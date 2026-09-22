@@ -1,0 +1,37 @@
+{
+  "$schema": "https://cdn.jsdelivr.net/gh/Zhengqbbb/cz-git@1.14.0/docs/public/schema.json",
+  "messages": {
+    "type": { "description": "选择你要提交的类型 :" },
+    "scope": { "description": "选择一个提交范围（可选）:" },
+    "customScope": {
+      "description": "请输入自定义的提交范围 :",
+      "title": "Scope",
+      "format": "{value}"
+    },
+    "subject": { "description": "填写简短精炼的变更描述 :\n" },
+    "body": { "description": "填写更加详细的变更描述（可选）。使用 \"|\" 换行 :\n" },
+    "breaking": { "description": "列举非兼容性变更（可选）:\n" },
+    "footerPrefixesSelect": "选择关联 issue 前缀（可选）:",
+    "confirmCommit": "确认提交？（y 确认 / n 取消 / e 编辑）:"
+  },
+  "types": [
+    { "value": "feat", "name": "feat:     新增功能", "emoji": "✨" },
+    { "value": "fix", "name": "fix:      修复缺陷", "emoji": "🐛" },
+    { "value": "docs", "name": "docs:     文档变更", "emoji": "📝" },
+    { "value": "style", "name": "style:    代码格式（不影响功能）", "emoji": "💄" },
+    { "value": "refactor", "name": "refactor: 重构（既非新增也非修复）", "emoji": "♻️" },
+    { "value": "perf", "name": "perf:     性能优化", "emoji": "⚡" },
+    { "value": "test", "name": "test:     测试相关", "emoji": "✅" },
+    { "value": "build", "name": "build:    构建系统或依赖变更", "emoji": "📦" },
+    { "value": "ci", "name": "ci:       CI 配置变更", "emoji": "🔧" },
+    { "value": "chore", "name": "chore:    其他杂项", "emoji": "🔨" },
+    { "value": "revert", "name": "revert:   回退提交", "emoji": "⏪" }
+  ],
+  "useEmoji": false,
+  "scopes": ["root", "api", "admin", "docs", "config", "deps", "release"],
+  "enableMultipleScopes": true,
+  "scopeEnumSeparator": ",",
+  "allowCustomScopes": true,
+  "allowEmptyScopes": true,
+  "subjectLimit": 100
+}

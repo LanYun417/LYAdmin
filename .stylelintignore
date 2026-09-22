@@ -1,0 +1,7 @@
+node_modules
+dist
+build
+coverage
+api/uploads
+api/logs
+**/*.min.css

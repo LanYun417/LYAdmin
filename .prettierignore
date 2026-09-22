@@ -1,0 +1,14 @@
+node_modules
+dist
+build
+coverage
+pnpm-lock.yaml
+package-lock.json
+*.min.js
+*.min.css
+api/uploads
+api/logs
+
+# 自动生成的类型声明（由 unplugin-auto-import / unplugin-vue-components 生成，格式由插件决定）
+admin/auto-imports.d.ts
+admin/components.d.ts
