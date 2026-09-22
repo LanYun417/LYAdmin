@@ -107,7 +107,7 @@ onBeforeUnmount(() => {
         <div
           v-for="view in visitedViews"
           :key="view.path"
-          class="tags-item"
+          class="tags-item shadow-md"
           :class="{ active: isActive(view) }"
           @click="toView(view)"
           @contextmenu="openContextMenu($event, view)"
