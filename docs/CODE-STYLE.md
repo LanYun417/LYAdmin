@@ -90,16 +90,31 @@ const emit = defineEmits<{ (e: 'success'): void; (e: 'update:visible', v: boolea
 ### 3.3 状态管理（Pinia）约定
 
 - Store 文件位于 `admin/src/store/modules/`，**按领域拆分**：`user` / `permission` / `app` / `tagsView`；统一在 `store/index.ts` 挂载 `pinia-plugin-persistedstate`。
+- **本项目统一使用 Setup Store（组合式）写法**：与项目其余代码（`<script setup>` + 组合式 API）保持同一心智模型。用 `ref` 声明 state、`computed` 声明 getter、普通函数声明 action，最终统一 `return`。
+- **每个 state ref 必须显式标注类型**（如 `ref<boolean>(false)`、`ref<UserDetail | null>(null)`、`ref<string[]>([])`），并给每个字段写行内注释。
+- **必须 `return` 全部 state + getter + action**：这是 Setup Store 的硬约束 —— 漏 return 任意一个 state 字段会导致 devtools 与 `pinia-plugin-persistedstate` **静默失效**，非常难以排查。
 - **何时该进 Store**：跨页面共享、需要跨路由存活、需要持久化的状态（登录态、权限码、菜单树、侧边栏折叠、暗黑模式）。
 - **何时不该进 Store**：仅本页面使用的列表数据 / 弹窗显隐 / 表单状态，用 `ref` / `reactive` 留在组件内。
-- 持久化只持久必要字段，禁止整包落库：
+- 持久化只持久必要字段，禁止整包落库；`persist` 作为 `defineStore` 的**第三个参数**传入：
 
 ```ts
 // admin/src/store/modules/user.ts
-persist: { key: 'ly_admin_user', pick: ['accessToken', 'refreshToken'] }
-```
+export const useUserStore = defineStore(
+  'user',
+  () => {
+    /** 访问令牌 */
+    const accessToken = ref<string>(getAccessToken());
+    /** 刷新令牌 */
+    const refreshToken = ref<string>(getRefreshToken());
+    // ... 其余 state / getter / action
 
-- State 接口必须显式声明（`interface UserState { ... }`），并给每个字段写行内注释。
+    return { accessToken, refreshToken /* , ...其余成员必须全部 return */ };
+  },
+  {
+    persist: { key: 'ly_admin_user', pick: ['accessToken', 'refreshToken'] },
+  },
+);
+```
 
 ### 3.4 请求层约定
 

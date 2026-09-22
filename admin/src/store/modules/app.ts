@@ -1,58 +1,65 @@
+import { ref } from 'vue';
 import { defineStore } from 'pinia';
 
-interface AppState {
-  /** 侧边栏是否折叠 */
-  sidebarCollapsed: boolean;
-  /** 暗黑模式（与 html.dark 同步） */
-  dark: boolean;
-  /** 主题色 */
-  primaryColor: string;
-  /** 是否全屏（P2） */
-  isFullscreen: boolean;
-}
+export const useAppStore = defineStore(
+  'app',
+  () => {
+    /** 侧边栏是否折叠 */
+    const sidebarCollapsed = ref<boolean>(false);
+    /** 暗黑模式（与 html.dark 同步） */
+    const dark = ref<boolean>(false);
+    /** 主题色 */
+    const primaryColor = ref<string>('#409eff');
+    /** 是否全屏（P2） */
+    const isFullscreen = ref<boolean>(false);
 
-export const useAppStore = defineStore('app', {
-  state: (): AppState => ({
-    sidebarCollapsed: false,
-    dark: false,
-    primaryColor: '#409eff',
-    isFullscreen: false,
-  }),
-
-  actions: {
     /** 切换侧边栏折叠状态 */
-    toggleSidebar(): void {
-      this.sidebarCollapsed = !this.sidebarCollapsed;
-    },
+    function toggleSidebar(): void {
+      sidebarCollapsed.value = !sidebarCollapsed.value;
+    }
 
     /** 设置侧边栏折叠状态 */
-    setSidebarCollapsed(value: boolean): void {
-      this.sidebarCollapsed = value;
-    },
+    function setSidebarCollapsed(value: boolean): void {
+      sidebarCollapsed.value = value;
+    }
 
     /** 设置暗黑模式 */
-    setDark(value: boolean): void {
-      this.dark = value;
-    },
+    function setDark(value: boolean): void {
+      dark.value = value;
+    }
 
     /** 切换暗黑模式 */
-    toggleDark(): void {
-      this.dark = !this.dark;
-    },
+    function toggleDark(): void {
+      dark.value = !dark.value;
+    }
 
     /** 设置主题色 */
-    setPrimaryColor(color: string): void {
-      this.primaryColor = color;
-    },
+    function setPrimaryColor(color: string): void {
+      primaryColor.value = color;
+    }
 
     /** 设置全屏状态 */
-    setFullscreen(value: boolean): void {
-      this.isFullscreen = value;
+    function setFullscreen(value: boolean): void {
+      isFullscreen.value = value;
+    }
+
+    return {
+      sidebarCollapsed,
+      dark,
+      primaryColor,
+      isFullscreen,
+      toggleSidebar,
+      setSidebarCollapsed,
+      setDark,
+      toggleDark,
+      setPrimaryColor,
+      setFullscreen,
+    };
+  },
+  {
+    persist: {
+      key: 'ly_admin_app',
+      pick: ['sidebarCollapsed', 'primaryColor'],
     },
   },
-
-  persist: {
-    key: 'ly_admin_app',
-    pick: ['sidebarCollapsed', 'primaryColor'],
-  },
-});
+);

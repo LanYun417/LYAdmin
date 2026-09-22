@@ -1,3 +1,4 @@
+import { ref } from 'vue';
 import { defineStore } from 'pinia';
 import type { RouteLocationNormalizedLoaded } from 'vue-router';
 
@@ -15,79 +16,82 @@ export interface TagView {
   affix?: boolean;
 }
 
-interface TagsViewState {
+export const useTagsViewStore = defineStore('tagsView', () => {
   /** 已访问的标签 */
-  visitedViews: TagView[];
+  const visitedViews = ref<TagView[]>([]);
   /** 需要 keep-alive 缓存的组件名 */
-  cachedViews: string[];
-}
+  const cachedViews = ref<string[]>([]);
 
-export const useTagsViewStore = defineStore('tagsView', {
-  state: (): TagsViewState => ({
-    visitedViews: [],
-    cachedViews: [],
-  }),
+  /** 新增已访问标签 */
+  function addVisitedView(route: RouteLocationNormalizedLoaded): void {
+    if (!route.name) {
+      return;
+    }
+    const name = String(route.name);
+    if (visitedViews.value.some((view) => view.path === route.path)) {
+      return;
+    }
+    visitedViews.value.push({
+      name,
+      path: route.path,
+      fullPath: route.fullPath,
+      title: (route.meta.title as string) || name,
+      affix: Boolean(route.meta.affix),
+    });
+  }
 
-  actions: {
-    /** 新增标签（访问页面时调用） */
-    addView(route: RouteLocationNormalizedLoaded): void {
-      this.addVisitedView(route);
-      this.addCachedView(route);
-    },
+  /** 新增缓存标签 */
+  function addCachedView(route: RouteLocationNormalizedLoaded): void {
+    if (!route.meta.keepAlive || !route.name) {
+      return;
+    }
+    const name = String(route.name);
+    if (!cachedViews.value.includes(name)) {
+      cachedViews.value.push(name);
+    }
+  }
 
-    /** 新增已访问标签 */
-    addVisitedView(route: RouteLocationNormalizedLoaded): void {
-      if (!route.name) {
-        return;
-      }
-      const name = String(route.name);
-      if (this.visitedViews.some((view) => view.path === route.path)) {
-        return;
-      }
-      this.visitedViews.push({
-        name,
-        path: route.path,
-        fullPath: route.fullPath,
-        title: (route.meta.title as string) || name,
-        affix: Boolean(route.meta.affix),
-      });
-    },
+  /** 新增标签（访问页面时调用） */
+  function addView(route: RouteLocationNormalizedLoaded): void {
+    addVisitedView(route);
+    addCachedView(route);
+  }
 
-    /** 新增缓存标签 */
-    addCachedView(route: RouteLocationNormalizedLoaded): void {
-      if (!route.meta.keepAlive || !route.name) {
-        return;
-      }
-      const name = String(route.name);
-      if (!this.cachedViews.includes(name)) {
-        this.cachedViews.push(name);
-      }
-    },
+  /** 更新已访问标签的完整路径 */
+  function updateVisitedView(route: RouteLocationNormalizedLoaded): void {
+    const target = visitedViews.value.find((view) => view.path === route.path);
+    if (target) {
+      target.fullPath = route.fullPath;
+    }
+  }
 
-    /** 更新已访问标签的完整路径 */
-    updateVisitedView(route: RouteLocationNormalizedLoaded): void {
-      const target = this.visitedViews.find((view) => view.path === route.path);
-      if (target) {
-        target.fullPath = route.fullPath;
-      }
-    },
+  /** 关闭指定标签 */
+  function delView(view: TagView): void {
+    visitedViews.value = visitedViews.value.filter((item) => item.path !== view.path);
+    cachedViews.value = cachedViews.value.filter((name) => name !== view.name);
+  }
 
-    /** 关闭指定标签 */
-    delView(view: TagView): void {
-      this.visitedViews = this.visitedViews.filter((item) => item.path !== view.path);
-      this.cachedViews = this.cachedViews.filter((name) => name !== view.name);
-    },
+  /** 关闭其他标签（保留固定标签与当前标签） */
+  function delOthersViews(view: TagView): void {
+    visitedViews.value = visitedViews.value.filter((item) => item.affix || item.path === view.path);
+    cachedViews.value = cachedViews.value.filter((name) => name === view.name);
+  }
 
-    /** 关闭其他标签（保留固定标签与当前标签） */
-    delOthersViews(view: TagView): void {
-      this.visitedViews = this.visitedViews.filter((item) => item.affix || item.path === view.path);
-      this.cachedViews = this.cachedViews.filter((name) => name === view.name);
-    },
+  /** 关闭全部标签（保留固定标签） */
+  function delAllViews(): void {
+    visitedViews.value = visitedViews.value.filter((item) => item.affix);
+    cachedViews.value = [];
+  }
 
-    /** 关闭全部标签（保留固定标签） */
-    delAllViews(): void {
-      this.visitedViews = this.visitedViews.filter((item) => item.affix);
-      this.cachedViews = [];
-    },
-  },
+  return {
+    visitedViews,
+    cachedViews,
+    addView,
+    addVisitedView,
+    addCachedView,
+    updateVisitedView,
+    delView,
+    delOthersViews,
+    delAllViews,
+  };
 });

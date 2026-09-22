@@ -1,4 +1,4 @@
-import { defineComponent, h } from 'vue';
+import { defineComponent, h, ref } from 'vue';
 import { RouterView, type RouteRecordRaw } from 'vue-router';
 import { defineStore } from 'pinia';
 import type { MenuNode } from '@/types/api';
@@ -196,43 +196,41 @@ function buildRoutes(menus: MenuNode[], parentPath: string): RouteRecordRaw[] {
   return routes;
 }
 
-interface PermissionState {
+export const usePermissionStore = defineStore('permission', () => {
   /** 生成的动态路由 */
-  routes: RouteRecordRaw[];
+  const routes = ref<RouteRecordRaw[]>([]);
   /** 是否已注入路由 */
-  added: boolean;
+  const added = ref<boolean>(false);
   /** 菜单树中收集到的按钮权限码 */
-  buttonPermissions: string[];
-}
+  const buttonPermissions = ref<string[]>([]);
 
-export const usePermissionStore = defineStore('permission', {
-  state: (): PermissionState => ({
-    routes: [],
-    added: false,
-    buttonPermissions: [],
-  }),
+  /**
+   * 依据菜单树生成动态路由并收集按钮权限码。
+   *
+   * @param menus 后端下发的菜单树
+   * @returns 动态路由列表
+   */
+  function generateRoutes(menus: MenuNode[]): RouteRecordRaw[] {
+    const builtRoutes = buildRoutes(menus, '');
+    const buttons: string[] = [];
+    collectButtonPermissions(menus, buttons);
+    routes.value = builtRoutes;
+    buttonPermissions.value = Array.from(new Set(buttons));
+    return builtRoutes;
+  }
 
-  actions: {
-    /**
-     * 依据菜单树生成动态路由并收集按钮权限码。
-     *
-     * @param menus 后端下发的菜单树
-     * @returns 动态路由列表
-     */
-    generateRoutes(menus: MenuNode[]): RouteRecordRaw[] {
-      const routes = buildRoutes(menus, '');
-      const buttons: string[] = [];
-      collectButtonPermissions(menus, buttons);
-      this.routes = routes;
-      this.buttonPermissions = Array.from(new Set(buttons));
-      return routes;
-    },
+  /** 重置动态路由状态 */
+  function resetRoutes(): void {
+    routes.value = [];
+    added.value = false;
+    buttonPermissions.value = [];
+  }
 
-    /** 重置动态路由状态 */
-    resetRoutes(): void {
-      this.routes = [];
-      this.added = false;
-      this.buttonPermissions = [];
-    },
-  },
+  return {
+    routes,
+    added,
+    buttonPermissions,
+    generateRoutes,
+    resetRoutes,
+  };
 });
