@@ -134,8 +134,7 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .tags-view {
-  height: 40px;
-  padding: 0 8px;
+  padding: 0 5px;
   border-bottom: 1px solid var(--el-border-color-light);
 }
 
@@ -145,7 +144,7 @@ onBeforeUnmount(() => {
 
 .tags-wrap {
   gap: 6px;
-  padding: 6px 0;
+  padding: 5px 0;
 }
 
 .tags-item {
