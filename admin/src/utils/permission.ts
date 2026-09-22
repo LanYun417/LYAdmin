@@ -12,8 +12,8 @@ export function hasPermission(code: string | string[] | undefined | null): boole
   }
   const userStore = useUserStore();
   const permissions = userStore.permissions ?? [];
-  // 超管通配
-  if (permissions.includes('*:*:*')) {
+  // 超管通配：后端对超级管理员下发 `["*"]`，兼容 `*:*:*` 形式
+  if (permissions.includes('*') || permissions.includes('*:*:*')) {
     return true;
   }
   const codes = Array.isArray(code) ? code : [code];

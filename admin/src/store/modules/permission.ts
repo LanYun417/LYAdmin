@@ -65,8 +65,84 @@ function collectButtonPermissions(menus: MenuNode[], bucket: string[]): void {
   });
 }
 
+/** 规范化路径：合并重复斜杠，去除末尾多余斜杠（根路径 `/` 保留） */
+function normalizePath(input: string): string {
+  const collapsed = input.replace(/\/{2,}/g, '/');
+  return collapsed.length > 1 ? collapsed.replace(/\/+$/, '') : collapsed;
+}
+
+/**
+ * 计算节点自身的完整路径。
+ * - `menu.path` 以 `/` 开头 → 视为绝对路径，直接采用（规范化多余斜杠）；
+ * - 否则 → 与父路径拼接（父路径 + 子片段）。
+ *
+ * @param rawPath 菜单原始 path
+ * @param parentPath 父级完整路径
+ * @returns 规范化后的完整路径
+ */
+function resolveFullPath(rawPath: string, parentPath: string): string {
+  const trimmed = rawPath.trim();
+  if (trimmed.startsWith('/')) {
+    return normalizePath(trimmed);
+  }
+  const segment = trimmed.replace(/^\/+/, '');
+  return normalizePath(`${parentPath}/${segment}`);
+}
+
+/**
+ * 计算作为子路由注册时的相对片段（相对父级 fullPath）。
+ * - 子项 fullPath 以 `${parentPath}/` 开头 → 去掉该前缀（避免路径重复拼接）；
+ * - 否则回退为末段 `segment`。
+ *
+ * @param fullPath 子节点完整路径
+ * @param parentPath 父级完整路径
+ * @param segment 子节点 path 去除前导斜杠后的末段
+ * @returns 供 vue-router 注册使用的相对路径片段
+ */
+function toChildPath(fullPath: string, parentPath: string, segment: string): string {
+  const prefix = `${parentPath}/`;
+  if (fullPath.startsWith(prefix)) {
+    return fullPath.slice(prefix.length);
+  }
+  return segment;
+}
+
+/**
+ * 找出首个可生成路由的子节点完整路径（用于目录节点 redirect）。
+ *
+ * @param menus 子节点列表
+ * @param parentPath 父级完整路径
+ * @returns 首个可路由子节点的完整路径；无则返回 undefined
+ */
+function firstRoutableFullPath(menus: MenuNode[] | undefined, parentPath: string): string | undefined {
+  if (!menus?.length) {
+    return undefined;
+  }
+  for (const child of menus) {
+    if (child.menuType === 'F' || child.status === 0) {
+      continue;
+    }
+    const rawPath = child.path ?? '';
+    const segment = rawPath.replace(/^\/+/, '');
+    if (!segment) {
+      const deeper = firstRoutableFullPath(child.children, parentPath);
+      if (deeper) {
+        return deeper;
+      }
+      continue;
+    }
+    return resolveFullPath(rawPath, parentPath);
+  }
+  return undefined;
+}
+
 /**
  * 将菜单树映射为动态路由（相对路径，挂载到根 Layout 下）。
+ *
+ * 同时兼容后端下发的绝对路径（如 `/system/user`）与相对路径（如 `user`）两种形式：
+ * 节点自身完整路径由 {@link resolveFullPath} 计算，而注册到 vue-router 的 `path`
+ * 由 {@link toChildPath} 归一化为「相对父级 fullPath 的片段」，从根本上避免
+ * 「父路径 + 绝对子路径」造成的重复拼接（如 `/system/system/user`）。
  *
  * @param menus 菜单树
  * @param parentPath 父级完整路径
@@ -78,7 +154,8 @@ function buildRoutes(menus: MenuNode[], parentPath: string): RouteRecordRaw[] {
     if (menu.menuType === 'F' || menu.status === 0) {
       return;
     }
-    const segment = (menu.path ?? '').replace(/^\/+/, '');
+    const rawPath = menu.path ?? '';
+    const segment = rawPath.replace(/^\/+/, '');
     if (!segment) {
       // 无 path 的目录，直接下沉子级
       if (menu.children?.length) {
@@ -86,7 +163,8 @@ function buildRoutes(menus: MenuNode[], parentPath: string): RouteRecordRaw[] {
       }
       return;
     }
-    const fullPath = `${parentPath}/${segment}`.replace(/\/{2,}/g, '/');
+    const fullPath = resolveFullPath(rawPath, parentPath);
+    const childPath = toChildPath(fullPath, parentPath, segment);
     const routeName = toPascalCase(fullPath);
     const meta: AppRouteMeta = {
       title: menu.menuName,
@@ -97,18 +175,18 @@ function buildRoutes(menus: MenuNode[], parentPath: string): RouteRecordRaw[] {
     };
     const children = menu.children?.length ? buildRoutes(menu.children, fullPath) : [];
     if (children.length > 0) {
-      const firstSegment = (menu.children?.[0]?.path ?? '').replace(/^\/+/, '');
+      // 目录节点：redirect 指向第一个可路由子节点的完整路径
       routes.push({
-        path: segment,
+        path: childPath,
         name: routeName,
         component: RouterViewPassthrough,
         meta,
-        redirect: menu.redirect || `${fullPath}/${firstSegment}`,
+        redirect: menu.redirect || firstRoutableFullPath(menu.children, fullPath),
         children,
       } as RouteRecordRaw);
     } else {
       routes.push({
-        path: segment,
+        path: childPath,
         name: routeName,
         component: resolveComponent(menu.component) ?? RouterViewPassthrough,
         meta,
