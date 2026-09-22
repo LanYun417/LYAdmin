@@ -67,6 +67,10 @@ export const useTagsViewStore = defineStore('tagsView', () => {
 
   /** 关闭指定标签 */
   function delView(view: TagView): void {
+    // 固定标签（如首页）不可关闭
+    if (view.affix) {
+      return;
+    }
     visitedViews.value = visitedViews.value.filter((item) => item.path !== view.path);
     cachedViews.value = cachedViews.value.filter((name) => name !== view.name);
   }

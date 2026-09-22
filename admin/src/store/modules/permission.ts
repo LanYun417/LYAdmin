@@ -3,6 +3,7 @@ import { RouterView, type RouteRecordRaw } from 'vue-router';
 import { defineStore } from 'pinia';
 import type { MenuNode } from '@/types/api';
 import type { AppRouteMeta } from '@/types/router';
+import { AFFIX_TAB_PATHS } from '@/router/routes';
 
 /** 嵌套目录的透传组件（渲染子路由出口） */
 const RouterViewPassthrough = defineComponent({
@@ -172,6 +173,7 @@ function buildRoutes(menus: MenuNode[], parentPath: string): RouteRecordRaw[] {
       keepAlive: menu.keepAlive === 1,
       hidden: menu.visible === 0,
       permission: menu.permission ?? undefined,
+      affix: AFFIX_TAB_PATHS.includes(fullPath),
     };
     const children = menu.children?.length ? buildRoutes(menu.children, fullPath) : [];
     if (children.length > 0) {

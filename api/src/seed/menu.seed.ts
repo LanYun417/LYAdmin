@@ -26,7 +26,7 @@ interface MenuSeedNode {
 const MENU_TREE: MenuSeedNode[] = [
   {
     key: 'dashboard',
-    menuName: '仪表盘',
+    menuName: '首页',
     menuType: MenuType.MENU,
     path: '/dashboard',
     component: 'dashboard/index',

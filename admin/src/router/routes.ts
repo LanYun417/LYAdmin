@@ -1,6 +1,9 @@
 import type { RouteRecordRaw } from 'vue-router';
 import Layout from '@/layout/index.vue';
 
+/** 固定标签页（标签不可关闭）的路由路径白名单 */
+export const AFFIX_TAB_PATHS: string[] = ['/dashboard'];
+
 /**
  * 静态路由表（无需权限即可注册）。
  * 动态业务路由由 permission store 依据菜单树生成后，注入到 name='Layout' 的根路由下。
