@@ -15,7 +15,7 @@ function handleToggle(): void {
 </script>
 
 <template>
-  <div class="navbar flex items-center justify-between">
+  <div class="navbar flex items-center justify-between shadow">
     <div class="flex items-center gap-3">
       <el-icon class="navbar-toggle" @click="handleToggle">
         <Fold v-if="!appStore.sidebarCollapsed" />
