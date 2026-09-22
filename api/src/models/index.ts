@@ -1,0 +1,24 @@
+/**
+ * 模型汇总入口。
+ * 模块职责：统一导出全部模型与模型数组（供 Sequelize 注册关联）。
+ */
+import { File } from './File';
+import { LoginLog } from './LoginLog';
+import { Menu } from './Menu';
+import { OperationLog } from './OperationLog';
+import { Role } from './Role';
+import { RoleMenu } from './RoleMenu';
+import { User } from './User';
+import { UserRole } from './UserRole';
+
+export { User } from './User';
+export { Role } from './Role';
+export { Menu } from './Menu';
+export { UserRole } from './UserRole';
+export { RoleMenu } from './RoleMenu';
+export { LoginLog } from './LoginLog';
+export { OperationLog } from './OperationLog';
+export { File } from './File';
+
+/** 全部模型数组，传入 Sequelize 构造函数以注册表与关联。 */
+export const models = [User, Role, Menu, UserRole, RoleMenu, LoginLog, OperationLog, File];
