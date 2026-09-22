@@ -1,0 +1,31 @@
+/**
+ * Element Plus 主题 / 尺寸微调。
+ * 约定：仅做带命名空间的覆盖，不使用 !important 强行改写组件内部外观。
+ */
+
+.el-menu {
+  border-right: none;
+}
+
+/* 侧边栏折叠宽度统一 */
+.el-menu--collapse {
+  width: 64px;
+}
+
+/* 卡片默认内边距微调 */
+.el-card {
+  --el-card-padding: 16px;
+}
+
+/* 表格操作列按钮间距 */
+.table-action .el-button + .el-button {
+  margin-left: 8px;
+}
+
+/* 搜索表单区域 */
+.search-form {
+  padding: 16px 16px 0;
+  margin-bottom: 12px;
+  background-color: var(--el-bg-color);
+  border-radius: 4px;
+}

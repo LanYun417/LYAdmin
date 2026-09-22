@@ -1,0 +1,134 @@
+<script setup lang="ts">
+import { onMounted, reactive, ref } from 'vue';
+import { Refresh } from '@element-plus/icons-vue';
+import { getHttpLogsApi } from '@/api/log';
+import { formatDuration } from '@/utils/format';
+import type { HttpLog } from '@/types/api';
+import Pagination from '@/components/Pagination/index.vue';
+import SearchForm from '@/components/SearchForm/index.vue';
+
+defineOptions({ name: 'LogHttp' });
+
+const loading = ref(false);
+const list = ref<HttpLog[]>([]);
+const total = ref(0);
+const dateRange = ref<string[]>([]);
+
+const query = reactive({
+  method: '',
+  statusCode: undefined as number | undefined,
+  page: 1,
+  pageSize: 10,
+});
+
+/** 加载 HTTP 日志 */
+async function loadList(): Promise<void> {
+  loading.value = true;
+  try {
+    const res = await getHttpLogsApi({
+      page: query.page,
+      pageSize: query.pageSize,
+      method: query.method || undefined,
+      statusCode: query.statusCode,
+      startTime: dateRange.value[0] || undefined,
+      endTime: dateRange.value[1] || undefined,
+    });
+    list.value = res.list ?? [];
+    total.value = res.total ?? 0;
+  } finally {
+    loading.value = false;
+  }
+}
+
+/** 查询 */
+function handleSearch(): void {
+  query.page = 1;
+  void loadList();
+}
+
+/** 重置 */
+function handleReset(): void {
+  query.method = '';
+  query.statusCode = undefined;
+  dateRange.value = [];
+  query.page = 1;
+  void loadList();
+}
+
+/** 状态码颜色 */
+function statusType(code: number): 'success' | 'warning' | 'danger' {
+  if (code >= 200 && code < 300) {
+    return 'success';
+  }
+  if (code >= 400 && code < 500) {
+    return 'warning';
+  }
+  return 'danger';
+}
+
+onMounted(() => {
+  void loadList();
+});
+</script>
+
+<template>
+  <div class="log-http-page">
+    <SearchForm @search="handleSearch" @reset="handleReset">
+      <el-form-item label="请求方法">
+        <el-select v-model="query.method" placeholder="全部" clearable style="width: 140px">
+          <el-option label="GET" value="GET" />
+          <el-option label="POST" value="POST" />
+          <el-option label="PUT" value="PUT" />
+          <el-option label="DELETE" value="DELETE" />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="状态码">
+        <el-input-number v-model="query.statusCode" :min="100" :max="599" placeholder="全部" />
+      </el-form-item>
+      <template #advanced>
+        <el-form-item label="时间范围">
+          <el-date-picker
+            v-model="dateRange"
+            type="datetimerange"
+            value-format="YYYY-MM-DD HH:mm:ss"
+            range-separator="至"
+            start-placeholder="开始时间"
+            end-placeholder="结束时间"
+          />
+        </el-form-item>
+      </template>
+    </SearchForm>
+
+    <el-card shadow="never">
+      <div class="flex items-center justify-between mb-3">
+        <span class="table-title">HTTP 访问日志</span>
+        <el-button :icon="Refresh" @click="loadList">刷新</el-button>
+      </div>
+
+      <el-table v-loading="loading" :data="list" border stripe>
+        <el-table-column prop="method" label="方法" width="100" align="center" />
+        <el-table-column prop="url" label="URL" min-width="260" show-overflow-tooltip />
+        <el-table-column label="状态码" width="100" align="center">
+          <template #default="{ row }">
+            <el-tag :type="statusType(row.statusCode)" size="small">{{ row.statusCode }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="耗时" width="110" align="center">
+          <template #default="{ row }">{{ formatDuration(row.duration) }}</template>
+        </el-table-column>
+        <el-table-column prop="ip" label="IP" width="150" />
+        <el-table-column prop="time" label="时间" width="200" show-overflow-tooltip />
+      </el-table>
+
+      <Pagination v-model:page="query.page" v-model:page-size="query.pageSize" :total="total" @change="loadList" />
+    </el-card>
+  </div>
+</template>
+
+<style scoped>
+.table-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--el-text-color-primary);
+}
+</style>

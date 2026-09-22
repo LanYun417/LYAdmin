@@ -1,0 +1,135 @@
+<script setup lang="ts">
+import { onMounted, reactive, ref } from 'vue';
+import { Refresh } from '@element-plus/icons-vue';
+import { getOperationLogsApi } from '@/api/log';
+import { formatDateTime, formatDuration } from '@/utils/format';
+import type { OperationLog } from '@/types/api';
+import Pagination from '@/components/Pagination/index.vue';
+import SearchForm from '@/components/SearchForm/index.vue';
+
+defineOptions({ name: 'LogOperation' });
+
+const loading = ref(false);
+const list = ref<OperationLog[]>([]);
+const total = ref(0);
+const dateRange = ref<string[]>([]);
+
+const query = reactive({
+  module: '',
+  username: '',
+  result: undefined as number | undefined,
+  page: 1,
+  pageSize: 10,
+});
+
+/** 加载操作日志 */
+async function loadList(): Promise<void> {
+  loading.value = true;
+  try {
+    const res = await getOperationLogsApi({
+      page: query.page,
+      pageSize: query.pageSize,
+      module: query.module || undefined,
+      username: query.username || undefined,
+      result: query.result,
+      startTime: dateRange.value[0] || undefined,
+      endTime: dateRange.value[1] || undefined,
+    });
+    list.value = res.list ?? [];
+    total.value = res.total ?? 0;
+  } finally {
+    loading.value = false;
+  }
+}
+
+/** 查询 */
+function handleSearch(): void {
+  query.page = 1;
+  void loadList();
+}
+
+/** 重置 */
+function handleReset(): void {
+  query.module = '';
+  query.username = '';
+  query.result = undefined;
+  dateRange.value = [];
+  query.page = 1;
+  void loadList();
+}
+
+onMounted(() => {
+  void loadList();
+});
+</script>
+
+<template>
+  <div class="log-operation-page">
+    <SearchForm @search="handleSearch" @reset="handleReset">
+      <el-form-item label="模块">
+        <el-input v-model="query.module" placeholder="请输入模块" clearable />
+      </el-form-item>
+      <el-form-item label="操作人">
+        <el-input v-model="query.username" placeholder="请输入操作人" clearable @keyup.enter="handleSearch" />
+      </el-form-item>
+      <template #advanced>
+        <el-form-item label="结果">
+          <el-select v-model="query.result" placeholder="全部" clearable style="width: 140px">
+            <el-option label="成功" :value="1" />
+            <el-option label="失败" :value="0" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="操作时间">
+          <el-date-picker
+            v-model="dateRange"
+            type="datetimerange"
+            value-format="YYYY-MM-DD HH:mm:ss"
+            range-separator="至"
+            start-placeholder="开始时间"
+            end-placeholder="结束时间"
+          />
+        </el-form-item>
+      </template>
+    </SearchForm>
+
+    <el-card shadow="never">
+      <div class="flex items-center justify-between mb-3">
+        <span class="table-title">操作日志</span>
+        <el-button :icon="Refresh" @click="loadList">刷新</el-button>
+      </div>
+
+      <el-table v-loading="loading" :data="list" border stripe>
+        <el-table-column prop="module" label="模块" width="120" />
+        <el-table-column prop="action" label="动作" width="110" />
+        <el-table-column prop="username" label="操作人" width="120" />
+        <el-table-column prop="method" label="方法" width="90" align="center" />
+        <el-table-column prop="url" label="URL" min-width="180" show-overflow-tooltip />
+        <el-table-column prop="params" label="参数" min-width="200" show-overflow-tooltip />
+        <el-table-column label="耗时" width="100" align="center">
+          <template #default="{ row }">{{ formatDuration(row.duration) }}</template>
+        </el-table-column>
+        <el-table-column label="结果" width="90" align="center">
+          <template #default="{ row }">
+            <el-tag :type="row.result === 1 ? 'success' : 'danger'" size="small">
+              {{ row.result === 1 ? '成功' : '失败' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="ip" label="IP" width="140" />
+        <el-table-column label="操作时间" width="180">
+          <template #default="{ row }">{{ formatDateTime(row.createdAt) }}</template>
+        </el-table-column>
+      </el-table>
+
+      <Pagination v-model:page="query.page" v-model:page-size="query.pageSize" :total="total" @change="loadList" />
+    </el-card>
+  </div>
+</template>
+
+<style scoped>
+.table-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--el-text-color-primary);
+}
+</style>

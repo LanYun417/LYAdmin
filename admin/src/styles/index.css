@@ -1,0 +1,85 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/**
+ * 最小 base 重置（因关闭了 Tailwind preflight，需自行补齐关键重置）。
+ * 仅做不破坏 Element Plus 组件外观的必要重置。
+ */
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html,
+  body,
+  #app {
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    margin: 0;
+  }
+
+  body {
+    font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--el-text-color-primary);
+    background-color: var(--el-bg-color-page);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  img {
+    display: inline-block;
+    max-width: 100%;
+    vertical-align: middle;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  ul,
+  ol {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  p {
+    margin: 0;
+  }
+}
+
+/* ------------------------------ 全局工具类 ------------------------------ */
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.text-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.full-height {
+  height: 100%;
+}
+
+/* NProgress 顶部进度条颜色跟随主题 */
+#nprogress .bar {
+  background: var(--el-color-primary) !important;
+}
