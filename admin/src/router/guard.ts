@@ -19,7 +19,7 @@ const WHITE_LIST: string[] = ['/login', '/403', '/404', '/500'];
  * @param router 路由实例
  */
 export function setupRouterGuard(router: Router): void {
-  router.beforeEach(async (to, _from, next) => {
+  router.beforeEach(async (to) => {
     NProgress.start();
 
     const appTitle = import.meta.env.VITE_APP_TITLE || '蓝云后台管理系统';
@@ -31,26 +31,19 @@ export function setupRouterGuard(router: Router): void {
 
     // 未登录
     if (!userStore.isLogin) {
-      if (WHITE_LIST.includes(to.path)) {
-        next();
-      } else {
-        next(`/login?redirect=${encodeURIComponent(to.fullPath)}`);
-      }
       NProgress.done();
-      return;
+      return WHITE_LIST.includes(to.path) ? true : `/login?redirect=${encodeURIComponent(to.fullPath)}`;
     }
 
     // 已登录访问登录页 → 首页
     if (to.path === '/login') {
-      next('/dashboard');
       NProgress.done();
-      return;
+      return '/dashboard';
     }
 
     // 动态路由已注入 → 放行
     if (permissionStore.added) {
-      next();
-      return;
+      return true;
     }
 
     // 首次进入：加载用户信息 + 生成动态路由
@@ -63,12 +56,12 @@ export function setupRouterGuard(router: Router): void {
       // 合并按钮权限码（profile 权限码 ∪ 菜单 F 节点权限码）
       userStore.setPermissions([...userStore.permissions, ...permissionStore.buttonPermissions]);
       // 重新解析目标路由
-      next({ path: to.path, query: to.query, hash: to.hash, replace: true });
+      return { path: to.path, query: to.query, hash: to.hash, replace: true };
     } catch (error) {
       userStore.resetState();
       permissionStore.resetRoutes();
       console.error('[router-guard] 加载用户信息失败', error);
-      next(`/login?redirect=${encodeURIComponent(to.fullPath)}`);
+      return `/login?redirect=${encodeURIComponent(to.fullPath)}`;
     }
   });
 
