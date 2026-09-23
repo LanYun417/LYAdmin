@@ -13,7 +13,7 @@ import TrendChart from './components/TrendChart.vue';
 import PieChart from './components/PieChart.vue';
 import BarChart from './components/BarChart.vue';
 
-defineOptions({ name: 'Dashboard' });
+defineOptions({ name: 'Home' });
 
 const loading = ref(false);
 const stats = ref<DashboardStats>({

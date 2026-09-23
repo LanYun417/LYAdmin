@@ -7,7 +7,7 @@ const router = useRouter();
 
 /** 返回首页 */
 function goHome(): void {
-  void router.push('/dashboard');
+  void router.push('/home');
 }
 </script>
 

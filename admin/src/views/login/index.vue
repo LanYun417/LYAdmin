@@ -42,7 +42,7 @@ async function handleLogin(): Promise<void> {
     await userStore.login(form);
     permissionStore.resetRoutes();
     ElMessage.success('登录成功');
-    const redirect = (route.query.redirect as string) || '/dashboard';
+    const redirect = (route.query.redirect as string) || '/home';
     await router.replace(redirect);
   } catch {
     // 错误提示已由 axios 拦截器统一处理

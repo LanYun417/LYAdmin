@@ -28,7 +28,7 @@ const MENU_TREE: MenuSeedNode[] = [
     key: 'dashboard',
     menuName: '首页',
     menuType: MenuType.MENU,
-    path: '/dashboard',
+    path: '/home',
     component: 'dashboard/index',
     icon: 'BIconSpeedometer2',
     sort: 1,

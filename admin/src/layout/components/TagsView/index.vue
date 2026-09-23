@@ -35,7 +35,7 @@ function closeView(view: TagView): void {
   if (isActive(view)) {
     const rest = visitedViews.value;
     const next = rest[rest.length - 1];
-    void router.push(next ? next.fullPath : '/dashboard');
+    void router.push(next ? next.fullPath : '/home');
   }
 }
 
@@ -68,7 +68,7 @@ function handleCloseOthers(): void {
 /** 关闭全部标签 */
 function handleCloseAll(): void {
   tagsViewStore.delAllViews();
-  void router.push('/dashboard');
+  void router.push('/home');
   closeContextMenu();
 }
 

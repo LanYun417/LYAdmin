@@ -38,7 +38,7 @@ export function setupRouterGuard(router: Router): void {
     // 已登录访问登录页 → 首页
     if (to.path === '/login') {
       NProgress.done();
-      return '/dashboard';
+      return '/home';
     }
 
     // 动态路由已注入 → 放行

@@ -2,7 +2,7 @@ import type { RouteRecordRaw } from 'vue-router';
 import Layout from '@/layout/index.vue';
 
 /** 固定标签页（标签不可关闭）的路由路径白名单 */
-export const AFFIX_TAB_PATHS: string[] = ['/dashboard'];
+export const AFFIX_TAB_PATHS: string[] = ['/home'];
 
 /**
  * 静态路由表（无需权限即可注册）。
@@ -50,7 +50,7 @@ export const constantRoutes: RouteRecordRaw[] = [
     path: '/',
     name: 'Layout',
     component: Layout,
-    redirect: '/dashboard',
+    redirect: '/home',
     meta: { hidden: true },
     children: [],
   },
