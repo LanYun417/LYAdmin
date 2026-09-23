@@ -71,7 +71,22 @@
  * 3) 仅作用于侧边栏，不影响其它 el-menu。 */
 .sidebar .el-menu--inline {
   display: flow-root;
+  margin: 0 8px;
+
+  /* 二级菜单：内嵌浅灰面板，与白色一级菜单形成层次感（亮/暗主题自适应） */
+  background-color: var(--el-fill-color);
+  border-radius: 8px;
   transform: translateZ(0);
+}
+
+/* 二级菜单项：默认透明以露出灰面板；横向收窄，让项贴近面板 */
+.sidebar .el-menu--inline .el-menu-item {
+  margin: 4px;
+}
+
+/* 二级菜单项 hover：用比面板更深的灰，保证在灰底上可见 */
+.sidebar .el-menu--inline .el-menu-item:not(.is-active):hover {
+  background-color: var(--el-fill-color-dark);
 }
 
 /* 展开/收起过渡改用更自然的缓动曲线，减少“突跳”观感 */
