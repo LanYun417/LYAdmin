@@ -2,7 +2,6 @@ import type { Router } from 'vue-router';
 import NProgress from 'nprogress';
 import { useUserStore } from '@/store/modules/user';
 import { usePermissionStore } from '@/store/modules/permission';
-import { notFoundRoute } from './routes';
 
 NProgress.configure({ showSpinner: false, trickleSpeed: 120 });
 
@@ -51,7 +50,6 @@ export function setupRouterGuard(router: Router): void {
       await userStore.loadUserInfo();
       const routes = permissionStore.generateRoutes(userStore.menus);
       routes.forEach((route) => router.addRoute('Layout', route));
-      router.addRoute(notFoundRoute);
       permissionStore.added = true;
       // 合并按钮权限码（profile 权限码 ∪ 菜单 F 节点权限码）
       userStore.setPermissions([...userStore.permissions, ...permissionStore.buttonPermissions]);

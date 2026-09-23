@@ -93,12 +93,17 @@ function handlePrimaryColorChange(color: string | null): void {
     </el-tooltip>
 
     <el-tooltip content="主题色" placement="bottom">
-      <el-color-picker
-        v-model="primaryColor"
-        size="small"
-        class="navbar-color-picker"
-        @change="handlePrimaryColorChange"
-      />
+      <!-- el-color-picker 根节点是组件（内部 ElTooltip），直接作为
+           el-tooltip 的触发子节点会触发 Vue 的“运行时指令挂到
+           非元素根”警告；包一层普通元素承载 forwardRef 指令。 -->
+      <span class="navbar-color-picker-trigger">
+        <el-color-picker
+          v-model="primaryColor"
+          size="small"
+          class="navbar-color-picker"
+          @change="handlePrimaryColorChange"
+        />
+      </span>
     </el-tooltip>
 
     <el-dropdown trigger="click">
@@ -123,6 +128,11 @@ function handlePrimaryColorChange(color: string | null): void {
   font-size: 18px;
   color: var(--el-text-color-primary);
   cursor: pointer;
+}
+
+.navbar-color-picker-trigger {
+  display: inline-flex;
+  align-items: center;
 }
 
 .navbar-color-picker {

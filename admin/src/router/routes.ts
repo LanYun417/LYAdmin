@@ -54,12 +54,18 @@ export const constantRoutes: RouteRecordRaw[] = [
     meta: { hidden: true },
     children: [],
   },
+  {
+    /**
+     * 兜底 404（静态注册）。
+     * 必须是“组件型”而非 redirect 型：刷新时首次路由解析发生在
+     * 动态路由注入之前，若无兜底会触发 vue-router 的
+     * “No match found”警告；redirect 型会把 to.path 改写成 /404，
+     * 导致守卫重解析时丢失原始目标（刷新 /home 会落在 404）。
+     * 动态路由注入后，具体路由的匹配优先级高于 catch-all，不受影响。
+     */
+    path: '/:pathMatch(.*)*',
+    name: 'NotFoundFallback',
+    component: () => import('@/views/error/404.vue'),
+    meta: { title: '页面不存在', hidden: true },
+  },
 ];
-
-/** 兜底 404 路由（动态路由注入完成后追加，避免拦截未注册的动态路由） */
-export const notFoundRoute: RouteRecordRaw = {
-  path: '/:pathMatch(.*)*',
-  name: 'NotFoundCatchAll',
-  redirect: '/404',
-  meta: { hidden: true },
-};
