@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { Plus, Refresh } from '@element-plus/icons-vue';
+import { BIconArrowClockwise, BIconPlus } from 'bootstrap-icons-vue';
 import { deleteMenuApi, getMenuListApi } from '@/api/menu';
 import type { MenuNode } from '@/types/api';
 import MenuForm from './components/MenuForm.vue';
@@ -81,8 +81,8 @@ onMounted(() => {
       <div class="flex items-center justify-between mb-3">
         <span class="table-title">菜单列表</span>
         <div class="flex items-center gap-2">
-          <el-button :icon="Refresh" @click="loadTree">刷新</el-button>
-          <el-button v-permission="'system:menu:add'" type="primary" :icon="Plus" @click="handleAdd">
+          <el-button :icon="BIconArrowClockwise" @click="loadTree">刷新</el-button>
+          <el-button v-permission="'system:menu:add'" type="primary" :icon="BIconPlus" @click="handleAdd">
             新增菜单
           </el-button>
         </div>

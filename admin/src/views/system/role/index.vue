@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { Plus } from '@element-plus/icons-vue';
+import { BIconPlus } from 'bootstrap-icons-vue';
 import { deleteRoleApi, getRoleListApi } from '@/api/role';
 import { formatDateTime } from '@/utils/format';
 import type { Role } from '@/types/api';
@@ -113,7 +113,7 @@ onMounted(() => {
     <el-card shadow="never">
       <div class="flex items-center justify-between mb-3">
         <span class="table-title">角色列表</span>
-        <el-button v-permission="'system:role:add'" type="primary" :icon="Plus" @click="handleAdd">
+        <el-button v-permission="'system:role:add'" type="primary" :icon="BIconPlus" @click="handleAdd">
           新增角色
         </el-button>
       </div>

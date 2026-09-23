@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { Key, Plus, UserFilled } from '@element-plus/icons-vue';
+import { BIconKey, BIconPersonFill, BIconPlus } from 'bootstrap-icons-vue';
 import { deleteUserApi, getUserListApi, resetUserPasswordApi, updateUserStatusApi } from '@/api/user';
 import { getAllRolesApi } from '@/api/role';
 import { formatDateTime } from '@/utils/format';
@@ -155,7 +155,7 @@ onMounted(() => {
     <el-card shadow="never">
       <div class="flex items-center justify-between mb-3">
         <span class="table-title">用户列表</span>
-        <el-button v-permission="'system:user:add'" type="primary" :icon="Plus" @click="handleAdd">
+        <el-button v-permission="'system:user:add'" type="primary" :icon="BIconPlus" @click="handleAdd">
           新增用户
         </el-button>
       </div>
@@ -164,7 +164,7 @@ onMounted(() => {
         <el-table-column label="头像" width="80" align="center">
           <template #default="{ row }">
             <el-avatar :size="36" :src="row.avatar">
-              <el-icon><UserFilled /></el-icon>
+              <el-icon><BIconPersonFill /></el-icon>
             </el-avatar>
           </template>
         </el-table-column>
@@ -205,7 +205,7 @@ onMounted(() => {
                 v-permission="'system:user:resetPwd'"
                 type="info"
                 link
-                :icon="Key"
+                :icon="BIconKey"
                 @click="handleResetPwd(row as UserDetail)"
               >
                 重置

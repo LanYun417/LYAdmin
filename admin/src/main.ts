@@ -1,5 +1,5 @@
-import { createApp, type Component } from 'vue';
-import * as ElementPlusIconsVue from '@element-plus/icons-vue';
+import { createApp } from 'vue';
+import { BootstrapIconsPlugin } from 'bootstrap-icons-vue';
 import App from './App.vue';
 import router from './router';
 import pinia from './store';
@@ -15,10 +15,8 @@ import '@/styles/element.scss';
 
 const app = createApp(App);
 
-// 全局注册 Element Plus 图标，支持后端下发 icon 名称的动态渲染
-Object.entries(ElementPlusIconsVue).forEach(([name, icon]) => {
-  app.component(name, icon as Component);
-});
+// 全局注册 Bootstrap Icons（注册名形如 BIconPerson），支持后端下发 icon 名称的动态渲染
+app.use(BootstrapIconsPlugin);
 
 app.use(pinia);
 app.use(router);

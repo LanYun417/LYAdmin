@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue';
-import { Refresh } from '@element-plus/icons-vue';
+import { BIconArrowClockwise } from 'bootstrap-icons-vue';
 import { getHttpLogsApi } from '@/api/log';
 import { formatDuration } from '@/utils/format';
 import type { HttpLog } from '@/types/api';
@@ -102,7 +102,7 @@ onMounted(() => {
     <el-card shadow="never">
       <div class="flex items-center justify-between mb-3">
         <span class="table-title">HTTP 访问日志</span>
-        <el-button :icon="Refresh" @click="loadList">刷新</el-button>
+        <el-button :icon="BIconArrowClockwise" @click="loadList">刷新</el-button>
       </div>
 
       <el-table v-loading="loading" :data="list" border stripe>

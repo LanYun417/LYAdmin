@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, reactive, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { Close } from '@element-plus/icons-vue';
+import { BIconX } from 'bootstrap-icons-vue';
 import { useTagsViewStore, type TagView } from '@/store/modules/tagsView';
 
 defineOptions({ name: 'TagsView' });
@@ -114,7 +114,7 @@ onBeforeUnmount(() => {
         >
           <span class="tags-title">{{ view.title }}</span>
           <el-icon v-if="!view.affix" class="tags-close" @click.stop="closeView(view)">
-            <Close />
+            <BIconX />
           </el-icon>
         </div>
       </div>

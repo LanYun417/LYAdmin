@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
-import { DataLine, Folder, Menu, User } from '@element-plus/icons-vue';
+import { BIconFolder, BIconGraphUp, BIconList, BIconPerson } from 'bootstrap-icons-vue';
 import {
   getDashboardStatsApi,
   getLoginTrendApi,
@@ -59,16 +59,16 @@ onMounted(() => {
   <div v-loading="loading" class="dashboard-page">
     <el-row :gutter="16">
       <el-col :xs="24" :sm="12" :md="6">
-        <StatCard title="用户总数" :value="stats.userTotal" :icon="User" color="#409eff" />
+        <StatCard title="用户总数" :value="stats.userTotal" :icon="BIconPerson" color="#409eff" />
       </el-col>
       <el-col :xs="24" :sm="12" :md="6">
-        <StatCard title="角色总数" :value="stats.roleTotal" :icon="Folder" color="#67c23a" />
+        <StatCard title="角色总数" :value="stats.roleTotal" :icon="BIconFolder" color="#67c23a" />
       </el-col>
       <el-col :xs="24" :sm="12" :md="6">
-        <StatCard title="菜单总数" :value="stats.menuTotal" :icon="Menu" color="#e6a23c" />
+        <StatCard title="菜单总数" :value="stats.menuTotal" :icon="BIconList" color="#e6a23c" />
       </el-col>
       <el-col :xs="24" :sm="12" :md="6">
-        <StatCard title="今日登录" :value="stats.todayLoginCount" :icon="DataLine" color="#f56c6c" />
+        <StatCard title="今日登录" :value="stats.todayLoginCount" :icon="BIconGraphUp" color="#f56c6c" />
       </el-col>
     </el-row>
 

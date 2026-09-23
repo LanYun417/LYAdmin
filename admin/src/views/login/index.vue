@@ -2,7 +2,7 @@
 import { reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus';
-import { Lock, User } from '@element-plus/icons-vue';
+import { BIconLock, BIconPerson } from 'bootstrap-icons-vue';
 import { useUserStore } from '@/store/modules/user';
 import { usePermissionStore } from '@/store/modules/permission';
 import { usernameRule } from '@/utils/validate';
@@ -61,13 +61,13 @@ async function handleLogin(): Promise<void> {
       </div>
       <el-form ref="formRef" :model="form" :rules="rules" size="large" @keyup.enter="handleLogin">
         <el-form-item prop="username">
-          <el-input v-model="form.username" :prefix-icon="User" placeholder="请输入账号" clearable />
+          <el-input v-model="form.username" :prefix-icon="BIconPerson" placeholder="请输入账号" clearable />
         </el-form-item>
         <el-form-item prop="password">
           <el-input
             v-model="form.password"
             type="password"
-            :prefix-icon="Lock"
+            :prefix-icon="BIconLock"
             placeholder="请输入密码"
             show-password
           />

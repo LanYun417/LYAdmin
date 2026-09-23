@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import * as ElementPlusIcons from '@element-plus/icons-vue';
-import { Search } from '@element-plus/icons-vue';
+import { computed, ref, watch } from 'vue';
+import { BIconSearch, iconNames } from 'bootstrap-icons-vue';
 
 defineOptions({ name: 'IconSelect' });
 
@@ -14,13 +13,20 @@ const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void;
 }>();
 
+/** 每批渲染的图标数量，避免一次性挂载全部 2050 个 SVG。 */
+const BATCH_SIZE = 200;
+
+/** 滚动到底部的提前触发距离（px）。 */
+const SCROLL_THRESHOLD = 100;
+
 const visible = ref(false);
 const keyword = ref('');
+/** 当前已渲染的图标数量上限 */
+const visibleCount = ref(BATCH_SIZE);
+/** 图标网格容器，用于定位 el-scrollbar 的滚动容器 */
+const gridRef = ref<HTMLElement | null>(null);
 
-/** 全部图标名 */
-const iconNames = Object.keys(ElementPlusIcons);
-
-/** 过滤后的图标名 */
+/** 过滤后的图标名（完整结果，用于搜索匹配与总数展示） */
 const filteredIcons = computed(() => {
   const key = keyword.value.trim().toLowerCase();
   if (!key) {
@@ -29,9 +35,34 @@ const filteredIcons = computed(() => {
   return iconNames.filter((name) => name.toLowerCase().includes(key));
 });
 
+/** 实际渲染到 DOM 的图标名（仅一个窗口，避免一次性创建大量节点） */
+const renderedIcons = computed(() => filteredIcons.value.slice(0, visibleCount.value));
+
+// 关键词变化后重置窗口，否则会出现残留过多节点或列表空白
+watch(keyword, () => {
+  visibleCount.value = BATCH_SIZE;
+});
+
+/** 追加下一批图标 */
+function loadMore(): void {
+  visibleCount.value = Math.min(visibleCount.value + BATCH_SIZE, filteredIcons.value.length);
+}
+
+/** 滚动接近底部时加载下一批 */
+function handleScroll({ scrollTop }: { scrollTop: number }): void {
+  const wrap = gridRef.value?.closest('.el-scrollbar__wrap') as HTMLElement | null;
+  if (!wrap || visibleCount.value >= filteredIcons.value.length) {
+    return;
+  }
+  if (scrollTop + wrap.clientHeight >= wrap.scrollHeight - SCROLL_THRESHOLD) {
+    loadMore();
+  }
+}
+
 /** 打开选择弹层 */
 function handleOpen(): void {
   visible.value = true;
+  visibleCount.value = BATCH_SIZE;
 }
 
 /** 选择图标 */
@@ -51,11 +82,11 @@ function handleSelect(name: string): void {
     <el-button @click="handleOpen">选择图标</el-button>
 
     <el-dialog v-model="visible" title="选择图标" width="620px" append-to-body>
-      <el-input v-model="keyword" :prefix-icon="Search" placeholder="搜索图标" clearable class="mb-3" />
-      <el-scrollbar height="360px">
-        <div class="icon-grid flex flex-wrap">
+      <el-input v-model="keyword" :prefix-icon="BIconSearch" placeholder="搜索图标" clearable class="mb-3" />
+      <el-scrollbar height="360px" @scroll="handleScroll">
+        <div ref="gridRef" class="icon-grid flex flex-wrap">
           <div
-            v-for="name in filteredIcons"
+            v-for="name in renderedIcons"
             :key="name"
             class="icon-cell flex-center"
             :class="{ active: name === modelValue }"
@@ -66,6 +97,10 @@ function handleSelect(name: string): void {
           </div>
         </div>
       </el-scrollbar>
+      <div class="icon-count-hint">
+        显示 {{ renderedIcons.length }} / {{ filteredIcons.length }}
+        <template v-if="renderedIcons.length < filteredIcons.length">，滚动加载更多</template>
+      </div>
     </el-dialog>
   </div>
 </template>
@@ -92,5 +127,12 @@ function handleSelect(name: string): void {
   color: var(--el-color-primary);
   background-color: var(--el-color-primary-light-9);
   border-color: var(--el-color-primary);
+}
+
+.icon-count-hint {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+  text-align: center;
 }
 </style>

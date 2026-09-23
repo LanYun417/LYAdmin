@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { ElMessage, type UploadRequestOptions } from 'element-plus';
-import { Plus } from '@element-plus/icons-vue';
+import { BIconPlus } from 'bootstrap-icons-vue';
 import { uploadAvatarApi } from '@/api/profile';
 import { useUserStore } from '@/store/modules/user';
 import ProfileForm from './components/ProfileForm.vue';
@@ -64,7 +64,7 @@ async function handleAvatarUpload(options: UploadRequestOptions): Promise<void> 
               :http-request="handleAvatarUpload"
             >
               <el-avatar v-loading="uploading" :size="100" :src="avatar">
-                <el-icon><Plus /></el-icon>
+                <el-icon><BIconPlus /></el-icon>
               </el-avatar>
             </el-upload>
             <div class="avatar-tip">点击更换头像</div>

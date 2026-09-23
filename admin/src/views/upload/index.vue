@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue';
 import { ElMessage, ElMessageBox, type UploadRequestOptions } from 'element-plus';
-import { Delete, UploadFilled } from '@element-plus/icons-vue';
+import { BIconArrowClockwise, BIconTrash, BIconUpload } from 'bootstrap-icons-vue';
 import { deleteFileApi, getFileListApi, uploadFilesApi } from '@/api/file';
 import { formatFileSize, formatDateTime } from '@/utils/format';
 import type { FileItem } from '@/types/api';
@@ -90,7 +90,7 @@ onMounted(() => {
         :before-upload="beforeUpload"
         :http-request="customUpload"
       >
-        <el-icon class="upload-icon"><UploadFilled /></el-icon>
+        <el-icon class="upload-icon"><BIconUpload /></el-icon>
         <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
         <template #tip>
           <div class="el-upload__tip">支持图片 / 文档 / 压缩包，单个文件不超过 10MB，单次最多 10 个</div>
@@ -102,7 +102,7 @@ onMounted(() => {
       <template #header>
         <div class="flex items-center justify-between">
           <span>文件列表</span>
-          <el-button :icon="UploadFilled" size="small" @click="loadFiles">刷新</el-button>
+          <el-button :icon="BIconArrowClockwise" size="small" @click="loadFiles">刷新</el-button>
         </div>
       </template>
       <el-table v-loading="loading" :data="fileList" border stripe>
@@ -117,7 +117,7 @@ onMounted(() => {
         <el-table-column label="操作" width="160" fixed="right">
           <template #default="{ row }">
             <el-link type="primary" :href="row.fileUrl" target="_blank" rel="noopener" class="mr-3"> 查看 </el-link>
-            <el-button type="danger" link :icon="Delete" @click="handleDelete(row as FileItem)"> 删除 </el-button>
+            <el-button type="danger" link :icon="BIconTrash" @click="handleDelete(row as FileItem)"> 删除 </el-button>
           </template>
         </el-table-column>
       </el-table>

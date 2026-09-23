@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue';
 import { ElMessage } from 'element-plus';
-import { Download, Refresh } from '@element-plus/icons-vue';
+import { BIconArrowClockwise, BIconDownload } from 'bootstrap-icons-vue';
 import { exportOperationLogsApi, getOperationLogsApi } from '@/api/log';
 import { formatDate, formatDateTime, formatDuration } from '@/utils/format';
 import { downloadBlob } from '@/utils/download';
@@ -125,13 +125,13 @@ onMounted(() => {
           <el-button
             v-permission="'log:operation:export'"
             type="primary"
-            :icon="Download"
+            :icon="BIconDownload"
             :loading="exporting"
             @click="handleExport"
           >
             导出
           </el-button>
-          <el-button :icon="Refresh" @click="loadList">刷新</el-button>
+          <el-button :icon="BIconArrowClockwise" @click="loadList">刷新</el-button>
         </div>
       </div>
 

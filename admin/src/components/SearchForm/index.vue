@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, useSlots } from 'vue';
-import { ArrowDown, ArrowUp, Refresh, Search } from '@element-plus/icons-vue';
+import { BIconArrowClockwise, BIconChevronDown, BIconChevronUp, BIconSearch } from 'bootstrap-icons-vue';
 
 defineOptions({ name: 'SearchForm' });
 
@@ -55,13 +55,13 @@ function handleReset(): void {
           </div>
         </template>
         <el-form-item class="search-buttons">
-          <el-button type="primary" :icon="Search" @click="handleSearch">查询</el-button>
-          <el-button :icon="Refresh" @click="handleReset">重置</el-button>
+          <el-button type="primary" :icon="BIconSearch" @click="handleSearch">查询</el-button>
+          <el-button :icon="BIconArrowClockwise" @click="handleReset">重置</el-button>
           <el-button v-if="collapsible && hasAdvanced" link type="primary" @click="toggle">
             {{ collapsed ? '展开' : '收起' }}
             <el-icon>
-              <ArrowDown v-if="collapsed" />
-              <ArrowUp v-else />
+              <BIconChevronDown v-if="collapsed" />
+              <BIconChevronUp v-else />
             </el-icon>
           </el-button>
         </el-form-item>

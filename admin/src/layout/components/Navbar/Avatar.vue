@@ -2,9 +2,17 @@
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessageBox } from 'element-plus';
-// 注意：Expand / Fold 是「侧边栏折叠」的方向箭头，已被 Navbar 的侧边栏开关使用。
-// 全屏切换应使用 FullScreen（进入全屏）与 Aim（退出全屏），避免两个按钮图标混淆。
-import { Aim, FullScreen, Moon, Sunny, User, SwitchButton } from '@element-plus/icons-vue';
+// 注意：BIconLayoutSidebar / BIconLayoutSidebarReverse 是「侧边栏折叠」的方向图标，
+// 已被 Navbar 的侧边栏开关使用。全屏切换使用 BIconFullscreen（进入全屏）与
+// BIconFullscreenExit（退出全屏），避免与侧边栏开关图标混淆。
+import {
+  BIconBoxArrowRight,
+  BIconFullscreen,
+  BIconFullscreenExit,
+  BIconMoon,
+  BIconPerson,
+  BIconSun,
+} from 'bootstrap-icons-vue';
 import { useUserStore } from '@/store/modules/user';
 import { usePermissionStore } from '@/store/modules/permission';
 import { useAppStore } from '@/store/modules/app';
@@ -72,15 +80,15 @@ function handlePrimaryColorChange(color: string | null): void {
   <div class="navbar-avatar flex items-center gap-2">
     <el-tooltip :content="appStore.isFullscreen ? '退出全屏' : '全屏'" placement="bottom">
       <el-icon class="navbar-action" @click="handleToggleFullscreen">
-        <FullScreen v-if="!appStore.isFullscreen" />
-        <Aim v-else />
+        <BIconFullscreen v-if="!appStore.isFullscreen" />
+        <BIconFullscreenExit v-else />
       </el-icon>
     </el-tooltip>
 
     <el-tooltip :content="isDark ? '切换亮色' : '切换暗黑'" placement="bottom">
       <el-icon class="navbar-action" @click="toggleTheme">
-        <Moon v-if="!isDark" />
-        <Sunny v-else />
+        <BIconMoon v-if="!isDark" />
+        <BIconSun v-else />
       </el-icon>
     </el-tooltip>
 
@@ -96,14 +104,14 @@ function handlePrimaryColorChange(color: string | null): void {
     <el-dropdown trigger="click">
       <div class="avatar-trigger flex items-center gap-2">
         <el-avatar :size="32" :src="avatar">
-          <el-icon><User /></el-icon>
+          <el-icon><BIconPerson /></el-icon>
         </el-avatar>
         <span class="avatar-name">{{ nickname }}</span>
       </div>
       <template #dropdown>
         <el-dropdown-menu>
-          <el-dropdown-item :icon="User" @click="goProfile">个人中心</el-dropdown-item>
-          <el-dropdown-item :icon="SwitchButton" divided @click="handleLogout"> 退出登录 </el-dropdown-item>
+          <el-dropdown-item :icon="BIconPerson" @click="goProfile">个人中心</el-dropdown-item>
+          <el-dropdown-item :icon="BIconBoxArrowRight" divided @click="handleLogout"> 退出登录 </el-dropdown-item>
         </el-dropdown-menu>
       </template>
     </el-dropdown>

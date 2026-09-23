@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Expand, Fold } from '@element-plus/icons-vue';
+import { BIconLayoutSidebar, BIconLayoutSidebarReverse, BIconList } from 'bootstrap-icons-vue';
 import { useAppStore } from '@/store/modules/app';
 import Breadcrumb from './Breadcrumb.vue';
 import Avatar from './Avatar.vue';
@@ -26,9 +26,9 @@ function handleToggle(): void {
   <div class="navbar flex items-center justify-between shadow">
     <div class="flex items-center gap-3">
       <el-icon class="navbar-toggle" @click="handleToggle">
-        <Menu v-if="appStore.isMobile" />
-        <Fold v-else-if="!appStore.sidebarCollapsed" />
-        <Expand v-else />
+        <BIconList v-if="appStore.isMobile" />
+        <BIconLayoutSidebarReverse v-else-if="!appStore.sidebarCollapsed" />
+        <BIconLayoutSidebar v-else />
       </el-icon>
       <Breadcrumb />
     </div>
