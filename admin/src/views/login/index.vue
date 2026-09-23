@@ -3,6 +3,7 @@ import { reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus';
 import { BIconLock, BIconPerson } from 'bootstrap-icons-vue';
+import logoUrl from '@/assets/logo.png';
 import { useUserStore } from '@/store/modules/user';
 import { usePermissionStore } from '@/store/modules/permission';
 import { usernameRule } from '@/utils/validate';
@@ -56,6 +57,7 @@ async function handleLogin(): Promise<void> {
   <div class="login-page flex-center">
     <div class="login-card">
       <div class="login-header">
+        <img class="login-logo" :src="logoUrl" alt="logo" />
         <h2 class="login-title">蓝云后台管理系统</h2>
         <p class="login-subtitle">LYAdmin · 通用后台管理基座</p>
       </div>
@@ -101,6 +103,13 @@ async function handleLogin(): Promise<void> {
 .login-header {
   margin-bottom: 24px;
   text-align: center;
+}
+
+.login-logo {
+  display: block;
+  width: 40px;
+  height: 40px;
+  margin: 0 auto 12px;
 }
 
 .login-title {
