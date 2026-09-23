@@ -19,7 +19,7 @@
   .el-sub-menu__title {
     position: relative;
     height: 48px;
-    margin: 4px 8px;
+    margin: 0;
     line-height: 48px;
     transition:
       background-color 0.25s ease,
@@ -65,21 +65,16 @@
 /* 多级菜单展开顺滑化（消除展开时的“抖动感”）：
  * 1) transform: translateZ(0) 把 max-height 动画的反复重排/重绘
  *    隔离到独立合成层，避免牵动整页掉帧；
- * 2) display: flow-root 建立 BFC，把子菜单项的纵向 margin 收进容器内部，
- *    消除动画结束时 margin 折叠穿透导致的 1~4px 跳动（抖动的主因）；
+ * 2) display: flow-root 建立 BFC，让展开动画期间容器高度测量稳定，
+ *    消除动画结束时的跳动；
  * 3) 仅作用于侧边栏，不影响其它 el-menu。 */
 .sidebar .el-menu--inline {
   display: flow-root;
-  margin: 0 8px;
+  margin: 0;
 
-  /* 二级菜单：内嵌浅灰面板，与白色一级菜单形成层次感（亮/暗主题自适应） */
+  /* 二级菜单：浅灰面板与白色一级菜单形成层次感（亮/暗主题自适应） */
   background-color: var(--el-fill-color);
   transform: translateZ(0);
-}
-
-/* 二级菜单项：默认透明以露出灰面板；横向收窄，让项贴近面板 */
-.sidebar .el-menu--inline .el-menu-item {
-  margin: 4px;
 }
 
 /* 二级菜单项 hover：用比面板更深的灰，保证在灰底上可见 */
@@ -94,15 +89,6 @@
     max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
     padding-top 0.3s ease,
     padding-bottom 0.3s ease;
-}
-
-/* 折叠态：去掉横向外边距，让图标居中、竖条贴左边缘 */
-.sidebar .el-menu--collapse {
-  .el-menu-item,
-  .el-sub-menu__title {
-    margin: 4px 0;
-    border-radius: 0;
-  }
 }
 
 /* 侧边栏折叠宽度统一 */
