@@ -55,10 +55,13 @@ function handleReset(): void {
   void loadList();
 }
 
-/** 状态码颜色 */
-function statusType(code: number): 'success' | 'warning' | 'danger' {
+/** 状态码颜色：2xx 成功绿 / 3xx 重定向灰 / 4xx 客户端错误黄 / 5xx 服务端错误红 */
+function statusType(code: number): 'success' | 'info' | 'warning' | 'danger' {
   if (code >= 200 && code < 300) {
     return 'success';
+  }
+  if (code >= 300 && code < 400) {
+    return 'info';
   }
   if (code >= 400 && code < 500) {
     return 'warning';

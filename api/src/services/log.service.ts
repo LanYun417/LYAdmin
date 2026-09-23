@@ -6,7 +6,7 @@ import dayjs from 'dayjs';
 import { Op, type WhereOptions } from 'sequelize';
 import { LoginLog, OperationLog } from '@/models';
 import type { PageResult } from '@/types';
-import { readHttpLogs, type HttpLogRecord } from '@/utils/logger';
+import { readHttpLogs } from '@/utils/logger';
 import { buildPageResult, parsePagination } from '@/utils/pagination';
 
 /** 操作日志写入参数。 */
@@ -52,9 +52,20 @@ export interface OperationLogItem {
   createdAt: Date;
 }
 
-/** HTTP 访问日志列表项。 */
-export interface HttpLogItem extends HttpLogRecord {
+/**
+ * HTTP 访问日志列表项（对外 API 契约）。
+ * 注意：日志文件内的字段名是 status / responseTime，
+ * 对外统一映射为 statusCode / duration，与前端 HttpLog 类型对齐。
+ */
+export interface HttpLogItem {
   id: number;
+  time: string;
+  method: string;
+  url: string;
+  statusCode: number;
+  duration: number;
+  ip: string;
+  userAgent: string;
 }
 
 /** 解析时间范围查询条件（无有效值时返回 undefined）。 */
@@ -196,7 +207,13 @@ export async function listHttpLogs(query: Record<string, unknown>): Promise<Page
 
   const items: HttpLogItem[] = list.map((record, index) => ({
     id: (page - 1) * pageSize + index + 1,
-    ...record,
+    time: record.time,
+    method: record.method,
+    url: record.url,
+    statusCode: record.status,
+    duration: record.responseTime,
+    ip: record.ip,
+    userAgent: record.userAgent,
   }));
 
   return buildPageResult(items, total, page, pageSize);
