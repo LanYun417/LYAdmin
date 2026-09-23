@@ -6,7 +6,7 @@ import { formatDateTimeInZone } from '@/utils/datetime';
 import { Op, type WhereOptions } from 'sequelize';
 import { LoginLog, OperationLog } from '@/models';
 import type { PageResult } from '@/types';
-import { readHttpLogs } from '@/utils/logger';
+import { clearAccessLog, readHttpLogs } from '@/utils/logger';
 import { buildPageResult, parsePagination } from '@/utils/pagination';
 
 /** 操作日志写入参数。 */
@@ -226,6 +226,13 @@ export async function listHttpLogs(query: Record<string, unknown>): Promise<Page
   }));
 
   return buildPageResult(items, total, page, pageSize);
+}
+
+/**
+ * 清空所有 HTTP 访问日志（截断访问日志文件）。
+ */
+export async function clearHttpLogs(): Promise<void> {
+  await clearAccessLog();
 }
 
 /** 转义 CSV 单元格。 */

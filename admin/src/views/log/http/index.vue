@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue';
-import { BIconArrowClockwise } from 'bootstrap-icons-vue';
-import { getHttpLogsApi } from '@/api/log';
+import { BIconArrowClockwise, BIconTrash } from 'bootstrap-icons-vue';
+import { ElMessage, ElMessageBox } from 'element-plus';
+import { clearHttpLogsApi, getHttpLogsApi } from '@/api/log';
 import { formatDateTime, formatDuration } from '@/utils/format';
 import type { HttpLog } from '@/types/api';
 import Pagination from '@/components/Pagination/index.vue';
@@ -103,6 +104,23 @@ function formatParams(row: HttpLog): string {
   return parts.length > 0 ? parts.join('\n\n') : '（无请求参数）';
 }
 
+/** 清空所有 HTTP 日志 */
+async function handleClear(): Promise<void> {
+  try {
+    await ElMessageBox.confirm('确定清空所有 HTTP 日志吗？此操作不可恢复。', '清空确认', {
+      type: 'warning',
+      confirmButtonText: '确定清空',
+      cancelButtonText: '取消',
+    });
+  } catch {
+    return;
+  }
+  await clearHttpLogsApi();
+  ElMessage.success('已清空所有 HTTP 日志');
+  query.page = 1;
+  await loadList();
+}
+
 onMounted(() => {
   void loadList();
 });
@@ -139,7 +157,10 @@ onMounted(() => {
     <el-card shadow="never">
       <div class="flex items-center justify-between mb-3">
         <span class="table-title">HTTP 访问日志</span>
-        <el-button :icon="BIconArrowClockwise" @click="loadList">刷新</el-button>
+        <div class="flex items-center gap-2">
+          <el-button :icon="BIconArrowClockwise" @click="loadList">刷新</el-button>
+          <el-button type="danger" plain :icon="BIconTrash" @click="handleClear">清空所有日志</el-button>
+        </div>
       </div>
 
       <el-table v-loading="loading" :data="list">

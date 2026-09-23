@@ -1,4 +1,4 @@
-import { get, request } from './request';
+import { del, get, request } from './request';
 import type {
   HttpLog,
   HttpLogQuery,
@@ -22,6 +22,11 @@ export function getOperationLogsApi(params: OperationLogQuery): Promise<PageResu
 /** HTTP 访问日志列表 */
 export function getHttpLogsApi(params: HttpLogQuery): Promise<PageResult<HttpLog>> {
   return get<PageResult<HttpLog>>('/logs/http', params);
+}
+
+/** 清空所有 HTTP 访问日志 */
+export function clearHttpLogsApi(): Promise<null> {
+  return del<null>('/logs/http');
 }
 
 /** 导出登录日志（CSV，P2） */

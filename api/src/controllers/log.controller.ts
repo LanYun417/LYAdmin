@@ -37,6 +37,12 @@ function timezoneOffsetFrom(req: Request): number | undefined {
   return Number.isFinite(offset) ? offset : undefined;
 }
 
+/** 清空所有 HTTP 访问日志。 */
+export async function clearHttpLogs(_req: Request, res: Response): Promise<void> {
+  await logService.clearHttpLogs();
+  ok(res, null, '已清空所有 HTTP 日志');
+}
+
 /** 导出登录日志 CSV。 */
 export async function exportLoginLogs(req: Request, res: Response): Promise<void> {
   const csv = await logService.exportLoginLogs(req.query as Record<string, unknown>, timezoneOffsetFrom(req));

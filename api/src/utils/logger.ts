@@ -31,8 +31,27 @@ if (!fs.existsSync(config.logDir)) {
   fs.mkdirSync(config.logDir, { recursive: true });
 }
 
-/** 访问日志写入流（追加模式）。 */
-export const accessLogStream = fs.createWriteStream(ACCESS_LOG_FILE, { flags: 'a' });
+/** 访问日志写入流（追加模式；清空日志时会重建）。 */
+let accessLogStream = fs.createWriteStream(ACCESS_LOG_FILE, { flags: 'a' });
+
+/**
+ * 清空访问日志文件。
+ * 先关闭写入流（等待句柄释放，避免 Windows 下文件占用），
+ * 再截断文件并重建流，保证后续日志继续正常写入。
+ */
+export function clearAccessLog(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    accessLogStream.end(() => {
+      try {
+        fs.writeFileSync(ACCESS_LOG_FILE, '');
+        accessLogStream = fs.createWriteStream(ACCESS_LOG_FILE, { flags: 'a' });
+        resolve();
+      } catch (error) {
+        reject(error);
+      }
+    });
+  });
+}
 
 /** 一条访问日志记录。 */
 export interface HttpLogRecord {
