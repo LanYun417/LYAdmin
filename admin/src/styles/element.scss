@@ -7,6 +7,71 @@
   border-right: none;
 }
 
+/* ============================================================
+ * 侧边栏菜单项高亮优化
+ * 默认 Element Plus 仅用字体颜色表示选中，视觉偏弱。
+ * 这里增加：激活项主色浅底 + 左侧竖条指示（带出现动画）+ 加粗，
+ * 以及 hover 浅底。全部基于 Element Plus 主题变量，亮/暗色自动适配。
+ * 仅作用于侧边栏（.sidebar），不影响其它 el-menu。
+ * ========================================================== */
+.sidebar {
+  .el-menu-item,
+  .el-sub-menu__title {
+    position: relative;
+    height: 44px;
+    margin: 4px 8px;
+    line-height: 44px;
+    border-radius: 6px;
+    transition:
+      background-color 0.25s ease,
+      color 0.25s ease;
+  }
+
+  /* hover：浅底提示，不抢选中态 */
+  .el-menu-item:not(.is-active):hover,
+  .el-sub-menu__title:hover {
+    background-color: var(--el-fill-color-light);
+  }
+
+  /* 左侧竖条指示器：默认收起，激活时展开 */
+  .el-menu-item::before {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 3px;
+    height: 22px;
+    content: '';
+    background-color: var(--el-color-primary);
+    border-radius: 0 3px 3px 0;
+    transform: translateY(-50%) scaleY(0);
+    transition: transform 0.25s ease;
+  }
+
+  .el-menu-item.is-active::before {
+    transform: translateY(-50%) scaleY(1);
+  }
+
+  /* 激活项：主色浅底 + 主色文字 + 加粗 + 图标同步主色 */
+  .el-menu-item.is-active {
+    font-weight: 600;
+    color: var(--el-color-primary);
+    background-color: var(--el-color-primary-light-9);
+
+    .el-icon {
+      color: var(--el-color-primary);
+    }
+  }
+}
+
+/* 折叠态：去掉横向外边距，让图标居中、竖条贴左边缘 */
+.sidebar .el-menu--collapse {
+  .el-menu-item,
+  .el-sub-menu__title {
+    margin: 4px 0;
+    border-radius: 0;
+  }
+}
+
 /* 侧边栏折叠宽度统一 */
 .el-menu--collapse {
   width: 64px;
