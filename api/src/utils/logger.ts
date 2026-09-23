@@ -4,8 +4,7 @@
  */
 import fs from 'fs';
 import path from 'path';
-import type { Request } from 'express';
-import morgan from 'morgan';
+import type { Request, RequestHandler, Response } from 'express';
 import { config } from '@/config';
 
 /**
@@ -44,6 +43,12 @@ export interface HttpLogRecord {
   responseTime: number;
   ip: string;
   userAgent: string;
+  /** 请求查询参数（已脱敏） */
+  query?: Record<string, unknown>;
+  /** 请求体（JSON 序列化、脱敏、超长截断） */
+  reqBody?: string;
+  /** 响应内容（截断；二进制仅记占位说明） */
+  resBody?: string;
 }
 
 /** 访问日志查询条件。 */
@@ -56,30 +61,153 @@ export interface HttpLogQuery {
   endTime?: string;
 }
 
-/**
- * morgan 自定义格式：单行 JSON，便于解析。
- * @returns morgan format 函数
- */
-export function httpLogFormat(): morgan.FormatFn {
-  return (tokens, req, res) => {
-    const record: HttpLogRecord = {
-      time: tokens.date(req, res, 'iso') ?? new Date().toISOString(),
-      method: tokens.method(req, res) ?? '',
-      url: tokens.url(req, res) ?? '',
-      status: Number(tokens.status(req, res) ?? 0),
-      responseTime: Number(tokens['response-time'](req, res) ?? 0),
-      ip: tokens['remote-addr'](req, res) ?? '',
-      userAgent: tokens['user-agent'](req, res) ?? '',
-    };
-    return `${JSON.stringify(record)}\n`;
-  };
+/** 请求/响应内容捕获与序列化上限（字节） */
+const MAX_BODY_LENGTH = 2048;
+
+/** 敏感字段名（命中后值替换为 ******） */
+const SENSITIVE_KEY_RE = /password|pwd|pass|token|secret|authorization|credential/i;
+
+/** 递归脱敏对象中的敏感字段。 */
+function redactSensitive<T>(value: T): T {
+  if (Array.isArray(value)) {
+    return value.map((item) => redactSensitive(item)) as unknown as T;
+  }
+  if (value && typeof value === 'object') {
+    const result: Record<string, unknown> = {};
+    for (const [key, val] of Object.entries(value as Record<string, unknown>)) {
+      result[key] = SENSITIVE_KEY_RE.test(key) ? '******' : redactSensitive(val);
+    }
+    return result as unknown as T;
+  }
+  return value;
+}
+
+/** 超长截断。 */
+function truncateText(text: string): string {
+  return text.length > MAX_BODY_LENGTH
+    ? `${text.slice(0, MAX_BODY_LENGTH)}
+…（内容过长，已截断）`
+    : text;
 }
 
 /**
- * 从访问日志文件中读取并筛选记录（倒序，最新在前）。
- * @param query 查询条件（含分页）
- * @returns 分页结果 `{ list, total }`
+ * 序列化请求体：对象先脱敏再紧凑序列化；纯字符串尝试按 JSON 解析脱敏。
+ * @param value 请求体（express.json 解析结果或原始字符串）
  */
+function serializeBody(value: unknown): string | undefined {
+  if (value === undefined || value === null) {
+    return undefined;
+  }
+  let text: string;
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return undefined;
+    }
+    try {
+      text = JSON.stringify(redactSensitive(JSON.parse(trimmed)));
+    } catch {
+      text = value;
+    }
+  } else {
+    try {
+      text = JSON.stringify(redactSensitive(value));
+    } catch {
+      text = String(value);
+    }
+  }
+  return truncateText(text);
+}
+
+/**
+ * 拦截 res.write / res.end 收集响应内容（最多 MAX_BODY_LENGTH 字节，超出只计数不再入内存）。
+ * @returns 读取函数：{ text, totalBytes }
+ */
+function captureResponseBody(res: Response): () => { text: string; totalBytes: number } {
+  const chunks: Buffer[] = [];
+  let capturedBytes = 0;
+  let totalBytes = 0;
+
+  const collect = (chunk: unknown): void => {
+    if (!chunk) {
+      return;
+    }
+    const buf = Buffer.isBuffer(chunk) ? chunk : Buffer.from(String(chunk));
+    totalBytes += buf.length;
+    if (capturedBytes >= MAX_BODY_LENGTH) {
+      return;
+    }
+    const remain = MAX_BODY_LENGTH - capturedBytes;
+    const slice = buf.length > remain ? buf.subarray(0, remain) : buf;
+    chunks.push(slice);
+    capturedBytes += slice.length;
+  };
+
+  type WriteArgs = Parameters<Response['write']>;
+  type EndArgs = Parameters<Response['end']>;
+  const originalWrite = res.write.bind(res) as (...args: WriteArgs) => boolean;
+  const originalEnd = res.end.bind(res) as (...args: EndArgs) => Response;
+
+  res.write = ((...args: WriteArgs) => {
+    collect(args[0]);
+    return originalWrite(...args);
+  }) as typeof res.write;
+
+  res.end = ((...args: EndArgs) => {
+    collect(args[0]);
+    return originalEnd(...args);
+  }) as typeof res.end;
+
+  return () => ({ text: Buffer.concat(chunks).toString('utf-8'), totalBytes });
+}
+
+/**
+ * HTTP 访问日志中间件（替代 morgan 落盘）：
+ * 拦截响应收集内容，finish 时以 JSON Lines 追加写入访问日志文件，
+ * 记录请求查询参数、请求体（脱敏）与响应内容（截断）。
+ */
+export function httpAccessLogger(): RequestHandler {
+  return (req, res, next) => {
+    const startAt = process.hrtime.bigint();
+    const getResponseBody = captureResponseBody(res);
+
+    res.on('finish', () => {
+      try {
+        const contentType = String(res.getHeader('content-type') ?? '');
+        const { text, totalBytes } = getResponseBody();
+
+        let resBody: string | undefined;
+        if (totalBytes > 0) {
+          resBody = /json|text|html|xml/i.test(contentType)
+            ? truncateText(text)
+            : `（二进制响应，共 ${totalBytes} 字节）`;
+        }
+
+        const hasQuery = Object.keys(req.query).length > 0;
+        const record: HttpLogRecord = {
+          time: new Date().toISOString(),
+          method: req.method,
+          url: req.originalUrl || req.url || '',
+          status: res.statusCode,
+          responseTime: Number((process.hrtime.bigint() - startAt) / 1000000n),
+          ip: getClientIp(req),
+          userAgent: req.get('user-agent') ?? '',
+          query: hasQuery ? (redactSensitive(req.query) as Record<string, unknown>) : undefined,
+          reqBody: serializeBody(req.body),
+          resBody,
+        };
+        accessLogStream.write(`${JSON.stringify(record)}
+`);
+      } catch (error) {
+        // 日志记录失败不影响业务响应
+        console.error('[HttpAccessLogger] 写入访问日志失败:', error);
+      }
+    });
+
+    next();
+  };
+}
+
 export function readHttpLogs(query: HttpLogQuery): { list: HttpLogRecord[]; total: number } {
   if (!fs.existsSync(ACCESS_LOG_FILE)) {
     return { list: [], total: 0 };

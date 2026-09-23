@@ -69,6 +69,14 @@ function statusType(code: number): 'success' | 'info' | 'warning' | 'danger' {
   return 'danger';
 }
 
+/** 格式化请求查询参数（JSON 缩进展示） */
+function formatQuery(query: Record<string, unknown> | null | undefined): string {
+  if (!query || Object.keys(query).length === 0) {
+    return '（无请求参数）';
+  }
+  return JSON.stringify(query, null, 2);
+}
+
 onMounted(() => {
   void loadList();
 });
@@ -109,6 +117,24 @@ onMounted(() => {
       </div>
 
       <el-table v-loading="loading" :data="list" border stripe>
+        <el-table-column type="expand">
+          <template #default="{ row }">
+            <div class="http-log-detail">
+              <div class="detail-block">
+                <p class="detail-title">请求参数（Query）</p>
+                <pre>{{ formatQuery(row.query) }}</pre>
+              </div>
+              <div v-if="row.reqBody" class="detail-block">
+                <p class="detail-title">请求体</p>
+                <pre>{{ row.reqBody }}</pre>
+              </div>
+              <div v-if="row.resBody" class="detail-block">
+                <p class="detail-title">响应内容</p>
+                <pre>{{ row.resBody }}</pre>
+              </div>
+            </div>
+          </template>
+        </el-table-column>
         <el-table-column prop="method" label="方法" width="100" align="center" />
         <el-table-column prop="url" label="URL" min-width="260" show-overflow-tooltip />
         <el-table-column label="状态码" width="100" align="center">
@@ -133,5 +159,33 @@ onMounted(() => {
   font-size: 15px;
   font-weight: 600;
   color: var(--el-text-color-primary);
+}
+</style>
+
+<style scoped>
+/* 展开行：请求参数 / 响应内容 详情 */
+.http-log-detail {
+  padding: 8px 16px;
+}
+
+.detail-title {
+  margin: 10px 0 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--el-text-color-secondary);
+}
+
+.detail-block pre {
+  max-height: 240px;
+  padding: 10px 12px;
+  margin: 0;
+  overflow: auto;
+  font-family: Consolas, Monaco, 'Courier New', monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  word-break: break-all;
+  white-space: pre-wrap;
+  background-color: var(--el-fill-color-light);
+  border-radius: 4px;
 }
 </style>

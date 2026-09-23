@@ -66,6 +66,12 @@ export interface HttpLogItem {
   duration: number;
   ip: string;
   userAgent: string;
+  /** 请求查询参数（已脱敏） */
+  query?: Record<string, unknown>;
+  /** 请求体（已脱敏、截断） */
+  reqBody?: string;
+  /** 响应内容（已截断；二进制为占位说明） */
+  resBody?: string;
 }
 
 /** 解析时间范围查询条件（无有效值时返回 undefined）。 */
@@ -214,6 +220,9 @@ export async function listHttpLogs(query: Record<string, unknown>): Promise<Page
     duration: record.responseTime,
     ip: record.ip,
     userAgent: record.userAgent,
+    query: record.query,
+    reqBody: record.reqBody,
+    resBody: record.resBody,
   }));
 
   return buildPageResult(items, total, page, pageSize);

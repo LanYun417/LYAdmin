@@ -9,7 +9,7 @@ import { config } from '@/config';
 import { errorHandler, notFoundHandler } from '@/middlewares/errorHandler';
 import { operationLog } from '@/middlewares/operationLog';
 import routes from '@/routes';
-import { accessLogStream, httpLogFormat } from '@/utils/logger';
+import { httpAccessLogger } from '@/utils/logger';
 import { ok } from '@/utils/response';
 
 /**
@@ -30,8 +30,8 @@ export function createApp(): Express {
     }),
   );
 
-  // 访问日志：文件（JSON Lines）+ 控制台
-  app.use(morgan(httpLogFormat(), { stream: accessLogStream }));
+  // 访问日志：文件（JSON Lines，含请求参数/请求体/响应内容，敏感字段脱敏）+ 控制台
+  app.use(httpAccessLogger());
   app.use(morgan('dev'));
 
   // 请求体解析

@@ -214,6 +214,12 @@ export interface HttpLog {
   duration: number;
   ip: string;
   time: string;
+  /** 请求查询参数（已脱敏） */
+  query?: Record<string, unknown> | null;
+  /** 请求体（已脱敏、截断） */
+  reqBody?: string | null;
+  /** 响应内容（已截断；二进制为占位说明） */
+  resBody?: string | null;
 }
 
 /** HTTP 日志查询参数 */
