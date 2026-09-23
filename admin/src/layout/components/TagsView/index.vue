@@ -39,6 +39,19 @@ function closeView(view: TagView): void {
   }
 }
 
+/**
+ * 离场标签脱离文档流（position: absolute）后，flex 容器会把它按
+ * 「唯一 flex 项」的规则重置到起点，导致原地淡出失效。
+ * 在脱离文档流前把当前坐标钉死为内联 left/top，让被关标签
+ * 原地淡出，右侧标签才能获得正确的 FLIP 左移递进。
+ */
+function pinLeavingTag(el: Element): void {
+  const elm = el as HTMLElement;
+  const { offsetLeft, offsetTop } = elm;
+  elm.style.left = `${offsetLeft}px`;
+  elm.style.top = `${offsetTop}px`;
+}
+
 /** 打开右键菜单 */
 function openContextMenu(event: MouseEvent, view: TagView): void {
   event.preventDefault();
@@ -104,7 +117,7 @@ onBeforeUnmount(() => {
 <template>
   <div class="tags-view flex items-center">
     <el-scrollbar class="tags-scroll">
-      <div class="tags-wrap flex items-center">
+      <TransitionGroup tag="div" name="tag" class="tags-wrap flex items-center" @before-leave="pinLeavingTag">
         <el-tag
           v-for="view in visitedViews"
           :key="view.path"
@@ -120,7 +133,7 @@ onBeforeUnmount(() => {
         >
           {{ view.title }}
         </el-tag>
-      </div>
+      </TransitionGroup>
     </el-scrollbar>
 
     <div
@@ -146,6 +159,7 @@ onBeforeUnmount(() => {
 }
 
 .tags-wrap {
+  position: relative;
   gap: 6px;
   padding: 5px 0;
 }
@@ -156,6 +170,44 @@ onBeforeUnmount(() => {
   cursor: pointer;
   border-radius: 3px;
   box-shadow: var(--el-box-shadow-lighter);
+}
+
+/* ============================================================
+ * 标签页关闭 → 右侧标签左移递进（FLIP move 动画）
+ * - 触发：visitedViews 数组移除元素（点 × / 右键关闭当前 /
+ *   关闭其他 / 关闭全部），TransitionGroup 在 DOM 移除时挂类；
+ * - 位移：右侧每个标签沿 X 轴左移「原位置 − 新位置」的距离
+ *   （= 被关标签宽 + 6px gap），由 FLIP 实测，不硬编码；
+ * - 缓动/时长：递进 0.25s cubic-bezier(0.4,0,0.2,1)（快出缓收）；
+ *   被关标签原地 0.15s ease-out 淡出并缩小，先于递进结束，
+ *   避免残影与滑动中的标签互相遮挡。
+ * ========================================================== */
+.tag-move {
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tag-leave-active {
+  position: absolute;
+  transition:
+    opacity 0.15s ease-out,
+    transform 0.15s ease-out;
+}
+
+.tag-leave-to {
+  opacity: 0;
+  transform: scale(0.85);
+}
+
+/* 新开标签：从右侧轻微滑入淡现（刷新恢复走初始挂载，不触发） */
+.tag-enter-active {
+  transition:
+    opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tag-enter-from {
+  opacity: 0;
+  transform: translateX(10px);
 }
 
 .tags-context-menu {
