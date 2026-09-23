@@ -24,7 +24,6 @@ export const sequelize = new Sequelize({
     collate: 'utf8mb4_general_ci',
   },
   dialectOptions: {
-    dateStrings: true,
     typeCast: true,
     charset: 'utf8mb4',
   },

@@ -2,7 +2,7 @@
  * 日志服务。
  * 模块职责：登录/操作日志查询与写入、HTTP 访问日志读取、日志导出（CSV）。
  */
-import dayjs from 'dayjs';
+import { formatDateTimeInZone } from '@/utils/datetime';
 import { Op, type WhereOptions } from 'sequelize';
 import { LoginLog, OperationLog } from '@/models';
 import type { PageResult } from '@/types';
@@ -248,7 +248,7 @@ function toCsv(headers: string[], rows: unknown[][]): string {
  * 导出登录日志 CSV。
  * @param query 筛选条件
  */
-export async function exportLoginLogs(query: Record<string, unknown>): Promise<string> {
+export async function exportLoginLogs(query: Record<string, unknown>, timezoneOffset?: number): Promise<string> {
   const { list } = await listLoginLogs({ ...query, page: 1, pageSize: 10000 });
   const rows = list.map((item) => [
     item.id,
@@ -257,7 +257,7 @@ export async function exportLoginLogs(query: Record<string, unknown>): Promise<s
     item.status === 1 ? '成功' : '失败',
     item.message,
     item.userAgent,
-    dayjs(item.loginAt).format('YYYY-MM-DD HH:mm:ss'),
+    formatDateTimeInZone(item.loginAt, timezoneOffset),
   ]);
   return toCsv(['ID', '账号', 'IP', '结果', '描述', 'User-Agent', '登录时间'], rows);
 }
@@ -266,7 +266,7 @@ export async function exportLoginLogs(query: Record<string, unknown>): Promise<s
  * 导出操作日志 CSV。
  * @param query 筛选条件
  */
-export async function exportOperationLogs(query: Record<string, unknown>): Promise<string> {
+export async function exportOperationLogs(query: Record<string, unknown>, timezoneOffset?: number): Promise<string> {
   const { list } = await listOperationLogs({ ...query, page: 1, pageSize: 10000 });
   const rows = list.map((item) => [
     item.id,
@@ -280,7 +280,7 @@ export async function exportOperationLogs(query: Record<string, unknown>): Promi
     item.result === 1 ? '成功' : '失败',
     item.errorMessage,
     item.ip,
-    dayjs(item.createdAt).format('YYYY-MM-DD HH:mm:ss'),
+    formatDateTimeInZone(item.createdAt, timezoneOffset),
   ]);
   return toCsv(['ID', '模块', '动作', '操作人', '方法', 'URL', '参数', '耗时', '结果', '错误信息', 'IP', '时间'], rows);
 }

@@ -24,9 +24,22 @@ export async function httpLogs(req: Request, res: Response): Promise<void> {
   ok(res, result);
 }
 
+/**
+ * 读取客户端时区偏移（前端每次请求携带 X-Timezone-Offset，
+ * 值为浏览器 getTimezoneOffset() 的分钟数，如北京时间 -480）。
+ */
+function timezoneOffsetFrom(req: Request): number | undefined {
+  const raw = req.get('x-timezone-offset');
+  if (raw === undefined || raw === '') {
+    return undefined;
+  }
+  const offset = Number(raw);
+  return Number.isFinite(offset) ? offset : undefined;
+}
+
 /** 导出登录日志 CSV。 */
 export async function exportLoginLogs(req: Request, res: Response): Promise<void> {
-  const csv = await logService.exportLoginLogs(req.query as Record<string, unknown>);
+  const csv = await logService.exportLoginLogs(req.query as Record<string, unknown>, timezoneOffsetFrom(req));
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');
   res.setHeader('Content-Disposition', `attachment; filename="login-logs-${Date.now()}.csv"`);
   res.send(csv);
@@ -34,7 +47,7 @@ export async function exportLoginLogs(req: Request, res: Response): Promise<void
 
 /** 导出操作日志 CSV。 */
 export async function exportOperationLogs(req: Request, res: Response): Promise<void> {
-  const csv = await logService.exportOperationLogs(req.query as Record<string, unknown>);
+  const csv = await logService.exportOperationLogs(req.query as Record<string, unknown>, timezoneOffsetFrom(req));
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');
   res.setHeader('Content-Disposition', `attachment; filename="operation-logs-${Date.now()}.csv"`);
   res.send(csv);

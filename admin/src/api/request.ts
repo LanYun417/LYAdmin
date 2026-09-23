@@ -89,6 +89,8 @@ service.interceptors.request.use(
     if (token) {
       config.headers.set('Authorization', `Bearer ${token}`);
     }
+    // 告知后端当前用户时区偏移（CSV 导出等由后端按用户时区格式化时间）
+    config.headers.set('X-Timezone-Offset', String(new Date().getTimezoneOffset()));
     if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
       // 交由浏览器自动携带 multipart boundary
       config.headers.delete('Content-Type');
