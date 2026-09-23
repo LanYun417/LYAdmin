@@ -2,7 +2,7 @@
 import { onMounted, reactive, ref } from 'vue';
 import { BIconArrowClockwise } from 'bootstrap-icons-vue';
 import { getHttpLogsApi } from '@/api/log';
-import { formatDuration } from '@/utils/format';
+import { formatDateTime, formatDuration } from '@/utils/format';
 import type { HttpLog } from '@/types/api';
 import Pagination from '@/components/Pagination/index.vue';
 import SearchForm from '@/components/SearchForm/index.vue';
@@ -146,7 +146,9 @@ onMounted(() => {
           <template #default="{ row }">{{ formatDuration(row.duration) }}</template>
         </el-table-column>
         <el-table-column prop="ip" label="IP" width="150" />
-        <el-table-column prop="time" label="时间" width="200" show-overflow-tooltip />
+        <el-table-column label="时间" width="180">
+          <template #default="{ row }">{{ formatDateTime(row.time) }}</template>
+        </el-table-column>
       </el-table>
 
       <Pagination v-model:page="query.page" v-model:page-size="query.pageSize" :total="total" @change="loadList" />

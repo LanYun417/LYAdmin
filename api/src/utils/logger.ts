@@ -168,6 +168,12 @@ function captureResponseBody(res: Response): () => { text: string; totalBytes: n
  */
 export function httpAccessLogger(): RequestHandler {
   return (req, res, next) => {
+    // 只记录后端 API 请求：静态资源（/uploads）等其他请求一律不记录
+    if (!req.path.startsWith('/api/')) {
+      next();
+      return;
+    }
+
     const startAt = process.hrtime.bigint();
     const getResponseBody = captureResponseBody(res);
 
@@ -227,6 +233,10 @@ export function readHttpLogs(query: HttpLogQuery): { list: HttpLogRecord[]; tota
   }
 
   const filtered = records.filter((record) => {
+    // 兼容历史数据：只展示后端 API 请求（中间件层现已仅记录 /api/*）
+    if (!record.url.startsWith('/api')) {
+      return false;
+    }
     if (query.method && record.method.toUpperCase() !== query.method.toUpperCase()) {
       return false;
     }
