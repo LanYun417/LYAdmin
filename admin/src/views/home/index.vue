@@ -13,7 +13,7 @@ import TrendChart from './components/TrendChart.vue';
 import PieChart from './components/PieChart.vue';
 import BarChart from './components/BarChart.vue';
 
-defineOptions({ name: 'Home' });
+defineOptions({ name: 'HomePage' });
 
 const loading = ref(false);
 const stats = ref<DashboardStats>({
@@ -56,7 +56,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div v-loading="loading" class="dashboard-page">
+  <div v-loading="loading" class="home-page">
     <el-row :gutter="16">
       <el-col :xs="24" :sm="12" :md="6">
         <StatCard title="用户总数" :value="stats.userTotal" :icon="BIconPerson" color="#409eff" />

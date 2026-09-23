@@ -26,6 +26,22 @@ function toPascalCase(input: string): string {
     .join('');
 }
 
+/**
+ * 路由名覆盖：path → 页面组件 defineOptions name。
+ *
+ * keep-alive 的 `:include` 按**组件名**匹配，而本文件默认用 `toPascalCase(path)`
+ * 作为路由名。当某页面的组件名与该默认值不一致时（例如首页组件名为 `HomePage`
+ * 而非默认的 `Home`），必须在此显式声明，否则首页的缓存不会命中。
+ */
+const ROUTE_NAME_OVERRIDES: Record<string, string> = {
+  '/home': 'HomePage',
+};
+
+/** 解析路由名：优先使用覆盖表，否则回退到 PascalCase(path) */
+function resolveRouteName(fullPath: string): string {
+  return ROUTE_NAME_OVERRIDES[fullPath] ?? toPascalCase(fullPath);
+}
+
 /** 归一化后端下发的组件路径 */
 function normalizeComponentPath(component?: string | null): string | undefined {
   if (!component) {
@@ -166,7 +182,7 @@ function buildRoutes(menus: MenuNode[], parentPath: string): RouteRecordRaw[] {
     }
     const fullPath = resolveFullPath(rawPath, parentPath);
     const childPath = toChildPath(fullPath, parentPath, segment);
-    const routeName = toPascalCase(fullPath);
+    const routeName = resolveRouteName(fullPath);
     const meta: AppRouteMeta = {
       title: menu.menuName,
       icon: menu.icon ?? undefined,

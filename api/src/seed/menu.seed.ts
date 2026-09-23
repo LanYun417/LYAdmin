@@ -29,7 +29,7 @@ const MENU_TREE: MenuSeedNode[] = [
     menuName: '首页',
     menuType: MenuType.MENU,
     path: '/home',
-    component: 'dashboard/index',
+    component: 'home/index',
     icon: 'BIconSpeedometer2',
     sort: 1,
     visible: Status.ENABLED,
