@@ -168,8 +168,11 @@ function captureResponseBody(res: Response): () => { text: string; totalBytes: n
  */
 export function httpAccessLogger(): RequestHandler {
   return (req, res, next) => {
-    // 只记录后端 API 请求：静态资源（/uploads）等其他请求一律不记录
-    if (!req.path.startsWith('/api/')) {
+    // 只记录后端 API 请求：静态资源（/uploads）等其他请求一律不记录。
+    // 注意：必须用 originalUrl（挂载前完整路径）——req.path 是随 req.url
+    // 变化的惰性属性，finish 时已被路由剥掉挂载前缀（如 /stats）。
+    const requestPath = (req.originalUrl || req.url || '').split('?')[0];
+    if (!requestPath.startsWith('/api/')) {
       next();
       return;
     }
@@ -182,8 +185,12 @@ export function httpAccessLogger(): RequestHandler {
         const contentType = String(res.getHeader('content-type') ?? '');
         const { text, totalBytes } = getResponseBody();
 
+        // 获取日志数据的接口（/api/logs/*）：响应本身就是日志列表，
+        // 再记录会造成递归噪音，故不记录其响应内容
+        const skipResBody = requestPath.startsWith('/api/logs');
+
         let resBody: string | undefined;
-        if (totalBytes > 0) {
+        if (!skipResBody && totalBytes > 0) {
           resBody = /json|text|html|xml/i.test(contentType)
             ? truncateText(text)
             : `（二进制响应，共 ${totalBytes} 字节）`;

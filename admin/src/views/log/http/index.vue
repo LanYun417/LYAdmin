@@ -69,12 +69,38 @@ function statusType(code: number): 'success' | 'info' | 'warning' | 'danger' {
   return 'danger';
 }
 
-/** 格式化请求查询参数（JSON 缩进展示） */
+/** 格式化请求查询参数（JSON 缩进展示），无参数返回空串 */
 function formatQuery(query: Record<string, unknown> | null | undefined): string {
   if (!query || Object.keys(query).length === 0) {
-    return '（无请求参数）';
+    return '';
   }
   return JSON.stringify(query, null, 2);
+}
+
+/** 请求体美化：能解析的压缩 JSON 展开为缩进格式 */
+function formatBody(body: string | null | undefined): string {
+  if (!body) {
+    return '';
+  }
+  try {
+    return JSON.stringify(JSON.parse(body), null, 2);
+  } catch {
+    return body;
+  }
+}
+
+/** 合并完整请求参数：Query + 请求体 */
+function formatParams(row: HttpLog): string {
+  const parts: string[] = [];
+  const queryText = formatQuery(row.query);
+  if (queryText) {
+    parts.push(`【Query】\n${queryText}`);
+  }
+  const bodyText = formatBody(row.reqBody);
+  if (bodyText) {
+    parts.push(`【Body】\n${bodyText}`);
+  }
+  return parts.length > 0 ? parts.join('\n\n') : '（无请求参数）';
 }
 
 onMounted(() => {
@@ -121,12 +147,8 @@ onMounted(() => {
           <template #default="{ row }">
             <div class="http-log-detail">
               <div class="detail-block">
-                <p class="detail-title">请求参数（Query）</p>
-                <pre>{{ formatQuery(row.query) }}</pre>
-              </div>
-              <div v-if="row.reqBody" class="detail-block">
-                <p class="detail-title">请求体</p>
-                <pre>{{ row.reqBody }}</pre>
+                <p class="detail-title">请求参数（Query + Body，敏感字段已脱敏）</p>
+                <pre>{{ formatParams(row) }}</pre>
               </div>
               <div v-if="row.resBody" class="detail-block">
                 <p class="detail-title">响应内容</p>
