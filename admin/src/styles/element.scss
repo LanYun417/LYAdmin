@@ -63,6 +63,26 @@
   }
 }
 
+/* 多级菜单展开顺滑化（消除展开时的“抖动感”）：
+ * 1) transform: translateZ(0) 把 max-height 动画的反复重排/重绘
+ *    隔离到独立合成层，避免牵动整页掉帧；
+ * 2) display: flow-root 建立 BFC，把子菜单项的纵向 margin 收进容器内部，
+ *    消除动画结束时 margin 折叠穿透导致的 1~4px 跳动（抖动的主因）；
+ * 3) 仅作用于侧边栏，不影响其它 el-menu。 */
+.sidebar .el-menu--inline {
+  display: flow-root;
+  transform: translateZ(0);
+}
+
+/* 展开/收起过渡改用更自然的缓动曲线，减少“突跳”观感 */
+.sidebar .el-collapse-transition-enter-active,
+.sidebar .el-collapse-transition-leave-active {
+  transition:
+    max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    padding-top 0.3s ease,
+    padding-bottom 0.3s ease;
+}
+
 /* 折叠态：去掉横向外边距，让图标居中、竖条贴左边缘 */
 .sidebar .el-menu--collapse {
   .el-menu-item,
