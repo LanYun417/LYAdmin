@@ -148,7 +148,7 @@ onMounted(() => {
             <div class="http-log-detail">
               <div class="detail-block">
                 <p class="detail-title">请求参数（Query + Body，敏感字段已脱敏）</p>
-                <pre>{{ formatParams(row) }}</pre>
+                <pre>{{ formatParams(row as HttpLog) }}</pre>
               </div>
               <div v-if="row.resBody" class="detail-block">
                 <p class="detail-title">响应内容</p>
