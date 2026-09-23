@@ -47,34 +47,25 @@ function beforeUpload(file: File): boolean {
 async function doUpload(options: UploadRequestOptions, file: File): Promise<void> {
   const res = await uploadFilesApi([file]);
   options.onSuccess?.(res);
-  const dedup = res.some((item) => item.deduplicated);
-  ElMessage.success(dedup ? '上传成功：内容与库内文件一致，已自动去重' : '上传成功');
+  ElMessage.success('上传成功');
   await loadFiles();
 }
 
-/** 自定义上传：先算哈希预检，命中则提示秒传，否则正常上传 */
+/**
+ * 自定义上传：先算哈希预检，命中库内已有内容则静默秒传（不重复
+ * 上传文件体、不提示重复），否则正常上传；两者对外表现一致。
+ */
 async function customUpload(options: UploadRequestOptions): Promise<void> {
   const file = options.file as unknown as File;
   try {
     const hash = await sha256Hex(file);
     const check = await checkFileApi(hash);
 
-    if (check.exists && check.file) {
-      const existing = check.file;
-      try {
-        await ElMessageBox.confirm(
-          `库内已存在相同内容的文件「${existing.originName}」（${formatFileSize(existing.size)}，上传于 ${formatDateTime(existing.createdAt)}）。可以选择秒传（不重复上传文件体），或仍然重新上传一份。`,
-          '发现重复文件',
-          { confirmButtonText: '秒传', cancelButtonText: '仍然上传', type: 'warning' },
-        );
-      } catch {
-        // 用户选择“仍然上传”：走正常上传，后端仍会做内容去重兜底
-        await doUpload(options, file);
-        return;
-      }
+    if (check.exists) {
+      // 静默秒传：复用既有物理文件，仅新增引用记录
       const created = await instantUploadApi(hash, file.name);
       options.onSuccess?.(created);
-      ElMessage.success('秒传成功：未重复上传文件体');
+      ElMessage.success('上传成功');
       await loadFiles();
       return;
     }
