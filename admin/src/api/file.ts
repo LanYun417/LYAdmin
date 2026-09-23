@@ -1,4 +1,4 @@
-import { del, get, post, request } from './request';
+import { del, get, request } from './request';
 import type { FileItem, FileQuery, PageResult } from '@/types/api';
 
 /** 上传文件（支持 1~10 个） */
@@ -25,9 +25,4 @@ export function deleteFileApi(id: number): Promise<null> {
 /** 秒传预检：按内容哈希查询库内是否已存在相同文件 */
 export function checkFileApi(hash: string): Promise<{ exists: boolean; file: FileItem | null }> {
   return get<{ exists: boolean; file: FileItem | null }>('/files/check', { hash });
-}
-
-/** 秒传：不传文件体，按哈希复用库内物理文件 */
-export function instantUploadApi(hash: string, originName: string): Promise<FileItem> {
-  return post<FileItem>('/files/instant', { hash, originName });
 }

@@ -37,19 +37,6 @@ export async function check(req: Request, res: Response): Promise<void> {
   ok(res, { exists: file !== null, file });
 }
 
-/** 秒传：不传文件体，按哈希复用库内物理文件。 */
-export async function instant(req: Request, res: Response): Promise<void> {
-  const { hash, originName } = (req.body ?? {}) as { hash?: string; originName?: string };
-  const normalizedHash = String(hash ?? '').toLowerCase();
-  assertValidHash(normalizedHash);
-  const name = String(originName ?? '').trim();
-  if (!name) {
-    throw AppError.badRequest('originName 不能为空');
-  }
-  const file = await fileService.instantUpload(normalizedHash, name, req.user?.userId ?? null);
-  ok(res, file, '秒传成功');
-}
-
 /** 删除文件。 */
 export async function remove(req: Request, res: Response): Promise<void> {
   const id = Number(req.params.id);

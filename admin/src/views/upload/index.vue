@@ -2,7 +2,7 @@
 import { onMounted, reactive, ref } from 'vue';
 import { ElMessage, ElMessageBox, type UploadRequestOptions } from 'element-plus';
 import { BIconArrowClockwise, BIconUpload } from 'bootstrap-icons-vue';
-import { deleteFileApi, checkFileApi, getFileListApi, instantUploadApi, uploadFilesApi } from '@/api/file';
+import { deleteFileApi, checkFileApi, getFileListApi, uploadFilesApi } from '@/api/file';
 import { sha256Hex } from '@/utils/hash';
 import { formatFileSize, formatDateTime } from '@/utils/format';
 import type { FileItem } from '@/types/api';
@@ -52,8 +52,9 @@ async function doUpload(options: UploadRequestOptions, file: File): Promise<void
 }
 
 /**
- * 自定义上传：先算哈希预检，命中库内已有内容则静默秒传（不重复
- * 上传文件体、不提示重复），否则正常上传；两者对外表现一致。
+ * 自定义上传：先算哈希预检，命中库内已有内容则静默秒传——不上传
+ * 文件体、不提示重复、也不新增任何记录（库内已有该文件），对外
+ * 与正常上传表现一致；未命中则正常上传。
  */
 async function customUpload(options: UploadRequestOptions): Promise<void> {
   const file = options.file as unknown as File;
@@ -62,11 +63,9 @@ async function customUpload(options: UploadRequestOptions): Promise<void> {
     const check = await checkFileApi(hash);
 
     if (check.exists) {
-      // 静默秒传：复用既有物理文件，仅新增引用记录
-      const created = await instantUploadApi(hash, file.name);
-      options.onSuccess?.(created);
+      // 静默秒传：库内已有同内容文件，不重复上传也不新增记录
+      options.onSuccess?.(null);
       ElMessage.success('上传成功');
-      await loadFiles();
       return;
     }
 

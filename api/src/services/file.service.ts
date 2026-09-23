@@ -90,9 +90,8 @@ export async function saveFiles(files: Express.Multer.File[], uploaderId: number
     const absolutePath = path.isAbsolute(file.path) ? file.path : path.resolve(config.rootDir, file.path);
     const hash = await computeSha256(absolutePath);
 
-    // 内容去重：同哈希物理文件已存在 → 秒传。
-    // 删除本次上传的物理文件，新记录复用既有 filePath/fileUrl；
-    // 引用计数不落库，删除时按同 filePath 行数动态判断是否删盘。
+    // 内容去重：同哈希文件已存在 → 秒传语义（库里已有，不新增任何记录）。
+    // 清理本次上传的物理文件，直接返回既有记录并标记 deduplicated。
     const existing = await File.findOne({ where: { hash }, order: [['id', 'ASC']] });
 
     if (existing) {
@@ -102,18 +101,7 @@ export async function saveFiles(files: Express.Multer.File[], uploaderId: number
         console.error('[FileService] 清理重复上传的物理文件失败:', error);
       }
 
-      const record = await File.create({
-        originName,
-        fileName: existing.fileName,
-        filePath: existing.filePath,
-        fileUrl: existing.fileUrl,
-        mimeType: file.mimetype,
-        size: file.size,
-        uploaderId,
-        hash,
-      });
-
-      items.push({ ...toFileItem(record), deduplicated: true });
+      items.push({ ...toFileItem(existing), deduplicated: true });
       continue;
     }
 
@@ -145,32 +133,6 @@ export async function saveFiles(files: Express.Multer.File[], uploaderId: number
 export async function checkFileByHash(hash: string): Promise<FileItem | null> {
   const record = await File.findOne({ where: { hash }, order: [['id', 'ASC']] });
   return record ? toFileItem(record) : null;
-}
-
-/**
- * 秒传：不接收文件体，按哈希复用既有物理文件，仅创建新的引用记录。
- * @param hash SHA-256 十六进制
- * @param originName 本次上传使用的原始文件名
- * @param uploaderId 上传人 id
- */
-export async function instantUpload(hash: string, originName: string, uploaderId: number | null): Promise<FileItem> {
-  const existing = await File.findOne({ where: { hash }, order: [['id', 'ASC']] });
-  if (!existing) {
-    throw AppError.notFound('库中不存在相同内容的文件，无法秒传');
-  }
-
-  const record = await File.create({
-    originName,
-    fileName: existing.fileName,
-    filePath: existing.filePath,
-    fileUrl: existing.fileUrl,
-    mimeType: existing.mimeType,
-    size: Number(existing.size),
-    uploaderId,
-    hash,
-  });
-
-  return { ...toFileItem(record), deduplicated: true };
 }
 
 /**

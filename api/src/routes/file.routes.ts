@@ -16,9 +16,8 @@ router.use(authenticate);
 // 上传：兼容任意字段名（files / files[] / file），单次上限由 multer limits 控制
 router.post('/upload', requirePermission('file:upload'), upload.any(), asyncHandler(fileController.upload));
 
-// 秒传预检与秒传：与上传同权限码
+// 秒传预检：与上传同权限码（命中重复时前端直接静默成功，不新增记录）
 router.get('/check', requirePermission('file:upload'), asyncHandler(fileController.check));
-router.post('/instant', requirePermission('file:upload'), asyncHandler(fileController.instant));
 
 router.get('/', requirePermission('file:list'), asyncHandler(fileController.list));
 
