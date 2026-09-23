@@ -136,7 +136,7 @@ onMounted(() => {
           <el-button :icon="BIconArrowClockwise" size="small" @click="loadFiles">刷新</el-button>
         </div>
       </template>
-      <el-table v-loading="loading" :data="fileList" border stripe>
+      <el-table v-loading="loading" :data="fileList">
         <el-table-column prop="originName" label="文件名" min-width="200" show-overflow-tooltip />
         <el-table-column prop="mimeType" label="类型" width="160" show-overflow-tooltip />
         <el-table-column label="大小" width="110">

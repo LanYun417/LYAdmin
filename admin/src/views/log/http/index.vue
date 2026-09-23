@@ -116,7 +116,7 @@ onMounted(() => {
         <el-button :icon="BIconArrowClockwise" @click="loadList">刷新</el-button>
       </div>
 
-      <el-table v-loading="loading" :data="list" border stripe>
+      <el-table v-loading="loading" :data="list">
         <el-table-column type="expand">
           <template #default="{ row }">
             <div class="http-log-detail">
