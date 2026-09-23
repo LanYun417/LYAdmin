@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, reactive, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { BIconX } from 'bootstrap-icons-vue';
 import { useTagsViewStore, type TagView } from '@/store/modules/tagsView';
 
 defineOptions({ name: 'TagsView' });
@@ -92,6 +91,8 @@ watch(
 );
 
 onMounted(() => {
+  // 刷新后从已注册路由补齐固定标签（如首页），保证其常驻并显示在第一个位置
+  tagsViewStore.ensureAffixViews(router.getRoutes());
   document.addEventListener('click', closeContextMenu);
 });
 
@@ -104,19 +105,21 @@ onBeforeUnmount(() => {
   <div class="tags-view flex items-center">
     <el-scrollbar class="tags-scroll">
       <div class="tags-wrap flex items-center">
-        <div
+        <el-tag
           v-for="view in visitedViews"
           :key="view.path"
-          class="tags-item shadow-md"
+          class="tags-item"
           :class="{ active: isActive(view) }"
+          :type="isActive(view) ? 'primary' : 'info'"
+          :effect="isActive(view) ? 'dark' : 'light'"
+          :closable="!view.affix"
+          :disable-transitions="true"
           @click="toView(view)"
+          @close="closeView(view)"
           @contextmenu="openContextMenu($event, view)"
         >
-          <span class="tags-title">{{ view.title }}</span>
-          <el-icon v-if="!view.affix" class="tags-close" @click.stop="closeView(view)">
-            <BIconX />
-          </el-icon>
-        </div>
+          {{ view.title }}
+        </el-tag>
       </div>
     </el-scrollbar>
 
@@ -148,31 +151,11 @@ onBeforeUnmount(() => {
 }
 
 .tags-item {
-  display: inline-flex;
-  align-items: center;
   height: 26px;
-  padding: 0 8px;
   font-size: 12px;
-  color: var(--el-text-color-regular);
   cursor: pointer;
-  background-color: var(--el-fill-color-light);
-  border: 1px solid var(--el-border-color-light);
   border-radius: 3px;
-}
-
-.tags-item.active {
-  color: #fff;
-  background-color: var(--el-color-primary);
-  border-color: var(--el-color-primary);
-}
-
-.tags-close {
-  margin-left: 4px;
-  font-size: 12px;
-}
-
-.tags-close:hover {
-  color: var(--el-color-danger);
+  box-shadow: var(--el-box-shadow-lighter);
 }
 
 .tags-context-menu {

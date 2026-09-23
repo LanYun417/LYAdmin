@@ -77,7 +77,7 @@ function handlePrimaryColorChange(color: string | null): void {
 </script>
 
 <template>
-  <div class="navbar-avatar flex items-center gap-2">
+  <div class="navbar-avatar flex items-center gap-4">
     <el-tooltip :content="appStore.isFullscreen ? '退出全屏' : '全屏'" placement="bottom">
       <el-icon class="navbar-action" @click="handleToggleFullscreen">
         <BIconFullscreen v-if="!appStore.isFullscreen" />
