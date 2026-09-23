@@ -79,6 +79,9 @@ function closeDrawer(): void {
   overflow: hidden;
   background-color: var(--el-bg-color);
   border-right: 1px solid var(--el-border-color-light);
+
+  /* 桌面端：右侧柔和投影，与内容区分层 */
+  box-shadow: 4px 0 12px rgb(0 0 0 / 8%);
   transition: width 0.28s;
 }
 
@@ -128,6 +131,9 @@ function closeDrawer(): void {
   left: 0;
   z-index: 1001;
   width: 210px;
+
+  /* 移动端抽屉：悬浮于内容之上，投影加强以突出层级 */
+  box-shadow: 4px 0 24px rgb(0 0 0 / 18%);
   transform: translateX(-100%);
   transition: transform 0.28s ease;
 }
