@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { BIconSearch, iconNames } from 'bootstrap-icons-vue';
+import BasicDialog from '@/components/BasicDialog/index.vue';
 
 defineOptions({ name: 'IconSelect' });
 
@@ -81,7 +82,7 @@ function handleSelect(name: string): void {
     </el-input>
     <el-button @click="handleOpen">选择图标</el-button>
 
-    <el-dialog v-model="visible" title="选择图标" width="620px" append-to-body>
+    <BasicDialog v-model="visible" title="选择图标" width="620px" :show-footer="false" append-to-body>
       <el-input v-model="keyword" :prefix-icon="BIconSearch" placeholder="搜索图标" clearable class="mb-3" />
       <el-scrollbar height="360px" @scroll="handleScroll">
         <div ref="gridRef" class="icon-grid flex flex-wrap">
@@ -101,7 +102,7 @@ function handleSelect(name: string): void {
         显示 {{ renderedIcons.length }} / {{ filteredIcons.length }}
         <template v-if="renderedIcons.length < filteredIcons.length">，滚动加载更多</template>
       </div>
-    </el-dialog>
+    </BasicDialog>
   </div>
 </template>
 

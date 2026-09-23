@@ -2,6 +2,7 @@
 import { computed, reactive, ref, watch } from 'vue';
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus';
 import { createMenuApi, getMenuDetailApi, getMenuTreeApi, updateMenuApi } from '@/api/menu';
+import BasicDialog from '@/components/BasicDialog/index.vue';
 import type { MenuNode, MenuUpsert } from '@/types/api';
 import IconSelect from './IconSelect.vue';
 
@@ -152,7 +153,14 @@ async function handleSubmit(): Promise<void> {
 </script>
 
 <template>
-  <el-dialog :model-value="modelValue" :title="isEdit ? '编辑菜单' : '新增菜单'" width="620px" @close="handleClose">
+  <BasicDialog
+    :model-value="modelValue"
+    :title="isEdit ? '编辑菜单' : '新增菜单'"
+    width="620px"
+    :confirm-loading="submitting"
+    @update:model-value="handleClose"
+    @confirm="handleSubmit"
+  >
     <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
       <el-form-item label="上级菜单">
         <el-tree-select
@@ -206,10 +214,5 @@ async function handleSubmit(): Promise<void> {
         </el-radio-group>
       </el-form-item>
     </el-form>
-
-    <template #footer>
-      <el-button @click="handleClose">取消</el-button>
-      <el-button type="primary" :loading="submitting" @click="handleSubmit">确定</el-button>
-    </template>
-  </el-dialog>
+  </BasicDialog>
 </template>

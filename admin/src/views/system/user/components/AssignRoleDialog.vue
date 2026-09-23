@@ -2,6 +2,7 @@
 import { ref, watch } from 'vue';
 import { ElMessage } from 'element-plus';
 import { assignUserRolesApi } from '@/api/user';
+import BasicDialog from '@/components/BasicDialog/index.vue';
 import type { RoleBrief } from '@/types/api';
 
 defineOptions({ name: 'AssignRoleDialog' });
@@ -57,16 +58,18 @@ async function handleSubmit(): Promise<void> {
 </script>
 
 <template>
-  <el-dialog :model-value="modelValue" title="分配角色" width="480px" @close="handleClose">
+  <BasicDialog
+    :model-value="modelValue"
+    title="分配角色"
+    width="480px"
+    :confirm-loading="submitting"
+    @update:model-value="handleClose"
+    @confirm="handleSubmit"
+  >
     <el-checkbox-group v-model="selected">
       <div class="role-list flex flex-col gap-2">
         <el-checkbox v-for="role in roleOptions" :key="role.id" :value="role.id" :label="role.roleName" />
       </div>
     </el-checkbox-group>
-
-    <template #footer>
-      <el-button @click="handleClose">取消</el-button>
-      <el-button type="primary" :loading="submitting" @click="handleSubmit">确定</el-button>
-    </template>
-  </el-dialog>
+  </BasicDialog>
 </template>

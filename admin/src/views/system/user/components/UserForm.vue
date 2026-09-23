@@ -2,6 +2,7 @@
 import { reactive, ref, watch } from 'vue';
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus';
 import { createUserApi, getUserDetailApi, updateUserApi } from '@/api/user';
+import BasicDialog from '@/components/BasicDialog/index.vue';
 import { emailRule, phoneRule, usernameRule } from '@/utils/validate';
 import type { RoleBrief, UserUpsert } from '@/types/api';
 
@@ -115,7 +116,14 @@ async function handleSubmit(): Promise<void> {
 </script>
 
 <template>
-  <el-dialog :model-value="modelValue" :title="isEdit ? '编辑用户' : '新增用户'" width="560px" @close="handleClose">
+  <BasicDialog
+    :model-value="modelValue"
+    :title="isEdit ? '编辑用户' : '新增用户'"
+    width="560px"
+    :confirm-loading="submitting"
+    @update:model-value="handleClose"
+    @confirm="handleSubmit"
+  >
     <el-form ref="formRef" :model="form" :rules="rules" label-width="90px">
       <el-form-item label="账号" prop="username">
         <el-input v-model="form.username" :disabled="isEdit" placeholder="请输入账号" />
@@ -147,10 +155,5 @@ async function handleSubmit(): Promise<void> {
         <el-input v-model="form.remark" type="textarea" :rows="2" placeholder="请输入备注" />
       </el-form-item>
     </el-form>
-
-    <template #footer>
-      <el-button @click="handleClose">取消</el-button>
-      <el-button type="primary" :loading="submitting" @click="handleSubmit">确定</el-button>
-    </template>
-  </el-dialog>
+  </BasicDialog>
 </template>

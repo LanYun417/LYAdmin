@@ -2,6 +2,7 @@
 import { reactive, ref, watch } from 'vue';
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus';
 import { createRoleApi, getRoleListApi, updateRoleApi } from '@/api/role';
+import BasicDialog from '@/components/BasicDialog/index.vue';
 import type { RoleUpsert } from '@/types/api';
 
 defineOptions({ name: 'RoleForm' });
@@ -105,7 +106,14 @@ async function handleSubmit(): Promise<void> {
 </script>
 
 <template>
-  <el-dialog :model-value="modelValue" :title="isEdit ? '编辑角色' : '新增角色'" width="480px" @close="handleClose">
+  <BasicDialog
+    :model-value="modelValue"
+    :title="isEdit ? '编辑角色' : '新增角色'"
+    width="480px"
+    :confirm-loading="submitting"
+    @update:model-value="handleClose"
+    @confirm="handleSubmit"
+  >
     <el-form ref="formRef" :model="form" :rules="rules" label-width="90px">
       <el-form-item label="角色名称" prop="roleName">
         <el-input v-model="form.roleName" placeholder="请输入角色名称" />
@@ -126,10 +134,5 @@ async function handleSubmit(): Promise<void> {
         <el-input v-model="form.remark" type="textarea" :rows="2" placeholder="请输入备注" />
       </el-form-item>
     </el-form>
-
-    <template #footer>
-      <el-button @click="handleClose">取消</el-button>
-      <el-button type="primary" :loading="submitting" @click="handleSubmit">确定</el-button>
-    </template>
-  </el-dialog>
+  </BasicDialog>
 </template>
