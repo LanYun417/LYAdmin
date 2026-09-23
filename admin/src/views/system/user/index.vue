@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { BIconKey, BIconPersonFill, BIconPlus } from 'bootstrap-icons-vue';
+import { BIconPersonFill, BIconPlus } from 'bootstrap-icons-vue';
 import { deleteUserApi, getUserListApi, resetUserPasswordApi, updateUserStatusApi } from '@/api/user';
 import { getAllRolesApi } from '@/api/role';
 import { formatDateTime } from '@/utils/format';
@@ -205,7 +205,6 @@ onMounted(() => {
                 v-permission="'system:user:resetPwd'"
                 type="info"
                 link
-                :icon="BIconKey"
                 @click="handleResetPwd(row as UserDetail)"
               >
                 重置

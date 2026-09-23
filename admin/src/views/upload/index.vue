@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue';
 import { ElMessage, ElMessageBox, type UploadRequestOptions } from 'element-plus';
-import { BIconArrowClockwise, BIconTrash, BIconUpload } from 'bootstrap-icons-vue';
+import { BIconArrowClockwise, BIconUpload } from 'bootstrap-icons-vue';
 import { deleteFileApi, checkFileApi, getFileListApi, instantUploadApi, uploadFilesApi } from '@/api/file';
 import { sha256Hex } from '@/utils/hash';
 import { formatFileSize, formatDateTime } from '@/utils/format';
@@ -148,7 +148,7 @@ onMounted(() => {
         <el-table-column label="操作" width="160" fixed="right">
           <template #default="{ row }">
             <el-link type="primary" :href="row.fileUrl" target="_blank" rel="noopener" class="mr-3"> 查看 </el-link>
-            <el-button type="danger" link :icon="BIconTrash" @click="handleDelete(row as FileItem)"> 删除 </el-button>
+            <el-button type="danger" link @click="handleDelete(row as FileItem)"> 删除 </el-button>
           </template>
         </el-table-column>
       </el-table>
