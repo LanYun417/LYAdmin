@@ -35,6 +35,9 @@ export class File extends Model {
   @Column({ type: DataType.INTEGER.UNSIGNED, allowNull: false, defaultValue: 0, comment: '字节' })
   declare size: number;
 
+  @Column({ type: DataType.STRING(64), allowNull: true, comment: 'SHA-256 内容哈希（秒传/去重依据）' })
+  declare hash: string | null;
+
   @Column({ type: DataType.BIGINT.UNSIGNED, allowNull: true, comment: '上传人 id' })
   declare uploaderId: number | null;
 

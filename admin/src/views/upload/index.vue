@@ -2,7 +2,8 @@
 import { onMounted, reactive, ref } from 'vue';
 import { ElMessage, ElMessageBox, type UploadRequestOptions } from 'element-plus';
 import { BIconArrowClockwise, BIconTrash, BIconUpload } from 'bootstrap-icons-vue';
-import { deleteFileApi, getFileListApi, uploadFilesApi } from '@/api/file';
+import { deleteFileApi, checkFileApi, getFileListApi, instantUploadApi, uploadFilesApi } from '@/api/file';
+import { sha256Hex } from '@/utils/hash';
 import { formatFileSize, formatDateTime } from '@/utils/format';
 import type { FileItem } from '@/types/api';
 
@@ -42,13 +43,43 @@ function beforeUpload(file: File): boolean {
   return true;
 }
 
-/** 自定义上传 */
+/** 真正上传文件体 */
+async function doUpload(options: UploadRequestOptions, file: File): Promise<void> {
+  const res = await uploadFilesApi([file]);
+  options.onSuccess?.(res);
+  const dedup = res.some((item) => item.deduplicated);
+  ElMessage.success(dedup ? '上传成功：内容与库内文件一致，已自动去重' : '上传成功');
+  await loadFiles();
+}
+
+/** 自定义上传：先算哈希预检，命中则提示秒传，否则正常上传 */
 async function customUpload(options: UploadRequestOptions): Promise<void> {
+  const file = options.file as unknown as File;
   try {
-    const res = await uploadFilesApi([options.file as unknown as File]);
-    options.onSuccess?.(res);
-    ElMessage.success('上传成功');
-    await loadFiles();
+    const hash = await sha256Hex(file);
+    const check = await checkFileApi(hash);
+
+    if (check.exists && check.file) {
+      const existing = check.file;
+      try {
+        await ElMessageBox.confirm(
+          `库内已存在相同内容的文件「${existing.originName}」（${formatFileSize(existing.size)}，上传于 ${formatDateTime(existing.createdAt)}）。可以选择秒传（不重复上传文件体），或仍然重新上传一份。`,
+          '发现重复文件',
+          { confirmButtonText: '秒传', cancelButtonText: '仍然上传', type: 'warning' },
+        );
+      } catch {
+        // 用户选择“仍然上传”：走正常上传，后端仍会做内容去重兜底
+        await doUpload(options, file);
+        return;
+      }
+      const created = await instantUploadApi(hash, file.name);
+      options.onSuccess?.(created);
+      ElMessage.success('秒传成功：未重复上传文件体');
+      await loadFiles();
+      return;
+    }
+
+    await doUpload(options, file);
   } catch (error) {
     options.onError?.(error as Parameters<NonNullable<UploadRequestOptions['onError']>>[0]);
   }

@@ -235,8 +235,11 @@ export interface FileItem {
   fileUrl: string;
   mimeType: string;
   size: number;
+  hash?: string | null;
   uploaderId: number | null;
   createdAt: string;
+  /** 本次保存是否复用了既有物理文件（秒传/去重） */
+  deduplicated?: boolean;
 }
 
 /** 文件查询参数 */
