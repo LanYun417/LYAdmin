@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { BIconFolder, BIconGraphUp, BIconList, BIconPerson } from 'bootstrap-icons-vue';
 import {
   getDashboardStatsApi,
@@ -8,12 +8,15 @@ import {
   getRoleUserCountApi,
 } from '@/api/dashboard';
 import type { DashboardStats, LoginTrend, NameValue, RoleUserCount } from '@/types/api';
+import { useUserStore } from '@/store/modules/user';
 import StatCard from './components/StatCard.vue';
 import TrendChart from './components/TrendChart.vue';
 import PieChart from './components/PieChart.vue';
 import BarChart from './components/BarChart.vue';
 
 defineOptions({ name: 'HomePage' });
+
+const userStore = useUserStore();
 
 const loading = ref(false);
 const stats = ref<DashboardStats>({
@@ -53,10 +56,44 @@ async function loadData(): Promise<void> {
 onMounted(() => {
   void loadData();
 });
+
+/** 按时段问候 */
+const greeting = computed(() => {
+  const hour = new Date().getHours();
+  if (hour < 6) {
+    return '夜深了';
+  }
+  if (hour < 9) {
+    return '早上好';
+  }
+  if (hour < 12) {
+    return '上午好';
+  }
+  if (hour < 14) {
+    return '中午好';
+  }
+  if (hour < 18) {
+    return '下午好';
+  }
+  return '晚上好';
+});
+
+/** 今日日期（2026年9月23日 星期三） */
+const todayText = new Intl.DateTimeFormat('zh-CN', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+  weekday: 'long',
+}).format(new Date());
 </script>
 
 <template>
   <div v-loading="loading" class="home-page">
+    <header class="home-hero">
+      <h2 class="home-greeting">{{ greeting }}，{{ userStore.nickname }}</h2>
+      <p class="home-subtitle">今天是 {{ todayText }}，欢迎回来</p>
+    </header>
+
     <el-row :gutter="16">
       <el-col :xs="24" :sm="12" :md="6" class="my-1">
         <StatCard title="用户总数" :value="stats.userTotal" :icon="BIconPerson" color="#409eff" />
@@ -97,3 +134,21 @@ onMounted(() => {
     </el-row>
   </div>
 </template>
+
+<style scoped>
+.home-hero {
+  margin-bottom: 16px;
+}
+
+.home-greeting {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--el-text-color-primary);
+}
+
+.home-subtitle {
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--el-text-color-secondary);
+}
+</style>
