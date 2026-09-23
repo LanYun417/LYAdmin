@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue';
 import { useMediaQuery } from '@vueuse/core';
+import { BIconRocketFill } from 'bootstrap-icons-vue';
 import { useAppStore } from '@/store/modules/app';
 import Sidebar from './components/Sidebar/index.vue';
 import Navbar from './components/Navbar/index.vue';
@@ -58,6 +59,10 @@ function closeDrawer(): void {
         <el-scrollbar class="content-scrollbar">
           <AppMain />
         </el-scrollbar>
+        <!-- 返回顶部：作用于内容区滚动容器 -->
+        <el-backtop target=".content-scrollbar .el-scrollbar__wrap" :right="24" :bottom="24">
+          <el-icon :size="18" class="backtop-rocket"><BIconRocketFill /></el-icon>
+        </el-backtop>
       </main>
     </div>
   </div>
@@ -96,6 +101,16 @@ function closeDrawer(): void {
 
 .content-scrollbar {
   height: 100%;
+}
+
+/* 返回顶部按钮：图标用主题色，悬浮时白字与底色对调 */
+.backtop-rocket {
+  color: var(--el-color-primary);
+  transition: color 0.2s ease;
+}
+
+.el-backtop:hover .backtop-rocket {
+  color: var(--el-bg-color);
 }
 
 /* ---------- 移动端（< 768px）：侧边栏改为悬浮抽屉 ---------- */
