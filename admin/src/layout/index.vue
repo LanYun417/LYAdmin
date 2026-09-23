@@ -106,10 +106,21 @@ function closeDrawer(): void {
   height: 100%;
 }
 
-/* 返回顶部按钮：图标用主题色，悬浮时白字与底色对调 */
+/* 返回顶部：hover 变为主题色底 + 白色图标（EP 默认 hover 底色接近
+ * 白色，若只把图标改白会“看起来消失”，故整体反转为实心主题色） */
 .backtop-rocket {
   color: var(--el-color-primary);
   transition: color 0.2s ease;
+}
+
+.el-backtop {
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.el-backtop:hover {
+  background-color: var(--el-color-primary);
 }
 
 .el-backtop:hover .backtop-rocket {
