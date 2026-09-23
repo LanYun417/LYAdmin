@@ -10,10 +10,12 @@ defineProps<{
 </script>
 
 <template>
-  <div class="sidebar-logo flex items-center justify-center">
-    <img class="sidebar-logo-img" :src="logoUrl" alt="logo" />
-    <span v-show="!collapsed" class="sidebar-logo-title">蓝云后台</span>
-  </div>
+  <router-link to="/home">
+    <div class="sidebar-logo flex items-center justify-center">
+      <img class="sidebar-logo-img" :src="logoUrl" alt="logo" />
+      <span v-show="!collapsed" class="sidebar-logo-title">蓝云后台管理系统</span>
+    </div>
+  </router-link>
 </template>
 
 <style scoped>
@@ -24,8 +26,8 @@ defineProps<{
 }
 
 .sidebar-logo-img {
-  width: 28px;
-  height: 28px;
+  width: 23px;
+  height: 23px;
 }
 
 .sidebar-logo-title {
