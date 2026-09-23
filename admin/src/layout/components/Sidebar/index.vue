@@ -12,24 +12,27 @@ const route = useRoute();
 const appStore = useAppStore();
 const userStore = useUserStore();
 
-/** 顶层可见菜单（过滤按钮与禁用项） */
-const menus = computed(() => (userStore.menus ?? []).filter((menu) => menu.menuType !== 'F' && menu.status !== 0));
+/** 顶层可见菜单：过滤按钮、禁用项，以及 visible=0 的隐藏项（如个人中心，仍可从头像下拉进入） */
+const menus = computed(() =>
+  (userStore.menus ?? []).filter((menu) => menu.menuType !== 'F' && menu.status !== 0 && menu.visible !== 0),
+);
 
 /** 当前高亮菜单 */
 const activeMenu = computed(() => (route.meta.activeMenu as string) || route.path);
+
+/**
+ * 菜单是否折叠。
+ * 移动端侧边栏以悬浮抽屉形式展示，宽度固定且空间充足，此时强制展开，
+ * 避免沿用桌面端的折叠状态导致抽屉里只剩图标、无法辨认。
+ */
+const collapsed = computed(() => appStore.sidebarCollapsed && !appStore.isMobile);
 </script>
 
 <template>
   <div class="sidebar flex flex-col h-full">
-    <Logo :collapsed="appStore.sidebarCollapsed" />
+    <Logo :collapsed="collapsed" />
     <el-scrollbar class="sidebar-scroll flex-1">
-      <el-menu
-        :default-active="activeMenu"
-        :collapse="appStore.sidebarCollapsed"
-        :collapse-transition="false"
-        unique-opened
-        router
-      >
+      <el-menu :default-active="activeMenu" :collapse="collapsed" :collapse-transition="false" unique-opened router>
         <SidebarItem v-for="menu in menus" :key="menu.id" :item="menu" base-path="" />
       </el-menu>
     </el-scrollbar>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { useResizeObserver } from '@vueuse/core';
 import * as echarts from 'echarts';
 import type { RoleUserCount } from '@/types/api';
 
@@ -47,16 +48,20 @@ function resize(): void {
   chart?.resize();
 }
 
+/**
+ * 监听图表容器尺寸变化（而非只监听 window resize）。
+ * 这样窗口缩放、侧边栏折叠 / 展开、移动端断点切换导致容器变宽变窄时，图表都能重新适配。
+ */
+useResizeObserver(chartRef, resize);
+
 onMounted(() => {
   if (chartRef.value) {
     chart = echarts.init(chartRef.value);
     render();
-    window.addEventListener('resize', resize);
   }
 });
 
 onBeforeUnmount(() => {
-  window.removeEventListener('resize', resize);
   chart?.dispose();
   chart = null;
 });

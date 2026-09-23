@@ -27,7 +27,7 @@ function resolvePath(routePath?: string | null): string {
 
 /** 可见子菜单（过滤按钮与禁用项） */
 const visibleChildren = computed(() =>
-  (props.item.children ?? []).filter((child) => child.menuType !== 'F' && child.status !== 0),
+  (props.item.children ?? []).filter((child) => child.menuType !== 'F' && child.status !== 0 && child.visible !== 0),
 );
 
 /** 是否叶子节点 */

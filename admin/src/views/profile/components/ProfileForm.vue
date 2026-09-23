@@ -70,9 +70,3 @@ async function handleSubmit(): Promise<void> {
     </el-form-item>
   </el-form>
 </template>
-
-<style scoped>
-.profile-form {
-  max-width: 480px;
-}
-</style>

@@ -8,9 +8,17 @@ defineOptions({ name: 'Navbar' });
 
 const appStore = useAppStore();
 
-/** 折叠 / 展开侧边栏 */
+/**
+ * 侧边栏切换：
+ * - 桌面端：折叠 / 展开侧边栏宽度
+ * - 移动端：打开 / 关闭侧边栏悬浮抽屉
+ */
 function handleToggle(): void {
-  appStore.toggleSidebar();
+  if (appStore.isMobile) {
+    appStore.toggleMobileDrawer();
+  } else {
+    appStore.toggleSidebar();
+  }
 }
 </script>
 
@@ -18,7 +26,8 @@ function handleToggle(): void {
   <div class="navbar flex items-center justify-between shadow">
     <div class="flex items-center gap-3">
       <el-icon class="navbar-toggle" @click="handleToggle">
-        <Fold v-if="!appStore.sidebarCollapsed" />
+        <Menu v-if="appStore.isMobile" />
+        <Fold v-else-if="!appStore.sidebarCollapsed" />
         <Expand v-else />
       </el-icon>
       <Breadcrumb />

@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue';
-import { Refresh } from '@element-plus/icons-vue';
-import { getOperationLogsApi } from '@/api/log';
-import { formatDateTime, formatDuration } from '@/utils/format';
+import { ElMessage } from 'element-plus';
+import { Download, Refresh } from '@element-plus/icons-vue';
+import { exportOperationLogsApi, getOperationLogsApi } from '@/api/log';
+import { formatDate, formatDateTime, formatDuration } from '@/utils/format';
+import { downloadBlob } from '@/utils/download';
 import type { OperationLog } from '@/types/api';
 import Pagination from '@/components/Pagination/index.vue';
 import SearchForm from '@/components/SearchForm/index.vue';
@@ -10,6 +12,7 @@ import SearchForm from '@/components/SearchForm/index.vue';
 defineOptions({ name: 'LogOperation' });
 
 const loading = ref(false);
+const exporting = ref(false);
 const list = ref<OperationLog[]>([]);
 const total = ref(0);
 const dateRange = ref<string[]>([]);
@@ -58,6 +61,29 @@ function handleReset(): void {
   void loadList();
 }
 
+/** 导出操作日志（P2）：按当前筛选条件导出，不带分页参数 */
+async function handleExport(): Promise<void> {
+  if (exporting.value) {
+    return;
+  }
+  exporting.value = true;
+  try {
+    const blob = await exportOperationLogsApi({
+      module: query.module || undefined,
+      username: query.username || undefined,
+      result: query.result,
+      startTime: dateRange.value[0] || undefined,
+      endTime: dateRange.value[1] || undefined,
+    });
+    downloadBlob(blob, `操作日志_${formatDate(new Date(), 'YYYYMMDD_HHmmss')}.csv`);
+    ElMessage.success('导出成功');
+  } catch {
+    ElMessage.error('导出失败');
+  } finally {
+    exporting.value = false;
+  }
+}
+
 onMounted(() => {
   void loadList();
 });
@@ -95,7 +121,18 @@ onMounted(() => {
     <el-card shadow="never">
       <div class="flex items-center justify-between mb-3">
         <span class="table-title">操作日志</span>
-        <el-button :icon="Refresh" @click="loadList">刷新</el-button>
+        <div class="flex items-center gap-2">
+          <el-button
+            v-permission="'log:operation:export'"
+            type="primary"
+            :icon="Download"
+            :loading="exporting"
+            @click="handleExport"
+          >
+            导出
+          </el-button>
+          <el-button :icon="Refresh" @click="loadList">刷新</el-button>
+        </div>
       </div>
 
       <el-table v-loading="loading" :data="list" border stripe>

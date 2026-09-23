@@ -2,11 +2,14 @@
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessageBox } from 'element-plus';
-import { Expand, Fold, Moon, Sunny, User, SwitchButton } from '@element-plus/icons-vue';
+// 注意：Expand / Fold 是「侧边栏折叠」的方向箭头，已被 Navbar 的侧边栏开关使用。
+// 全屏切换应使用 FullScreen（进入全屏）与 Aim（退出全屏），避免两个按钮图标混淆。
+import { Aim, FullScreen, Moon, Sunny, User, SwitchButton } from '@element-plus/icons-vue';
 import { useUserStore } from '@/store/modules/user';
 import { usePermissionStore } from '@/store/modules/permission';
 import { useAppStore } from '@/store/modules/app';
 import { useTheme } from '@/hooks/useTheme';
+import { applyPrimaryColor, DEFAULT_PRIMARY_COLOR } from '@/utils/theme';
 
 defineOptions({ name: 'Avatar' });
 
@@ -18,6 +21,12 @@ const { isDark, toggleTheme } = useTheme();
 
 const avatar = computed(() => userStore.avatar);
 const nickname = computed(() => userStore.nickname);
+
+/** 主题色（双向绑定 app store） */
+const primaryColor = computed({
+  get: () => appStore.primaryColor,
+  set: (value: string) => appStore.setPrimaryColor(value),
+});
 
 /** 跳转个人中心 */
 function goProfile(): void {
@@ -50,14 +59,21 @@ function handleToggleFullscreen(): void {
     appStore.setFullscreen(true);
   }
 }
+
+/** 切换主题色（P2）：立即应用到 CSS 变量并持久化 */
+function handlePrimaryColorChange(color: string | null): void {
+  const value = color || DEFAULT_PRIMARY_COLOR;
+  appStore.setPrimaryColor(value);
+  applyPrimaryColor(value);
+}
 </script>
 
 <template>
   <div class="navbar-avatar flex items-center gap-2">
-    <el-tooltip content="全屏切换" placement="bottom">
+    <el-tooltip :content="appStore.isFullscreen ? '退出全屏' : '全屏'" placement="bottom">
       <el-icon class="navbar-action" @click="handleToggleFullscreen">
-        <Expand v-if="!appStore.isFullscreen" />
-        <Fold v-else />
+        <FullScreen v-if="!appStore.isFullscreen" />
+        <Aim v-else />
       </el-icon>
     </el-tooltip>
 
@@ -66,6 +82,15 @@ function handleToggleFullscreen(): void {
         <Moon v-if="!isDark" />
         <Sunny v-else />
       </el-icon>
+    </el-tooltip>
+
+    <el-tooltip content="主题色" placement="bottom">
+      <el-color-picker
+        v-model="primaryColor"
+        size="small"
+        class="navbar-color-picker"
+        @change="handlePrimaryColorChange"
+      />
     </el-tooltip>
 
     <el-dropdown trigger="click">
@@ -90,6 +115,10 @@ function handleToggleFullscreen(): void {
   font-size: 18px;
   color: var(--el-text-color-primary);
   cursor: pointer;
+}
+
+.navbar-color-picker {
+  vertical-align: middle;
 }
 
 .avatar-trigger {

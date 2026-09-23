@@ -12,10 +12,29 @@ export const useAppStore = defineStore(
     const primaryColor = ref<string>('#409eff');
     /** 是否全屏（P2） */
     const isFullscreen = ref<boolean>(false);
+    /** 是否移动端（视口宽度 < 768px），由布局层依据媒体查询同步，不持久化 */
+    const isMobile = ref<boolean>(false);
+    /** 移动端侧边栏抽屉是否展开，不持久化 */
+    const mobileDrawerOpen = ref<boolean>(false);
 
     /** 切换侧边栏折叠状态 */
     function toggleSidebar(): void {
       sidebarCollapsed.value = !sidebarCollapsed.value;
+    }
+
+    /** 设置是否为移动端 */
+    function setMobile(value: boolean): void {
+      isMobile.value = value;
+    }
+
+    /** 切换移动端侧边栏抽屉 */
+    function toggleMobileDrawer(): void {
+      mobileDrawerOpen.value = !mobileDrawerOpen.value;
+    }
+
+    /** 设置移动端侧边栏抽屉展开状态 */
+    function setMobileDrawer(value: boolean): void {
+      mobileDrawerOpen.value = value;
     }
 
     /** 设置侧边栏折叠状态 */
@@ -48,12 +67,17 @@ export const useAppStore = defineStore(
       dark,
       primaryColor,
       isFullscreen,
+      isMobile,
+      mobileDrawerOpen,
       toggleSidebar,
       setSidebarCollapsed,
       setDark,
       toggleDark,
       setPrimaryColor,
       setFullscreen,
+      setMobile,
+      toggleMobileDrawer,
+      setMobileDrawer,
     };
   },
   {

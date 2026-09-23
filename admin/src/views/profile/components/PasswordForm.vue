@@ -83,9 +83,3 @@ async function handleSubmit(): Promise<void> {
     </el-form-item>
   </el-form>
 </template>
-
-<style scoped>
-.password-form {
-  max-width: 480px;
-}
-</style>

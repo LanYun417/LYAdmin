@@ -28,6 +28,19 @@ const cachedViews = computed(() => tagsViewStore.cachedViews);
   padding: 16px;
 }
 
+/* 响应式：窄屏收窄内边距，把宽度让给内容；超宽屏适当放大留白 */
+@media (width <= 767px) {
+  .app-main {
+    padding: 12px;
+  }
+}
+
+@media (width >= 1600px) {
+  .app-main {
+    padding: 20px 24px;
+  }
+}
+
 .fade-transform-enter-active,
 .fade-transform-leave-active {
   transition: all 0.25s;

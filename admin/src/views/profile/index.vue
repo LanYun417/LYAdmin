@@ -66,8 +66,8 @@ async function handleAvatarUpload(options: UploadRequestOptions): Promise<void> 
               <el-avatar v-loading="uploading" :size="100" :src="avatar">
                 <el-icon><Plus /></el-icon>
               </el-avatar>
-              <div class="avatar-tip">点击更换头像</div>
             </el-upload>
+            <div class="avatar-tip">点击更换头像</div>
             <p class="profile-nickname">{{ nickname }}</p>
             <p class="profile-username">@{{ username }}</p>
           </div>
@@ -105,7 +105,6 @@ async function handleAvatarUpload(options: UploadRequestOptions): Promise<void> 
 }
 
 .avatar-uploader {
-  text-align: center;
   cursor: pointer;
 }
 

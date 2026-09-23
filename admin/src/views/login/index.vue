@@ -89,7 +89,9 @@ async function handleLogin(): Promise<void> {
 }
 
 .login-card {
-  width: 380px;
+  box-sizing: border-box;
+  width: 90%;
+  max-width: 380px;
   padding: 32px;
   background-color: var(--el-bg-color);
   border-radius: 8px;
