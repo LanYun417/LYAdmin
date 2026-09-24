@@ -84,6 +84,24 @@ async function handleExport(): Promise<void> {
   }
 }
 
+/** 方法列标签配色：读操作绿、新增蓝、修改黄、删除红 */
+type EpTagType = 'primary' | 'success' | 'warning' | 'danger' | 'info';
+function methodTag(method: string): EpTagType {
+  switch (String(method ?? '').toUpperCase()) {
+    case 'GET':
+      return 'success';
+    case 'POST':
+      return 'primary';
+    case 'PUT':
+    case 'PATCH':
+      return 'warning';
+    case 'DELETE':
+      return 'danger';
+    default:
+      return 'info';
+  }
+}
+
 onMounted(() => {
   void loadList();
 });
@@ -139,7 +157,11 @@ onMounted(() => {
         <el-table-column prop="module" label="模块" width="120" />
         <el-table-column prop="action" label="动作" width="110" />
         <el-table-column prop="username" label="操作人" width="120" />
-        <el-table-column prop="method" label="方法" width="90" align="center" />
+        <el-table-column prop="method" label="方法" width="90" align="center">
+          <template #default="{ row }">
+            <el-tag :type="methodTag(row.method)" size="small">{{ row.method }}</el-tag>
+          </template>
+        </el-table-column>
         <el-table-column prop="url" label="URL" min-width="180" show-overflow-tooltip />
         <el-table-column prop="params" label="参数" min-width="200" show-overflow-tooltip />
         <el-table-column label="耗时" width="100" align="center">
