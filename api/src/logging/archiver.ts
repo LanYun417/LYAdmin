@@ -29,9 +29,9 @@ const execFileAsync = promisify(execFile);
 /** 匹配按天日志文件名 `YYYY-M-D.log`（月/日不补零）。 */
 const LOG_FILE_RE = /^(\d{4})-(\d{1,2})-(\d{1,2})\.log$/;
 
-/** tar 可执行文件路径（可被 TAR_BIN 覆盖）。 */
+/** tar 可执行文件路径（来自 config.log.tarBin，可由环境变量 TAR_BIN 覆盖）。 */
 function tarBin(): string {
-  return process.env.TAR_BIN ?? 'tar';
+  return config.log.tarBin;
 }
 
 /** 将数字补零到两位。 */

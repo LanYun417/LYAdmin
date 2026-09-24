@@ -85,6 +85,8 @@ export const config = {
     keepSourceAfterArchive: toBoolean(process.env.LOG_ARCHIVE_KEEP_SOURCE, false),
     /** 慢 SQL 阈值（ms，默认 200） */
     slowSqlMs: toNumber(process.env.LOG_SLOW_SQL_MS, 200),
+    /** 可选的 tar 可执行文件路径覆盖（跨平台/自定义环境用）；默认 PATH 中的 `tar` */
+    tarBin: process.env.TAR_BIN ?? 'tar',
   },
 } as const;
 
