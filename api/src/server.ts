@@ -6,8 +6,8 @@ import 'reflect-metadata';
 import { createApp } from '@/app';
 import { config } from '@/config';
 import { connectDatabase, syncDatabase } from '@/config/database';
-import { auditDocsCoverage } from '@/docs';
-import { registerProcessHandlers, startLogScheduler } from '@/logging';
+import { auditCoverage, auditDocsCoverage } from '@/docs';
+import { registerProcessHandlers, startLogScheduler, startRetentionScheduler } from '@/logging';
 import { runSeed } from '@/seed';
 
 /**
@@ -18,6 +18,8 @@ async function bootstrap(): Promise<void> {
   registerProcessHandlers();
   // 日志归档调度：启动补跑 + 每日定时归档
   startLogScheduler();
+  // 日志保留清理调度：启动补跑 + 每日定时分批清理过期日志（默认 00:10，避开 00:05 归档）
+  startRetentionScheduler();
 
   await connectDatabase();
   await syncDatabase();
@@ -32,6 +34,8 @@ async function bootstrap(): Promise<void> {
 
   // 接口文档覆盖校验：比对运行时注册路由与文档目录，仅打印提示，不影响启动
   auditDocsCoverage(app);
+  // 留痕覆盖率守卫：列出「有写操作、无留痕」的写接口，仅打印提示，不影响启动
+  auditCoverage(app);
 }
 
 bootstrap().catch((error) => {

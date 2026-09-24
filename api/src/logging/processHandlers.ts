@@ -13,6 +13,7 @@ import { reportProcessError } from './errorReporter';
 import { flushDbLogs } from './dbLogBuffer';
 import { closeAllStreams } from './logManager';
 import { stopLogScheduler } from './scheduler';
+import { stopRetentionScheduler } from './retention';
 
 /** 是否已注册（幂等保护）。 */
 let registered = false;
@@ -34,6 +35,7 @@ async function shutdown(reason: string, exitCode: number): Promise<void> {
 
   try {
     stopLogScheduler();
+    stopRetentionScheduler();
     // 先落盘 SQL 日志缓冲区（写入流尚未关闭），再关闭全部写入流，避免尾部日志丢失
     flushDbLogs();
     await closeAllStreams();

@@ -9,4 +9,5 @@ export * from './archiver';
 export * from './scheduler';
 export * from './errorReporter';
 export * from './httpLogStore';
+export * from './retention';
 export * from './processHandlers';

@@ -6,12 +6,79 @@
  * 约定：
  * - 写入失败绝不影响业务：`appendHttpLog` 内部吞异常并 console.error。
  * - 「清空」只清数据库表（TRUNCATE），物理文件（logs/access/）不受影响。
+ *
+ * 性能（日志治理 ④）：`sys_http_log` 为大表，`count(*)` 代价高。为 `count` 结果加**进程内短 TTL
+ * 缓存（30s）**：仍返回**精确** `total`，最多 30 秒陈旧；缓存键包含全部筛选条件（method/statusCode/
+ * startTime/endTime），不同筛选各自计数，绝不串数。**不改变接口返回契约**（不做近似计数 / hasMore 模式）。
  */
 import { Op, type WhereOptions } from 'sequelize';
+import { config } from '@/config';
 import { HttpLog } from '@/models';
 import { buildPageResult } from '@/utils/pagination';
 import type { PageResult } from '@/types';
 import type { AccessLogRecord, HttpLogItem, HttpLogQuery } from './types';
+
+/** HTTP 日志 count 缓存的 TTL（毫秒）。 */
+const COUNT_CACHE_TTL_MS = 30_000;
+
+/** count 缓存条目。 */
+interface CountCacheEntry {
+  /** 缓存的精确总数 */
+  total: number;
+  /** 过期时间戳（ms） */
+  expiresAt: number;
+}
+
+/** count 缓存：键为筛选条件序列化串，值为精确总数 + 过期时间。 */
+const countCache = new Map<string, CountCacheEntry>();
+
+/**
+ * 由查询条件构造 count 缓存键（必须包含全部筛选参数，否则不同筛选会串数）。
+ * 说明：总数只与筛选条件相关，与 page / pageSize 无关，故不纳入键。
+ * @param query 查询条件
+ * @returns 缓存键
+ */
+function buildCountCacheKey(query: HttpLogQuery): string {
+  return JSON.stringify({
+    method: query.method ? query.method.toUpperCase() : '',
+    statusCode: query.statusCode ?? null,
+    startTime: query.startTime ?? '',
+    endTime: query.endTime ?? '',
+  });
+}
+
+/**
+ * 读取 count 缓存（过期即失效并移除）。
+ * @param key 缓存键
+ * @returns 命中的精确总数；未命中或已过期返回 null
+ */
+function readCachedCount(key: string): number | null {
+  const entry = countCache.get(key);
+  if (!entry) {
+    return null;
+  }
+  if (entry.expiresAt <= Date.now()) {
+    countCache.delete(key);
+    return null;
+  }
+  return entry.total;
+}
+
+/**
+ * 写入 count 缓存。
+ * @param key 缓存键
+ * @param total 精确总数
+ */
+function writeCachedCount(key: string, total: number): void {
+  countCache.set(key, { total, expiresAt: Date.now() + COUNT_CACHE_TTL_MS });
+}
+
+/**
+ * 清空 count 缓存（清空全部日志 / 按保留期清理后调用，避免返回陈旧 total）。
+ */
+export function clearHttpLogCountCache(): void {
+  countCache.clear();
+}
 
 /**
  * 构造时间范围查询条件（无效值忽略；无有效值时返回 undefined）。
@@ -61,8 +128,9 @@ export async function appendHttpLog(record: AccessLogRecord): Promise<void> {
 
 /**
  * 分页查询 HTTP 访问日志（按时间倒序）。
+ * 行数据照常查询；`total` 走 30s 短 TTL 缓存（键含全部筛选条件），未命中才做精确 `count(*)`。
  * @param query 查询条件
- * @returns 统一分页结果
+ * @returns 统一分页结果（`total` 为精确值，最多 30 秒陈旧）
  */
 export async function queryHttpLogs(query: HttpLogQuery): Promise<PageResult<HttpLogItem>> {
   const where: WhereOptions = {};
@@ -77,7 +145,7 @@ export async function queryHttpLogs(query: HttpLogQuery): Promise<PageResult<Htt
     where.time = range;
   }
 
-  const { rows, count } = await HttpLog.findAndCountAll({
+  const rows = await HttpLog.findAll({
     where,
     order: [
       ['time', 'DESC'],
@@ -86,6 +154,19 @@ export async function queryHttpLogs(query: HttpLogQuery): Promise<PageResult<Htt
     offset: (query.page - 1) * query.pageSize,
     limit: query.pageSize,
   });
+
+  // count 缓存：先查缓存，未命中再做精确 count(*) 并写回
+  const cacheKey = buildCountCacheKey(query);
+  let total = readCachedCount(cacheKey);
+  if (total === null) {
+    total = await HttpLog.count({ where });
+    writeCachedCount(cacheKey, total);
+    if (config.log.httpCountCacheDebug) {
+      console.log(`[HttpLogStore] count 未命中缓存，精确计算 total=${total}`);
+    }
+  } else if (config.log.httpCountCacheDebug) {
+    console.log(`[HttpLogStore] count 命中缓存 total=${total}`);
+  }
 
   const list: HttpLogItem[] = rows.map((row) => ({
     id: Number(row.id),
@@ -101,12 +182,14 @@ export async function queryHttpLogs(query: HttpLogQuery): Promise<PageResult<Htt
     resBody: row.resBody ?? null,
   }));
 
-  return buildPageResult(list, count, query.page, query.pageSize);
+  return buildPageResult(list, total, query.page, query.pageSize);
 }
 
 /**
  * 清空所有 HTTP 访问日志（TRUNCATE 数据库表；物理文件不受影响）。
+ * 同步清空 count 缓存，避免清空后 30 秒内仍返回陈旧 total。
  */
 export async function clearHttpLogsDb(): Promise<void> {
   await HttpLog.truncate();
+  clearHttpLogCountCache();
 }

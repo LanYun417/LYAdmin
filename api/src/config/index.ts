@@ -28,6 +28,37 @@ function toNumber(value: string | undefined, fallback: number): number {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
+/** 保留天数合理性上界提示阈值（超过仅告警，不拒绝）。 */
+const RETENTION_DAYS_MAX_HINT = 3650;
+
+/**
+ * 解析「日志保留天数」：必须为**正整数**。
+ *
+ * 安全背景（下界保护）：`retention = 0` 会让 `cutoff = now - 0 = now` → 删除**整张日志表**；
+ * 一个环境变量的笔误即可造成数据事故。因此对 `≤ 0` / 非整数 / 非数字 / 空串一律**拒绝该值、
+ * 回退到默认值**并打印明确告警。同时对上界做合理性提示（> {@link RETENTION_DAYS_MAX_HINT} 天仅告警）。
+ * @param name 环境变量名
+ * @param fallback 默认保留天数（正整数）
+ * @returns 合法的保留天数（非法时返回 fallback）
+ */
+function parseRetentionDays(name: string, fallback: number): number {
+  const raw = process.env[name];
+  if (raw === undefined || raw.trim() === '') {
+    return fallback;
+  }
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed) || !Number.isInteger(parsed) || parsed <= 0) {
+    console.warn(`[LogRetention] ${name}=${raw} 非法（保留天数须为正整数），已回退默认 ${fallback} 天`);
+    return fallback;
+  }
+  if (parsed > RETENTION_DAYS_MAX_HINT) {
+    console.warn(
+      `[LogRetention] ${name}=${parsed} 超出常见合理范围（> ${RETENTION_DAYS_MAX_HINT} 天），请确认是否有意为之`,
+    );
+  }
+  return parsed;
+}
+
 /** 生成 32 字节随机密钥的命令（用于必填项报错信息与 .env.example 说明）。 */
 const SECRET_GEN_HINT = `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`;
 
@@ -124,6 +155,31 @@ export const config = {
     slowSqlMs: toNumber(process.env.LOG_SLOW_SQL_MS, 200),
     /** 可选的 tar 可执行文件路径覆盖（跨平台/自定义环境用）；默认 PATH 中的 `tar` */
     tarBin: process.env.TAR_BIN ?? 'tar',
+
+    // ── 日志保留策略（按时间列分批 DELETE 自动清理）──
+    /**
+     * HTTP 访问日志（sys_http_log）保留天数，默认 7。
+     * 该表是磁盘增长主源（≈8.6GB/天@100QPS），访问日志的取证价值随时间快速衰减，故保留期最短。
+     */
+    httpLogRetentionDays: parseRetentionDays('LOG_HTTP_RETENTION_DAYS', 7),
+    /** 操作日志（sys_operation_log）保留天数，默认 180。审计证据，需长期保留。 */
+    operationLogRetentionDays: parseRetentionDays('LOG_OPERATION_RETENTION_DAYS', 180),
+    /** 登录日志（sys_login_log）保留天数，默认 180（折中）。 */
+    loginLogRetentionDays: parseRetentionDays('LOG_LOGIN_RETENTION_DAYS', 180),
+    /** 保留清理时刻：小时（本地时区，0-23，默认 0） */
+    retentionHour: toNumber(process.env.LOG_RETENTION_HOUR, 0),
+    /** 保留清理时刻：分钟（本地时区，0-59，默认 10，避开 00:05 归档以避免同一时刻抢 IO） */
+    retentionMinute: toNumber(process.env.LOG_RETENTION_MINUTE, 10),
+    /**
+     * 是否启用日志保留清理（默认 true）。
+     * 设为 false 为「紧急刹车」：不注册调度器、不执行清理（启动日志会明确打印“已禁用”）。
+     */
+    retentionEnabled: toBoolean(process.env.LOG_RETENTION_ENABLED, true),
+    /**
+     * 是否输出 HTTP 日志 count 缓存的命中/未命中调试日志（默认 false）。
+     * 仅用于验证短 TTL 计数缓存效果，生产默认关闭，不影响接口返回契约。
+     */
+    httpCountCacheDebug: toBoolean(process.env.LOG_HTTP_COUNT_CACHE_DEBUG, false),
   },
 } as const;
 

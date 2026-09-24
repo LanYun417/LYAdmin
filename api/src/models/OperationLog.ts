@@ -10,6 +10,11 @@ import { AutoIncrement, Column, DataType, Model, PrimaryKey, Table } from 'seque
   timestamps: true,
   updatedAt: false,
   comment: '操作日志表',
+  // 保留期清理（分批 DELETE WHERE created_at < ?）与按时间检索均依赖该索引：
+  // 无索引时每批删除都会全表扫描（O(n×批数)）且扫描行会被 InnoDB 加锁更久。
+  // 新环境与既有库均由 sequelize.sync 自动建立/补建（已实测：DROP 后重启即自动补回）。
+  // 若因权限等原因未能自动建立，可手动 ALTER TABLE sys_operation_log ADD INDEX idx_created_at (created_at)。
+  indexes: [{ name: 'idx_created_at', fields: ['created_at'] }],
 })
 export class OperationLog extends Model {
   @PrimaryKey
