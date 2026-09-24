@@ -1576,7 +1576,7 @@ export const MODULES: ModuleDoc[] = [
     key: 'docs',
     name: '接口文档',
     basePath: '/api-docs',
-    description: '零依赖自建接口文档页面与数据接口（公开访问）。',
+    description: '接口文档页面与数据接口（公开访问）。',
     endpoints: [
       {
         method: 'GET',

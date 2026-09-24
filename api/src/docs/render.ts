@@ -734,7 +734,7 @@ table.params tbody tr:hover { background: #fafbfc; }
 .back-top:hover { background: var(--primary-600); transform: translateY(-2px); }
 
 /* 遮罩 */
-.overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.4); z-index: 55; }
+.overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6); z-index: 55; }
 
 /* ===== 响应式 ===== */
 @media (max-width: 1200px) {
@@ -745,21 +745,21 @@ table.params tbody tr:hover { background: #fafbfc; }
   .menu-btn { display: inline-flex; }
   .brand-sub { display: none; }
   .layout { padding: 0; gap: 0; }
-  .sidebar {
-    position: fixed;
-    top: var(--header-h);
-    left: 0;
-    bottom: 0;
-    width: min(82vw, 320px);
-    max-height: none;
-    border-radius: 0;
-    border-left: 0;
-    border-top: 0;
-    transform: translateX(-100%);
-    transition: transform 0.22s ease;
-    z-index: 60;
-    box-shadow: var(--shadow-lg);
-  }
+.sidebar {
+      position: fixed;
+      top: var(--header-h);
+      left: 0;
+      bottom: 0;
+      width: min(86vw, 340px);
+      max-height: none;
+      border-radius: 0;
+      border-left: 0;
+      border-top: 0;
+      transform: translateX(-100%);
+      transition: transform 0.22s ease;
+      z-index: 60;
+      box-shadow: 4px 0 24px rgba(0, 0, 0, 0.18);
+    }
   .sidebar.open { transform: translateX(0); }
   .content { width: 100%; padding: 16px; }
   .topbar-actions { display: none; }
@@ -788,7 +788,7 @@ table.params tbody tr:hover { background: #fafbfc; }
       <span class="brand-mark" aria-hidden="true">LY</span>
       <div>
         <h1>${escapeHtml(DOC_TITLE)}</h1>
-        <p class="brand-sub">共 ${ENDPOINT_TOTAL} 个接口 · ${moduleCount} 个模块 · 零依赖自建</p>
+        <p class="brand-sub">共 ${ENDPOINT_TOTAL} 个接口 · ${moduleCount} 个模块</p>
       </div>
     </div>
     <div class="search-wrap">
