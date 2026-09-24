@@ -6,7 +6,8 @@ import { formatDateTimeInZone } from '@/utils/datetime';
 import { Op, type WhereOptions } from 'sequelize';
 import { LoginLog, OperationLog } from '@/models';
 import type { PageResult } from '@/types';
-import { clearAccessLog, readHttpLogs } from '@/utils/logger';
+import { clearHttpLogsDb, queryHttpLogs } from '@/logging/httpLogStore';
+import type { HttpLogItem } from '@/logging/types';
 import { buildPageResult, parsePagination } from '@/utils/pagination';
 
 /** 操作日志写入参数。 */
@@ -54,25 +55,10 @@ export interface OperationLogItem {
 
 /**
  * HTTP 访问日志列表项（对外 API 契约）。
- * 注意：日志文件内的字段名是 status / responseTime，
- * 对外统一映射为 statusCode / duration，与前端 HttpLog 类型对齐。
+ * 类型已迁移至 `logging/types`，此处再导出以保持既有引用路径可用。
+ * 注意：对外字段为 statusCode / duration，与前端 HttpLog 类型对齐。
  */
-export interface HttpLogItem {
-  id: number;
-  time: string;
-  method: string;
-  url: string;
-  statusCode: number;
-  duration: number;
-  ip: string;
-  userAgent: string;
-  /** 请求查询参数（已脱敏） */
-  query?: Record<string, unknown>;
-  /** 请求体（已脱敏、截断） */
-  reqBody?: string;
-  /** 响应内容（已截断；二进制为占位说明） */
-  resBody?: string;
-}
+export type { HttpLogItem };
 
 /** 解析时间范围查询条件（无有效值时返回 undefined）。 */
 function buildDateRange(startTime?: unknown, endTime?: unknown): WhereOptions | undefined {
@@ -197,12 +183,12 @@ export async function listOperationLogs(query: Record<string, unknown>): Promise
 }
 
 /**
- * 分页查询 HTTP 访问日志（从日志文件读取）。
+ * 分页查询 HTTP 访问日志（改查数据库 `sys_http_log`）。
  * @param query 查询参数
  */
 export async function listHttpLogs(query: Record<string, unknown>): Promise<PageResult<HttpLogItem>> {
   const { page, pageSize } = parsePagination(query);
-  const { list, total } = readHttpLogs({
+  return queryHttpLogs({
     page,
     pageSize,
     method: typeof query.method === 'string' ? query.method : undefined,
@@ -210,29 +196,13 @@ export async function listHttpLogs(query: Record<string, unknown>): Promise<Page
     startTime: typeof query.startTime === 'string' ? query.startTime : undefined,
     endTime: typeof query.endTime === 'string' ? query.endTime : undefined,
   });
-
-  const items: HttpLogItem[] = list.map((record, index) => ({
-    id: (page - 1) * pageSize + index + 1,
-    time: record.time,
-    method: record.method,
-    url: record.url,
-    statusCode: record.status,
-    duration: record.responseTime,
-    ip: record.ip,
-    userAgent: record.userAgent,
-    query: record.query,
-    reqBody: record.reqBody,
-    resBody: record.resBody,
-  }));
-
-  return buildPageResult(items, total, page, pageSize);
 }
 
 /**
- * 清空所有 HTTP 访问日志（截断访问日志文件）。
+ * 清空所有 HTTP 访问日志（仅清数据库表 `sys_http_log`；物理文件不动）。
  */
 export async function clearHttpLogs(): Promise<void> {
-  await clearAccessLog();
+  await clearHttpLogsDb();
 }
 
 /** 转义 CSV 单元格。 */

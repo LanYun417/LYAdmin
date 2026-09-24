@@ -1,11 +1,13 @@
 /**
  * 日志工具。
- * 模块职责：提供 morgan 访问日志输出流、JSON Lines 落盘格式，以及 HTTP 日志文件读取（供 `/api/logs/http` 使用）。
+ * 模块职责：提供 HTTP 访问日志中间件（请求参数/请求体/响应内容采集、脱敏、截断）与客户端 IP 解析。
+ * 访问日志采用「双写」：① 物理文件（按天，JSON Lines，留痕）② `sys_http_log` 表（供页面查询）。
+ * 物理文件与数据库各自独立失败隔离，任一步骤异常均不影响业务响应。
  */
-import fs from 'fs';
-import path from 'path';
 import type { Request, RequestHandler, Response } from 'express';
-import { config } from '@/config';
+import { writeLog } from '@/logging/logManager';
+import { appendHttpLog } from '@/logging/httpLogStore';
+import type { AccessLogRecord } from '@/logging/types';
 
 /**
  * 解析客户端真实 IP（优先取代理头 `x-forwarded-for`）。
@@ -21,63 +23,6 @@ export function getClientIp(req: Request): string {
     return forwarded[0];
   }
   return req.ip ?? req.socket.remoteAddress ?? '';
-}
-
-/** 访问日志文件绝对路径。 */
-export const ACCESS_LOG_FILE = path.join(config.logDir, 'access.log');
-
-// 确保日志目录存在
-if (!fs.existsSync(config.logDir)) {
-  fs.mkdirSync(config.logDir, { recursive: true });
-}
-
-/** 访问日志写入流（追加模式；清空日志时会重建）。 */
-let accessLogStream = fs.createWriteStream(ACCESS_LOG_FILE, { flags: 'a' });
-
-/**
- * 清空访问日志文件。
- * 先关闭写入流（等待句柄释放，避免 Windows 下文件占用），
- * 再截断文件并重建流，保证后续日志继续正常写入。
- */
-export function clearAccessLog(): Promise<void> {
-  return new Promise((resolve, reject) => {
-    accessLogStream.end(() => {
-      try {
-        fs.writeFileSync(ACCESS_LOG_FILE, '');
-        accessLogStream = fs.createWriteStream(ACCESS_LOG_FILE, { flags: 'a' });
-        resolve();
-      } catch (error) {
-        reject(error);
-      }
-    });
-  });
-}
-
-/** 一条访问日志记录。 */
-export interface HttpLogRecord {
-  time: string;
-  method: string;
-  url: string;
-  status: number;
-  responseTime: number;
-  ip: string;
-  userAgent: string;
-  /** 请求查询参数（已脱敏） */
-  query?: Record<string, unknown>;
-  /** 请求体（JSON 序列化、脱敏、超长截断） */
-  reqBody?: string;
-  /** 响应内容（截断；二进制仅记占位说明） */
-  resBody?: string;
-}
-
-/** 访问日志查询条件。 */
-export interface HttpLogQuery {
-  page: number;
-  pageSize: number;
-  method?: string;
-  statusCode?: number;
-  startTime?: string;
-  endTime?: string;
 }
 
 /** 请求/响应内容捕获与序列化上限（字节） */
@@ -181,9 +126,11 @@ function captureResponseBody(res: Response): () => { text: string; totalBytes: n
 }
 
 /**
- * HTTP 访问日志中间件（替代 morgan 落盘）：
- * 拦截响应收集内容，finish 时以 JSON Lines 追加写入访问日志文件，
- * 记录请求查询参数、请求体（脱敏）与响应内容（截断）。
+ * HTTP 访问日志中间件：
+ * 拦截响应收集内容，finish 时组装 AccessLogRecord，
+ * ① 以 JSON Lines 追加写入按天物理文件（`logs/access/YYYY-M-D.log`）；
+ * ② fire-and-forget 写入 `sys_http_log` 表（不阻塞响应）。
+ * 任一步骤失败仅 console.error，绝不影响业务响应。
  */
 export function httpAccessLogger(): RequestHandler {
   return (req, res, next) => {
@@ -216,7 +163,7 @@ export function httpAccessLogger(): RequestHandler {
         }
 
         const hasQuery = Object.keys(req.query).length > 0;
-        const record: HttpLogRecord = {
+        const record: AccessLogRecord = {
           time: new Date().toISOString(),
           method: req.method,
           url: req.originalUrl || req.url || '',
@@ -228,8 +175,11 @@ export function httpAccessLogger(): RequestHandler {
           reqBody: serializeBody(req.body),
           resBody,
         };
-        accessLogStream.write(`${JSON.stringify(record)}
-`);
+
+        // ① 物理文件（按天，JSON Lines）
+        writeLog('access', record);
+        // ② 数据库（fire-and-forget，内部已吞异常）
+        void appendHttpLog(record);
       } catch (error) {
         // 日志记录失败不影响业务响应
         console.error('[HttpAccessLogger] 写入访问日志失败:', error);
@@ -238,52 +188,4 @@ export function httpAccessLogger(): RequestHandler {
 
     next();
   };
-}
-
-export function readHttpLogs(query: HttpLogQuery): { list: HttpLogRecord[]; total: number } {
-  if (!fs.existsSync(ACCESS_LOG_FILE)) {
-    return { list: [], total: 0 };
-  }
-
-  const content = fs.readFileSync(ACCESS_LOG_FILE, 'utf-8');
-  const lines = content.split('\n').filter((line) => line.trim() !== '');
-
-  const records: HttpLogRecord[] = [];
-  for (const line of lines) {
-    try {
-      const parsed = JSON.parse(line) as HttpLogRecord;
-      records.push(parsed);
-    } catch {
-      // 忽略无法解析的历史行
-    }
-  }
-
-  const filtered = records.filter((record) => {
-    // 兼容历史数据：只展示后端 API 请求（中间件层现已仅记录 /api/*）
-    if (!record.url.startsWith('/api')) {
-      return false;
-    }
-    if (query.method && record.method.toUpperCase() !== query.method.toUpperCase()) {
-      return false;
-    }
-    if (query.statusCode && record.status !== query.statusCode) {
-      return false;
-    }
-    if (query.startTime && record.time < query.startTime) {
-      return false;
-    }
-    if (query.endTime && record.time > query.endTime) {
-      return false;
-    }
-    return true;
-  });
-
-  // 倒序：最新在前
-  filtered.reverse();
-
-  const total = filtered.length;
-  const start = (query.page - 1) * query.pageSize;
-  const list = filtered.slice(start, start + query.pageSize);
-
-  return { list, total };
 }
