@@ -4,7 +4,36 @@
  */
 import { Sequelize } from 'sequelize-typescript';
 import { config } from '@/config';
+import { writeLog } from '@/logging/logManager';
+import type { DbLogRecord } from '@/logging/types';
 import { models } from '@/models';
+
+/**
+ * 构造 Sequelize SQL 日志钩子：把每条 SQL（含耗时）写入 `logs/db/` 日志文件。
+ *
+ * 关键约定（见 docs/system_design.md §3.5 / §8）：
+ * - **仅写文件、绝不写数据库**，避免 SQL 日志自触发造成递归。
+ * - 需配合 `benchmark: true` 才能拿到 `timing`（毫秒）；缺失时按 0 处理。
+ * - `slow` = 耗时 >= `config.log.slowSqlMs`（默认 200ms）。
+ * - 任何写入异常内部捕获，绝不影响数据库正常行为。
+ * @returns Sequelize `logging` 回调
+ */
+function createDbLogger(): (sql: string, timing?: number) => void {
+  return (sql: string, timing?: number): void => {
+    try {
+      const durationMs = typeof timing === 'number' ? timing : 0;
+      const record: DbLogRecord = {
+        time: new Date().toISOString(),
+        sql,
+        durationMs,
+        slow: durationMs >= config.log.slowSqlMs,
+      };
+      writeLog('db', record);
+    } catch (error) {
+      console.error('[DBLogger] 写入数据库日志失败:', error);
+    }
+  };
+}
 
 /** 全局唯一 Sequelize 实例。 */
 export const sequelize = new Sequelize({
@@ -14,7 +43,10 @@ export const sequelize = new Sequelize({
   database: config.db.name,
   username: config.db.user,
   password: config.db.password,
-  logging: config.db.logging ? (sql: string) => console.log(`[SQL] ${sql}`) : false,
+  // config.db.logging=true 时：SQL 写入 logs/db/ 文件（不再打印到控制台）
+  logging: config.db.logging ? createDbLogger() : false,
+  // 开启 benchmark 以获取每条 SQL 的耗时（供 db 日志 durationMs / slow 使用）
+  benchmark: true,
   models,
   define: {
     underscored: true,
