@@ -129,6 +129,9 @@ export default [
         module: 'readonly',
         require: 'readonly',
         __dirname: 'readonly',
+        // Node 内置全局：`api/scripts/bench-http.mjs` 等零依赖 Node 脚本会用到
+        Buffer: 'readonly',
+        URL: 'readonly',
       },
     },
     rules: {
