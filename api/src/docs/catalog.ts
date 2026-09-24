@@ -1233,7 +1233,7 @@ export const MODULES: ModuleDoc[] = [
         summary: '清空 HTTP 访问日志',
         description: '清空数据库中的全部 HTTP 访问日志记录。',
         auth: true,
-        permission: 'log:http:list',
+        permission: 'log:http:clear',
         contentType: 'application/json',
         requestExample: [
           'curl -X DELETE "http://localhost:3000/api/logs/http" \\',

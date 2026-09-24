@@ -48,6 +48,7 @@ const ROLE_SEEDS: RoleSeed[] = [
       'log:operation',
       'log:operation:export',
       'log:http',
+      'log:http:clear',
       'file',
       'file:upload',
       'file:remove',
@@ -59,6 +60,8 @@ const ROLE_SEEDS: RoleSeed[] = [
     roleName: '只读访客',
     sort: 3,
     status: Status.ENABLED,
+    // 严格只读：只授予查看/查询类权限码，任何写操作与破坏性操作（如 log:http:clear）
+    // 一律不得加入此列表，否则只读角色将获得越权能力。
     remark: '仅拥有查看类权限',
     menuKeys: [
       'dashboard',

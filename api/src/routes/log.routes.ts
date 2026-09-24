@@ -24,7 +24,8 @@ router.get(
 
 router.get('/http', requirePermission('log:http:list'), asyncHandler(logController.httpLogs));
 
-// 清空所有 HTTP 日志（与列表查看同权限码）
-router.delete('/http', requirePermission('log:http:list'), asyncHandler(logController.clearHttpLogs));
+// 清空所有 HTTP 日志：高危破坏性操作，必须使用独立的 log:http:clear 权限码，
+// 不能复用只读的 log:http:list，否则任何能查看日志的角色都能清空日志。
+router.delete('/http', requirePermission('log:http:clear'), asyncHandler(logController.clearHttpLogs));
 
 export default router;

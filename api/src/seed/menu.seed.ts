@@ -257,6 +257,15 @@ const MENU_TREE: MenuSeedNode[] = [
         sort: 3,
         visible: Status.ENABLED,
         keepAlive: 1,
+        children: [
+          {
+            key: 'log:http:clear',
+            menuName: '清空HTTP日志',
+            menuType: MenuType.BUTTON,
+            permission: 'log:http:clear',
+            sort: 1,
+          },
+        ],
       },
     ],
   },

@@ -23,7 +23,13 @@ export function requirePermission(...codes: string[]): RequestHandler {
         next();
         return;
       }
-      const passed = codes.length === 0 || codes.some((code) => user.permissions.includes(code));
+      // 未声明任何权限码视为配置缺失，按最小权限原则默认拒绝（fail-closed）。
+      // 历史实现为 codes.length === 0 直接放行，一旦误写 requirePermission() 就会
+      // 让所有已登录用户通过，属越权风险。
+      if (codes.length === 0) {
+        throw AppError.forbidden();
+      }
+      const passed = codes.some((code) => user.permissions.includes(code));
       if (!passed) {
         throw AppError.forbidden();
       }

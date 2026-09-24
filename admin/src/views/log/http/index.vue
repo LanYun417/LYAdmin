@@ -159,7 +159,9 @@ onMounted(() => {
         <span class="table-title">HTTP 访问日志</span>
         <div class="flex items-center gap-2">
           <el-button :icon="BIconArrowClockwise" @click="loadList">刷新</el-button>
-          <el-button type="danger" plain :icon="BIconTrash" @click="handleClear">清空所有日志</el-button>
+          <el-button v-permission="'log:http:clear'" type="danger" plain :icon="BIconTrash" @click="handleClear"
+            >清空所有日志</el-button
+          >
         </div>
       </div>
 
