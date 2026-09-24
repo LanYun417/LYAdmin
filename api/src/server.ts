@@ -6,12 +6,18 @@ import 'reflect-metadata';
 import { createApp } from '@/app';
 import { config } from '@/config';
 import { connectDatabase, syncDatabase } from '@/config/database';
+import { registerProcessHandlers, startLogScheduler } from '@/logging';
 import { runSeed } from '@/seed';
 
 /**
  * 启动流程。
  */
 async function bootstrap(): Promise<void> {
+  // 进程级异常与退出信号（异常写入 error 日志；退出时关流 + 停调度）
+  registerProcessHandlers();
+  // 日志归档调度：启动补跑 + 每日定时归档
+  startLogScheduler();
+
   await connectDatabase();
   await syncDatabase();
   await runSeed();
