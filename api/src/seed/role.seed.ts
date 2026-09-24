@@ -50,7 +50,11 @@ const ROLE_SEEDS: RoleSeed[] = [
       'log:operation',
       'log:operation:export',
       'log:http',
-      'log:http:clear',
+      // 说明：admin 为「业务运营管理者」，不应持有系统级能力。以下两个权限码已回收，
+      // 仅由超管（menuKeys: 'ALL'）持有：
+      //   - log:http:clear —— 清空全量日志，属破坏性系统操作；
+      //   - tool:gen:create —— 向源码目录写 .ts/.vue，属系统级代码生成能力。
+      // 前端按钮已配置 v-permission，回收后 admin 侧将自动隐藏，无需改动前端。
       'file',
       'file:upload',
       'file:remove',
@@ -58,7 +62,6 @@ const ROLE_SEEDS: RoleSeed[] = [
       'tool:gen',
       'tool:gen:preview',
       'tool:gen:download',
-      'tool:gen:create',
       'profile',
     ],
   },
