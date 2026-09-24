@@ -58,14 +58,17 @@ export function getImageMimeType(name: string): string {
  * 解析 `?scale=` 查询参数。
  * 归一化到 2 位小数，合法范围 [0.1, 1]。
  * @param raw 原始查询值（可能是 string | string[] | undefined）
- * @returns 合法时返回归一化后的比例；缺省/非法（非数字、空串、0、负数、>1、NaN）返回 null（按原图处理）
+ * @returns 合法时返回归一化后的比例；缺省/非法（重复参数、非数字、空串、0、负数、>1、<0.1、NaN）返回 null（按原图处理）
  */
 export function parseScale(raw: unknown): number | null {
   if (raw === undefined || raw === null) {
     return null;
   }
-  const text = Array.isArray(raw) ? String(raw[0]) : String(raw);
-  const trimmed = text.trim();
+  // 重复/多值参数（如 ?scale=0.1&scale=0.5）视为非法 → 回原图
+  if (Array.isArray(raw)) {
+    return null;
+  }
+  const trimmed = String(raw).trim();
   if (trimmed === '') {
     return null;
   }
@@ -90,7 +93,7 @@ function buildCachePath(sourceAbsPath: string, scale: number): string {
 
 /**
  * 获取指定图片在指定比例下的（缩放后）绝对路径。
- * 命中缓存直接返回；否则用 sharp 等比缩放并落盘到缓存目录。
+ * 命中缓存直接返回；否则用 sharp 等比缩放并以「临时文件 + 原子 rename」落盘到缓存目录。
  * 不指定输出格式 → 保持原格式；只缩不放；任何异常均内部捕获并回退原图路径。
  * @param sourceAbsPath 原图绝对路径
  * @param scale 归一化后的缩放比例（[0.1, 1]）
@@ -130,8 +133,20 @@ export async function getScaledImage(sourceAbsPath: string, scale: number): Prom
       }
 
       await fs.promises.mkdir(config.upload.cacheDir, { recursive: true });
-      // 不指定格式 → 保持原格式；仅按宽度等比缩放（高度自动按比例）
-      await sharp(sourceAbsPath).resize({ width: targetWidth }).toFile(cachePath);
+
+      // 原子写：先写同目录临时文件，再 rename 到最终路径。
+      // 同目录（同卷）的 rename 才是原子操作，可避免进程在写入中途被杀时残留
+      // 半截缓存文件、进而被 fs.existsSync 误判为命中并长期复用损坏图片。
+      const tmpPath = `${cachePath}.tmp-${process.pid}-${Date.now()}`;
+      try {
+        // 不指定格式 → 保持原格式；仅按宽度等比缩放（高度自动按比例）
+        await sharp(sourceAbsPath).resize({ width: targetWidth }).toFile(tmpPath);
+        await fs.promises.rename(tmpPath, cachePath);
+      } catch (error) {
+        // 写失败/rename 失败：尽力清理临时文件，再将异常上抛由外层 catch 回退原图
+        await fs.promises.rm(tmpPath, { force: true }).catch(() => {});
+        throw error;
+      }
       return cachePath;
     })();
 
