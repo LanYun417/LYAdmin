@@ -1,0 +1,75 @@
+%% LYAdmin 日志记录方案重构 · 类图（新增/改造模块）
+%% 模型属性 camelCase，DB 列 snake_case（Sequelize underscored:true 自动映射）
+
+classDiagram
+    direction LR
+
+    class LogType {
+        <<enumeration>>
+        access
+        db
+        error
+    }
+
+    class LogManager {
+        -Map~string,WriteStream~ streams
+        -Record~LogType,string~ currentKeys
+        +getLogDir(type) string
+        +dailyLogFileName(date) string
+        +dailyLogPath(type, date) string
+        +archiveLogPath(type, date) string
+        +writeLog(type, record) void
+        +closeStream(type, date) Promise~void~
+        +closeAllStreams() Promise~void~
+    }
+
+    class Archiver {
+        +archivePastLogs() Promise~ArchiveResult[]~
+        +archiveForDate(date) Promise~ArchiveResult[]~
+    }
+
+    class LogScheduler {
+        -timer Timeout
+        +startLogScheduler() void
+        +stopLogScheduler() void
+    }
+
+    class ErrorReporter {
+        +reportError(err, ctx) void
+        +reportProcessError(kind, err) void
+    }
+
+    class HttpLogStore {
+        +appendHttpLog(record) Promise~void~
+        +queryHttpLogs(query) Promise~PageResult~
+        +clearHttpLogsDb() Promise~void~
+    }
+
+    class HttpLog {
+        +number id
+        +Date time
+        +string method
+        +string url
+        +number statusCode
+        +number duration
+        +string ip
+        +string userAgent
+        +object query
+        +string reqBody
+        +string resBody
+    }
+
+    class LogService {
+        +listHttpLogs(query) PageResult
+        +clearHttpLogs() void
+        +createOperationLog(input) void
+        +listLoginLogs(query) PageResult
+        +listOperationLogs(query) PageResult
+    }
+
+    LogManager ..> LogType : uses
+    Archiver ..> LogManager : closeStream / archiveLogPath
+    LogScheduler ..> Archiver : triggers
+    ErrorReporter ..> LogManager : writeLog(error)
+    HttpLogStore ..> HttpLog : ORM
+    LogService ..> HttpLogStore : delegates
