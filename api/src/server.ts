@@ -6,6 +6,7 @@ import 'reflect-metadata';
 import { createApp } from '@/app';
 import { config } from '@/config';
 import { connectDatabase, syncDatabase } from '@/config/database';
+import { auditDocsCoverage } from '@/docs';
 import { registerProcessHandlers, startLogScheduler } from '@/logging';
 import { runSeed } from '@/seed';
 
@@ -26,7 +27,11 @@ async function bootstrap(): Promise<void> {
   app.listen(config.port, () => {
     console.log(`[Server] LYAdmin API 已启动: http://localhost:${config.port}/api`);
     console.log(`[Server] 静态资源目录: http://localhost:${config.port}/uploads`);
+    console.log(`[Docs] 接口文档: http://localhost:${config.port}/api-docs`);
   });
+
+  // 接口文档覆盖校验：比对运行时注册路由与文档目录，仅打印提示，不影响启动
+  auditDocsCoverage(app);
 }
 
 bootstrap().catch((error) => {

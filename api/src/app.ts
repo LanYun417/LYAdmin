@@ -6,6 +6,7 @@ import cors from 'cors';
 import express, { type Express, type Request, type Response } from 'express';
 import morgan from 'morgan';
 import { config } from '@/config';
+import { registerDocsRoutes } from '@/docs';
 import { errorHandler, notFoundHandler } from '@/middlewares/errorHandler';
 import { imageScaleMiddleware } from '@/middlewares/imageScale';
 import { operationLog } from '@/middlewares/operationLog';
@@ -58,6 +59,9 @@ export function createApp(): Express {
 
   // 业务路由
   app.use('/api', routes);
+
+  // 零依赖自建接口文档（公开访问，不含敏感信息；路径位于 /api 之外，不与业务路由冲突）
+  registerDocsRoutes(app);
 
   // 404 与统一错误处理
   app.use(notFoundHandler);
