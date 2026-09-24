@@ -11,6 +11,9 @@ const ROOT_DIR = path.resolve(__dirname, '../../');
 
 dotenv.config({ path: path.resolve(ROOT_DIR, '.env') });
 
+/** 日志根目录（绝对路径），供 logDir 与归档目录复用。 */
+const LOG_DIR = path.resolve(ROOT_DIR, process.env.LOG_DIR ?? 'logs');
+
 /** 将字符串布尔值安全转换为 boolean。 */
 function toBoolean(value: string | undefined, fallback: boolean): boolean {
   if (value === undefined || value === '') {
@@ -63,7 +66,25 @@ export const config = {
   /** 跨域允许来源 */
   corsOrigin: process.env.CORS_ORIGIN ?? 'http://localhost:5173',
   /** 日志目录（绝对路径） */
-  logDir: path.resolve(ROOT_DIR, process.env.LOG_DIR ?? 'logs'),
+  logDir: LOG_DIR,
+  /** 日志系统配置（按天分文件 + 定时归档） */
+  log: {
+    /** 日志根目录（绝对路径），即 config.logDir，语义化别名 */
+    dir: LOG_DIR,
+    /** 归档根目录（绝对路径），默认 <logDir>/archive；可用 LOG_ARCHIVE_DIR 覆盖 */
+    archiveDir: path.resolve(
+      ROOT_DIR,
+      process.env.LOG_ARCHIVE_DIR ?? path.join(process.env.LOG_DIR ?? 'logs', 'archive'),
+    ),
+    /** 每日归档时刻：小时（本地时区，0-23，默认 0） */
+    archiveHour: toNumber(process.env.LOG_ARCHIVE_HOUR, 0),
+    /** 每日归档时刻：分钟（本地时区，0-59，默认 5） */
+    archiveMinute: toNumber(process.env.LOG_ARCHIVE_MINUTE, 5),
+    /** 归档成功后是否保留源 .log（false=删除，默认 false） */
+    keepSourceAfterArchive: toBoolean(process.env.LOG_ARCHIVE_KEEP_SOURCE, false),
+    /** 慢 SQL 阈值（ms，默认 200） */
+    slowSqlMs: toNumber(process.env.LOG_SLOW_SQL_MS, 200),
+  },
 } as const;
 
 export type AppConfig = typeof config;
