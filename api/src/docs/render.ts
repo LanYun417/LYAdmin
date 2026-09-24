@@ -11,7 +11,23 @@
  * - 滚动条优化（页面 / 目录 / 代码块三处）；
  * - 路径与示例代码块复制、返回顶部、搜索过滤、scroll-spy、键盘可操作与 aria 标注。
  */
+import * as fs from 'fs';
+import * as path from 'path';
 import { DOC_TITLE, ENDPOINT_TOTAL, GENERAL, MODULES, type EndpointDoc, type ParamDoc } from '@/docs/catalog';
+
+/**
+ * 文档页 favicon：直接复用后台管理系统的 favicon.ico，以内联 data URI 形式嵌入页面，
+ * 保证页面零外链、离线可用，且始终与后台图标保持一致。
+ * 模块加载时读取一次；文件缺失（如独立部署 api 时）则降级为空字符串（无 favicon）。
+ */
+const FAVICON_DATA_URI = (() => {
+  try {
+    const faviconPath = path.resolve(__dirname, '../../../admin/public/favicon.ico');
+    return `data:image/x-icon;base64,${fs.readFileSync(faviconPath).toString('base64')}`;
+  } catch {
+    return '';
+  }
+})();
 
 /** HTML 转义，防止内容破坏结构。 */
 function escapeHtml(input: string): string {
@@ -299,6 +315,7 @@ export function renderDocsHtml(): string {
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="color-scheme" content="light" />
 <title>${escapeHtml(DOC_TITLE)}</title>
+<link rel="icon" href="${FAVICON_DATA_URI}" />
 <style>
 :root {
   --primary: #409eff;
