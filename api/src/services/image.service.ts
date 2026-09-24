@@ -83,11 +83,23 @@ export function parseScale(raw: unknown): number | null {
   return Math.round(value * 100) / 100;
 }
 
-/** 依据原文件路径与比例，计算缓存文件的绝对路径。 */
+/**
+ * 依据原文件路径与比例，计算缓存文件的绝对路径。
+ *
+ * 关键：缓存键必须包含源文件**相对上传根目录的路径**，否则不同目录下的同名图片
+ * （如 `a/logo.png` 与 `b/logo.png`）会命中同一份缓存，返回错误的图片。
+ * 若源文件不在上传根目录内（如外部绝对路径），退化用文件名 basename，避免生成 `../..`
+ * 这类越界且含分隔符的缓存名。目录分隔符统一替换为 `__` 以保证文件名安全。
+ */
 function buildCachePath(sourceAbsPath: string, scale: number): string {
   const ext = path.extname(sourceAbsPath).toLowerCase();
-  const base = path.basename(sourceAbsPath, path.extname(sourceAbsPath));
-  const cacheFileName = `${base}_s${scale.toFixed(2)}${ext}`;
+  const relative = path.relative(config.upload.dir, sourceAbsPath);
+  const isInsideUpload = relative !== '' && !relative.startsWith('..') && !path.isAbsolute(relative);
+  const keyPath = isInsideUpload ? relative : path.basename(sourceAbsPath);
+  // 去掉尾部扩展名（仅保留路径主体参与缓存键，扩展名单独拼接避免重复）
+  const keyBody = keyPath.slice(0, keyPath.length - path.extname(keyPath).length);
+  const safeKey = keyBody.replace(/[\\/]+/g, '__');
+  const cacheFileName = `${safeKey}_s${scale.toFixed(2)}${ext}`;
   return path.join(config.upload.cacheDir, cacheFileName);
 }
 
