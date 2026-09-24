@@ -7,6 +7,7 @@ import express, { type Express, type Request, type Response } from 'express';
 import morgan from 'morgan';
 import { config } from '@/config';
 import { errorHandler, notFoundHandler } from '@/middlewares/errorHandler';
+import { imageScaleMiddleware } from '@/middlewares/imageScale';
 import { operationLog } from '@/middlewares/operationLog';
 import routes from '@/routes';
 import { httpAccessLogger } from '@/utils/logger';
@@ -39,7 +40,9 @@ export function createApp(): Express {
   app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 
   // 静态资源：上传目录（Express 5 直接挂载即可，无需通配路由）
-  app.use('/uploads', express.static(config.upload.dir));
+  // 图片按需缩放中间件须在 static 之前：命中合法 ?scale= 且为图片时返回缩放结果，
+  // 否则 next() 交由 static 出原图。
+  app.use('/uploads', imageScaleMiddleware(), express.static(config.upload.dir));
 
   // 操作日志（拦截写操作，异步落库）
   app.use(operationLog());

@@ -6,4 +6,5 @@ logs/
 .env.local
 uploads/*
 !uploads/.gitkeep
+cache/
 *.tsbuildinfo

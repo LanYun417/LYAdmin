@@ -59,6 +59,12 @@ export const config = {
     dir: path.resolve(ROOT_DIR, process.env.UPLOAD_DIR ?? 'uploads'),
     /** 相对 api/ 的目录名，用于拼接 URL */
     dirName: process.env.UPLOAD_DIR ?? 'uploads',
+    /**
+     * 图片缩放缓存目录（绝对路径），默认 <api>/cache/images。
+     * 必须位于静态服务根目录（upload.dir）之外，避免缓存文件被公开访问；
+     * 可用 UPLOAD_CACHE_DIR 覆盖。
+     */
+    cacheDir: path.resolve(ROOT_DIR, process.env.UPLOAD_CACHE_DIR ?? 'cache/images'),
     /** 单文件大小上限（字节） */
     maxSize: toNumber(process.env.UPLOAD_MAX_SIZE, 10 * 1024 * 1024),
     /** 单次最多文件数 */

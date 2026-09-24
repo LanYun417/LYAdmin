@@ -18,6 +18,20 @@ const query = reactive({ page: 1, pageSize: 10, originName: '' });
 const ACCEPT_TYPES = '.jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip';
 /** 单文件大小上限 10MB */
 const MAX_SIZE = 10 * 1024 * 1024;
+/** 列表缩略图等比缩放比例（0.1 = 宽高各为原图 10%），仅用于小尺寸展示，节省带宽 */
+const THUMB_SCALE = 0.1;
+
+/**
+ * 列表缩略图地址：在原图地址后追加等比缩放参数（scale=0.1）。
+ * 原图地址（fileUrl）不含 query，直接拼接；若已带 query 则用 & 追加，避免重复拼接。
+ */
+function thumbUrl(url: string): string {
+  if (!url) {
+    return url;
+  }
+  const separator = url.includes('?') ? '&' : '?';
+  return `${url}${separator}scale=${THUMB_SCALE}`;
+}
 
 /** 加载文件列表 */
 async function loadFiles(): Promise<void> {
@@ -132,7 +146,7 @@ onMounted(() => {
             <el-image
               v-if="row.mimeType?.startsWith('image/')"
               class="file-thumb file-thumb--image"
-              :src="row.fileUrl"
+              :src="thumbUrl(row.fileUrl)"
               :preview-src-list="[row.fileUrl]"
               preview-teleported
               fit="cover"
