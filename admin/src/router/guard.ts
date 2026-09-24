@@ -2,6 +2,7 @@ import type { Router } from 'vue-router';
 import NProgress from 'nprogress';
 import { useUserStore } from '@/store/modules/user';
 import { usePermissionStore } from '@/store/modules/permission';
+import { hasPermission } from '@/utils/permission';
 
 NProgress.configure({ showSpinner: false, trickleSpeed: 120 });
 
@@ -40,8 +41,17 @@ export function setupRouterGuard(router: Router): void {
       return '/home';
     }
 
-    // 动态路由已注入 → 放行
+    // 动态路由已注入 → 校验路由级权限后放行
     if (permissionStore.added) {
+      // 路由 meta.permission 来自菜单节点权限码（见 permission store 的 buildRoutes）。
+      // 已登录但当前用户不具备该权限码时，跳转 403（语义正确），而非落到 catch-all 的 404。
+      // 超管 permissions 含 '*'，hasPermission 直接放行，不会被误拦。
+      const required = to.meta.permission as string | undefined;
+      if (required && !hasPermission(required)) {
+        NProgress.done();
+        // 路由内跳转（返回目标路径），不做整页刷新，保留 tagsView 已打开标签与表单状态
+        return '/403';
+      }
       return true;
     }
 

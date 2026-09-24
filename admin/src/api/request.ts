@@ -5,6 +5,7 @@ import axios, {
   type AxiosResponse,
   type InternalAxiosRequestConfig,
 } from 'axios';
+import type { Router } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import type { ApiResponse, RefreshResult } from '@/types/api';
 import { getAccessToken, getRefreshToken, removeToken, setToken } from '@/utils/auth';
@@ -24,6 +25,58 @@ interface RetryableConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;
 }
 
+/* --------------------------- 路由导航注入（避免循环依赖） --------------------------- */
+
+/**
+ * vue-router 实例引用。
+ *
+ * 说明：`request.ts` 处于依赖链底层（router → guard → store → api/auth → api/request），
+ * 若在此处直接 `import router from '@/router'` 会形成循环依赖。因此改为「注入式」：
+ * 由 `main.ts` 在创建路由实例后调用 {@link setRequestRouter} 注入，`request.ts` 仅在
+ * 拦截器触发时（运行时）读取该引用，此时实例必已就绪。
+ *
+ * 这里使用 `import type`（编译期擦除），不会在运行时引入 `vue-router`，不构成循环依赖。
+ */
+let routerInstance: Router | null = null;
+
+/**
+ * 注入应用的 vue-router 实例（由 main.ts 调用）。
+ * @param router 路由实例
+ */
+export function setRequestRouter(router: Router): void {
+  routerInstance = router;
+}
+
+/**
+ * 执行路由内跳转；未注入 router 时回退为整页跳转（仅在应用初始化极早期可能发生）。
+ * @param fullPath 目标完整路径（含查询串）
+ */
+function redirectTo(fullPath: string): void {
+  if (routerInstance) {
+    void routerInstance.push(fullPath);
+    return;
+  }
+  // 兜底：router 尚未注入（正常运行时不会走到这里），退化为整页跳转以保证不丢失导航
+  window.location.assign(fullPath);
+}
+
+/** 当前是否已处于无权限页（用于避免重复跳转）。 */
+function isOnForbiddenPage(): boolean {
+  if (routerInstance) {
+    return routerInstance.currentRoute.value.path === '/403';
+  }
+  return window.location.pathname.startsWith('/403');
+}
+
+/** 当前完整路径（含查询串），优先取路由状态，回退到浏览器地址。 */
+function currentFullPath(): string {
+  if (routerInstance) {
+    return routerInstance.currentRoute.value.fullPath;
+  }
+  const { pathname, search } = window.location;
+  return `${pathname}${search}`;
+}
+
 /** 请求实例 */
 const service: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
@@ -39,18 +92,18 @@ let pendingQueue: Array<(token: string | null) => void> = [];
 
 /**
  * 刷新失败后的统一处理：清空 Token / Store，跳转登录页。
- * 使用 window.location 而非 router，避免 request → router 的循环依赖。
+ * 采用「路由内跳转」（router 由 main.ts 注入），避免整页刷新；
+ * 通过注入而非直接 import，同样规避 request → router 的循环依赖。
  */
 function handleAuthFailure(): void {
   isRefreshing = false;
   pendingQueue = [];
   removeToken();
   localStorage.removeItem(USER_PERSIST_KEY);
-  const { pathname, search } = window.location;
-  if (!pathname.startsWith('/login')) {
+  const fullPath = currentFullPath();
+  if (!fullPath.startsWith('/login')) {
     ElMessage.error('登录状态已失效，请重新登录');
-    const redirect = encodeURIComponent(pathname + search);
-    window.location.href = `/login?redirect=${redirect}`;
+    redirectTo(`/login?redirect=${encodeURIComponent(fullPath)}`);
   }
 }
 
@@ -119,8 +172,8 @@ service.interceptors.response.use(
     }
     if (res.code === FORBIDDEN_CODE) {
       ElMessage.error(res.message || '无访问权限');
-      if (!window.location.pathname.startsWith('/403')) {
-        window.location.href = '/403';
+      if (!isOnForbiddenPage()) {
+        redirectTo('/403');
       }
       return Promise.reject(new Error(res.message || '无访问权限'));
     }
@@ -143,8 +196,8 @@ service.interceptors.response.use(
     // 403：跳转无权限页
     if (status === FORBIDDEN_CODE || businessCode === FORBIDDEN_CODE) {
       ElMessage.error(response.data?.message || '无访问权限');
-      if (!window.location.pathname.startsWith('/403')) {
-        window.location.href = '/403';
+      if (!isOnForbiddenPage()) {
+        redirectTo('/403');
       }
       return Promise.reject(error);
     }
