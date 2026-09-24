@@ -210,6 +210,14 @@ onMounted(() => {
   cursor: zoom-in;
 }
 
+/* 错误兜底态：占位需填满外层 48×48 容器且不再自带边框（边框由 .file-thumb 提供），
+   否则内层 48×48 + 1px 边框会溢出 2px 被 overflow 裁掉，导致四边边框不对称 */
+.file-thumb .file-thumb-placeholder {
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
 .file-thumb-placeholder {
   display: flex;
   align-items: center;
