@@ -2,6 +2,8 @@
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useResizeObserver } from '@vueuse/core';
 import echarts from '@/utils/echarts';
+import { getChartPalette, hexToRgba, verticalGradient } from '@/utils/chartTheme';
+import { useAppStore } from '@/store/modules/app';
 import type { LoginTrend } from '@/types/api';
 
 defineOptions({ name: 'TrendChart' });
@@ -11,6 +13,7 @@ const props = defineProps<{
   data: LoginTrend;
 }>();
 
+const appStore = useAppStore();
 const chartRef = ref<HTMLDivElement>();
 let chart: ReturnType<typeof echarts.init> | null = null;
 
@@ -19,26 +22,56 @@ function render(): void {
   if (!chart) {
     return;
   }
+  const palette = getChartPalette(appStore.dark);
+  const primary = appStore.primaryColor;
+  const hasData = props.data.counts.length > 0;
+
   chart.setOption({
-    tooltip: { trigger: 'axis' },
-    grid: { left: 44, right: 20, top: 30, bottom: 30 },
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: palette.tooltipBg,
+      borderColor: palette.tooltipBorder,
+      textStyle: { color: palette.tooltipText },
+      axisPointer: { type: 'line', lineStyle: { color: hexToRgba(primary, 0.4) } },
+    },
+    grid: { left: 8, right: 16, top: 40, bottom: 8, containLabel: true },
     xAxis: {
       type: 'category',
       boundaryGap: false,
       data: props.data.dates,
-      axisLabel: { color: '#909399' },
+      axisLine: { lineStyle: { color: palette.axisLine } },
+      axisTick: { show: false },
+      axisLabel: { color: palette.textSecondary, fontSize: 12, margin: 12 },
     },
     yAxis: {
       type: 'value',
-      axisLabel: { color: '#909399' },
+      minInterval: 1,
+      axisLabel: { color: palette.textSecondary, fontSize: 12 },
+      splitLine: { lineStyle: { color: palette.splitLine, type: 'dashed' } },
     },
     series: [
       {
         name: '登录次数',
         type: 'line',
-        smooth: true,
-        symbolSize: 6,
-        areaStyle: { opacity: 0.15 },
+        smooth: 0.4,
+        symbol: 'circle',
+        symbolSize: 8,
+        showSymbol: false,
+        lineStyle: { width: 3, color: primary },
+        itemStyle: { color: primary, borderColor: palette.cardBg, borderWidth: 2 },
+        emphasis: { focus: 'series' },
+        areaStyle: {
+          color: verticalGradient(hexToRgba(primary, 0.32), hexToRgba(primary, 0.02)),
+        },
+        markPoint: hasData
+          ? {
+              symbol: 'pin',
+              symbolSize: 48,
+              itemStyle: { color: primary },
+              label: { fontSize: 11, color: '#ffffff' },
+              data: [{ type: 'max', name: '峰值' }],
+            }
+          : undefined,
         data: props.data.counts,
       },
     ],
@@ -69,6 +102,8 @@ onBeforeUnmount(() => {
 });
 
 watch(() => props.data, render, { deep: true });
+// 暗黑模式 / 主题色切换时重绘
+watch(() => [appStore.dark, appStore.primaryColor], render);
 </script>
 
 <template>

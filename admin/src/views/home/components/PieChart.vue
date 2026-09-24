@@ -2,6 +2,8 @@
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useResizeObserver } from '@vueuse/core';
 import echarts from '@/utils/echarts';
+import { CHART_COLORS, getChartPalette } from '@/utils/chartTheme';
+import { useAppStore } from '@/store/modules/app';
 import type { NameValue } from '@/types/api';
 
 defineOptions({ name: 'PieChart' });
@@ -11,6 +13,7 @@ const props = defineProps<{
   data: NameValue[];
 }>();
 
+const appStore = useAppStore();
 const chartRef = ref<HTMLDivElement>();
 let chart: ReturnType<typeof echarts.init> | null = null;
 
@@ -19,18 +22,78 @@ function render(): void {
   if (!chart) {
     return;
   }
+  const palette = getChartPalette(appStore.dark);
+  const hasData = props.data.length > 0;
+  const total = props.data.reduce((sum, item) => sum + (item.value || 0), 0);
+
+  const data = props.data.map((item, index) => ({
+    ...item,
+    itemStyle: { color: CHART_COLORS[index % CHART_COLORS.length] },
+  }));
+
   chart.setOption({
-    tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
-    legend: { bottom: 0, textStyle: { color: '#909399' } },
+    tooltip: {
+      trigger: 'item',
+      backgroundColor: palette.tooltipBg,
+      borderColor: palette.tooltipBorder,
+      textStyle: { color: palette.tooltipText },
+      formatter: '{b}: {c} ({d}%)',
+    },
+    legend: {
+      bottom: 0,
+      icon: 'circle',
+      itemWidth: 8,
+      itemHeight: 8,
+      textStyle: { color: palette.textSecondary, fontSize: 12 },
+    },
     series: [
       {
         name: '操作类型分布',
         type: 'pie',
-        radius: ['40%', '68%'],
-        center: ['50%', '45%'],
+        radius: ['50%', '72%'],
+        center: ['50%', '44%'],
         avoidLabelOverlap: true,
-        label: { color: '#909399' },
-        data: props.data,
+        itemStyle: { borderColor: palette.cardBg, borderWidth: 3, borderRadius: 4 },
+        label: {
+          show: true,
+          color: palette.text,
+          fontSize: 12,
+          formatter: '{b} {d}%',
+        },
+        labelLine: { length: 12, length2: 8, lineStyle: { color: palette.axisLine } },
+        emphasis: {
+          scaleSize: 6,
+          itemStyle: { shadowBlur: 16, shadowColor: 'rgba(0, 0, 0, 0.25)' },
+          label: { fontSize: 13, fontWeight: 600 },
+        },
+        data,
+      },
+    ],
+    graphic: [
+      {
+        type: 'text',
+        left: 'center',
+        top: '37%',
+        silent: true,
+        style: {
+          text: hasData ? total.toLocaleString() : '0',
+          textAlign: 'center',
+          fill: palette.text,
+          fontSize: 28,
+          fontWeight: 700,
+        },
+      },
+      {
+        type: 'text',
+        left: 'center',
+        top: '49%',
+        silent: true,
+        style: {
+          text: '操作总数',
+          textAlign: 'center',
+          fill: palette.textSecondary,
+          fontSize: 12,
+        },
       },
     ],
   });
@@ -60,6 +123,8 @@ onBeforeUnmount(() => {
 });
 
 watch(() => props.data, render, { deep: true });
+// 暗黑模式 / 主题色切换时重绘
+watch(() => [appStore.dark, appStore.primaryColor], render);
 </script>
 
 <template>
