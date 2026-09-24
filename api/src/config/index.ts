@@ -43,7 +43,8 @@ export const config = {
     name: process.env.DB_NAME ?? 'ly_admin',
     user: process.env.DB_USER ?? 'root',
     password: process.env.DB_PASSWORD ?? '',
-    logging: toBoolean(process.env.DB_LOGGING, false),
+    // 数据库日志默认开启：SQL 写入 logs/db/ 日志文件；显式设 DB_LOGGING=false 可关闭
+    logging: toBoolean(process.env.DB_LOGGING, true),
   },
   /** JWT 配置 */
   jwt: {

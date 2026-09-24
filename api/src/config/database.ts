@@ -45,8 +45,9 @@ export const sequelize = new Sequelize({
   password: config.db.password,
   // config.db.logging=true 时：SQL 写入 logs/db/ 文件（不再打印到控制台）
   logging: config.db.logging ? createDbLogger() : false,
-  // 开启 benchmark 以获取每条 SQL 的耗时（供 db 日志 durationMs / slow 使用）
-  benchmark: true,
+  // 仅在开启数据库日志时启用 benchmark 以获取每条 SQL 的耗时（供 durationMs / slow 使用）；
+  // 关闭时 benchmark=false，避免无谓的性能开销
+  benchmark: config.db.logging,
   models,
   define: {
     underscored: true,
