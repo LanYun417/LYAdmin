@@ -141,16 +141,29 @@ function closeDrawer(): void {
   bottom: 0;
   left: 0;
   z-index: 1001;
+
+  /* 关闭态必须彻底隐藏：仅靠 translateX 移出屏幕时元素仍会绘制，
+     其 box-shadow（向右延伸 blur 宽度约 28px）与 border-right
+     会残留在视口左缘形成暗带/细线；visibility 延迟到滑出动画结束后生效，
+     保证关闭动画期间阴影可见 */
+  visibility: hidden;
   width: 210px;
 
   /* 移动端抽屉：悬浮于内容之上，投影加强以突出层级 */
   box-shadow: 4px 0 24px rgb(0 0 0 / 18%);
   transform: translateX(-100%);
-  transition: transform 0.28s ease;
+  transition:
+    transform 0.28s ease,
+    visibility 0s linear 0.28s;
 }
 
 .layout-sidebar.is-drawer.is-open {
+  /* 打开时立即可见（visibility 不延迟），否则会等 0.28s 才出现 */
+  visibility: visible;
   transform: translateX(0);
+  transition:
+    transform 0.28s ease,
+    visibility 0s;
 }
 
 .fade-enter-active,
