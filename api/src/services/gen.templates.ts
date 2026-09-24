@@ -84,8 +84,13 @@ function toSequelizeType(col: GenColumn): string {
   return len ? `DataType.STRING(${len[1]})` : 'DataType.STRING(255)';
 }
 
-/** SQL 字段 → zod 校验表达式。 */
-function toZod(col: GenColumn): string {
+/**
+ * SQL 字段 → zod 校验表达式。
+ * 注意链序：zod 必须先接校验器再接 .optional()，ZodOptional 上没有 min/int 等方法。
+ * @param col 字段
+ * @param forceOptional 强制可选（编辑表单/查询参数统一可选）
+ */
+function toZod(col: GenColumn, forceOptional = false): string {
   const max = col.columnType.match(/\((\d+)\)/);
   const maxLen = max ? Number(max[1]) : 255;
   let base: string;
@@ -106,7 +111,8 @@ function toZod(col: GenColumn): string {
       base = `z.string().trim().max(${maxLen}, '长度不能超过 ${maxLen}')`;
       break;
   }
-  if (col.isNullable) {
+  // 可空字段或强制可选：校验链收尾后统一 .optional()
+  if (forceOptional || col.isNullable) {
     return `${base}.optional()`;
   }
   return col.tsType === 'string' ? `${base}.min(1, '${col.columnComment || col.columnName}不能为空')` : base;
@@ -183,18 +189,11 @@ function renderValidator(config: GenConfig, columns: GenColumn[]): string {
   const queryFields = [
     '  page: z.coerce.number().int().positive().optional(),',
     '  pageSize: z.coerce.number().int().positive().optional(),',
-    ...query.map((c) => `  ${c.fieldName}: ${toZod(c).replace('.min(1, ', '.optional().min(1, ')},`),
+    ...query.map((c) => `  ${c.fieldName}: ${toZod(c, true)},`),
   ].join('\n');
 
   const writeFields = (withRequired: boolean): string =>
-    editable
-      .map((c) => {
-        const zod = toZod(c);
-        // 编辑时字段统一可选，避免未提供即报错
-        const expr = withRequired ? zod : zod.replace('.min(1, ', '.optional().min(1, ');
-        return `  ${c.fieldName}: ${expr},`;
-      })
-      .join('\n');
+    editable.map((c) => `  ${c.fieldName}: ${toZod(c, !withRequired)},`).join('\n');
 
   return [
     `/**`,
@@ -425,9 +424,10 @@ function renderFrontendApi(config: GenConfig): string {
     `/**`,
     ` * ${config.businessName} 接口封装（由代码生成器生成）。`,
     ` */`,
-    `import request from '@/utils/request';`,
+    `import { del, get, post, put } from './request';`,
+    `import type { PageResult } from '@/types/api';`,
     ``,
-    `const BASE = '/api/${name}';`,
+    `const BASE = '/${name}';`,
     ``,
     `/** ${config.businessName} 记录。 */`,
     `export interface ${cls} {`,
@@ -436,28 +436,28 @@ function renderFrontendApi(config: GenConfig): string {
     `}`,
     ``,
     `/** 分页查询。 */`,
-    `export function get${cls}List(params: Record<string, unknown>) {`,
-    `  return request.get(BASE, { params });`,
+    `export function get${cls}List(params: Record<string, unknown>): Promise<PageResult<${cls}>> {`,
+    `  return get<PageResult<${cls}>>(BASE, params);`,
     `}`,
     ``,
     `/** 详情。 */`,
-    `export function get${cls}(id: number) {`,
-    `  return request.get(BASE + '/' + id);`,
+    `export function get${cls}(id: number): Promise<${cls}> {`,
+    `  return get<${cls}>(BASE + '/' + id);`,
     `}`,
     ``,
     `/** 新增。 */`,
-    `export function create${cls}(data: Partial<${cls}>) {`,
-    `  return request.post(BASE, data);`,
+    `export function create${cls}(data: Partial<${cls}>): Promise<${cls}> {`,
+    `  return post<${cls}>(BASE, data);`,
     `}`,
     ``,
     `/** 编辑。 */`,
-    `export function update${cls}(id: number, data: Partial<${cls}>) {`,
-    `  return request.put(BASE + '/' + id, data);`,
+    `export function update${cls}(id: number, data: Partial<${cls}>): Promise<${cls}> {`,
+    `  return put<${cls}>(BASE + '/' + id, data);`,
     `}`,
     ``,
     `/** 删除。 */`,
-    `export function delete${cls}(id: number) {`,
-    `  return request.delete(BASE + '/' + id);`,
+    `export function delete${cls}(id: number): Promise<null> {`,
+    `  return del<null>(BASE + '/' + id);`,
     `}`,
     ``,
   ].join('\n');
@@ -498,6 +498,10 @@ function renderFrontendView(config: GenConfig, columns: GenColumn[]): string {
     .join('\n');
 
   const formInit = editable.map((c) => `    ${c.fieldName}: ${c.tsType === 'number' ? '0' : "''"},`).join('\n');
+  // 查询字段必须先在 reactive 中声明，否则模板绑定 query.xxx 会产生类型错误
+  const queryInit = queryColumns(columns)
+    .map((c) => `    ${c.fieldName}: '',`)
+    .join('\n');
 
   return [
     `<script setup lang="ts">`,
@@ -522,7 +526,11 @@ function renderFrontendView(config: GenConfig, columns: GenColumn[]): string {
     `const editingId = ref<number | null>(null);`,
     `const formRef = ref<FormInstance>();`,
     ``,
-    `const query = reactive({ page: 1, pageSize: 10 });`,
+    `const query = reactive({`,
+    `  page: 1,`,
+    `  pageSize: 10,`,
+    queryInit || `    // 无可用查询字段`,
+    `});`,
     `const form = reactive({`,
     formInit || `    // 无可用字段`,
     `});`,
@@ -532,8 +540,8 @@ function renderFrontendView(config: GenConfig, columns: GenColumn[]): string {
     `  loading.value = true;`,
     `  try {`,
     `    const res = await get${cls}List(query);`,
-    `    list.value = res.list ?? res.records ?? [];`,
-    `    total.value = res.total ?? 0;`,
+    `    list.value = res.list;`,
+    `    total.value = res.total;`,
     `  } finally {`,
     `    loading.value = false;`,
     `  }`,
@@ -598,8 +606,8 @@ function renderFrontendView(config: GenConfig, columns: GenColumn[]): string {
     tableCols || `        <el-table-column prop="id" label="ID" width="80" />`,
     `        <el-table-column label="操作" width="160" fixed="right">`,
     `          <template #default="{ row }">`,
-    `            <el-button v-permission="'${perm}:edit'" type="primary" link :icon="BIconPencilSquare" @click="handleEdit(row)">编辑</el-button>`,
-    `            <el-button v-permission="'${perm}:remove'" type="danger" link :icon="BIconTrash" @click="handleDelete(row)">删除</el-button>`,
+    `            <el-button v-permission="'${perm}:edit'" type="primary" link :icon="BIconPencilSquare" @click="handleEdit(row as ${cls})">编辑</el-button>`,
+    `            <el-button v-permission="'${perm}:remove'" type="danger" link :icon="BIconTrash" @click="handleDelete(row as ${cls})">删除</el-button>`,
     `          </template>`,
     `        </el-table-column>`,
     `      </el-table>`,

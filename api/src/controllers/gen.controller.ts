@@ -5,6 +5,7 @@
 import type { Request, Response } from 'express';
 import * as genService from '@/services/gen.service';
 import type { GenConfig } from '@/services/gen.service';
+import { createGenCode } from '@/services/gen.writer';
 import { ok } from '@/utils/response';
 
 /** 数据库物理表列表。 */
@@ -33,4 +34,11 @@ export async function download(req: Request, res: Response): Promise<void> {
   res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
   res.setHeader('Cache-Control', 'no-store');
   res.send(buffer);
+}
+
+/** 生成代码并直接写入项目目录（含自动接线）。 */
+export async function create(req: Request, res: Response): Promise<void> {
+  const body = req.body as GenConfig & { overwrite?: boolean };
+  const result = await createGenCode(body, body.overwrite === true);
+  ok(res, result, '代码已生成到项目');
 }

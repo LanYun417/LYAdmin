@@ -56,6 +56,7 @@ const ROLE_SEEDS: RoleSeed[] = [
       'tool:gen',
       'tool:gen:preview',
       'tool:gen:download',
+      'tool:gen:create',
       'profile',
     ],
   },

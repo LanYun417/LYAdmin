@@ -321,6 +321,13 @@ const MENU_TREE: MenuSeedNode[] = [
             permission: 'tool:gen:download',
             sort: 2,
           },
+          {
+            key: 'tool:gen:create',
+            menuName: '生成到项目',
+            menuType: MenuType.BUTTON,
+            permission: 'tool:gen:create',
+            sort: 3,
+          },
         ],
       },
     ],

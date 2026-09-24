@@ -88,3 +88,18 @@ export function previewGenCodeApi(data: GenConfig): Promise<GenPreviewResult> {
 export function downloadGenCodeApi(data: GenConfig): Promise<Blob> {
   return post<Blob>('/gen/download', data, { responseType: 'blob' });
 }
+
+/** 生成结果 */
+export interface GenCreateResult {
+  /** 成功写入的文件（相对项目根） */
+  written: string[];
+  /** 已自动接线的文件 */
+  injected: string[];
+  /** 生成后仍需人工完成的步骤 */
+  manualSteps: string[];
+}
+
+/** 生成代码并直接写入项目目录（同名文件已存在时后端返回 409） */
+export function createGenCodeApi(data: GenConfig, overwrite = false): Promise<GenCreateResult> {
+  return post<GenCreateResult>('/gen/create', { ...data, overwrite });
+}

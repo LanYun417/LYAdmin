@@ -1502,6 +1502,52 @@ export const MODULES: ModuleDoc[] = [
         responseExample: ['/* 二进制 ZIP 流，Content-Type: application/zip */'].join('\n'),
         notes: '响应为 application/zip 附件下载；文件名取 ${businessName}.zip。',
       },
+      {
+        method: 'POST',
+        path: '/api/gen/create',
+        summary: '生成代码到项目目录',
+        description:
+          '与预览同一套模板，但会把文件直接写入真实项目目录（backend/* → api/src，frontend/* → admin/src），并自动接线模型注册与路由挂载。',
+        auth: true,
+        permission: 'tool:gen:create',
+        contentType: 'application/json',
+        bodyParams: [
+          { name: 'tableName', type: 'string', required: true, description: '表名（下划线形式）' },
+          {
+            name: 'moduleName',
+            type: 'string',
+            required: true,
+            description: '模块名，字母开头，仅字母数字（如 system）',
+          },
+          {
+            name: 'businessName',
+            type: 'string',
+            required: true,
+            description: '业务名，字母开头，仅字母数字（如 user）',
+          },
+          { name: 'author', type: 'string', required: false, description: '作者（可留空）' },
+          { name: 'overwrite', type: 'boolean', required: false, description: '是否覆盖已存在文件，默认 false' },
+        ],
+        requestExample: [
+          'curl -X POST "http://localhost:3000/api/gen/create" \\',
+          '  -H "Authorization: Bearer <accessToken>" \\',
+          '  -H "Content-Type: application/json" \\',
+          '  -d \'{"tableName":"sys_user","moduleName":"system","businessName":"user","overwrite":false}\'',
+        ].join('\n'),
+        responseExample: [
+          '{',
+          '  "code": 200,',
+          '  "message": "代码已生成到项目",',
+          '  "data": {',
+          '    "written": ["api/src/models/User.ts", "api/src/routes/user.routes.ts", "admin/src/views/system/user/index.vue"],',
+          '    "injected": ["api/src/models/index.ts", "api/src/routes/index.ts"],',
+          '    "manualSteps": ["重启后端生效", "菜单管理新增菜单", "为角色授权权限码"]',
+          '  }',
+          '}',
+        ].join('\n'),
+        notes:
+          '同名文件已存在且未传 overwrite=true 时返回 409（message 列出冲突文件）。生成后需重启后端并在菜单管理配置菜单与权限码。',
+      },
     ],
   },
   {

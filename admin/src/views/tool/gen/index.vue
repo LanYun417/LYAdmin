@@ -1,11 +1,18 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue';
-import { ElMessage } from 'element-plus';
-import { BIconArrowClockwise, BIconCodeSlash, BIconDownload, BIconTable } from 'bootstrap-icons-vue';
-import { downloadGenCodeApi, getGenTableDetailApi, getGenTablesApi, previewGenCodeApi } from '@/api/gen';
+import { ElMessage, ElMessageBox } from 'element-plus';
+import type { AxiosError } from 'axios';
+import { BIconArrowClockwise, BIconCodeSlash, BIconDownload, BIconMagic, BIconTable } from 'bootstrap-icons-vue';
+import {
+  createGenCodeApi,
+  downloadGenCodeApi,
+  getGenTableDetailApi,
+  getGenTablesApi,
+  previewGenCodeApi,
+} from '@/api/gen';
 import { formatDateTime } from '@/utils/format';
 import { downloadBlob } from '@/utils/download';
-import type { GenColumn, GenConfig, GenFile, GenTable } from '@/api/gen';
+import type { GenColumn, GenConfig, GenCreateResult, GenFile, GenTable } from '@/api/gen';
 import SearchForm from '@/components/SearchForm/index.vue';
 
 defineOptions({ name: 'ToolGen' });
@@ -18,6 +25,8 @@ const columnLoading = ref(false);
 const previewLoading = ref(false);
 /** 下载按钮加载态 */
 const downloadLoading = ref(false);
+/** 生成到项目按钮加载态 */
+const createLoading = ref(false);
 
 /** 全部数据表 */
 const tables = ref<GenTable[]>([]);
@@ -198,6 +207,50 @@ async function handleDownload(): Promise<void> {
   }
 }
 
+/** 展示生成结果与后续人工步骤 */
+async function showCreateResult(result: GenCreateResult): Promise<void> {
+  const lines = [
+    `已写入 ${result.written.length} 个文件，自动接线：${result.injected.length > 0 ? result.injected.join('、') : '无'}`,
+    '',
+    ...result.manualSteps,
+  ];
+  await ElMessageBox.alert(lines.join('\n'), '生成成功', { customStyle: { whiteSpace: 'pre-line' } as never });
+}
+
+/**
+ * 生成代码到项目目录。
+ * 同名文件已存在时后端返回 409，此处弹确认框后携带 overwrite=true 重试。
+ */
+async function handleGenerate(overwrite = false): Promise<void> {
+  const error = validateConfig();
+  if (error) {
+    ElMessage.warning(error);
+    return;
+  }
+  createLoading.value = true;
+  try {
+    const result = await createGenCodeApi(buildGenConfig(), overwrite);
+    await showCreateResult(result);
+  } catch (e) {
+    const status = (e as AxiosError)?.response?.status;
+    if (status === 409) {
+      const confirmed = await ElMessageBox.confirm(
+        '检测到同名文件已存在，是否覆盖？覆盖后原文件内容将丢失。',
+        '覆盖确认',
+        { type: 'warning', confirmButtonText: '覆盖生成', cancelButtonText: '取消' },
+      )
+        .then(() => true)
+        .catch(() => false);
+      if (confirmed) {
+        await handleGenerate(true);
+      }
+    }
+    // 其它错误已由请求拦截器统一提示
+  } finally {
+    createLoading.value = false;
+  }
+}
+
 /** 复制当前预览文件的内容 */
 async function handleCopyCode(): Promise<void> {
   if (!activeFilePath.value) {
@@ -299,6 +352,16 @@ onMounted(() => {
               @click="handleDownload"
             >
               下载 ZIP
+            </el-button>
+            <el-button
+              v-permission="'tool:gen:create'"
+              type="warning"
+              :icon="BIconMagic"
+              :loading="createLoading"
+              :disabled="!currentTable"
+              @click="handleGenerate(false)"
+            >
+              生成到项目
             </el-button>
           </div>
         </div>
