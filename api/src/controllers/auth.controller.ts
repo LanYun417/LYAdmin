@@ -39,7 +39,8 @@ export async function logout(_req: Request, res: Response): Promise<void> {
  * 当前用户信息。
  */
 export async function profile(req: Request, res: Response): Promise<void> {
-  const result = await authService.getProfile(req.user!.userId);
+  // 复用鉴权中间件已加载的上下文，避免重复 loadAuthUser（B2）
+  const result = await authService.getProfile(req.user!.userId, req.authContext);
   ok(res, result);
 }
 
@@ -47,7 +48,7 @@ export async function profile(req: Request, res: Response): Promise<void> {
  * 当前用户菜单树。
  */
 export async function menus(req: Request, res: Response): Promise<void> {
-  const result = await authService.getUserMenus(req.user!.userId);
+  const result = await authService.getUserMenus(req.user!.userId, req.authContext);
   ok(res, result);
 }
 
@@ -55,6 +56,6 @@ export async function menus(req: Request, res: Response): Promise<void> {
  * 当前用户权限码列表。
  */
 export async function permissions(req: Request, res: Response): Promise<void> {
-  const result = await authService.getPermissions(req.user!.userId);
+  const result = await authService.getPermissions(req.user!.userId, req.authContext);
   ok(res, result);
 }

@@ -5,6 +5,7 @@
 import { Op, type FindOptions, type WhereOptions } from 'sequelize';
 import { MenuType, Status, SUPER_ADMIN_ROLE } from '@/constants';
 import { Menu, Role, RoleMenu } from '@/models';
+import { invalidateAuthCache } from '@/services/authCache';
 import type { MenuNode } from '@/types';
 import { buildTree } from '@/utils/tree';
 import { AppError } from '@/utils/response';
@@ -153,6 +154,8 @@ export async function createMenu(input: MenuUpsertInput): Promise<MenuNode> {
     keepAlive: input.keepAlive,
   });
 
+  // 菜单变更影响权限码集合：清空鉴权缓存（影响面广，全清）
+  invalidateAuthCache();
   return toMenuNode(menu);
 }
 
@@ -196,6 +199,8 @@ export async function updateMenu(id: number, input: MenuUpsertInput): Promise<Me
     keepAlive: input.keepAlive,
   });
 
+  // 菜单变更影响权限码集合：清空鉴权缓存（影响面广，全清）
+  invalidateAuthCache();
   return toMenuNode(menu);
 }
 
@@ -238,4 +243,6 @@ export async function deleteMenu(id: number): Promise<void> {
   }
   await RoleMenu.destroy({ where: { menuId: id } });
   await menu.destroy();
+  // 菜单删除影响权限码集合：清空鉴权缓存（影响面广，全清）
+  invalidateAuthCache();
 }

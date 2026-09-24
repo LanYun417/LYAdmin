@@ -64,6 +64,8 @@ export async function authenticate(req: Request, _res: Response, next: NextFunct
       permissions,
       status: Number(user.status),
     };
+    // 复用同一份上下文：控制器可读取 req.authContext，避免再次 loadAuthUser（B2）
+    req.authContext = context;
     req.tokenIat = payload.iat;
     next();
   } catch (error) {

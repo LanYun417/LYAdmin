@@ -5,6 +5,7 @@
 import { Op, type WhereOptions } from 'sequelize';
 import { Status } from '@/constants';
 import { Role, User, UserRole } from '@/models';
+import { invalidateAuthCache } from '@/services/authCache';
 import { toUserBrief } from '@/services/auth.service';
 import type { PageResult, UserDetail } from '@/types';
 import { buildPageResult, parsePagination } from '@/utils/pagination';
@@ -128,6 +129,8 @@ export async function updateUser(id: number, input: UpdateUserInput): Promise<Us
   });
 
   await syncUserRoles(id, input.roleIds);
+  // 角色 / 状态可能变更：立即失效该用户鉴权缓存，确保权限即时生效
+  invalidateAuthCache(id);
   return getUserDetail(id);
 }
 
@@ -145,6 +148,8 @@ export async function deleteUser(id: number): Promise<void> {
   }
   await UserRole.destroy({ where: { userId: id } });
   await user.destroy();
+  // 用户已删除：立即失效其鉴权缓存（防旧 Token 仍在 TTL 内通过）
+  invalidateAuthCache(id);
 }
 
 /**
@@ -161,6 +166,8 @@ export async function updateStatus(id: number, status: number): Promise<void> {
     throw AppError.conflict('内置管理员账号不可禁用');
   }
   await user.update({ status });
+  // 启用 / 禁用：立即失效鉴权缓存，禁用后旧 Token 应立刻被拒（强制下线）
+  invalidateAuthCache(id);
 }
 
 /**
@@ -177,6 +184,8 @@ export async function resetPassword(id: number, password: string): Promise<void>
     password: await hashPassword(password),
     passwordChangedAt: new Date(),
   });
+  // 改密：失效缓存的旧 passwordChangedAt，保持「旧 Token 立即失效」语义
+  invalidateAuthCache(id);
 }
 
 /**
@@ -190,4 +199,6 @@ export async function assignRoles(id: number, roleIds: number[]): Promise<void> 
     throw AppError.notFound('用户不存在');
   }
   await syncUserRoles(id, roleIds);
+  // 角色变更：立即失效该用户鉴权缓存，确保新权限即时生效
+  invalidateAuthCache(id);
 }

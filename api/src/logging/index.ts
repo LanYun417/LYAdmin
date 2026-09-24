@@ -4,6 +4,7 @@
  */
 export * from './types';
 export * from './logManager';
+export * from './dbLogBuffer';
 export * from './archiver';
 export * from './scheduler';
 export * from './errorReporter';

@@ -57,6 +57,32 @@ export function buildDocsData(): DocsData {
 }
 
 /**
+ * `/api-docs` 页面 HTML 的进程内惰性缓存。
+ * 目录（catalog）为编译期静态常量，页面 HTML（≈212KB）构建一次即可复用；
+ * 缓存后响应体与首次构建结果**逐字节一致**，仅去掉每请求的同步字符串拼接开销
+ * （原本每请求约 2.9ms 的 CPU 白白占用事件循环）。
+ */
+let cachedDocsHtml: string | null = null;
+
+/**
+ * 获取（惰性构建并缓存）文档页面 HTML。
+ * @returns 文档页面 HTML 字符串
+ */
+function getDocsHtml(): string {
+  if (cachedDocsHtml === null) {
+    cachedDocsHtml = renderDocsHtml();
+  }
+  return cachedDocsHtml;
+}
+
+/**
+ * 清除文档页面 HTML 缓存（如运行期目录数据变化需强制重建时调用）。
+ */
+export function clearDocsHtmlCache(): void {
+  cachedDocsHtml = null;
+}
+
+/**
  * 注册接口文档路由：
  * - `GET /api-docs`：自包含 HTML 页面；
  * - `GET /api-docs/data.json`：原始 JSON 数据（便于程序消费）。
@@ -65,7 +91,7 @@ export function buildDocsData(): DocsData {
  */
 export function registerDocsRoutes(app: Express): void {
   app.get('/api-docs', (_req: Request, res: Response) => {
-    const html = renderDocsHtml();
+    const html = getDocsHtml();
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.setHeader('Cache-Control', 'no-store');
     res.status(200).send(html);

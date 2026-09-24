@@ -5,11 +5,16 @@
 import { Op } from 'sequelize';
 import { ERROR_MESSAGE, LogResult, Status, SUPER_ADMIN_ROLE } from '@/constants';
 import { LoginLog, Menu, Role, User } from '@/models';
+import { getCachedAuthContext, invalidateAuthCache, setCachedAuthContext } from '@/services/authCache';
 import { getMenusByRoles } from '@/services/menu.service';
 import type { JwtPayload, MenuNode, UserBrief } from '@/types';
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '@/utils/jwt';
 import { comparePassword } from '@/utils/password';
 import { AppError } from '@/utils/response';
+
+// 对外统一从 auth 服务导出缓存失效能力（实现见 `services/authCache.ts`）：
+// 写操作触发权限变更时调用，详见 authCache.ts 顶部的失效点清单。
+export { invalidateAuthCache } from '@/services/authCache';
 
 /** 鉴权上下文（供中间件使用）。 */
 export interface AuthContext {
@@ -109,10 +114,18 @@ async function collectPermissions(roleCodes: string[], roles: Role[]): Promise<s
 
 /**
  * 加载用户鉴权上下文（角色码 + 权限码），供鉴权中间件使用。
+ *
+ * 命中进程内缓存时直接返回，避免每个鉴权请求都查库（见 `services/authCache.ts`）。
+ * 缓存 TTL 30 秒，且在上游写操作时主动失效；缓存只存「存在的用户」，不存在时不缓存。
  * @param userId 用户 id
  * @returns 上下文；用户不存在时返回 null
  */
 export async function loadAuthUser(userId: number): Promise<AuthContext | null> {
+  const cached = getCachedAuthContext(userId);
+  if (cached) {
+    return cached;
+  }
+
   const user = await User.findByPk(userId, { include: [{ model: Role }] });
   if (!user) {
     return null;
@@ -120,7 +133,9 @@ export async function loadAuthUser(userId: number): Promise<AuthContext | null> 
   const roles = user.roles ?? [];
   const roleCodes = roles.map((role) => role.roleCode);
   const permissions = await collectPermissions(roleCodes, roles);
-  return { user, roleCodes, permissions };
+  const context: AuthContext = { user, roleCodes, permissions };
+  setCachedAuthContext(userId, context);
+  return context;
 }
 
 /**
@@ -151,6 +166,8 @@ export async function login(username: string, password: string, ip: string, user
 
   await user.update({ lastLoginAt: new Date() });
   await writeLoginLog(username, ip, userAgent, LogResult.SUCCESS, '登录成功');
+  // 登录会更新 lastLoginAt：失效该用户鉴权缓存，避免 /auth/profile 在 TTL 内返回陈旧 lastLoginAt
+  invalidateAuthCache(Number(user.id));
 
   const payload = { userId: Number(user.id), username: user.username };
   return {
@@ -194,42 +211,48 @@ export async function refresh(refreshToken: string): Promise<TokenPair> {
 /**
  * 获取当前用户信息（用户 + 角色码 + 权限码）。
  * @param userId 用户 id
+ * @param context 已加载的鉴权上下文（由鉴权中间件挂到 `req.authContext`）；传入时直接复用，避免重复查库
  */
-export async function getProfile(userId: number): Promise<{ user: UserBrief; roles: string[]; permissions: string[] }> {
-  const context = await loadAuthUser(userId);
-  if (!context) {
+export async function getProfile(
+  userId: number,
+  context?: AuthContext | null,
+): Promise<{ user: UserBrief; roles: string[]; permissions: string[] }> {
+  const ctx = context ?? (await loadAuthUser(userId));
+  if (!ctx) {
     throw AppError.notFound('用户不存在');
   }
   return {
-    user: toUserBrief(context.user),
-    roles: context.roleCodes,
-    permissions: context.permissions,
+    user: toUserBrief(ctx.user),
+    roles: ctx.roleCodes,
+    permissions: ctx.permissions,
   };
 }
 
 /**
  * 获取当前用户权限码列表。
  * @param userId 用户 id
+ * @param context 已加载的鉴权上下文（复用中间件结果，避免重复查库）
  */
-export async function getPermissions(userId: number): Promise<string[]> {
-  const context = await loadAuthUser(userId);
-  if (!context) {
+export async function getPermissions(userId: number, context?: AuthContext | null): Promise<string[]> {
+  const ctx = context ?? (await loadAuthUser(userId));
+  if (!ctx) {
     throw AppError.notFound('用户不存在');
   }
-  return context.permissions;
+  return ctx.permissions;
 }
 
 /**
  * 获取当前用户菜单树（仅目录/菜单节点）。
  * @param userId 用户 id
+ * @param context 已加载的鉴权上下文（复用中间件结果，避免重复查库）
  */
-export async function getUserMenus(userId: number): Promise<MenuNode[]> {
-  const context = await loadAuthUser(userId);
-  if (!context) {
+export async function getUserMenus(userId: number, context?: AuthContext | null): Promise<MenuNode[]> {
+  const ctx = context ?? (await loadAuthUser(userId));
+  if (!ctx) {
     throw AppError.notFound('用户不存在');
   }
-  const roleIds = (context.user.roles ?? []).map((role) => Number(role.id));
-  return getMenusByRoles(context.roleCodes, roleIds);
+  const roleIds = (ctx.user.roles ?? []).map((role) => Number(role.id));
+  return getMenusByRoles(ctx.roleCodes, roleIds);
 }
 
 /**

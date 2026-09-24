@@ -5,6 +5,7 @@
 import { Op, type WhereOptions } from 'sequelize';
 import { SUPER_ADMIN_ROLE } from '@/constants';
 import { Role, RoleMenu, UserRole } from '@/models';
+import { invalidateAuthCache } from '@/services/authCache';
 import type { PageResult } from '@/types';
 import { buildPageResult, parsePagination } from '@/utils/pagination';
 import { AppError } from '@/utils/response';
@@ -107,6 +108,8 @@ export async function updateRole(id: number, input: UpdateRoleInput): Promise<Ro
     status: input.status,
     remark: input.remark || null,
   });
+  // 角色信息变更：清空鉴权缓存（角色可能被多个用户持有，影响面广）
+  invalidateAuthCache();
   return toRoleBrief(role);
 }
 
@@ -128,6 +131,8 @@ export async function deleteRole(id: number): Promise<void> {
   }
   await RoleMenu.destroy({ where: { roleId: id } });
   await role.destroy();
+  // 角色删除：清空鉴权缓存（防御性，确保不再残留该角色相关权限）
+  invalidateAuthCache();
 }
 
 /**
@@ -161,4 +166,6 @@ export async function assignMenus(id: number, menuIds: number[]): Promise<void> 
       { ignoreDuplicates: true },
     );
   }
+  // 角色菜单授权变更 → 权限码集合变化：清空鉴权缓存（影响所有持有该角色的用户）
+  invalidateAuthCache();
 }

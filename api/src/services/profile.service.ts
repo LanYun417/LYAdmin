@@ -3,6 +3,7 @@
  * 模块职责：修改个人资料、修改密码（校验旧密码并写 passwordChangedAt）、更换头像。
  */
 import { User } from '@/models';
+import { invalidateAuthCache } from '@/services/authCache';
 import { toUserBrief } from '@/services/auth.service';
 import { saveFiles } from '@/services/file.service';
 import type { UserBrief } from '@/types';
@@ -26,6 +27,8 @@ export async function updateProfile(userId: number, input: UpdateProfileInput): 
     phone: input.phone || null,
     avatar: input.avatar || user.avatar,
   });
+  // 资料变更：失效该用户缓存，保证 /auth/profile 立即反映新昵称 / 头像
+  invalidateAuthCache(userId);
   return toUserBrief(user);
 }
 
@@ -49,6 +52,8 @@ export async function changePassword(userId: number, input: ChangePasswordInput)
     password: await hashPassword(input.newPassword),
     passwordChangedAt: new Date(),
   });
+  // 改密：失效缓存的旧 passwordChangedAt，保持「旧 Token 立即失效」语义（REQ-026）
+  invalidateAuthCache(userId);
 }
 
 /**
@@ -69,5 +74,7 @@ export async function updateAvatar(userId: number, file: Express.Multer.File): P
   }
 
   await user.update({ avatar: saved.fileUrl });
+  // 头像变更：失效该用户缓存，保证 /auth/profile 立即反映新头像
+  invalidateAuthCache(userId);
   return { avatar: saved.fileUrl };
 }

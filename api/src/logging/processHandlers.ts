@@ -10,6 +10,7 @@
  * 幂等：重复调用 `registerProcessHandlers()` 只会注册一次。
  */
 import { reportProcessError } from './errorReporter';
+import { flushDbLogs } from './dbLogBuffer';
 import { closeAllStreams } from './logManager';
 import { stopLogScheduler } from './scheduler';
 
@@ -33,6 +34,8 @@ async function shutdown(reason: string, exitCode: number): Promise<void> {
 
   try {
     stopLogScheduler();
+    // 先落盘 SQL 日志缓冲区（写入流尚未关闭），再关闭全部写入流，避免尾部日志丢失
+    flushDbLogs();
     await closeAllStreams();
   } catch (error) {
     console.error('[ProcessHandlers] 优雅关闭失败:', error);

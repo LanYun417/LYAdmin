@@ -4,7 +4,7 @@
  */
 import { Sequelize } from 'sequelize-typescript';
 import { config } from '@/config';
-import { writeLog } from '@/logging/logManager';
+import { enqueueDbLog } from '@/logging/dbLogBuffer';
 import type { DbLogRecord } from '@/logging/types';
 import { models } from '@/models';
 
@@ -16,6 +16,8 @@ import { models } from '@/models';
  * - 需配合 `benchmark: true` 才能拿到 `timing`（毫秒）；缺失时按 0 处理。
  * - `slow` = 耗时 >= `config.log.slowSqlMs`（默认 200ms）。
  * - 任何写入异常内部捕获，绝不影响数据库正常行为。
+ * - **异步化（B4）**：记录仅入队 `dbLogBuffer`，由批量缓冲区定时落盘，避免在请求回调中
+ *   同步执行字符串序列化与流写入，减少事件循环阻塞（内容与格式不变，退出前统一 flush）。
  * @returns Sequelize `logging` 回调
  */
 function createDbLogger(): (sql: string, timing?: number) => void {
@@ -28,7 +30,7 @@ function createDbLogger(): (sql: string, timing?: number) => void {
         durationMs,
         slow: durationMs >= config.log.slowSqlMs,
       };
-      writeLog('db', record);
+      enqueueDbLog(record);
     } catch (error) {
       console.error('[DBLogger] 写入数据库日志失败:', error);
     }
