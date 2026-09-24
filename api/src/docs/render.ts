@@ -840,92 +840,185 @@ table.params tbody tr:hover { background: #fafbfc; }
   var expandAllBtn = doc.getElementById('expandAll');
   var collapseAllBtn = doc.getElementById('collapseAll');
 
-  function setOpen(card, open) {
-    if (open) { card.classList.add('open'); } else { card.classList.remove('open'); }
-    var head = card.querySelector('.card-head');
-    if (head) { head.setAttribute('aria-expanded', open ? 'true' : 'false'); }
-  }
-  function isOpen(card) { return card.classList.contains('open'); }
-
-  // 卡片头点击展开/收起
+  // 预建索引：卡片元信息（卡片、头部、小写检索串）与 id/TOC 映射。
+  // 目的：搜索与滚动时不再逐次 querySelector / getAttribute / toLowerCase。
+  var metas = [];
+  var metaById = {};
+  var tocById = {};
   cards.forEach(function (card) {
-    var head = card.querySelector('.card-head');
+    var meta = {
+      card: card,
+      head: card.querySelector('.card-head'),
+      hay: (card.getAttribute('data-search') || '').toLowerCase()
+    };
+    metas.push(meta);
+    if (card.id) { metaById[card.id] = meta; }
+  });
+  tocItems.forEach(function (item) {
+    var target = item.getAttribute('data-target');
+    if (target) { tocById[target] = item; }
+  });
+
+  // 偏移量缓存失效标记：展开/收起、搜索过滤、窗口尺寸变化后需要重算
+  var offsetsDirty = true;
+  function markDirty() { offsetsDirty = true; }
+
+  // 仅在状态真正变化时写 DOM，避免无谓的样式失效与回流
+  function setOpen(meta, open) {
+    if (!meta) { return; }
+    var card = meta.card;
+    if (card.classList.contains('open') === open) { return; }
+    if (open) { card.classList.add('open'); } else { card.classList.remove('open'); }
+    if (meta.head) { meta.head.setAttribute('aria-expanded', open ? 'true' : 'false'); }
+    markDirty();
+  }
+  function metaOf(card, head) {
+    if (card && card.id && metaById[card.id]) { return metaById[card.id]; }
+    return { card: card, head: head || (card ? card.querySelector('.card-head') : null), hay: '' };
+  }
+
+  // 事件委托：整个文档一个 click 监听器，代替「每张卡一个监听器」+「每个复制按钮一个监听器」
+  function handleCopy(btn) {
+    var id = btn.getAttribute('data-copy');
+    var el = id ? doc.getElementById(id) : null;
+    if (!el) { return; }
+    var text = el.innerText;
+    var original = btn.getAttribute('data-label');
+    if (!original) { original = btn.textContent; btn.setAttribute('data-label', original); }
+    var done = function () {
+      btn.textContent = '已复制';
+      btn.classList.add('copied');
+      window.setTimeout(function () { btn.textContent = original; btn.classList.remove('copied'); }, 1500);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () { fallbackCopy(text); done(); });
+    } else {
+      fallbackCopy(text);
+      done();
+    }
+  }
+  doc.body.addEventListener('click', function (event) {
+    var el = event.target;
+    if (!el || !el.closest) { return; }
+    var copyBtn = el.closest('.copy-btn');
+    if (copyBtn) { handleCopy(copyBtn); return; }
+    var head = el.closest('.card-head');
     if (!head) { return; }
-    head.addEventListener('click', function () { setOpen(card, !isOpen(card)); });
+    var card = head.closest('.card');
+    if (!card) { return; }
+    setOpen(metaOf(card, head), !card.classList.contains('open'));
   });
 
   // 全部展开 / 收起
   if (expandAllBtn) {
     expandAllBtn.addEventListener('click', function () {
-      cards.forEach(function (card) { if (!card.classList.contains('is-hidden')) { setOpen(card, true); } });
+      metas.forEach(function (meta) { if (!meta.card.classList.contains('is-hidden')) { setOpen(meta, true); } });
     });
   }
   if (collapseAllBtn) {
     collapseAllBtn.addEventListener('click', function () {
-      cards.forEach(function (card) { setOpen(card, false); });
+      metas.forEach(function (meta) { setOpen(meta, false); });
     });
   }
 
-  // 搜索过滤
+  // 搜索过滤：走预建索引（不再逐卡 querySelector / toLowerCase），
+  // 且 class 写入前先判断当前状态，避免无谓的样式失效。
   function applySearch() {
     var q = (searchInput && searchInput.value ? searchInput.value : '').trim().toLowerCase();
-    var visible = 0;
-    cards.forEach(function (card) {
-      var hay = card.getAttribute('data-search') || '';
-      var match = q === '' || hay.indexOf(q) >= 0;
-      if (match) { card.classList.remove('is-hidden'); visible += 1; } else { card.classList.add('is-hidden'); }
-      if (q !== '' && match) { setOpen(card, true); }
-    });
+    var hits = 0;
+    for (var i = 0; i < metas.length; i += 1) {
+      var meta = metas[i];
+      var card = meta.card;
+      var match = q === '' || meta.hay.indexOf(q) >= 0;
+      if (match) {
+        if (card.classList.contains('is-hidden')) { card.classList.remove('is-hidden'); }
+        hits += 1;
+        if (q !== '') { setOpen(meta, true); }
+      } else if (!card.classList.contains('is-hidden')) {
+        card.classList.add('is-hidden');
+      }
+    }
     sections.forEach(function (sec) {
       var any = sec.querySelector('.card:not(.is-hidden)');
       if (any) { sec.classList.remove('is-hidden'); } else { sec.classList.add('is-hidden'); }
     });
     if (noResult) {
-      if (visible === 0 && q !== '') { noResult.classList.remove('is-hidden'); } else { noResult.classList.add('is-hidden'); }
+      if (hits === 0 && q !== '') { noResult.classList.remove('is-hidden'); } else { noResult.classList.add('is-hidden'); }
     }
-    if (hitCount) { hitCount.textContent = q === '' ? '' : '命中 ' + visible + ' 个'; }
+    if (hitCount) { hitCount.textContent = q === '' ? '' : '命中 ' + hits + ' 个'; }
     if (searchClear) { if (q === '') { searchClear.classList.add('is-hidden'); } else { searchClear.classList.remove('is-hidden'); } }
+    markDirty();
   }
+
+  // 输入防抖：避免每个按键都跑一次 O(N) 全量过滤
+  var searchTimer = null;
   if (searchInput) {
-    searchInput.addEventListener('input', applySearch);
+    searchInput.addEventListener('input', function () {
+      if (searchTimer) { window.clearTimeout(searchTimer); }
+      searchTimer = window.setTimeout(applySearch, 150);
+    });
   }
   if (searchClear) {
     searchClear.addEventListener('click', function () {
       if (searchInput) { searchInput.value = ''; searchInput.focus(); }
+      if (searchTimer) { window.clearTimeout(searchTimer); searchTimer = null; }
       applySearch();
     });
   }
 
-  // 目录点击：展开并滚动
-  tocItems.forEach(function (item) {
-    item.addEventListener('click', function (event) {
+  // 目录点击：展开并滚动（委托到侧栏，一个监听器代替 N 个）
+  if (sidebar) {
+    sidebar.addEventListener('click', function (event) {
+      var el = event.target;
+      if (!el || !el.closest) { return; }
+      var item = el.closest('.toc-item');
+      if (!item) { return; }
       event.preventDefault();
       var target = item.getAttribute('data-target');
-      var card = target ? doc.getElementById(target) : null;
-      if (card) {
-        setOpen(card, true);
-        card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      var meta = target ? metaById[target] : null;
+      if (meta) {
+        setOpen(meta, true);
+        meta.card.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
       closeDrawer();
     });
-  });
+  }
 
-  // scroll-spy 高亮
+  // scroll-spy 高亮：缓存可见卡片偏移量（仅在失效时重算），二分定位当前卡片，
+  // 且只改动「上一个 / 当前」两个目录项，而不是每帧遍历并重写全部目录项。
+  var visibleList = [];
+  var activeToc = null;
+  var activeId = null;
   var spyLock = false;
-  function spy() {
-    var fromTop = window.scrollY + 120;
-    var current = null;
-    for (var i = 0; i < cards.length; i += 1) {
-      var card = cards[i];
+
+  function refreshOffsets() {
+    visibleList.length = 0;
+    var scrollY = window.scrollY || window.pageYOffset || 0;
+    for (var i = 0; i < metas.length; i += 1) {
+      var card = metas[i].card;
       if (card.classList.contains('is-hidden')) { continue; }
-      var top = card.getBoundingClientRect().top + window.scrollY;
-      if (top <= fromTop) { current = card; } else { break; }
+      visibleList.push({ card: card, top: card.getBoundingClientRect().top + scrollY });
     }
-    if (!current) { current = cards.length ? cards[0] : null; }
-    tocItems.forEach(function (item) {
-      if (current && item.getAttribute('data-target') === current.id) { item.classList.add('active'); }
-      else { item.classList.remove('active'); }
-    });
+    offsetsDirty = false;
+  }
+
+  function spy() {
+    if (offsetsDirty) { refreshOffsets(); }
+    var fromTop = (window.scrollY || window.pageYOffset || 0) + 120;
+    var lo = 0;
+    var hi = visibleList.length - 1;
+    var idx = -1;
+    while (lo <= hi) {
+      var mid = (lo + hi) >> 1;
+      if (visibleList[mid].top <= fromTop) { idx = mid; lo = mid + 1; } else { hi = mid - 1; }
+    }
+    var current = idx >= 0 ? visibleList[idx].card : (metas.length ? metas[0].card : null);
+    var currentId = current ? current.id : null;
+    if (currentId === activeId) { return; }
+    if (activeToc) { activeToc.classList.remove('active'); }
+    activeToc = currentId ? (tocById[currentId] || null) : null;
+    if (activeToc) { activeToc.classList.add('active'); }
+    activeId = currentId;
   }
 
   // 返回顶部
@@ -969,7 +1062,10 @@ table.params tbody tr:hover { background: #fafbfc; }
       searchInput.focus();
     }
   });
-  window.addEventListener('resize', function () { if (window.innerWidth >= 900) { closeDrawer(); } });
+  window.addEventListener('resize', function () {
+    markDirty();
+    if (window.innerWidth >= 900) { closeDrawer(); }
+  });
 
   // 复制
   function fallbackCopy(text) {
@@ -982,27 +1078,7 @@ table.params tbody tr:hover { background: #fafbfc; }
     try { doc.execCommand('copy'); } catch (err) { /* 忽略 */ }
     doc.body.removeChild(ta);
   }
-  Array.prototype.slice.call(doc.querySelectorAll('.copy-btn')).forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      var id = btn.getAttribute('data-copy');
-      var el = id ? doc.getElementById(id) : null;
-      if (!el) { return; }
-      var text = el.innerText;
-      var original = btn.getAttribute('data-label');
-      if (!original) { original = btn.textContent; btn.setAttribute('data-label', original); }
-      var done = function () {
-        btn.textContent = '已复制';
-        btn.classList.add('copied');
-        window.setTimeout(function () { btn.textContent = original; btn.classList.remove('copied'); }, 1500);
-      };
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).then(done, function () { fallbackCopy(text); done(); });
-      } else {
-        fallbackCopy(text);
-        done();
-      }
-    });
-  });
+  // 复制按钮：已改由上方 doc.body 的委托监听器统一处理（handleCopy），此处不再逐个绑定。
 
   // 初始化
   applySearch();
