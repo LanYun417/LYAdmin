@@ -35,6 +35,13 @@ const OPERATION_RULES: Array<{ pattern: RegExp; module: string; action: string }
   { pattern: /^\/api\/profile\/password$/, module: '个人中心', action: '修改密码' },
   { pattern: /^\/api\/profile\/avatar$/, module: '个人中心', action: '更换头像' },
   { pattern: /^\/api\/profile$/, module: '个人中心', action: '修改资料' },
+
+  // 高危破坏性操作：清空全量 HTTP 日志必须留痕（此前零留痕，属「操作可追溯」目标缺口）
+  { pattern: /^\/api\/logs\/http$/, module: '日志管理', action: '清空' },
+  // 代码生成三动作：会写源码目录 / 导出 / 预览，均须留痕
+  { pattern: /^\/api\/gen\/create$/, module: '代码生成', action: '生成到项目' },
+  { pattern: /^\/api\/gen\/preview$/, module: '代码生成', action: '预览代码' },
+  { pattern: /^\/api\/gen\/download$/, module: '代码生成', action: '下载代码' },
 ];
 
 /** 不纳入操作日志的路径（认证类单独记登录日志）。 */

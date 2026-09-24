@@ -118,6 +118,7 @@ onMounted(() => {
     <el-card shadow="never">
       <template #header>文件上传</template>
       <el-upload
+        v-permission="'file:upload'"
         drag
         multiple
         :show-file-list="false"
@@ -174,7 +175,9 @@ onMounted(() => {
         <el-table-column label="操作" width="160" fixed="right">
           <template #default="{ row }">
             <el-link type="primary" :href="row.fileUrl" target="_blank" rel="noopener" class="mr-3"> 查看 </el-link>
-            <el-button type="danger" link @click="handleDelete(row as FileItem)"> 删除 </el-button>
+            <el-button v-permission="'file:remove'" type="danger" link @click="handleDelete(row as FileItem)">
+              删除
+            </el-button>
           </template>
         </el-table-column>
       </el-table>

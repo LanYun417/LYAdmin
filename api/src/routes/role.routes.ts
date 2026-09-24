@@ -27,7 +27,11 @@ router.get(
   asyncHandler(roleController.list),
 );
 
-router.get('/all', asyncHandler(roleController.all));
+// 全部角色下拉。使用独立权限码 system:role:all，而非复用只读的 system:role:list：
+// 历史上 admin 故意没有 system:role:list，而本接口是给持 system:user:assignRole 的角色
+// 拉取「分配角色」下拉框用的；复用 system:role:list 会把该能力收死，故新开独立码——
+// 既能堵住 viewer 枚举全部角色（含 super_admin），又不破坏分配角色下拉。
+router.get('/all', requirePermission('system:role:all'), asyncHandler(roleController.all));
 
 router.post(
   '/',

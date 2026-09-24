@@ -148,6 +148,13 @@ const MENU_TREE: MenuSeedNode[] = [
             permission: 'system:role:assignMenu',
             sort: 5,
           },
+          {
+            key: 'system:role:all',
+            menuName: '角色下拉',
+            menuType: MenuType.BUTTON,
+            permission: 'system:role:all',
+            sort: 6,
+          },
         ],
       },
       {

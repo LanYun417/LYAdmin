@@ -654,6 +654,7 @@ export const MODULES: ModuleDoc[] = [
         summary: '全部角色（下拉）',
         description: '返回全部角色简要信息（按排序、id 升序），用于下拉选择。',
         auth: true,
+        permission: 'system:role:all',
         contentType: 'application/json',
         requestExample: [
           'curl -X GET "http://localhost:3000/api/roles/all" \\',

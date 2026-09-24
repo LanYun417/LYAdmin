@@ -4,6 +4,7 @@ import { ElMessage, ElMessageBox } from 'element-plus';
 import { BIconPersonFill, BIconPlus } from 'bootstrap-icons-vue';
 import { deleteUserApi, getUserListApi, resetUserPasswordApi, updateUserStatusApi } from '@/api/user';
 import { getAllRolesApi } from '@/api/role';
+import { hasPermission } from '@/utils/permission';
 import { formatDateTime } from '@/utils/format';
 import { PASSWORD_REGEX } from '@/utils/validate';
 import type { RoleBrief, UserDetail } from '@/types/api';
@@ -49,8 +50,11 @@ async function loadList(): Promise<void> {
   }
 }
 
-/** 加载角色下拉 */
+/** 加载角色下拉（仅具备 system:role:all 的角色可拉取，避免无权限角色触发 403 整页跳转） */
 async function loadRoles(): Promise<void> {
+  if (!hasPermission('system:role:all')) {
+    return;
+  }
   roleOptions.value = await getAllRolesApi();
 }
 
@@ -92,9 +96,25 @@ async function handleDelete(row: UserDetail): Promise<void> {
   await loadList();
 }
 
-/** 切换启用状态 */
+/**
+ * 切换启用状态。
+ * 该操作需 system:user:edit 权限；开关位于表格插槽内，且需处理「无权限时回滚视觉状态」，
+ * 故用函数显式判定而非 v-permission 指令。操作前二次确认，取消则不变更。
+ */
 async function handleStatusChange(row: UserDetail): Promise<void> {
+  if (!hasPermission('system:user:edit')) {
+    ElMessage.warning('无操作权限，无法修改用户状态');
+    return;
+  }
   const next = row.status === 1 ? 0 : 1;
+  try {
+    await ElMessageBox.confirm(`确定要${next === 1 ? '启用' : '禁用'}用户「${row.username}」吗？`, '提示', {
+      type: 'warning',
+    });
+  } catch {
+    // 取消：开关随 :model-value 保持原状，无需额外回滚
+    return;
+  }
   try {
     await updateUserStatusApi(row.id, next);
     row.status = next;

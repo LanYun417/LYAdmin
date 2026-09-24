@@ -42,6 +42,8 @@ const ROLE_SEEDS: RoleSeed[] = [
       'system:user:remove',
       'system:user:resetPwd',
       'system:user:assignRole',
+      // 角色下拉（GET /api/roles/all 所需）；admin 无 system:role:list，靠此独立码拉下拉框
+      'system:role:all',
       'log',
       'log:login',
       'log:login:export',
@@ -65,8 +67,8 @@ const ROLE_SEEDS: RoleSeed[] = [
     roleName: '只读访客',
     sort: 3,
     status: Status.ENABLED,
-    // 严格只读：只授予查看/查询类权限码，任何写操作与破坏性操作（如 log:http:clear）
-    // 一律不得加入此列表，否则只读角色将获得越权能力。
+    // 严格只读：只授予查看/查询类权限码，任何写操作与破坏性操作（如 log:http:clear、
+    // system:role:all 枚举全部角色）一律不得加入此列表，否则只读角色将获得越权能力。
     remark: '仅拥有查看类权限',
     menuKeys: [
       'dashboard',
