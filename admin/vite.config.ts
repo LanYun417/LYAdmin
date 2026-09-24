@@ -58,7 +58,8 @@ export default defineConfig(({ mode }) => {
     build: {
       outDir: 'dist',
       sourcemap: false,
-      chunkSizeWarningLimit: 3000,
+      // 超大 chunk 告警阈值：调低至 600 kB，避免全量图标库 / 全量 echarts 等超大 chunk 被静默放行
+      chunkSizeWarningLimit: 600,
     },
   };
 });

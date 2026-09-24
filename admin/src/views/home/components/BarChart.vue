@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useResizeObserver } from '@vueuse/core';
-import * as echarts from 'echarts';
+import echarts from '@/utils/echarts';
 import type { RoleUserCount } from '@/types/api';
 
 defineOptions({ name: 'BarChart' });
@@ -12,7 +12,7 @@ const props = defineProps<{
 }>();
 
 const chartRef = ref<HTMLDivElement>();
-let chart: echarts.ECharts | null = null;
+let chart: ReturnType<typeof echarts.init> | null = null;
 
 /** 渲染图表 */
 function render(): void {

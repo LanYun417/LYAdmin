@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import { BIconSearch, iconNames } from 'bootstrap-icons-vue';
+import { BIconSearch } from 'bootstrap-icons-vue';
+import { appIconNames } from '@/utils/icons';
 import BasicDialog from '@/components/BasicDialog/index.vue';
 
 defineOptions({ name: 'IconSelect' });
@@ -14,7 +15,7 @@ const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void;
 }>();
 
-/** 每批渲染的图标数量，避免一次性挂载全部 2050 个 SVG。 */
+/** 每批渲染的图标数量，避免一次性挂载全部图标 SVG。 */
 const BATCH_SIZE = 200;
 
 /** 滚动到底部的提前触发距离（px）。 */
@@ -27,13 +28,13 @@ const visibleCount = ref(BATCH_SIZE);
 /** 图标网格容器，用于定位 el-scrollbar 的滚动容器 */
 const gridRef = ref<HTMLElement | null>(null);
 
-/** 过滤后的图标名（完整结果，用于搜索匹配与总数展示） */
+/** 过滤后的图标名（完整结果，用于搜索匹配与总数展示）。候选来自已注册图标，保证「可选即可用」。 */
 const filteredIcons = computed(() => {
   const key = keyword.value.trim().toLowerCase();
   if (!key) {
-    return iconNames;
+    return appIconNames;
   }
-  return iconNames.filter((name) => name.toLowerCase().includes(key));
+  return appIconNames.filter((name) => name.toLowerCase().includes(key));
 });
 
 /** 实际渲染到 DOM 的图标名（仅一个窗口，避免一次性创建大量节点） */

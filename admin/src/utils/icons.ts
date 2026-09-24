@@ -1,0 +1,156 @@
+/**
+ * Bootstrap Icons 按需注册表。
+ * 模块职责：显式引入后台实际使用的图标并导出「名字 → 组件」映射，供 `main.ts` 逐个
+ * `app.component(name, comp)` 注册（保留 `<component :is="icon" />` 动态渲染能力）。
+ *
+ * 背景：此前 `main.ts` 使用 `BootstrapIconsPlugin` 会注册 bootstrap-icons-vue 的**全部 2052 个**
+ * 图标，导致产物中出现约 222 kB（gzip）的全量图标 chunk（占首屏 JS 的 56%），而实际仅用到数十个。
+ * `bootstrap-icons-vue` 的 ESM 产物中每个图标都是带 PURE 标注的独立无副作用声明，
+ * 因此**只 import 需要的图标即可被 Rollup tree-shaking 摇掉其余**。
+ *
+ * 维护约定（关键，勿删减）：
+ * - 必须覆盖 `sys_menu` 表中现存图标（如 `BIconHouse`、`BIconSpeedometer2` 等）；
+ * - 必须覆盖各页面源码中直接引用的图标；
+ * - 菜单管理 / IconPicker 的可选图标列表由本表键集生成（保持「可选 = 已注册」语义一致，
+ *   避免用户选了未注册的图标导致渲染空白）。
+ * 若新增菜单图标，请在此补充并按需重新构建。
+ */
+import type { ComponentOptions } from 'vue';
+import {
+  BIconActivity,
+  BIconArrowClockwise,
+  BIconBarChart,
+  BIconBell,
+  BIconBoxArrowRight,
+  BIconBoxSeam,
+  BIconCalendar,
+  BIconBarChartLine,
+  BIconChatDots,
+  BIconCheckCircle,
+  BIconClipboardData,
+  BIconCloudUpload,
+  BIconCodeSlash,
+  BIconDatabase,
+  BIconDisplay,
+  BIconDownload,
+  BIconEnvelope,
+  BIconEye,
+  BIconFileEarmark,
+  BIconFileEarmarkImage,
+  BIconFileEarmarkPdf,
+  BIconFileEarmarkSpreadsheet,
+  BIconFileEarmarkText,
+  BIconFilter,
+  BIconFolder,
+  BIconFolder2Open,
+  BIconFullscreen,
+  BIconFullscreenExit,
+  BIconGear,
+  BIconGraphUp,
+  BIconHddNetwork,
+  BIconHouse,
+  BIconHouseDoor,
+  BIconImage,
+  BIconInfoCircle,
+  BIconKey,
+  BIconLayoutSidebar,
+  BIconLayoutSidebarReverse,
+  BIconList,
+  BIconLock,
+  BIconMagic,
+  BIconMoon,
+  BIconPencil,
+  BIconPeople,
+  BIconPerson,
+  BIconPersonCircle,
+  BIconPersonFill,
+  BIconPieChart,
+  BIconPlus,
+  BIconRocketFill,
+  BIconSearch,
+  BIconServer,
+  BIconShieldCheck,
+  BIconSpeedometer2,
+  BIconStar,
+  BIconSun,
+  BIconTable,
+  BIconTags,
+  BIconTools,
+  BIconTrash,
+  BIconUpload,
+  BIconWrench,
+  BIconXCircle,
+} from 'bootstrap-icons-vue';
+
+/**
+ * 已注册图标集合（键名即全局组件名，如 `BIconPerson`）。
+ * 使用 `satisfies` 保留字面量键类型，供 `types/bootstrap-icons.d.ts` 生成精确的 `GlobalComponents` 声明。
+ */
+export const appIcons = {
+  BIconActivity,
+  BIconArrowClockwise,
+  BIconBarChart,
+  BIconBell,
+  BIconBoxArrowRight,
+  BIconBoxSeam,
+  BIconCalendar,
+  BIconBarChartLine,
+  BIconChatDots,
+  BIconCheckCircle,
+  BIconClipboardData,
+  BIconCloudUpload,
+  BIconCodeSlash,
+  BIconDatabase,
+  BIconDisplay,
+  BIconDownload,
+  BIconEnvelope,
+  BIconEye,
+  BIconFileEarmark,
+  BIconFileEarmarkImage,
+  BIconFileEarmarkPdf,
+  BIconFileEarmarkSpreadsheet,
+  BIconFileEarmarkText,
+  BIconFilter,
+  BIconFolder,
+  BIconFolder2Open,
+  BIconFullscreen,
+  BIconFullscreenExit,
+  BIconGear,
+  BIconGraphUp,
+  BIconHddNetwork,
+  BIconHouse,
+  BIconHouseDoor,
+  BIconImage,
+  BIconInfoCircle,
+  BIconKey,
+  BIconLayoutSidebar,
+  BIconLayoutSidebarReverse,
+  BIconList,
+  BIconLock,
+  BIconMagic,
+  BIconMoon,
+  BIconPencil,
+  BIconPeople,
+  BIconPerson,
+  BIconPersonCircle,
+  BIconPersonFill,
+  BIconPieChart,
+  BIconPlus,
+  BIconRocketFill,
+  BIconSearch,
+  BIconServer,
+  BIconShieldCheck,
+  BIconSpeedometer2,
+  BIconStar,
+  BIconSun,
+  BIconTable,
+  BIconTags,
+  BIconTools,
+  BIconTrash,
+  BIconUpload,
+  BIconWrench,
+  BIconXCircle,
+} satisfies Record<string, ComponentOptions>;
+
+/** 全部已注册图标名（供 IconPicker / IconSelect 的可选列表消费，保持「可选 = 已注册」语义）。 */
+export const appIconNames: string[] = Object.keys(appIcons);

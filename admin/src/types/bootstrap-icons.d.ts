@@ -1,18 +1,18 @@
 /**
- * Bootstrap Icons 全局组件类型声明。
+ * Bootstrap Icons 全局组件类型声明（按需注册版）。
  *
- * `BootstrapIconsPlugin` 在运行时以 `BIconXxx` 为名全局注册全部图标组件，
- * 但 vue-tsc 无法感知运行时注册，模板里直接写 `<BIconPerson />` 或
- * `<component :is="item.icon" />` 会报 “Property does not exist”。
- * 这里从包的类型导出中提取所有 `BIcon*` 组件，补齐 `GlobalComponents` 声明。
+ * `main.ts` 不再使用会注册全量图标的 `BootstrapIconsPlugin`，而是遍历 `utils/icons.ts`
+ * 导出的 `appIcons` 逐个 `app.component(name, icon)` 注册。vue-tsc 无法感知运行时注册，
+ * 故此处基于 `appIcons` 的键（即已注册的图标名）补齐 `GlobalComponents` 声明，
+ * 保证模板中 `<BIconPerson />` 与 `<component :is="item.icon" />` 的类型安全。
+ *
+ * 若在 `utils/icons.ts` 新增图标，此处无需改动（类型自动跟随）。
  */
-import type * as BootstrapIcons from 'bootstrap-icons-vue';
+import type { appIcons } from '@/utils/icons';
 
-/** 仅保留 `BIcon` 前缀的图标组件（排除 `iconNames`、`BootstrapIconsPlugin` 等非组件导出）。 */
-type BootstrapIconComponents = {
-  [K in keyof typeof BootstrapIcons as K extends `BIcon${string}` ? K : never]: (typeof BootstrapIcons)[K];
-};
+/** 已注册图标组件的映射类型（键 = 图标名）。 */
+type AppIconComponents = typeof appIcons;
 
 declare module 'vue' {
-  export interface GlobalComponents extends BootstrapIconComponents {}
+  export interface GlobalComponents extends AppIconComponents {}
 }
