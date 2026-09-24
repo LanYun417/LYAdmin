@@ -42,6 +42,8 @@ const OPERATION_RULES: Array<{ pattern: RegExp; module: string; action: string }
   { pattern: /^\/api\/gen\/create$/, module: '代码生成', action: '生成到项目' },
   { pattern: /^\/api\/gen\/preview$/, module: '代码生成', action: '预览代码' },
   { pattern: /^\/api\/gen\/download$/, module: '代码生成', action: '下载代码' },
+
+  // [GEN-ANCHOR] 代码生成器自动插入位置，请勿删除（gen.writer 会在本行之前插入新模块操作日志规则）
 ];
 
 /** 不纳入操作日志的路径（认证类单独记登录日志）。 */

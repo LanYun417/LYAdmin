@@ -350,6 +350,7 @@ const MENU_TREE: MenuSeedNode[] = [
     visible: Status.DISABLED,
     keepAlive: 1,
   },
+  // [GEN-ANCHOR] 代码生成器自动插入位置，请勿删除（gen.writer 会在本行之前插入新模块菜单节点）
 ];
 
 /**

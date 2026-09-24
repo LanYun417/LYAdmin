@@ -1508,7 +1508,7 @@ export const MODULES: ModuleDoc[] = [
         path: '/api/gen/create',
         summary: '生成代码到项目目录',
         description:
-          '与预览同一套模板，但会把文件直接写入真实项目目录（backend/* → api/src，frontend/* → admin/src），并自动接线模型注册与路由挂载。',
+          '与预览同一套模板，但会把文件直接写入真实项目目录（backend/* → api/src，frontend/* → admin/src），并自动接线模型注册、路由挂载、菜单节点、接口文档与操作日志五处。',
         auth: true,
         permission: 'tool:gen:create',
         contentType: 'application/json',
@@ -1541,13 +1541,19 @@ export const MODULES: ModuleDoc[] = [
           '  "message": "代码已生成到项目",',
           '  "data": {',
           '    "written": ["api/src/models/User.ts", "api/src/routes/user.routes.ts", "admin/src/views/system/user/index.vue"],',
-          '    "injected": ["api/src/models/index.ts", "api/src/routes/index.ts"],',
-          '    "manualSteps": ["重启后端生效", "菜单管理新增菜单", "为角色授权权限码"]',
+          '    "injected": [',
+          '      "api/src/models/index.ts",',
+          '      "api/src/routes/index.ts",',
+          '      "api/src/seed/menu.seed.ts",',
+          '      "api/src/docs/catalog.ts",',
+          '      "api/src/middlewares/operationLog.ts"',
+          '    ],',
+          '    "manualSteps": ["重启后端生效", "如需授予其它角色，请在「角色管理-菜单授权」中勾选"]',
           '  }',
           '}',
         ].join('\n'),
         notes:
-          '同名文件已存在且未传 overwrite=true 时返回 409（message 列出冲突文件）。生成后需重启后端并在菜单管理配置菜单与权限码。',
+          '同名文件已存在且未传 overwrite=true 时返回 409（message 列出冲突文件）。生成后需重启后端生效；菜单与接口文档已自动接线，超管自动可见，其它角色需在角色管理页勾选授权。',
       },
     ],
   },
@@ -1780,6 +1786,7 @@ export const MODULES: ModuleDoc[] = [
       },
     ],
   },
+  // [GEN-ANCHOR] 代码生成器自动插入位置，请勿删除（gen.writer 会在本行之前插入新模块接口文档）
 ];
 
 /** 全部接口（扁平列表），供统计与覆盖校验复用。 */
