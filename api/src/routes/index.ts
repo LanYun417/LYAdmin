@@ -6,6 +6,7 @@ import { Router } from 'express';
 import authRoutes from './auth.routes';
 import dashboardRoutes from './dashboard.routes';
 import fileRoutes from './file.routes';
+import genRoutes from './gen.routes';
 import logRoutes from './log.routes';
 import menuRoutes from './menu.routes';
 import profileRoutes from './profile.routes';
@@ -22,5 +23,6 @@ router.use('/logs', logRoutes);
 router.use('/files', fileRoutes);
 router.use('/dashboard', dashboardRoutes);
 router.use('/profile', profileRoutes);
+router.use('/gen', genRoutes);
 
 export default router;
