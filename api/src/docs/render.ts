@@ -328,7 +328,9 @@ export function renderDocsHtml(): string {
 * { box-sizing: border-box; }
 html {
   scroll-behavior: smooth;
-  /* Firefox 滚动条优化 */
+}
+/* Firefox 滚动条：对所有元素统一为细滚动条，与页面一致 */
+* {
   scrollbar-width: thin;
   scrollbar-color: #c1c6cf transparent;
 }
@@ -479,10 +481,7 @@ a { color: var(--primary); text-decoration: none; }
   border-radius: 0;
   padding: 16px 12px;
 }
-/* 目录滚动条（更细） */
-.sidebar::-webkit-scrollbar { width: 8px; }
-.sidebar::-webkit-scrollbar-thumb { background-color: #c1c6cf; border-radius: 999px; border: 2px solid transparent; background-clip: content-box; }
-.sidebar::-webkit-scrollbar-thumb:hover { background-color: #9aa3af; background-clip: content-box; }
+/* 目录滚动条：沿用全局 ::-webkit-scrollbar 样式，与页面滚动条一致 */
 .toc-group { margin-bottom: 10px; }
 .toc-group:last-child { margin-bottom: 0; }
 .toc-group-title {
@@ -688,10 +687,7 @@ table.params tbody tr:hover { background: #fafbfc; }
   background: var(--code-bg);
   tab-size: 2;
 }
-/* 代码块滚动条（更细） */
-.code-block::-webkit-scrollbar { width: 8px; height: 8px; }
-.code-block::-webkit-scrollbar-thumb { background-color: #c1c6cf; border-radius: 999px; border: 2px solid transparent; background-clip: content-box; }
-.code-block::-webkit-scrollbar-thumb:hover { background-color: #9aa3af; background-clip: content-box; }
+/* 代码块滚动条：沿用全局 ::-webkit-scrollbar 样式，与页面滚动条一致 */
 
 .notes { margin: 14px 0 0; padding: 10px 14px; background: #fdf6ec; border: 1px solid #f5e3c4; border-radius: var(--radius); }
 .notes-title { display: inline-block; font-size: 12px; font-weight: 700; color: #b88230; margin-bottom: 2px; }
