@@ -18,10 +18,19 @@ const permissionStore = usePermissionStore();
 
 const formRef = ref<FormInstance>();
 const loading = ref(false);
+/** 是否开发环境（构建期常量；生产构建时被静态替换为 false） */
+const isDev = import.meta.env.DEV;
+/**
+ * 开发环境登录提示文案。
+ * 采用「构建期常量 + 三元」而非在模板里写死字面量：`import.meta.env.DEV` 在生产构建会被
+ * 静态替换为 false，`false ? '…' : ''` 经常量折叠后整个字面量从产物中消失，避免明文凭据
+ * 被打进生产 bundle（仅在模板用 v-if 无法删除已编译进 render 函数的字面量）。
+ */
+const devTip = import.meta.env.DEV ? '默认账号：admin / 123456（仅开发环境显示）' : '';
 
 const form = reactive<LoginParams>({
-  username: 'admin',
-  password: '123456',
+  username: isDev ? 'admin' : '',
+  password: isDev ? '123456' : '',
 });
 
 const rules: FormRules<LoginParams> = {
@@ -78,7 +87,7 @@ async function handleLogin(): Promise<void> {
           <el-button type="primary" class="login-button" :loading="loading" @click="handleLogin"> 登 录 </el-button>
         </el-form-item>
       </el-form>
-      <p class="login-tip">默认账号：admin / 123456</p>
+      <p v-if="devTip" class="login-tip">{{ devTip }}</p>
     </div>
   </div>
 </template>

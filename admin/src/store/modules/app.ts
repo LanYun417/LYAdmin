@@ -83,7 +83,7 @@ export const useAppStore = defineStore(
   {
     persist: {
       key: 'ly_admin_app',
-      pick: ['sidebarCollapsed', 'primaryColor'],
+      pick: ['sidebarCollapsed', 'primaryColor', 'dark'],
     },
   },
 );
