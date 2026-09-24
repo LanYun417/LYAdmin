@@ -58,6 +58,11 @@ export class AppError extends Error {
   static badRequest(message: string = ERROR_MESSAGE.BAD_REQUEST): AppError {
     return new AppError(message, ERROR_CODE.BAD_REQUEST, 400);
   }
+
+  /** 429 请求过于频繁（如登录频率限制触发） */
+  static tooManyRequests(message: string = ERROR_MESSAGE.TOO_MANY_REQUESTS): AppError {
+    return new AppError(message, ERROR_CODE.TOO_MANY_REQUESTS, 429);
+  }
 }
 
 /**

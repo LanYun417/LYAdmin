@@ -10,19 +10,22 @@ import { appendHttpLog } from '@/logging/httpLogStore';
 import type { AccessLogRecord } from '@/logging/types';
 
 /**
- * 解析客户端真实 IP（优先取代理头 `x-forwarded-for`）。
+ * 解析客户端真实 IP。
+ *
+ * **只信任 Express 的 `req.ip`**，绝不手工读取 `X-Forwarded-For` 头。原因：
+ * 当 `config.trustProxy > 0`（即 app.ts 执行 `app.set('trust proxy', n)`）时，Express 会
+ * 依据代理跳数自行解析 XFF 并写入 `req.ip`；默认配置（trustProxy = 0）下 `req.ip` 即真实
+ * socket 地址。若在此直接读 XFF 头，会绕过 trust proxy 配置——攻击者只需伪造一个 XFF 头，
+ * 就能伪造 IP、绕过登录频率限制（A3），并污染登录/操作/HTTP 审计日志（A2 的安全前提）。
  * @param req Express 请求对象
  * @returns 客户端 IP 字符串
  */
 export function getClientIp(req: Request): string {
-  const forwarded = req.headers['x-forwarded-for'];
-  if (typeof forwarded === 'string' && forwarded.length > 0) {
-    return forwarded.split(',')[0].trim();
+  const ip = req.ip;
+  if (typeof ip === 'string' && ip.length > 0) {
+    return ip;
   }
-  if (Array.isArray(forwarded) && forwarded.length > 0) {
-    return forwarded[0];
-  }
-  return req.ip ?? req.socket.remoteAddress ?? '';
+  return req.socket?.remoteAddress ?? '';
 }
 
 /** 请求/响应内容捕获与序列化上限（字节） */

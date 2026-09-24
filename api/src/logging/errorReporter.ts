@@ -61,20 +61,19 @@ function resolveStack(err: unknown): string | undefined {
 }
 
 /**
- * 从 Express 请求中提取客户端 IP（优先取代理头 `x-forwarded-for`）。
- * 说明：此处内联实现，避免与并行维护的 `utils/logger.ts` 产生耦合/循环依赖。
+ * 从 Express 请求中提取客户端 IP（只信任 `req.ip`，不再直读 `X-Forwarded-For`）。
+ * 说明：此处内联实现，避免与并行维护的 `utils/logger.ts` 产生耦合/循环依赖；
+ * `req.ip` 已由 Express 依据 trust proxy 配置决定是否解析 XFF，故与 getClientIp 语义一致，
+ * 不存在第二处绕过 trust proxy 实现伪造 IP。
  * @param req Express 请求对象
  * @returns 客户端 IP 字符串
  */
 function resolveClientIp(req: Request): string {
-  const forwarded = req.headers['x-forwarded-for'];
-  if (typeof forwarded === 'string' && forwarded.length > 0) {
-    return forwarded.split(',')[0].trim();
+  const ip = req.ip;
+  if (typeof ip === 'string' && ip.length > 0) {
+    return ip;
   }
-  if (Array.isArray(forwarded) && forwarded.length > 0) {
-    return forwarded[0];
-  }
-  return req.ip ?? req.socket.remoteAddress ?? '';
+  return req.socket?.remoteAddress ?? '';
 }
 
 /**

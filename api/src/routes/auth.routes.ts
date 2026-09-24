@@ -5,13 +5,15 @@
 import { Router } from 'express';
 import * as authController from '@/controllers/auth.controller';
 import { authenticate } from '@/middlewares/auth';
+import { loginRateLimit } from '@/middlewares/loginRateLimit';
 import { validate } from '@/middlewares/validate';
 import { asyncHandler } from '@/utils/asyncHandler';
 import { loginSchema, refreshSchema } from '@/validators/auth.validator';
 
 const router = Router();
 
-router.post('/login', validate({ body: loginSchema }), asyncHandler(authController.login));
+// 登录路由挂载频率限制：连续失败 5 次 / 5 分钟 → 锁定 15 分钟（返回 429），登录成功清零
+router.post('/login', loginRateLimit(), validate({ body: loginSchema }), asyncHandler(authController.login));
 router.post('/refresh', validate({ body: refreshSchema }), asyncHandler(authController.refresh));
 router.post('/logout', authenticate, asyncHandler(authController.logout));
 router.get('/profile', authenticate, asyncHandler(authController.profile));

@@ -62,6 +62,124 @@ function resolvePhysicalPath(relativePath: string): string {
   return path.isAbsolute(relativePath) ? relativePath : path.resolve(config.rootDir, relativePath);
 }
 
+/** 幻数校验读取的头部字节数（覆盖到 WEBP 的偏移 8~11 即可）。 */
+const MAGIC_HEAD_BYTES = 16;
+
+/** 判断缓冲区是否以指定字节序列开头。 */
+function startsWithBytes(head: Buffer, bytes: number[]): boolean {
+  if (head.length < bytes.length) {
+    return false;
+  }
+  return bytes.every((byte, index) => head[index] === byte);
+}
+
+/**
+ * 扩展名 → 幻数匹配函数。
+ *
+ * 说明（重要）：
+ * - 白名单 `UPLOAD_ALLOWED_EXT` 中 `.txt` 无稳定魔数（可为 BOM/纯 ASCII 等任意文本），
+ *   故**有意不在本表登记**，校验时跳过（宁可放行文本，也不误杀）。
+ * - `.docx` / `.xlsx` 本质是 ZIP 容器，`.zip` 同理，均以 `PK\x03\x04` 开头（另有空归档 `PK\x05\x06`、
+ *   分卷 `PK\x07\x08` 两种合法头）；`.doc` 为 OLE 复合文档。
+ * - `.avif` 不在 `UPLOAD_ALLOWED_EXT` 白名单内，上传本就不放行，此处无需登记。
+ */
+const MAGIC_BY_EXT: Record<string, (head: Buffer) => boolean> = {
+  '.png': (head) => startsWithBytes(head, [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+  '.jpg': (head) => startsWithBytes(head, [0xff, 0xd8, 0xff]),
+  '.jpeg': (head) => startsWithBytes(head, [0xff, 0xd8, 0xff]),
+  '.gif': (head) => startsWithBytes(head, [0x47, 0x49, 0x46, 0x38]),
+  '.bmp': (head) => startsWithBytes(head, [0x42, 0x4d]),
+  '.pdf': (head) => startsWithBytes(head, [0x25, 0x50, 0x44, 0x46]),
+  // WEBP：RIFF....WEBP（RIFF + 4 字节长度 + WEBP）
+  '.webp': (head) =>
+    startsWithBytes(head, [0x52, 0x49, 0x46, 0x46]) &&
+    head.length >= 12 &&
+    head[8] === 0x57 &&
+    head[9] === 0x45 &&
+    head[10] === 0x42 &&
+    head[11] === 0x50,
+  // ZIP 容器族：zip / docx / xlsx 均以 PK 开头
+  '.zip': (head) =>
+    startsWithBytes(head, [0x50, 0x4b, 0x03, 0x04]) ||
+    startsWithBytes(head, [0x50, 0x4b, 0x05, 0x06]) ||
+    startsWithBytes(head, [0x50, 0x4b, 0x07, 0x08]),
+  '.docx': (head) => startsWithBytes(head, [0x50, 0x4b, 0x03, 0x04]),
+  '.xlsx': (head) => startsWithBytes(head, [0x50, 0x4b, 0x03, 0x04]),
+  // OLE 复合文档（旧版 .doc）
+  '.doc': (head) => startsWithBytes(head, [0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]),
+  // OLE 复合文档（旧版 .xls，遗留 BIFF 格式），与 .doc 复用同一 OLE 判定
+  '.xls': (head) => startsWithBytes(head, [0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]),
+};
+
+/**
+ * 读取文件前 `length` 字节（不整文件载入内存）。
+ * @param absolutePath 物理文件绝对路径
+ * @param length 读取字节数
+ */
+async function readHead(absolutePath: string, length: number): Promise<Buffer> {
+  const handle = await fs.promises.open(absolutePath, 'r');
+  try {
+    const buffer = Buffer.alloc(length);
+    const { bytesRead } = await handle.read(buffer, 0, length, 0);
+    return buffer.subarray(0, bytesRead);
+  } finally {
+    await handle.close();
+  }
+}
+
+/**
+ * 校验已落盘文件的「幻数」（文件头魔数）是否与其扩展名匹配。
+ *
+ * 背景：multer 的 `fileFilter` 阶段拿不到文件内容 buffer（diskStorage 落盘后才可读），
+ * 且客户端提交的 `mimetype`/`originalname` 可被伪造；因此**必须在文件落盘之后**基于真实
+ * 内容做校验。白名单内未登记魔数的类型（如 `.txt`）跳过校验，避免误杀。
+ * @param absolutePath 已落盘文件绝对路径
+ * @param ext 文件扩展名（含点，大小写不敏感）
+ * @throws AppError 400 内容与扩展名不匹配
+ */
+export async function assertFileMagic(absolutePath: string, ext: string): Promise<void> {
+  const normalizedExt = ext.toLowerCase();
+  const checker = MAGIC_BY_EXT[normalizedExt];
+  if (!checker) {
+    return;
+  }
+  const head = await readHead(absolutePath, MAGIC_HEAD_BYTES);
+  if (!checker(head)) {
+    throw AppError.badRequest(`文件内容与扩展名不匹配: ${normalizedExt}（疑似伪造类型）`);
+  }
+}
+
+/** multer 文件 → 物理绝对路径。 */
+function toAbsolutePath(file: Express.Multer.File): string {
+  return path.isAbsolute(file.path) ? file.path : path.resolve(config.rootDir, file.path);
+}
+
+/**
+ * 校验本批已落盘文件的魔数；任一不匹配则删除**本批全部**已落盘文件后抛出 400。
+ *
+ * 安全约束：只清理本次请求新产生的文件（`files` 参数内的），绝不触碰历史/其它请求的文件。
+ * @param files 本批 multer 文件数组
+ * @throws AppError 400 任一文件内容与扩展名不匹配
+ */
+async function assertFilesMagic(files: Express.Multer.File[]): Promise<void> {
+  for (const file of files) {
+    const ext = path.extname(file.originalname).toLowerCase();
+    try {
+      await assertFileMagic(toAbsolutePath(file), ext);
+    } catch (error) {
+      // 校验失败：清理本批已落盘的全部文件，避免磁盘残留
+      for (const item of files) {
+        try {
+          fs.rmSync(toAbsolutePath(item), { force: true });
+        } catch (removeError) {
+          console.error('[FileService] 清理非法上传文件失败:', removeError);
+        }
+      }
+      throw error;
+    }
+  }
+}
+
 /**
  * 流式计算文件 SHA-256（避免大文件整体载入内存）。
  * @param absolutePath 物理文件绝对路径
@@ -83,6 +201,10 @@ function computeSha256(absolutePath: string): Promise<string> {
  * @returns 文件列表项数组
  */
 export async function saveFiles(files: Express.Multer.File[], uploaderId: number | null): Promise<FileItem[]> {
+  // 幻数校验：diskStorage 落盘后才有文件内容，故在此对每个已落盘文件做真实内容校验；
+  // 任一不匹配 → 清理本批全部文件并抛 400（防止伪造后缀/类型绕过白名单，且不留磁盘残留）。
+  await assertFilesMagic(files);
+
   const items: FileItem[] = [];
 
   for (const file of files) {

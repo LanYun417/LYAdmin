@@ -11,6 +11,7 @@ export const ERROR_CODE = {
   FORBIDDEN: 403,
   NOT_FOUND: 404,
   CONFLICT: 409,
+  TOO_MANY_REQUESTS: 429,
   INTERNAL: 500,
 } as const;
 
@@ -27,6 +28,7 @@ export const ERROR_MESSAGE = {
   FORBIDDEN: '无访问权限',
   NOT_FOUND: '资源不存在',
   CONFLICT: '数据已存在',
+  TOO_MANY_REQUESTS: '请求过于频繁，请稍后再试',
   INTERNAL: '服务器内部错误',
 } as const;
 

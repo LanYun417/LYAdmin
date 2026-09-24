@@ -21,7 +21,12 @@ import { ok } from '@/utils/response';
 export function createApp(): Express {
   const app = express();
 
-  app.set('trust proxy', true);
+  // 仅在显式配置 TRUST_PROXY（反向代理跳数 > 0）时才信任 X-Forwarded-For。
+  // 默认不信任（不调用 set），避免攻击者伪造来源 IP，同时保证 req.ip 返回真实 socket 地址、
+  // 登录频率限制（A3）不被绕过。
+  if (config.trustProxy > 0) {
+    app.set('trust proxy', config.trustProxy);
+  }
   app.disable('x-powered-by');
 
   // 跨域兜底（前端开发期走 Vite 代理，此处便于 Postman/curl 直连）

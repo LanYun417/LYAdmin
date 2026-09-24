@@ -28,12 +28,43 @@ function toNumber(value: string | undefined, fallback: number): number {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
+/** 生成 32 字节随机密钥的命令（用于必填项报错信息与 .env.example 说明）。 */
+const SECRET_GEN_HINT = `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`;
+
+/**
+ * 读取必填的环境变量；缺失或为空时抛出清晰错误并终止启动（fail-fast）。
+ *
+ * 安全背景：JWT 密钥此前带有硬编码默认值，且 api/.env 实际就使用了该默认值，
+ * 等于把签名密钥公开给全网，任何人均可伪造 Token。此处改为必填，绝不允许回退默认值。
+ * 由于 config 对象在模块顶层求值，抛错发生在进程启动早期（符合 fail-fast 预期）。
+ * @param name 环境变量名
+ * @param hint 附加提示（如生成命令），可为空
+ * @returns 非空的环境变量值
+ */
+function requireEnv(name: string, hint?: string): string {
+  const value = process.env[name];
+  if (value === undefined || value.trim() === '') {
+    const lines = [`[Config] 缺少必填环境变量 ${name}，服务拒绝启动。`];
+    if (hint) {
+      lines.push(`  提示：${hint}`);
+    }
+    throw new Error(lines.join('\n'));
+  }
+  return value;
+}
+
 /** 全局配置对象。 */
 export const config = {
   /** 运行环境 */
   env: process.env.NODE_ENV ?? 'development',
   /** 服务端口 */
   port: toNumber(process.env.PORT, 3000),
+  /**
+   * 反向代理信任跳数。默认 0 = 不信任 `X-Forwarded-For`，仅当服务确实部署在
+   * 反向代理之后才设置（值等于代理跳数，如 1）。默认不启用可避免攻击者伪造来源 IP、
+   * 绕过频率限制并污染审计日志。
+   */
+  trustProxy: toNumber(process.env.TRUST_PROXY, 0),
   /** 项目根目录（api/ 绝对路径） */
   rootDir: ROOT_DIR,
   /** 数据库配置 */
@@ -46,10 +77,10 @@ export const config = {
     // 数据库日志默认开启：SQL 写入 logs/db/ 日志文件；显式设 DB_LOGGING=false 可关闭
     logging: toBoolean(process.env.DB_LOGGING, true),
   },
-  /** JWT 配置 */
+  /** JWT 配置（密钥必填：缺失即抛错拒绝启动，禁止硬编码默认值） */
   jwt: {
-    accessSecret: process.env.JWT_ACCESS_SECRET ?? 'ly_admin_access_secret',
-    refreshSecret: process.env.JWT_REFRESH_SECRET ?? 'ly_admin_refresh_secret',
+    accessSecret: requireEnv('JWT_ACCESS_SECRET', `请执行以下命令生成后写入 api/.env：${SECRET_GEN_HINT}`),
+    refreshSecret: requireEnv('JWT_REFRESH_SECRET', `请执行以下命令生成后写入 api/.env：${SECRET_GEN_HINT}`),
     accessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN ?? '2h',
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN ?? '7d',
   },
