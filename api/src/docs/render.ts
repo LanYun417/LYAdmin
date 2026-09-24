@@ -750,6 +750,7 @@ table.params tbody tr:hover { background: #fafbfc; }
       top: var(--header-h);
       left: 0;
       bottom: 0;
+      height: auto;
       width: min(86vw, 340px);
       max-height: none;
       border-radius: 0;
