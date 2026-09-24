@@ -363,8 +363,6 @@ a { color: var(--primary); text-decoration: none; }
   border-bottom: 1px solid var(--border-2);
 }
 .topbar-inner {
-  max-width: 1440px;
-  margin: 0 auto;
   height: var(--header-h);
   padding: 0 24px;
   display: flex;
@@ -457,26 +455,24 @@ a { color: var(--primary); text-decoration: none; }
 
 /* ===== 布局 ===== */
 .layout {
-  max-width: 1440px;
-  margin: 0 auto;
-  padding: 24px;
   display: flex;
-  gap: 24px;
-  align-items: flex-start;
+  gap: 0;
+  align-items: stretch;
+  min-height: calc(100vh - var(--header-h));
 }
 .sidebar {
   position: sticky;
-  top: calc(var(--header-h) + 24px);
+  top: var(--header-h);
+  align-self: flex-start;
   width: var(--sidebar-w);
   flex: 0 0 var(--sidebar-w);
-  max-height: calc(100vh - var(--header-h) - 48px);
+  height: calc(100vh - var(--header-h));
   overflow-y: auto;
   overscroll-behavior: contain;
   background: var(--panel);
-  border: 1px solid var(--border-2);
-  border-radius: var(--radius);
-  padding: 12px;
-  box-shadow: var(--shadow);
+  border-right: 1px solid var(--border-2);
+  border-radius: 0;
+  padding: 16px 12px;
 }
 /* 目录滚动条（更细） */
 .sidebar::-webkit-scrollbar { width: 8px; }
@@ -507,7 +503,7 @@ a { color: var(--primary); text-decoration: none; }
 .toc-path { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .toc-item .method-sm { flex: 0 0 auto; }
 
-.content { flex: 1 1 auto; min-width: 0; }
+.content { flex: 1 1 auto; min-width: 0; padding: 24px 32px 48px; }
 
 /* ===== 方法徽标 ===== */
 .method {
@@ -730,7 +726,7 @@ table.params tbody tr:hover { background: #fafbfc; }
 @media (max-width: 900px) {
   .menu-btn { display: inline-flex; }
   .brand-sub { display: none; }
-  .layout { padding: 16px; gap: 0; }
+  .layout { padding: 0; gap: 0; }
   .sidebar {
     position: fixed;
     top: var(--header-h);
@@ -747,7 +743,7 @@ table.params tbody tr:hover { background: #fafbfc; }
     box-shadow: var(--shadow-lg);
   }
   .sidebar.open { transform: translateX(0); }
-  .content { width: 100%; }
+  .content { width: 100%; padding: 16px; }
   .topbar-actions { display: none; }
   .search-wrap { flex-basis: 160px; min-width: 120px; }
   .card-badges { display: none; }
@@ -755,7 +751,8 @@ table.params tbody tr:hover { background: #fafbfc; }
 @media (max-width: 560px) {
   .topbar-inner { padding: 0 12px; gap: 8px; }
   .brand h1 { font-size: 15px; }
-  .layout { padding: 12px; }
+  .layout { padding: 0; }
+  .content { padding: 12px; }
   .card-head { flex-wrap: wrap; gap: 8px; }
   .card-summary { width: 100%; }
   .ct-tag { margin-left: 0; }
