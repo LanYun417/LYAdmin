@@ -182,16 +182,20 @@ function renderModule(module: (typeof MODULES)[number], startIndex: number): { h
 
 /** 渲染左侧目录。 */
 function renderToc(
-  anchors: Array<{ moduleKey: string; moduleName: string; items: Array<{ id: string; method: string; path: string }> }>,
+  anchors: Array<{
+    moduleKey: string;
+    moduleName: string;
+    items: Array<{ id: string; method: string; name: string; path: string }>;
+  }>,
 ): string {
   const groups = anchors
     .map((group) => {
       const items = group.items
         .map(
           (item) =>
-            `<a class="toc-item" href="#${item.id}" data-target="${item.id}"><span class="method method-sm ${methodClass(
+            `<a class="toc-item" href="#${item.id}" data-target="${item.id}" title="${escapeHtml(item.path)}"><span class="method method-sm ${methodClass(
               item.method,
-            )}">${item.method}</span><span class="toc-path">${escapeHtml(item.path)}</span></a>`,
+            )}">${item.method}</span><span class="toc-name">${escapeHtml(item.name)}</span></a>`,
         )
         .join('');
       return [
@@ -266,7 +270,7 @@ export function renderDocsHtml(): string {
   const anchors: Array<{
     moduleKey: string;
     moduleName: string;
-    items: Array<{ id: string; method: string; path: string }>;
+    items: Array<{ id: string; method: string; name: string; path: string }>;
   }> = [];
   const moduleHtmlParts: string[] = [];
   let index = 0;
@@ -276,6 +280,7 @@ export function renderDocsHtml(): string {
     const items = module.endpoints.map((ep, offset) => ({
       id: `ep-${index + offset}`,
       method: ep.method,
+      name: ep.summary,
       path: ep.path,
     }));
     anchors.push({ moduleKey: module.key, moduleName: module.name, items });
@@ -500,7 +505,7 @@ a { color: var(--primary); text-decoration: none; }
 }
 .toc-item:hover { background: var(--primary-soft); color: var(--primary-600); }
 .toc-item.active { background: var(--primary-soft); color: var(--primary-600); font-weight: 600; }
-.toc-path { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.toc-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .toc-item .method-sm { flex: 0 0 auto; }
 
 .content { flex: 1 1 auto; min-width: 0; padding: 24px 32px 48px; }
@@ -519,7 +524,7 @@ a { color: var(--primary); text-decoration: none; }
   color: #fff;
   min-width: 52px;
 }
-.method-sm { min-width: 44px; font-size: 10px; padding: 2px 6px; }
+.method-sm { min-width: 54px; font-size: 11px; padding: 3px 8px; }
 .method-get { background: var(--get); }
 .method-post { background: var(--post); }
 .method-put { background: var(--put); }
