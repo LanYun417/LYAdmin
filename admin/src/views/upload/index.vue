@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue';
 import { ElMessage, ElMessageBox, type UploadRequestOptions } from 'element-plus';
-import { BIconArrowClockwise, BIconUpload } from 'bootstrap-icons-vue';
+import { BIconArrowClockwise, BIconFileEarmark, BIconFileEarmarkImage, BIconUpload } from 'bootstrap-icons-vue';
 import { deleteFileApi, checkFileApi, getFileListApi, uploadFilesApi } from '@/api/file';
 import { sha256Hex } from '@/utils/hash';
 import { formatFileSize, formatDateTime } from '@/utils/format';
@@ -127,6 +127,28 @@ onMounted(() => {
         </div>
       </template>
       <el-table v-loading="loading" :data="fileList">
+        <el-table-column label="预览" width="88" align="center">
+          <template #default="{ row }">
+            <el-image
+              v-if="row.mimeType?.startsWith('image/')"
+              class="file-thumb file-thumb--image"
+              :src="row.fileUrl"
+              :preview-src-list="[row.fileUrl]"
+              preview-teleported
+              fit="cover"
+              lazy
+            >
+              <template #error>
+                <div class="file-thumb-placeholder">
+                  <el-icon><BIconFileEarmarkImage /></el-icon>
+                </div>
+              </template>
+            </el-image>
+            <div v-else class="file-thumb-placeholder">
+              <el-icon><BIconFileEarmark /></el-icon>
+            </div>
+          </template>
+        </el-table-column>
         <el-table-column prop="originName" label="文件名" min-width="200" show-overflow-tooltip />
         <el-table-column prop="mimeType" label="类型" width="160" show-overflow-tooltip />
         <el-table-column label="大小" width="110">
@@ -173,5 +195,31 @@ onMounted(() => {
 .upload-icon {
   font-size: 48px;
   color: var(--el-text-color-placeholder);
+}
+
+.file-thumb {
+  display: block;
+  width: 48px;
+  height: 48px;
+  overflow: hidden;
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 6px;
+}
+
+.file-thumb--image {
+  cursor: zoom-in;
+}
+
+.file-thumb-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  font-size: 22px;
+  color: var(--el-text-color-secondary);
+  background-color: var(--el-fill-color-light);
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 6px;
 }
 </style>
