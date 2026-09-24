@@ -14,8 +14,11 @@ interface OperationDescriptor {
   action: string;
 }
 
-/** 路由规则：正则 + 模块/动作。 */
-const OPERATION_RULES: Array<{ pattern: RegExp; module: string; action: string }> = [
+/**
+ * 路由规则：正则 + 模块/动作。
+ * 导出供「留痕覆盖率守卫」（`docs/auditCoverage.ts`）复用，避免规则表与守卫各存一份产生漂移。
+ */
+export const OPERATION_RULES: Array<{ pattern: RegExp; module: string; action: string }> = [
   { pattern: /^\/api\/users\/\d+\/status$/, module: '用户管理', action: '启用禁用' },
   { pattern: /^\/api\/users\/\d+\/password$/, module: '用户管理', action: '重置密码' },
   { pattern: /^\/api\/users\/\d+\/roles$/, module: '用户管理', action: '分配角色' },
@@ -46,8 +49,8 @@ const OPERATION_RULES: Array<{ pattern: RegExp; module: string; action: string }
   // [GEN-ANCHOR] 代码生成器自动插入位置，请勿删除（gen.writer 会在本行之前插入新模块操作日志规则）
 ];
 
-/** 不纳入操作日志的路径（认证类单独记登录日志）。 */
-const EXCLUDED_PREFIXES = ['/api/auth/'];
+/** 不纳入操作日志的路径（认证类单独记登录日志）。导出供留痕覆盖守卫复用，保持排除规则一致。 */
+export const EXCLUDED_PREFIXES = ['/api/auth/'];
 
 /**
  * 根据请求方法 + 路径推断模块与动作。

@@ -21,6 +21,7 @@ export { ALL_ENDPOINTS, DOC_TITLE, ENDPOINT_TOTAL, GENERAL, MODULES, buildProbeM
 export type { EndpointDoc, GeneralDoc, HttpMethod, ModuleDoc, ParamDoc } from '@/docs/catalog';
 export { renderDocsHtml } from '@/docs/render';
 export { auditDocsCoverage } from '@/docs/routeAudit';
+export { auditCoverage } from '@/docs/auditCoverage';
 
 /** 文档数据接口（/api-docs/data.json）的响应结构。 */
 export interface DocsData {

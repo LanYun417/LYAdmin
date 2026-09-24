@@ -13,6 +13,8 @@
     "format:check": "prettier --check \"**/*.{js,mjs,cjs,ts,vue,json,css,scss,md,html}\"",
     "stylelint": "stylelint \"**/*.{css,scss,vue}\"",
     "stylelint:fix": "stylelint \"**/*.{css,scss,vue}\" --fix",
+    "guard:deps": "node scripts/deps-guard.mjs",
+    "guard:deps:update": "node scripts/deps-guard.mjs --update",
     "commit": "cz",
     "dev:api": "npm --prefix api run dev",
     "dev:admin": "npm --prefix admin run dev",

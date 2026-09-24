@@ -12,7 +12,7 @@ import type { Express } from 'express';
 import { ALL_ENDPOINTS, buildProbeMounts, ENDPOINT_TOTAL } from '@/docs/catalog';
 
 /** 运行时解析出的单个路由。 */
-interface RuntimeRoute {
+export interface RuntimeRoute {
   /** HTTP 方法（大写） */
   method: string;
   /** 完整路径（含 /api 前缀） */
@@ -128,10 +128,11 @@ function walkRouter(
 
 /**
  * 从 Express 应用实例解析运行时注册的全部路由。
+ * 供接口文档覆盖校验（auditDocsCoverage）与留痕覆盖校验（auditCoverage）共用。
  * @param app Express 应用
  * @returns 路由列表；无法解析时返回 null
  */
-function collectRuntimeRoutes(app: Express): RuntimeRoute[] | null {
+export function collectRuntimeRoutes(app: Express): RuntimeRoute[] | null {
   const anyApp = app as unknown as Record<string, unknown>;
   // 注意：Express 5 的 `app.router` 是一个「函数对象」（带 stack），并非普通对象，
   // 因此这里不能用 typeof === 'object' 作为判定条件。
