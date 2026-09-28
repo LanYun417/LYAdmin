@@ -71,7 +71,8 @@ export function getChartPalette(isDark: boolean): ChartPalette {
  */
 export function hexToRgba(hex: string, alpha: number): string {
   const h = hex.replace('#', '');
-  const full = h.length === 3 ? h.split('').map((c) => c + c).join('') : h;
+  // 3 位简写（如 #abc）按字符成对展开为 6 位（#aabbcc）
+  const full = h.length === 3 ? h.replace(/./g, '$&$&') : h;
   const r = parseInt(full.slice(0, 2), 16);
   const g = parseInt(full.slice(2, 4), 16);
   const b = parseInt(full.slice(4, 6), 16);

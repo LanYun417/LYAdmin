@@ -267,11 +267,12 @@ router.use(authenticate)                       // 1. 鉴权（校验 accessToken
 
 ### 4.6 时区约定
 
-- `api/src/config/database.ts` 设置了 `timezone: '+08:00'`，并配合 `dialectOptions: { dateStrings: true, typeCast: true }`，因此 **DATETIME 字段以本地时间字符串返回**。
+- `api/src/config/database.ts` 设置了 `timezone: '+08:00'`，并配合 `dialectOptions: { typeCast: true }`（**未开启 `dateStrings`**），因此 DATETIME 字段以 **JS `Date` 对象**返回，与模型声明（`Date | null`）一致。
 
-> ⚠️ **踩坑警示（本项目真实问题）**：**禁止对数据库返回的时间字段直接 `new Date(str)` 做跨时区比较**。
-> `dateStrings: true` 返回的是形如 `'2026-09-22 16:41:00'` 的字符串，若再用 `new Date(str)` 解析，会按运行环境时区二次换算，导致 **8 小时偏差**。
-> 正确做法：需要计算/比较时统一用 `dayjs`（前后端均依赖），或直接在 SQL 侧比较；展示用 `admin/src/utils/format.ts` 的 `formatDateTime`。
+> ⚠️ **踩坑警示（本项目真实问题）**：时区错位的风险点是「用 `new Date(str)` 解析**字符串**形式的时间」。
+> 形如 `'2026-09-22 16:41:00'` 的字符串（不带时区后缀）若交给 `new Date(str)` 解析，会按运行环境时区二次换算，导致 **8 小时偏差**。
+> 当前 `dialectOptions` 未开启 `dateStrings`，模型字段本身即 `Date` 对象，`new Date(dateObj)` 属安全等价操作；但仍**禁止对外部传入的字符串时间直接 `new Date(str)`**。
+> 正确做法：字符串时间统一用 `dayjs`（前后端均依赖）解析，或直接在 SQL 侧比较；展示用 `admin/src/utils/format.ts` 的 `formatDateTime`。
 
 ### 4.7 错误处理与日志约定
 

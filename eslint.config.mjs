@@ -19,8 +19,8 @@ export default [
       '**/*.min.js',
       'api/uploads/**',
       'api/logs/**',
-      'admin/src/auto-imports.d.ts',
-      'admin/src/components.d.ts',
+      'admin/auto-imports.d.ts',
+      'admin/components.d.ts',
     ],
   },
 
