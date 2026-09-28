@@ -79,7 +79,7 @@ onMounted(() => {
   <div class="menu-page">
     <el-card shadow="never">
       <div class="flex items-center justify-between mb-3">
-        <span class="table-title">菜单列表</span>
+        <span class="text-[15px] font-semibold text-ink">菜单列表</span>
         <div class="flex items-center gap-2">
           <el-button :icon="BIconArrowClockwise" @click="loadTree">刷新</el-button>
           <el-button v-permission="'system:menu:add'" type="primary" :icon="BIconPlus" @click="handleAdd">
@@ -145,11 +145,3 @@ onMounted(() => {
     <MenuForm v-model="formVisible" :menu-id="editId" @success="loadTree" />
   </div>
 </template>
-
-<style scoped>
-.table-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--el-text-color-primary);
-}
-</style>

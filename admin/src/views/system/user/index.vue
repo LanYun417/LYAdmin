@@ -174,7 +174,7 @@ onMounted(() => {
 
     <el-card shadow="never">
       <div class="flex items-center justify-between mb-3">
-        <span class="table-title">用户列表</span>
+        <span class="text-[15px] font-semibold text-ink">用户列表</span>
         <el-button v-permission="'system:user:add'" type="primary" :icon="BIconPlus" @click="handleAdd">
           新增用户
         </el-button>
@@ -256,11 +256,3 @@ onMounted(() => {
     />
   </div>
 </template>
-
-<style scoped>
-.table-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--el-text-color-primary);
-}
-</style>

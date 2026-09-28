@@ -69,15 +69,8 @@
   justify-content: center;
 }
 
-.text-ellipsis {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.full-height {
-  height: 100%;
-}
+/* 注：原 .text-ellipsis / .full-height 已移除——与 Tailwind 的 `truncate` / `h-full` 完全等价，
+   统一改用 Tailwind 内置类，避免自定义工具类与框架重复（见 docs/STYLE-REFACTOR-PLAN.md）。 */
 
 /* NProgress 顶部进度条颜色跟随主题 */
 #nprogress .bar {

@@ -128,12 +128,5 @@ watch(() => [appStore.dark, appStore.primaryColor], render);
 </script>
 
 <template>
-  <div ref="chartRef" class="chart" />
+  <div ref="chartRef" class="w-full h-[300px]" />
 </template>
-
-<style scoped>
-.chart {
-  width: 100%;
-  height: 300px;
-}
-</style>

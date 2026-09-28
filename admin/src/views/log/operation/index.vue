@@ -138,7 +138,7 @@ onMounted(() => {
 
     <el-card shadow="never">
       <div class="flex items-center justify-between mb-3">
-        <span class="table-title">操作日志</span>
+        <span class="text-[15px] font-semibold text-ink">操作日志</span>
         <div class="flex items-center gap-2">
           <el-button
             v-permission="'log:operation:export'"
@@ -184,11 +184,3 @@ onMounted(() => {
     </el-card>
   </div>
 </template>
-
-<style scoped>
-.table-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--el-text-color-primary);
-}
-</style>

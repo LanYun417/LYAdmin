@@ -156,7 +156,7 @@ onMounted(() => {
 
     <el-card shadow="never">
       <div class="flex items-center justify-between mb-3">
-        <span class="table-title">HTTP 访问日志</span>
+        <span class="text-[15px] font-semibold text-ink">HTTP 访问日志</span>
         <div class="flex items-center gap-2">
           <el-button :icon="BIconArrowClockwise" @click="loadList">刷新</el-button>
           <el-button v-permission="'log:http:clear'" type="danger" plain :icon="BIconTrash" @click="handleClear"
@@ -200,14 +200,6 @@ onMounted(() => {
     </el-card>
   </div>
 </template>
-
-<style scoped>
-.table-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--el-text-color-primary);
-}
-</style>
 
 <style scoped>
 /* 展开行：请求参数 / 响应内容 详情 */

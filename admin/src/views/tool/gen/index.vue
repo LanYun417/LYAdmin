@@ -314,7 +314,7 @@ onMounted(() => {
       <!-- 左：数据表列表 -->
       <el-card shadow="never" class="gen-table-card">
         <div class="flex flex-wrap items-center justify-between gap-y-2 mb-3">
-          <span class="table-title">数据表（{{ filteredTables.length }}）</span>
+          <span class="text-[15px] font-semibold text-ink">数据表（{{ filteredTables.length }}）</span>
           <el-button :icon="BIconArrowClockwise" @click="loadTables">刷新</el-button>
         </div>
 
@@ -340,7 +340,7 @@ onMounted(() => {
       <!-- 右：生成选项 + 字段列表 -->
       <el-card shadow="never" class="gen-detail-card">
         <div class="flex flex-wrap items-center justify-between gap-y-2 mb-3">
-          <span class="table-title">
+          <span class="text-[15px] font-semibold text-ink">
             生成配置
             <el-tag v-if="currentTable" size="small" type="info" class="ml-2">{{ currentTable.tableName }}</el-tag>
           </span>
@@ -491,12 +491,6 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.table-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--el-text-color-primary);
-}
-
 .gen-body {
   align-items: stretch;
 }

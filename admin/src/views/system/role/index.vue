@@ -112,7 +112,7 @@ onMounted(() => {
 
     <el-card shadow="never">
       <div class="flex items-center justify-between mb-3">
-        <span class="table-title">角色列表</span>
+        <span class="text-[15px] font-semibold text-ink">角色列表</span>
         <el-button v-permission="'system:role:add'" type="primary" :icon="BIconPlus" @click="handleAdd">
           新增角色
         </el-button>
@@ -163,11 +163,3 @@ onMounted(() => {
     <PermissionDrawer v-model="permissionVisible" :role-id="permissionRoleId" :role-name="permissionRoleName" />
   </div>
 </template>
-
-<style scoped>
-.table-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--el-text-color-primary);
-}
-</style>
