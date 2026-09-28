@@ -25,6 +25,7 @@ export async function updateProfile(userId: number, input: UpdateProfileInput): 
     nickname: input.nickname,
     email: input.email || null,
     phone: input.phone || null,
+    gender: input.gender || null,
     avatar: input.avatar || user.avatar,
   });
   // 资料变更：失效该用户缓存，保证 /auth/profile 立即反映新昵称 / 头像

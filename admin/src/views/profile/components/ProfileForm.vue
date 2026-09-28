@@ -2,6 +2,7 @@
 import { computed, reactive, ref } from 'vue';
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus';
 import { updateProfileApi } from '@/api/profile';
+import { useDict } from '@/hooks/useDict';
 import { useUserStore } from '@/store/modules/user';
 import { emailRule, phoneRule } from '@/utils/validate';
 import type { ProfileUpdateParams } from '@/types/api';
@@ -12,10 +13,14 @@ const userStore = useUserStore();
 const formRef = ref<FormInstance>();
 const submitting = ref(false);
 
+/** 性别下拉：数据来自字典管理中的「用户性别」（sys_user_sex） */
+const { options: genderOptions } = useDict('sys_user_sex');
+
 const form = reactive<ProfileUpdateParams>({
   nickname: userStore.userInfo?.nickname ?? '',
   email: userStore.userInfo?.email ?? '',
   phone: userStore.userInfo?.phone ?? '',
+  gender: userStore.userInfo?.gender ?? '',
   avatar: userStore.userInfo?.avatar ?? '',
 });
 
@@ -43,6 +48,7 @@ async function handleSubmit(): Promise<void> {
       userStore.userInfo.nickname = res.nickname;
       userStore.userInfo.email = res.email ?? null;
       userStore.userInfo.phone = res.phone ?? null;
+      userStore.userInfo.gender = res.gender ?? null;
     }
     ElMessage.success('资料更新成功');
   } finally {
@@ -64,6 +70,11 @@ async function handleSubmit(): Promise<void> {
     </el-form-item>
     <el-form-item label="手机号" prop="phone">
       <el-input v-model="form.phone" placeholder="请输入手机号" />
+    </el-form-item>
+    <el-form-item label="性别">
+      <el-select v-model="form.gender" placeholder="请选择性别" clearable style="width: 100%">
+        <el-option v-for="item in genderOptions" :key="item.value" :label="item.label" :value="item.value" />
+      </el-select>
     </el-form-item>
     <el-form-item>
       <el-button type="primary" :loading="submitting" @click="handleSubmit">保存资料</el-button>

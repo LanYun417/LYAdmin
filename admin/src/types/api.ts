@@ -385,6 +385,8 @@ export interface ProfileUpdateParams {
   nickname: string;
   email?: string;
   phone?: string;
+  /** 性别（字典 sys_user_sex 的值），空串表示未设置 */
+  gender?: string;
   avatar?: string;
 }
 

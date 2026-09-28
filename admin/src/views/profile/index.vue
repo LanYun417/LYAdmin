@@ -3,6 +3,7 @@ import { computed, ref } from 'vue';
 import { ElMessage, type UploadRequestOptions } from 'element-plus';
 import { BIconPlus } from 'bootstrap-icons-vue';
 import { uploadAvatarApi } from '@/api/profile';
+import { useDict } from '@/hooks/useDict';
 import { useUserStore } from '@/store/modules/user';
 import ProfileForm from './components/ProfileForm.vue';
 import PasswordForm from './components/PasswordForm.vue';
@@ -16,6 +17,9 @@ const avatar = computed(() => userStore.avatar);
 const nickname = computed(() => userStore.nickname);
 const username = computed(() => userStore.userInfo?.username ?? '');
 const roles = computed(() => userStore.roles.join('、') || '-');
+
+/** 性别字典（字典管理 → 用户性别 sys_user_sex），把存储值渲染成标签 */
+const { labelOf: genderLabel } = useDict('sys_user_sex');
 
 /** 头像上传前校验 */
 function beforeAvatarUpload(file: File): boolean {
@@ -80,6 +84,9 @@ async function handleAvatarUpload(options: UploadRequestOptions): Promise<void> 
             </el-descriptions-item>
             <el-descriptions-item label="手机号">
               {{ userStore.userInfo?.phone || '-' }}
+            </el-descriptions-item>
+            <el-descriptions-item label="性别">
+              {{ genderLabel(userStore.userInfo?.gender) || '-' }}
             </el-descriptions-item>
           </el-descriptions>
         </el-card>

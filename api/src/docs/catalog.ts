@@ -1673,6 +1673,12 @@ export const MODULES: ModuleDoc[] = [
           { name: 'nickname', type: 'string', required: true, description: '昵称，1~50 字符' },
           { name: 'email', type: 'string', required: false, description: '邮箱（可为空字符串）' },
           { name: 'phone', type: 'string', required: false, description: '手机号（可为空字符串）' },
+          {
+            name: 'gender',
+            type: 'string',
+            required: false,
+            description: '性别，取字典 sys_user_sex 的值（1 男 / 2 女 / 0 未知），空串表示未设置',
+          },
           { name: 'avatar', type: 'string', required: false, description: '头像地址（最长 255 字符）' },
         ],
         requestExample: [
