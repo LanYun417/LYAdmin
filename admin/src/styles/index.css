@@ -13,8 +13,11 @@
     box-sizing: border-box;
 
     /* 关闭了 Tailwind preflight，需自行补齐 border 重置：
-       否则 border / border-b 等宽度类因 border-style 默认 none 而不可见；
-       且叠加 border-solid 时，未指定宽度的那几条边会取初始值 medium（3px）而多出边框。 */
+       1) border-style 默认 none，缺了它 border / border-b 等宽度类不可见；
+          而叠加 border-solid 时，未指定宽度的边会取初始值 medium(3px) 多出边框；
+       2) 预置 border-color —— preflight 会把默认边框色设为浅灰，缺了它则回退到初始值
+          currentColor（文字色），一旦某个颜色类未生效就会渲染出刺眼的「黑线」。 */
+    border-color: var(--el-border-color);
     border-style: solid;
     border-width: 0;
   }
