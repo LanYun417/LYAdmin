@@ -281,6 +281,73 @@ export interface RoleUserCount {
   counts: number[];
 }
 
+/* ------------------------------- 字典 ------------------------------- */
+
+/** 字典类型（= 字典分类 / 分组） */
+export interface DictType {
+  id: number;
+  dictName: string;
+  /** 字典类型编码（业务引用键，创建后不可修改） */
+  dictType: string;
+  status: number;
+  remark: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+/** 字典类型查询参数 */
+export interface DictTypeQuery extends PageQuery {
+  dictName?: string;
+  dictType?: string;
+  status?: number;
+}
+
+/** 字典类型新增 / 编辑参数（编辑时不提交 dictType） */
+export interface DictTypeUpsert {
+  dictName: string;
+  dictType?: string;
+  status: number;
+  remark?: string;
+}
+
+/** 字典项 */
+export interface DictItem {
+  id: number;
+  dictType: string;
+  /** 标签（展示文案） */
+  dictLabel: string;
+  /** 值（业务存储值） */
+  dictValue: string;
+  sort: number;
+  status: number;
+  remark: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+/** 字典项查询参数（dictType 必填） */
+export interface DictItemQuery extends PageQuery {
+  dictType: string;
+  dictLabel?: string;
+  status?: number;
+}
+
+/** 字典项新增 / 编辑参数（编辑时不提交 dictType） */
+export interface DictItemUpsert {
+  dictType?: string;
+  dictLabel: string;
+  dictValue: string;
+  sort: number;
+  status: number;
+  remark?: string;
+}
+
+/** 业务字典数据项（按类型取，仅标签与值） */
+export interface DictDataItem {
+  label: string;
+  value: string;
+}
+
 /* ------------------------------- 认证 ------------------------------- */
 
 /** 登录参数 */

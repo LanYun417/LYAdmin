@@ -1,0 +1,288 @@
+<script setup lang="ts">
+import { reactive, ref, watch } from 'vue';
+import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus';
+import { BIconPlus } from 'bootstrap-icons-vue';
+import {
+  createDictItemApi,
+  deleteDictItemApi,
+  getDictItemListApi,
+  setDictItemStatusApi,
+  updateDictItemApi,
+} from '@/api/dict';
+import { clearDictCache } from '@/hooks/useDict';
+import { formatDateTime } from '@/utils/format';
+import { hasPermission } from '@/utils/permission';
+import type { DictItem, DictItemUpsert } from '@/types/api';
+import BasicDialog from '@/components/BasicDialog/index.vue';
+import Pagination from '@/components/Pagination/index.vue';
+
+defineOptions({ name: 'DictItemDrawer' });
+
+const props = defineProps<{
+  /** 抽屉可见性 */
+  modelValue: boolean;
+  /** 所属字典类型编码 */
+  dictType: string;
+  /** 所属字典名称（展示用） */
+  dictName: string;
+}>();
+
+const emit = defineEmits<{
+  (e: 'update:modelValue', value: boolean): void;
+}>();
+
+const loading = ref(false);
+const list = ref<DictItem[]>([]);
+const total = ref(0);
+const query = reactive({ dictLabel: '', page: 1, pageSize: 10 });
+
+/** 启用 / 禁用列（值为 1 的项） */
+const STATUS_OPTIONS = [
+  { label: '启用', value: 1 },
+  { label: '禁用', value: 0 },
+];
+
+/* ------------------------------ 列表 ------------------------------ */
+
+/** 加载字典项列表 */
+async function loadList(): Promise<void> {
+  if (!props.dictType) {
+    return;
+  }
+  loading.value = true;
+  try {
+    const res = await getDictItemListApi({
+      dictType: props.dictType,
+      page: query.page,
+      pageSize: query.pageSize,
+      dictLabel: query.dictLabel || undefined,
+    });
+    list.value = res.list ?? [];
+    total.value = res.total ?? 0;
+  } finally {
+    loading.value = false;
+  }
+}
+
+/** 查询 */
+function handleSearch(): void {
+  query.page = 1;
+  void loadList();
+}
+
+/** 重置 */
+function handleReset(): void {
+  query.dictLabel = '';
+  query.page = 1;
+  void loadList();
+}
+
+/** 删除 */
+async function handleDelete(row: DictItem): Promise<void> {
+  try {
+    await ElMessageBox.confirm(`确定删除字典项「${row.dictLabel}」吗？`, '提示', { type: 'warning' });
+  } catch {
+    return;
+  }
+  await deleteDictItemApi(row.id);
+  ElMessage.success('删除成功');
+  clearDictCache(props.dictType);
+  await loadList();
+}
+
+/**
+ * 启用 / 禁用。
+ * 字典项是「细粒度、可逆」的维护操作，不额外弹二次确认（删除才弹）。
+ */
+async function handleToggleStatus(row: DictItem): Promise<void> {
+  const next = row.status === 1 ? 0 : 1;
+  await setDictItemStatusApi(row.id, next);
+  ElMessage.success(next === 1 ? '已启用' : '已禁用');
+  clearDictCache(props.dictType);
+  await loadList();
+}
+
+/* ------------------------------ 新增 / 编辑 ------------------------------ */
+
+const itemFormVisible = ref(false);
+const editingItem = ref<DictItem | null>(null);
+const itemFormRef = ref<FormInstance>();
+const itemSubmitting = ref(false);
+
+const defaultItemForm = (): DictItemUpsert => ({
+  dictLabel: '',
+  dictValue: '',
+  sort: 0,
+  status: 1,
+  remark: '',
+});
+
+const itemForm = reactive<DictItemUpsert>(defaultItemForm());
+
+const itemRules: FormRules = {
+  dictLabel: [{ required: true, message: '请输入字典标签', trigger: 'blur' }],
+  dictValue: [{ required: true, message: '请输入字典值', trigger: 'blur' }],
+};
+
+/** 打开新增 */
+function handleAddItem(): void {
+  editingItem.value = null;
+  Object.assign(itemForm, defaultItemForm());
+  itemFormRef.value?.clearValidate();
+  itemFormVisible.value = true;
+}
+
+/** 打开编辑 */
+function handleEditItem(row: DictItem): void {
+  editingItem.value = row;
+  Object.assign(itemForm, {
+    dictLabel: row.dictLabel,
+    dictValue: row.dictValue,
+    sort: row.sort,
+    status: row.status,
+    remark: row.remark ?? '',
+  });
+  itemFormRef.value?.clearValidate();
+  itemFormVisible.value = true;
+}
+
+/** 提交字典项 */
+async function handleItemSubmit(): Promise<void> {
+  if (!itemFormRef.value) {
+    return;
+  }
+  const valid = await itemFormRef.value.validate().catch(() => false);
+  if (!valid) {
+    return;
+  }
+  itemSubmitting.value = true;
+  try {
+    if (editingItem.value) {
+      await updateDictItemApi(editingItem.value.id, {
+        dictLabel: itemForm.dictLabel,
+        dictValue: itemForm.dictValue,
+        sort: itemForm.sort,
+        status: itemForm.status,
+        remark: itemForm.remark,
+      });
+      ElMessage.success('更新成功');
+    } else {
+      await createDictItemApi({ ...itemForm, dictType: props.dictType });
+      ElMessage.success('新增成功');
+    }
+    clearDictCache(props.dictType);
+    itemFormVisible.value = false;
+    await loadList();
+  } finally {
+    itemSubmitting.value = false;
+  }
+}
+
+/** 关闭抽屉 */
+function handleClose(): void {
+  emit('update:modelValue', false);
+}
+
+watch(
+  () => props.modelValue,
+  (visible) => {
+    if (visible) {
+      query.dictLabel = '';
+      query.page = 1;
+      void loadList();
+    }
+  },
+);
+</script>
+
+<template>
+  <el-drawer :model-value="modelValue" :title="`字典项 · ${dictName}`" size="860px" @close="handleClose">
+    <div class="mb-3 flex flex-wrap items-center gap-2">
+      <el-input
+        v-model="query.dictLabel"
+        placeholder="请输入字典标签"
+        clearable
+        style="width: 200px"
+        @keyup.enter="handleSearch"
+      />
+      <el-button type="primary" @click="handleSearch">查询</el-button>
+      <el-button @click="handleReset">重置</el-button>
+      <el-button
+        v-permission="'system:dict:add'"
+        type="primary"
+        :icon="BIconPlus"
+        class="ml-auto"
+        @click="handleAddItem"
+      >
+        新增字典项
+      </el-button>
+    </div>
+
+    <el-table v-loading="loading" :data="list">
+      <el-table-column prop="dictLabel" label="字典标签" min-width="140" show-overflow-tooltip />
+      <el-table-column prop="dictValue" label="字典值" min-width="120" show-overflow-tooltip />
+      <el-table-column prop="sort" label="排序" width="80" align="center" />
+      <el-table-column label="状态" width="90" align="center">
+        <template #default="{ row }">
+          <el-switch
+            :model-value="row.status === 1"
+            :disabled="!hasPermission('system:dict:edit')"
+            @change="handleToggleStatus(row as DictItem)"
+          />
+        </template>
+      </el-table-column>
+      <el-table-column prop="remark" label="备注" min-width="140" show-overflow-tooltip />
+      <el-table-column label="创建时间" width="170">
+        <template #default="{ row }">{{ formatDateTime(row.createdAt) }}</template>
+      </el-table-column>
+      <el-table-column label="操作" width="140" fixed="right">
+        <template #default="{ row }">
+          <div class="table-action">
+            <el-button v-permission="'system:dict:edit'" type="primary" link @click="handleEditItem(row as DictItem)">
+              编辑
+            </el-button>
+            <el-button v-permission="'system:dict:remove'" type="danger" link @click="handleDelete(row as DictItem)">
+              删除
+            </el-button>
+          </div>
+        </template>
+      </el-table-column>
+    </el-table>
+
+    <Pagination v-model:page="query.page" v-model:page-size="query.pageSize" :total="total" @change="loadList" />
+
+    <BasicDialog
+      v-model="itemFormVisible"
+      :title="editingItem ? '编辑字典项' : '新增字典项'"
+      width="520px"
+      append-to-body
+      :confirm-loading="itemSubmitting"
+      @confirm="handleItemSubmit"
+    >
+      <el-form ref="itemFormRef" :model="itemForm" :rules="itemRules" label-width="110px">
+        <el-form-item label="所属类型">
+          <el-input :model-value="dictType" disabled />
+        </el-form-item>
+        <el-form-item label="字典标签" prop="dictLabel">
+          <el-input v-model="itemForm.dictLabel" placeholder="展示文案，如 男" />
+        </el-form-item>
+        <el-form-item label="字典值" prop="dictValue">
+          <el-input v-model="itemForm.dictValue" placeholder="业务存储值，如 1（同类型内唯一）" />
+        </el-form-item>
+        <el-form-item label="排序">
+          <el-input-number v-model="itemForm.sort" :min="0" :max="9999" />
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-radio-group v-model="itemForm.status">
+            <el-radio v-for="option in STATUS_OPTIONS" :key="option.value" :value="option.value">
+              {{ option.label }}
+            </el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="备注">
+          <el-input v-model="itemForm.remark" type="textarea" :rows="2" placeholder="请输入备注" />
+        </el-form-item>
+      </el-form>
+    </BasicDialog>
+  </el-drawer>
+</template>
