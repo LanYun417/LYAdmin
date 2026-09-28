@@ -67,6 +67,9 @@ const ROLE_SEEDS: RoleSeed[] = [
       'tool:gen',
       'tool:gen:preview',
       'tool:gen:download',
+      // Vditor 编辑器示例页（纯前端，只读的查看类权限）
+      // 注意：此处为**菜单节点的 key**（非权限码），写错会导致该角色拿不到授权
+      'tool:vditor',
       'profile',
     ],
   },

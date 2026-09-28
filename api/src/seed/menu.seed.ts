@@ -372,6 +372,18 @@ const MENU_TREE: MenuSeedNode[] = [
           },
         ],
       },
+      {
+        key: 'tool:vditor',
+        menuName: 'Vditor 编辑器',
+        menuType: MenuType.MENU,
+        path: '/tool/vditor',
+        component: 'tool/vditor/index',
+        icon: 'BIconPencil',
+        permission: 'tool:vditor:list',
+        sort: 2,
+        visible: Status.ENABLED,
+        keepAlive: 1,
+      },
     ],
   },
   {
