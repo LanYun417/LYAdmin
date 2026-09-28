@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { BIconSearch } from 'bootstrap-icons-vue';
 import { appIconNames } from '@/utils/icons';
+import { useResponsiveSize } from '@/hooks/useResponsiveSize';
 
 defineOptions({ name: 'IconPicker' });
 
@@ -63,10 +64,13 @@ function handleScroll({ scrollTop }: { scrollTop: number }): void {
 function selectIcon(name: string): void {
   emit('update:modelValue', name);
 }
+
+/** 气泡响应式宽度：桌面 360px，窄屏留 8% 边距（92%），避免移动端超出屏幕 */
+const { size: popoverWidth } = useResponsiveSize(360, '92%');
 </script>
 
 <template>
-  <el-popover placement="bottom-start" :width="360" trigger="click">
+  <el-popover placement="bottom-start" :width="popoverWidth" trigger="click">
     <template #reference>
       <el-input :model-value="modelValue" placeholder="点击选择图标" readonly clearable />
     </template>

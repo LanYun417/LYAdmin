@@ -11,8 +11,10 @@
  * - **受控**：关闭 Vditor 的 localStorage 缓存，内容完全由外部 v-model 掌控。
  */
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { ElMessage } from 'element-plus';
 import type VditorType from 'vditor';
 import { useAppStore } from '@/store/modules/app';
+import { getAccessToken } from '@/utils/auth';
 
 defineOptions({ name: 'VditorEditor' });
 
@@ -52,43 +54,50 @@ const emit = defineEmits<{
 const VDITOR_CDN = '/vditor';
 
 /**
- * 工具栏：仅保留已自托管资源所支持的能力。
- * 刻意排除 upload（未接后端上传，见 docs）、record，以及 more（其内含 echarts/markmap/abcjs
- * 等未自托管渲染器）。`|` 为分组分隔符。
+ * 工具栏：不显式指定 `toolbar` → Vditor 使用其内置**完整默认工具栏**（emoji / 标题 / 加粗 …
+ * 上传 / 录制 / more 等全部包含）。按需求「要全部」。
+ *
+ * 注：`more` 菜单里的图表 / 脑图 / 五线谱 / 流程图 等需要额外自托管渲染器
+ * （echarts、abcjs、markmap…），当前 `public/vditor/dist/js/` 未包含，点开那些子项会因缺少
+ * 渲染器而报错；如要使用，把对应 `node_modules/vditor/dist/js/<name>` 拷入自托管目录即可
+ * （详见项目长期记忆「Vditor Markdown 编辑器」一节）。
  */
-const TOOLBAR = [
-  'emoji',
-  'headings',
-  'bold',
-  'italic',
-  'strike',
-  'link',
-  '|',
-  'list',
-  'ordered-list',
-  'check',
-  'outdent',
-  'indent',
-  '|',
-  'quote',
-  'line',
-  'code',
-  'inline-code',
-  'insert-before',
-  'insert-after',
-  '|',
-  'table',
-  'math',
-  '|',
-  'undo',
-  'redo',
-  '|',
-  'edit-mode',
-  'fullscreen',
-  'outline',
-  'preview',
-  'export',
-];
+
+/**
+ * 文件上传：接入后端既有 `/api/files/upload`（需要 `file:upload` 权限）。
+ * 后端返回 `{ code, message, data: FileItem[] }`，而 Vditor 期望 `{ code:0, data:{ succMap, errFiles } }`，
+ * 用 `format` 做适配；鉴权靠 `setHeaders` 每次读取最新 Bearer Token
+ * （Vditor 自行发起 XHR，不走前端请求封装，故需手动注入）。
+ */
+const VDITOR_UPLOAD = {
+  url: '/api/files/upload',
+  // 每次上传前刷新请求头，保证 token 失效/刷新后仍可用
+  setHeaders: () => ({ Authorization: `Bearer ${getAccessToken()}` }),
+  format: (files: File[], responseText: string): string => {
+    try {
+      const res = JSON.parse(responseText) as {
+        data?: Array<{ originName?: string; fileName?: string; fileUrl?: string }>;
+      };
+      const items = Array.isArray(res.data) ? res.data : [];
+      const succMap: Record<string, string> = {};
+      for (const item of items) {
+        if (item?.fileUrl) {
+          succMap[item.originName || item.fileName || ''] = item.fileUrl;
+        }
+      }
+      return JSON.stringify({ code: 0, msg: '', data: { errFiles: [], succMap } });
+    } catch {
+      return JSON.stringify({
+        code: 1,
+        msg: '上传失败：响应解析错误',
+        data: { errFiles: files.map((f) => f.name), succMap: {} },
+      });
+    }
+  },
+  error: (msg: string) => {
+    ElMessage.error(msg || '图片上传失败');
+  },
+};
 
 const appStore = useAppStore();
 const containerRef = ref<HTMLDivElement>();
@@ -128,7 +137,8 @@ async function init(): Promise<void> {
     cdn: VDITOR_CDN,
     lang: 'zh_CN',
     icon: 'ant',
-    toolbar: TOOLBAR,
+    // 工具栏：不显式指定 → 使用 Vditor 内置完整默认工具栏（含上传 / more 等全部按钮）
+    upload: VDITOR_UPLOAD,
     // 内容由外部 v-model 掌控，关闭内置 localStorage 缓存
     cache: { enable: false },
     counter: { enable: true },

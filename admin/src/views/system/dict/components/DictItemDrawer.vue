@@ -15,6 +15,7 @@ import { hasPermission } from '@/utils/permission';
 import type { DictItem, DictItemUpsert } from '@/types/api';
 import BasicDialog from '@/components/BasicDialog/index.vue';
 import Pagination from '@/components/Pagination/index.vue';
+import { useResponsiveSize } from '@/hooks/useResponsiveSize';
 
 defineOptions({ name: 'DictItemDrawer' });
 
@@ -38,6 +39,9 @@ const query = reactive({ dictLabel: '', page: 1, pageSize: 10 });
 
 /** 状态选项：来自字典管理中的「通用状态」（sys_common_status） */
 const { statusOptions } = useStatusDict();
+
+/** 抽屉响应式尺寸：桌面 860px，窄屏自动铺满，避免移动端超出屏幕 */
+const { size: drawerSize } = useResponsiveSize(860);
 
 /* ------------------------------ 列表 ------------------------------ */
 
@@ -193,7 +197,7 @@ watch(
 </script>
 
 <template>
-  <el-drawer :model-value="modelValue" :title="`字典项 · ${dictName}`" size="860px" @close="handleClose">
+  <el-drawer :model-value="modelValue" :title="`字典项 · ${dictName}`" :size="drawerSize" @close="handleClose">
     <div class="mb-3 flex flex-wrap items-center gap-2">
       <el-input
         v-model="query.dictLabel"

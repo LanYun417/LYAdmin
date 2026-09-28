@@ -5,6 +5,7 @@ import { getMenuTreeApi } from '@/api/menu';
 import { assignRoleMenusApi, getRoleMenuIdsApi } from '@/api/role';
 import type { MenuNode } from '@/types/api';
 import MenuTree from '@/components/MenuTree/index.vue';
+import { useResponsiveSize } from '@/hooks/useResponsiveSize';
 
 defineOptions({ name: 'PermissionDrawer' });
 
@@ -27,6 +28,9 @@ const checkedKeys = ref<number[]>([]);
 const loading = ref(false);
 const submitting = ref(false);
 const treeRef = ref<InstanceType<typeof MenuTree>>();
+
+/** 抽屉响应式尺寸：桌面 420px，窄屏自动铺满，避免移动端超出屏幕 */
+const { size: drawerSize } = useResponsiveSize(420);
 
 /** 加载菜单树与已授权菜单 */
 async function loadData(): Promise<void> {
@@ -77,7 +81,7 @@ async function handleSubmit(): Promise<void> {
 </script>
 
 <template>
-  <el-drawer :model-value="modelValue" :title="`分配权限 - ${roleName}`" size="420px" @close="handleClose">
+  <el-drawer :model-value="modelValue" :title="`分配权限 - ${roleName}`" :size="drawerSize" @close="handleClose">
     <div v-loading="loading" class="h-full overflow-auto">
       <MenuTree ref="treeRef" :data="menuTree" :default-checked-keys="checkedKeys" />
     </div>
