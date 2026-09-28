@@ -58,6 +58,7 @@ declare module 'vue' {
     ElTree: typeof import('element-plus/es')['ElTree']
     ElTreeSelect: typeof import('element-plus/es')['ElTreeSelect']
     ElUpload: typeof import('element-plus/es')['ElUpload']
+    ErrorPage: typeof import('./src/components/ErrorPage/index.vue')['default']
     IconPicker: typeof import('./src/components/IconPicker/index.vue')['default']
     MenuTree: typeof import('./src/components/MenuTree/index.vue')['default']
     Pagination: typeof import('./src/components/Pagination/index.vue')['default']
