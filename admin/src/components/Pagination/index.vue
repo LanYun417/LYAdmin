@@ -65,17 +65,21 @@ function handleCurrentChange(current: number): void {
 </script>
 
 <template>
-  <div class="pagination-container flex justify-end mt-4">
-    <el-pagination
-      :current-page="currentPage"
-      :page-size="pageSize"
-      :total="total"
-      :page-sizes="pageSizes"
-      :layout="layout"
-      :background="background"
-      :size="paginationSize"
-      @size-change="handleSizeChange"
-      @current-change="handleCurrentChange"
-    />
-  </div>
+  <!-- 外层 el-scrollbar：移动端分页器超宽时，在自身区域内横向滚动，避免被裁剪或撑破页面布局
+       （桌面端分页器能放下时不会出现滚动条） -->
+  <el-scrollbar>
+    <div class="pagination-container inline-flex w-max min-w-full items-center justify-end whitespace-nowrap mt-4">
+      <el-pagination
+        :current-page="currentPage"
+        :page-size="pageSize"
+        :total="total"
+        :page-sizes="pageSizes"
+        :layout="layout"
+        :background="background"
+        :size="paginationSize"
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+      />
+    </div>
+  </el-scrollbar>
 </template>
