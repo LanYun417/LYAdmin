@@ -11,6 +11,7 @@ import { LoginLog } from './LoginLog';
 import { Menu } from './Menu';
 import { OperationLog } from './OperationLog';
 import { Role } from './Role';
+import { RoleDept } from './RoleDept';
 import { RoleMenu } from './RoleMenu';
 import { User } from './User';
 import { UserRole } from './UserRole';
@@ -20,6 +21,7 @@ export { Role } from './Role';
 export { Menu } from './Menu';
 export { UserRole } from './UserRole';
 export { RoleMenu } from './RoleMenu';
+export { RoleDept } from './RoleDept';
 export { LoginLog } from './LoginLog';
 export { OperationLog } from './OperationLog';
 export { File } from './File';
@@ -42,4 +44,5 @@ export const models = [
   DictType,
   DictItem,
   Dept,
+  RoleDept,
 ];

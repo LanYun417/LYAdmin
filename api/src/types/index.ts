@@ -20,6 +20,8 @@ export interface AuthUserContext extends JwtUserPayload {
   roles: string[];
   permissions: string[];
   status: number;
+  /** 当前用户所属部门 id（0 表示未分配，用于数据权限计算） */
+  deptId: number;
 }
 
 /** 分页请求参数。 */

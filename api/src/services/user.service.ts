@@ -5,9 +5,10 @@
 import { Op, type WhereOptions } from 'sequelize';
 import { Status } from '@/constants';
 import { Dept, Role, User, UserRole } from '@/models';
+import { getDataScope } from '@/services/dataScope.service';
 import { invalidateAuthCache } from '@/services/authCache';
 import { toUserBrief } from '@/services/auth.service';
-import type { PageResult, UserDetail } from '@/types';
+import type { AuthUserContext, PageResult, UserDetail } from '@/types';
 import { buildPageResult, parsePagination } from '@/utils/pagination';
 import { hashPassword } from '@/utils/password';
 import { AppError } from '@/utils/response';
@@ -54,10 +55,16 @@ async function syncUserRoles(userId: number, roleIds: number[]): Promise<void> {
 
 /**
  * 分页查询用户。
- * @param query 查询参数（page/pageSize/username/status）
+ * 数据权限：依据当前用户角色的数据范围裁剪可见行——
+ * 「仅本人」只能看到自己；「自定义部门 / 本部门及以下」只能看到所属部门集合内的用户；超管或「全部」不裁剪。
+ * @param query 查询参数（page/pageSize/username/status/deptId）
+ * @param authUser 鉴权上下文（用于数据权限计算；缺省时仅用于内部调用，不做裁剪）
  * @returns 分页结果
  */
-export async function listUsers(query: Record<string, unknown>): Promise<PageResult<UserDetail>> {
+export async function listUsers(
+  query: Record<string, unknown>,
+  authUser?: AuthUserContext,
+): Promise<PageResult<UserDetail>> {
   const { page, pageSize, offset, limit } = parsePagination(query);
   const where: WhereOptions = {};
 
@@ -68,8 +75,27 @@ export async function listUsers(query: Record<string, unknown>): Promise<PageRes
   if (query.status !== undefined && query.status !== '') {
     where.status = Number(query.status);
   }
-  if (query.deptId !== undefined && query.deptId !== '' && Number(query.deptId) > 0) {
-    where.deptId = Number(query.deptId);
+
+  // 数据权限裁剪 + 显式部门筛选求交集
+  const explicitDeptId =
+    query.deptId !== undefined && query.deptId !== '' && Number(query.deptId) > 0 ? Number(query.deptId) : null;
+
+  if (authUser) {
+    const scope = await getDataScope(authUser);
+    if (scope.mode === 'self') {
+      where.id = scope.userId;
+    } else if (scope.mode === 'dept') {
+      if (explicitDeptId !== null) {
+        // 请求筛选的部门必须在可见范围内，否则直接返回空集（防止越权探测）
+        where.deptId = scope.deptIds.includes(explicitDeptId) ? explicitDeptId : -1;
+      } else {
+        where.deptId = { [Op.in]: scope.deptIds };
+      }
+    } else if (explicitDeptId !== null) {
+      where.deptId = explicitDeptId;
+    }
+  } else if (explicitDeptId !== null) {
+    where.deptId = explicitDeptId;
   }
 
   const { rows, count } = await User.findAndCountAll({

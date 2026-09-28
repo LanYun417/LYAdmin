@@ -21,6 +21,10 @@ export const createRoleSchema = z.object({
     .regex(/^[a-zA-Z][a-zA-Z0-9_]{1,49}$/, '角色编码为字母开头，2~50 位字母/数字/下划线'),
   sort: z.number().int().min(0).default(0),
   status: z.number().int().min(0).max(1).default(1),
+  /** 数据权限范围：1 全部 / 2 自定义部门 / 3 本部门及以下 / 4 仅本人 */
+  dataScope: z.number().int().min(1).max(4).default(1),
+  /** 自定义部门 id 列表（dataScope=2 时生效） */
+  deptIds: z.array(z.coerce.number().int().positive()).default([]),
   remark: z.string().max(255, '备注过长').optional(),
 });
 
@@ -29,6 +33,10 @@ export const updateRoleSchema = z.object({
   roleName: z.string().trim().min(1, '角色名称不能为空').max(50, '角色名称过长'),
   sort: z.number().int().min(0).default(0),
   status: z.number().int().min(0).max(1).default(1),
+  /** 数据权限范围：1 全部 / 2 自定义部门 / 3 本部门及以下 / 4 仅本人 */
+  dataScope: z.number().int().min(1).max(4).default(1),
+  /** 自定义部门 id 列表（dataScope=2 时生效） */
+  deptIds: z.array(z.coerce.number().int().positive()).default([]),
   remark: z.string().max(255, '备注过长').optional(),
 });
 

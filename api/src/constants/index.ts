@@ -54,6 +54,20 @@ export enum LogResult {
 /** 超级管理员角色编码（不受权限裁剪）。 */
 export const SUPER_ADMIN_ROLE = 'super_admin';
 
+/**
+ * 数据权限范围（RBAC 增强）。
+ * - ALL：本人可看全部数据
+ * - CUSTOM：仅看「自定义部门」及其下级
+ * - DEPT_AND_CHILD：仅看「本部门及以下」
+ * - SELF：仅看本人数据
+ */
+export enum DataScope {
+  ALL = 1,
+  CUSTOM = 2,
+  DEPT_AND_CHILD = 3,
+  SELF = 4,
+}
+
 /** 常用正则。 */
 export const REGEX = {
   /** 账号：3~20 位字母/数字/下划线 */

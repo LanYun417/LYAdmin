@@ -63,6 +63,7 @@ export async function authenticate(req: Request, _res: Response, next: NextFunct
       roles: roleCodes,
       permissions,
       status: Number(user.status),
+      deptId: Number(user.deptId ?? 0),
     };
     // 复用同一份上下文：控制器可读取 req.authContext，避免再次 loadAuthUser（B2）
     req.authContext = context;

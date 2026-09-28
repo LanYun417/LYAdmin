@@ -91,6 +91,10 @@ export interface RoleBrief {
   id: number;
   roleName: string;
   roleCode: string;
+  /** 数据权限范围：1 全部 / 2 自定义部门 / 3 本部门及以下 / 4 仅本人 */
+  dataScope?: number;
+  /** 自定义部门 id 列表（仅 dataScope=2 时非空） */
+  deptIds?: number[];
 }
 
 /** 角色详情 */
@@ -114,8 +118,20 @@ export interface RoleUpsert {
   roleCode?: string;
   sort: number;
   status: number;
+  /** 数据权限范围：1 全部 / 2 自定义部门 / 3 本部门及以下 / 4 仅本人 */
+  dataScope?: number;
+  /** 自定义部门 id 列表（dataScope=2 时生效） */
+  deptIds?: number[];
   remark?: string;
 }
+
+/** 数据权限范围选项（1 全部 / 2 自定义部门 / 3 本部门及以下 / 4 仅本人） */
+export const DATA_SCOPE_OPTIONS = [
+  { value: 1, label: '全部数据' },
+  { value: 2, label: '自定义部门' },
+  { value: 3, label: '本部门及以下' },
+  { value: 4, label: '仅本人' },
+] as const;
 
 /* ------------------------------- 菜单 ------------------------------- */
 

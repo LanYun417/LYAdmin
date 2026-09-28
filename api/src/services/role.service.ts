@@ -3,8 +3,8 @@
  * 模块职责：角色分页/下拉查询、CRUD、菜单授权（唯一操作 Role/RoleMenu 的层）。
  */
 import { Op, type WhereOptions } from 'sequelize';
-import { SUPER_ADMIN_ROLE } from '@/constants';
-import { Role, RoleMenu, UserRole } from '@/models';
+import { DataScope, SUPER_ADMIN_ROLE } from '@/constants';
+import { Role, RoleDept, RoleMenu, UserRole } from '@/models';
 import { invalidateAuthCache } from '@/services/authCache';
 import type { PageResult } from '@/types';
 import { buildPageResult, parsePagination } from '@/utils/pagination';
@@ -18,17 +18,57 @@ export interface RoleBrief {
   roleCode: string;
   status: number;
   sort: number;
+  /** 数据权限范围：1 全部 / 2 自定义部门 / 3 本部门及以下 / 4 仅本人 */
+  dataScope: number;
+  /** 自定义部门 id 列表（仅 dataScope=2 时非空） */
+  deptIds: number[];
 }
 
 /** 将 Role 实例转换为简要信息。 */
-function toRoleBrief(role: Role): RoleBrief {
+function toRoleBrief(role: Role, deptIds: number[] = []): RoleBrief {
   return {
     id: Number(role.id),
     roleName: role.roleName,
     roleCode: role.roleCode,
     status: Number(role.status),
     sort: Number(role.sort),
+    dataScope: Number(role.dataScope ?? DataScope.ALL),
+    deptIds,
   };
+}
+
+/** 批量加载角色的自定义部门 id（按 roleId 分组）。 */
+async function loadDeptIdsByRoleIds(roleIds: number[]): Promise<Map<number, number[]>> {
+  const map = new Map<number, number[]>();
+  if (roleIds.length === 0) {
+    return map;
+  }
+  const rows = await RoleDept.findAll({
+    where: { roleId: { [Op.in]: roleIds } },
+    attributes: ['roleId', 'deptId'],
+  });
+  rows.forEach((row) => {
+    const roleId = Number(row.roleId);
+    const list = map.get(roleId) ?? [];
+    list.push(Number(row.deptId));
+    map.set(roleId, list);
+  });
+  return map;
+}
+
+/** 同步角色的自定义部门（仅 dataScope=2 时保留，其余情况清空）。 */
+async function syncRoleDepts(roleId: number, dataScope: number, deptIds: number[]): Promise<void> {
+  await RoleDept.destroy({ where: { roleId } });
+  if (dataScope !== DataScope.CUSTOM) {
+    return;
+  }
+  const unique = Array.from(new Set(deptIds));
+  if (unique.length > 0) {
+    await RoleDept.bulkCreate(
+      unique.map((deptId) => ({ roleId, deptId })),
+      { ignoreDuplicates: true },
+    );
+  }
 }
 
 /**
@@ -57,7 +97,13 @@ export async function listRoles(query: Record<string, unknown>): Promise<PageRes
     limit,
   });
 
-  return buildPageResult(rows.map(toRoleBrief), count, page, pageSize);
+  const deptIdsMap = await loadDeptIdsByRoleIds(rows.map((role) => Number(role.id)));
+  return buildPageResult(
+    rows.map((role) => toRoleBrief(role, deptIdsMap.get(Number(role.id)) ?? [])),
+    count,
+    page,
+    pageSize,
+  );
 }
 
 /**
@@ -70,7 +116,8 @@ export async function listAllRoles(): Promise<RoleBrief[]> {
       ['id', 'ASC'],
     ],
   });
-  return roles.map(toRoleBrief);
+  const deptIdsMap = await loadDeptIdsByRoleIds(roles.map((role) => Number(role.id)));
+  return roles.map((role) => toRoleBrief(role, deptIdsMap.get(Number(role.id)) ?? []));
 }
 
 /**
@@ -87,9 +134,11 @@ export async function createRole(input: CreateRoleInput): Promise<RoleBrief> {
     roleCode: input.roleCode,
     sort: input.sort,
     status: input.status,
+    dataScope: input.dataScope,
     remark: input.remark || null,
   });
-  return toRoleBrief(role);
+  await syncRoleDepts(Number(role.id), input.dataScope, input.deptIds);
+  return toRoleBrief(role, input.dataScope === DataScope.CUSTOM ? Array.from(new Set(input.deptIds)) : []);
 }
 
 /**
@@ -106,11 +155,13 @@ export async function updateRole(id: number, input: UpdateRoleInput): Promise<Ro
     roleName: input.roleName,
     sort: input.sort,
     status: input.status,
+    dataScope: input.dataScope,
     remark: input.remark || null,
   });
+  await syncRoleDepts(id, input.dataScope, input.deptIds);
   // 角色信息变更：清空鉴权缓存（角色可能被多个用户持有，影响面广）
   invalidateAuthCache();
-  return toRoleBrief(role);
+  return toRoleBrief(role, input.dataScope === DataScope.CUSTOM ? Array.from(new Set(input.deptIds)) : []);
 }
 
 /**
@@ -130,6 +181,7 @@ export async function deleteRole(id: number): Promise<void> {
     throw AppError.conflict('该角色下存在用户，无法删除');
   }
   await RoleMenu.destroy({ where: { roleId: id } });
+  await RoleDept.destroy({ where: { roleId: id } });
   await role.destroy();
   // 角色删除：清空鉴权缓存（防御性，确保不再残留该角色相关权限）
   invalidateAuthCache();

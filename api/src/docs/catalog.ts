@@ -700,6 +700,19 @@ export const MODULES: ModuleDoc[] = [
           },
           { name: 'sort', type: 'number', required: false, description: '排序（非负整数）', default: '0' },
           { name: 'status', type: 'number', required: false, description: '状态：1 启用 / 0 禁用', default: '1' },
+          {
+            name: 'dataScope',
+            type: 'number',
+            required: false,
+            description: '数据权限范围：1 全部 / 2 自定义部门 / 3 本部门及以下 / 4 仅本人',
+            default: '1',
+          },
+          {
+            name: 'deptIds',
+            type: 'number[]',
+            required: false,
+            description: '自定义部门 id 列表（dataScope=2 时生效）',
+          },
           { name: 'remark', type: 'string', required: false, description: '备注（最长 255 字符）' },
         ],
         requestExample: [
@@ -730,6 +743,19 @@ export const MODULES: ModuleDoc[] = [
           { name: 'roleName', type: 'string', required: true, description: '角色名称，1~50 字符' },
           { name: 'sort', type: 'number', required: false, description: '排序（非负整数）', default: '0' },
           { name: 'status', type: 'number', required: false, description: '状态：1 启用 / 0 禁用', default: '1' },
+          {
+            name: 'dataScope',
+            type: 'number',
+            required: false,
+            description: '数据权限范围：1 全部 / 2 自定义部门 / 3 本部门及以下 / 4 仅本人',
+            default: '1',
+          },
+          {
+            name: 'deptIds',
+            type: 'number[]',
+            required: false,
+            description: '自定义部门 id 列表（dataScope=2 时生效）',
+          },
           { name: 'remark', type: 'string', required: false, description: '备注（最长 255 字符）' },
         ],
         requestExample: [

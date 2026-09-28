@@ -9,7 +9,7 @@ import type { CreateUserInput, UpdateUserInput } from '@/validators/user.validat
 
 /** 分页列表。 */
 export async function list(req: Request, res: Response): Promise<void> {
-  const result = await userService.listUsers(req.query as Record<string, unknown>);
+  const result = await userService.listUsers(req.query as Record<string, unknown>, req.user);
   ok(res, result);
 }
 

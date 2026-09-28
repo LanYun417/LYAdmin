@@ -30,6 +30,24 @@ async function ensureUserDeptColumn(): Promise<void> {
 }
 
 /**
+ * 历史字段迁移：为 `sys_role` 追加 `data_scope` 列（幂等）。
+ * 存量角色默认「全部数据」（1），行为与升级前一致，需要收紧时在角色管理中调整。
+ */
+async function ensureRoleDataScopeColumn(): Promise<void> {
+  const queryInterface = sequelize.getQueryInterface();
+  const columns = await queryInterface.describeTable('sys_role');
+  if (!('data_scope' in columns)) {
+    await queryInterface.addColumn('sys_role', 'data_scope', {
+      type: DataTypes.TINYINT,
+      allowNull: false,
+      defaultValue: 1,
+      comment: '数据权限范围：1 全部 / 2 自定义部门 / 3 本部门及以下 / 4 仅本人',
+    });
+    console.log('[Seed] 已为 sys_role 追加 data_scope 列');
+  }
+}
+
+/**
  * 执行全部种子（幂等）。
  */
 export async function runSeed(): Promise<void> {
@@ -38,6 +56,7 @@ export async function runSeed(): Promise<void> {
   await seedUser();
   await seedDict();
   await ensureUserDeptColumn();
+  await ensureRoleDataScopeColumn();
   console.log('[Seed] 种子数据初始化完成');
 }
 

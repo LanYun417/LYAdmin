@@ -2,7 +2,7 @@
  * 角色种子数据。
  * 模块职责：写入默认角色（super_admin / admin / viewer）并完成菜单授权，幂等执行。
  */
-import { Status, SUPER_ADMIN_ROLE } from '@/constants';
+import { DataScope, Status, SUPER_ADMIN_ROLE } from '@/constants';
 import { Role, RoleMenu } from '@/models';
 
 /** 角色种子定义。 */
@@ -120,6 +120,8 @@ export async function seedRole(menuIdMap: Map<string, number>): Promise<void> {
         roleCode: seed.roleCode,
         sort: seed.sort,
         status: seed.status,
+        // 存量角色保持「全部数据」，需要收紧时在角色管理中按需调整
+        dataScope: DataScope.ALL,
         remark: seed.remark,
       },
     });

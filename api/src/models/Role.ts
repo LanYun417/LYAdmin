@@ -13,6 +13,7 @@ import {
   Table,
 } from 'sequelize-typescript';
 import { Menu } from './Menu';
+import { RoleDept } from './RoleDept';
 import { RoleMenu } from './RoleMenu';
 import { User } from './User';
 import { UserRole } from './UserRole';
@@ -41,6 +42,14 @@ export class Role extends Model {
   @Column({ type: DataType.TINYINT, allowNull: false, defaultValue: 1, comment: '1 启用 / 0 禁用' })
   declare status: number;
 
+  @Column({
+    type: DataType.TINYINT,
+    allowNull: false,
+    defaultValue: 1,
+    comment: '数据权限范围：1 全部 / 2 自定义部门 / 3 本部门及以下 / 4 仅本人',
+  })
+  declare dataScope: number;
+
   @Column({ type: DataType.STRING(255), allowNull: true, comment: '备注' })
   declare remark: string | null;
 
@@ -55,4 +64,7 @@ export class Role extends Model {
 
   @HasMany(() => RoleMenu)
   declare roleMenus: RoleMenu[];
+
+  @HasMany(() => RoleDept)
+  declare roleDepts: RoleDept[];
 }

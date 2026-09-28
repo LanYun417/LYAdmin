@@ -5,7 +5,7 @@ import { BIconPlus } from 'bootstrap-icons-vue';
 import { deleteRoleApi, getRoleListApi } from '@/api/role';
 import { useStatusDict } from '@/hooks/useDict';
 import { formatDateTime } from '@/utils/format';
-import type { Role } from '@/types/api';
+import { DATA_SCOPE_OPTIONS, type Role } from '@/types/api';
 import Pagination from '@/components/Pagination/index.vue';
 import SearchForm from '@/components/SearchForm/index.vue';
 import RoleForm from './components/RoleForm.vue';
@@ -19,6 +19,11 @@ const total = ref(0);
 
 /** 状态字典（字典管理 → 通用状态 sys_common_status），驱动状态筛选与标签文案 */
 const { statusOptions, statusLabel } = useStatusDict();
+
+/** 数据范围标签 */
+function dataScopeLabel(value?: number): string {
+  return DATA_SCOPE_OPTIONS.find((item) => item.value === value)?.label ?? '全部数据';
+}
 
 const query = reactive({
   roleName: '',
@@ -131,6 +136,9 @@ onMounted(() => {
               {{ statusLabel(row.status) }}
             </el-tag>
           </template>
+        </el-table-column>
+        <el-table-column label="数据范围" width="130" align="center">
+          <template #default="{ row }">{{ dataScopeLabel((row as Role).dataScope) }}</template>
         </el-table-column>
         <el-table-column prop="remark" label="备注" min-width="160" show-overflow-tooltip />
         <el-table-column label="创建时间" width="180">
