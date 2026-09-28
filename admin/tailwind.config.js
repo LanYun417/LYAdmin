@@ -35,6 +35,13 @@ export default {
         'line-light': 'var(--el-border-color-light)',
         'line-lighter': 'var(--el-border-color-lighter)',
       },
+      // 映射 Element Plus 的阴影变量。
+      // 注意：阴影必须走 theme 定义，不能写成 `shadow-[var(--x)]` 任意值 ——
+      // Tailwind 会把 var() 判定为「阴影颜色」，只生成 --tw-shadow-color 而不产生
+      // box-shadow 声明，导致阴影完全失效（2026-09-28 真实缺陷）。
+      boxShadow: {
+        'el-light': 'var(--el-box-shadow-light)',
+      },
     },
   },
   plugins: [],

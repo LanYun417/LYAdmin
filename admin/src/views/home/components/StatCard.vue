@@ -28,7 +28,7 @@ const iconBg = computed(() => (/^#[0-9a-f]{6}$/i.test(props.color) ? `${props.co
 
 <template>
   <div
-    class="p-5 bg-surface border border-line-lighter rounded-[10px] transition duration-[250ms] hover:-translate-y-0.5 hover:border-transparent hover:shadow-[var(--el-box-shadow-light)]"
+    class="p-5 bg-surface border border-line-lighter rounded-[10px] transition duration-[250ms] hover:-translate-y-0.5 hover:border-transparent hover:shadow-el-light"
   >
     <div class="flex items-center justify-between">
       <div>
