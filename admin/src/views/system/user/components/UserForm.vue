@@ -90,7 +90,7 @@ async function loadDetail(id: number): Promise<void> {
     phone: detail.phone ?? '',
     gender: detail.gender ?? '',
     status: detail.status,
-    roleIds: detail.roleIds ?? (detail.roles ?? []).map((role) => role.id),
+    roleIds: detail.roles?.map((role) => role.id) ?? [],
     // 0（未分配）转为 null，避免下拉把 0 当未知节点显示成 "0"
     deptId: detail.deptId ? detail.deptId : null,
     remark: detail.remark ?? '',

@@ -163,7 +163,7 @@ async function handleResetPwd(row: UserDetail): Promise<void> {
 /** 分配角色 */
 function handleAssignRole(row: UserDetail): void {
   assignUserId.value = row.id;
-  assignRoleIds.value = row.roleIds ?? (row.roles ?? []).map((role) => role.id);
+  assignRoleIds.value = row.roles?.map((role) => role.id) ?? [];
   assignVisible.value = true;
 }
 

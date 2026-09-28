@@ -26,8 +26,7 @@ function toUserDetail(user: User): UserDetail {
     deptId: Number(user.deptId ?? 0),
     deptName: dept?.deptName ?? null,
     remark: user.remark,
-    roleIds: roles.map((role) => Number(role.id)),
-    roleNames: roles.map((role) => role.roleName),
+    roles: roles.map((role) => ({ id: Number(role.id), roleName: role.roleName })),
   };
 }
 

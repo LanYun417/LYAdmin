@@ -106,8 +106,8 @@ export interface UserBrief {
 /** 用户详情（含角色信息）。 */
 export interface UserDetail extends UserBrief {
   remark: string | null;
-  roleIds: number[];
-  roleNames: string[];
+  /** 角色对象数组（含 id 与名称），替代原先的 roleIds/roleNames 平行数组 */
+  roles: Array<{ id: number; roleName: string }>;
 }
 
 /** 仪表盘统计卡片。 */

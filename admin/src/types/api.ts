@@ -55,7 +55,6 @@ export interface UserDetail extends UserBrief {
   status: number;
   lastLoginAt?: string | null;
   remark?: string | null;
-  roleIds?: number[];
   roles?: RoleBrief[];
   createdAt?: string;
   updatedAt?: string;
