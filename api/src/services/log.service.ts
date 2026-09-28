@@ -7,7 +7,7 @@ import { Op, type WhereOptions } from 'sequelize';
 import { LoginLog, OperationLog } from '@/models';
 import type { PageResult } from '@/types';
 import { clearHttpLogsDb, queryHttpLogs } from '@/logging/httpLogStore';
-import type { HttpLogItem } from '@/logging/types';
+import type { HttpLogItem, HttpLogQuery } from '@/logging/types';
 import { buildPageResult, parsePagination } from '@/utils/pagination';
 
 /** 操作日志写入参数。 */
@@ -186,16 +186,38 @@ export async function listOperationLogs(query: Record<string, unknown>): Promise
  * 分页查询 HTTP 访问日志（改查数据库 `sys_http_log`）。
  * @param query 查询参数
  */
-export async function listHttpLogs(query: Record<string, unknown>): Promise<PageResult<HttpLogItem>> {
-  const { page, pageSize } = parsePagination(query);
-  return queryHttpLogs({
+/** 导出单次最大行数（超过即截断，避免一次拉爆内存）。 */
+const EXPORT_MAX_ROWS = 10000;
+
+/**
+ * 把控制器传入的原始 query 归一化为 HTTP 日志查询条件。
+ * 说明：非法值一律忽略，`deptId` 的非数字（NaN）不会穿透到 SQL。
+ * @param query 原始 query
+ * @param page 页码
+ * @param pageSize 每页条数
+ */
+function toHttpLogQuery(query: Record<string, unknown>, page: number, pageSize: number): HttpLogQuery {
+  const deptIdRaw = query.deptId;
+  const deptIdNumber = deptIdRaw !== undefined && deptIdRaw !== '' ? Number(deptIdRaw) : undefined;
+  return {
     page,
     pageSize,
     method: typeof query.method === 'string' ? query.method : undefined,
     statusCode: query.statusCode !== undefined && query.statusCode !== '' ? Number(query.statusCode) : undefined,
     startTime: typeof query.startTime === 'string' ? query.startTime : undefined,
     endTime: typeof query.endTime === 'string' ? query.endTime : undefined,
-  });
+    username: typeof query.username === 'string' ? query.username.trim() : undefined,
+    deptId: deptIdNumber !== undefined && Number.isFinite(deptIdNumber) ? deptIdNumber : undefined,
+  };
+}
+
+/**
+ * 分页查询 HTTP 访问日志（改查数据库 `sys_http_log`）。
+ * @param query 查询参数
+ */
+export async function listHttpLogs(query: Record<string, unknown>): Promise<PageResult<HttpLogItem>> {
+  const { page, pageSize } = parsePagination(query);
+  return queryHttpLogs(toHttpLogQuery(query, page, pageSize));
 }
 
 /**
@@ -260,4 +282,35 @@ export async function exportOperationLogs(query: Record<string, unknown>, timezo
     formatDateTimeInZone(item.createdAt, timezoneOffset),
   ]);
   return toCsv(['ID', '模块', '动作', '操作人', '方法', 'URL', '参数', '耗时', '结果', '错误信息', 'IP', '时间'], rows);
+}
+
+/**
+ * 导出 HTTP 访问日志 CSV。
+ *
+ * 注意：**不走 `listHttpLogs`** —— 该链路会经 `parsePagination` 把 pageSize 收敛到 100，
+ * 直接调用 `queryHttpLogs` 才能按 `EXPORT_MAX_ROWS`（10000）取数。
+ * 「浏览器 / 操作系统」直接用服务层解析好的字段，导出端无需再次解析 UA。
+ * @param query 筛选条件
+ * @param timezoneOffset 客户端时区偏移
+ */
+export async function exportHttpLogs(query: Record<string, unknown>, timezoneOffset?: number): Promise<string> {
+  const { list } = await queryHttpLogs(toHttpLogQuery(query, 1, EXPORT_MAX_ROWS));
+  const rows = list.map((item) => [
+    item.id,
+    formatDateTimeInZone(item.time, timezoneOffset),
+    item.method,
+    item.url,
+    item.statusCode,
+    `${item.duration}ms`,
+    item.username || '-',
+    item.deptName || '-',
+    item.browser || '-',
+    item.os || '-',
+    item.ip,
+    item.userAgent,
+  ]);
+  return toCsv(
+    ['ID', '时间', '方法', 'URL', '状态码', '耗时', '操作人', '所属部门', '浏览器', '操作系统', 'IP', 'User-Agent'],
+    rows,
+  );
 }

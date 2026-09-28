@@ -9,12 +9,14 @@
  *
  * 性能（日志治理 ④）：`sys_http_log` 为大表，`count(*)` 代价高。为 `count` 结果加**进程内短 TTL
  * 缓存（30s）**：仍返回**精确** `total`，最多 30 秒陈旧；缓存键包含全部筛选条件（method/statusCode/
- * startTime/endTime），不同筛选各自计数，绝不串数。**不改变接口返回契约**（不做近似计数 / hasMore 模式）。
+ * startTime/endTime/username/deptId），不同筛选各自计数，绝不串数。**不改变接口返回契约**（不做近似计数 / hasMore 模式）。
+ * 注：浏览器 / 操作系统由 `userAgent` 在**返回当前页时**解析（带缓存），不进入 SQL 与 count。
  */
 import { Op, type WhereOptions } from 'sequelize';
 import { config } from '@/config';
 import { HttpLog } from '@/models';
 import { buildPageResult } from '@/utils/pagination';
+import { parseUserAgent } from '@/utils/userAgent';
 import type { PageResult } from '@/types';
 import type { AccessLogRecord, HttpLogItem, HttpLogQuery } from './types';
 
@@ -44,6 +46,8 @@ function buildCountCacheKey(query: HttpLogQuery): string {
     statusCode: query.statusCode ?? null,
     startTime: query.startTime ?? '',
     endTime: query.endTime ?? '',
+    username: query.username ?? '',
+    deptId: query.deptId ?? null,
   });
 }
 
@@ -120,6 +124,10 @@ export async function appendHttpLog(record: AccessLogRecord): Promise<void> {
       query: record.query ?? null,
       reqBody: record.reqBody ?? null,
       resBody: record.resBody ?? null,
+      userId: record.userId ?? 0,
+      username: record.username ?? null,
+      deptId: record.deptId ?? 0,
+      deptName: record.deptName ?? null,
     });
   } catch (error) {
     console.error('[HttpLogStore] 写入 HTTP 访问日志失败:', error);
@@ -139,6 +147,13 @@ export async function queryHttpLogs(query: HttpLogQuery): Promise<PageResult<Htt
   }
   if (query.statusCode !== undefined) {
     where.statusCode = query.statusCode;
+  }
+  const username = query.username?.trim();
+  if (username) {
+    where.username = { [Op.like]: `%${username}%` };
+  }
+  if (query.deptId !== undefined) {
+    where.deptId = query.deptId;
   }
   const range = buildTimeRange(query.startTime, query.endTime);
   if (range) {
@@ -168,19 +183,29 @@ export async function queryHttpLogs(query: HttpLogQuery): Promise<PageResult<Htt
     console.log(`[HttpLogStore] count 命中缓存 total=${total}`);
   }
 
-  const list: HttpLogItem[] = rows.map((row) => ({
-    id: Number(row.id),
-    time: row.time instanceof Date ? row.time.toISOString() : new Date(row.time).toISOString(),
-    method: row.method,
-    url: row.url,
-    statusCode: Number(row.statusCode),
-    duration: Number(row.duration),
-    ip: row.ip ?? '',
-    userAgent: row.userAgent ?? '',
-    query: row.query ?? null,
-    reqBody: row.reqBody ?? null,
-    resBody: row.resBody ?? null,
-  }));
+  const list: HttpLogItem[] = rows.map((row) => {
+    // UA 解析：带缓存的微秒级正则，且仅作用于当前页行（不影响 count）
+    const { browser, os } = parseUserAgent(row.userAgent);
+    return {
+      id: Number(row.id),
+      time: row.time instanceof Date ? row.time.toISOString() : new Date(row.time).toISOString(),
+      method: row.method,
+      url: row.url,
+      statusCode: Number(row.statusCode),
+      duration: Number(row.duration),
+      ip: row.ip ?? '',
+      userAgent: row.userAgent ?? '',
+      query: row.query ?? null,
+      reqBody: row.reqBody ?? null,
+      resBody: row.resBody ?? null,
+      userId: Number(row.userId ?? 0),
+      username: row.username ?? '',
+      deptId: Number(row.deptId ?? 0),
+      deptName: row.deptName ?? '',
+      browser: browser ?? '',
+      os: os ?? '',
+    };
+  });
 
   return buildPageResult(list, total, query.page, query.pageSize);
 }

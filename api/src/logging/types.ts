@@ -35,6 +35,14 @@ export interface AccessLogRecord {
   reqBody?: string;
   /** 响应内容（截断；二进制仅记占位说明） */
   resBody?: string;
+  /** 操作用户 id（0 表示匿名/未登录） */
+  userId?: number | null;
+  /** 操作账号快照 */
+  username?: string | null;
+  /** 用户所属部门 id 快照（0 表示无） */
+  deptId?: number | null;
+  /** 用户所属部门名称快照 */
+  deptName?: string | null;
 }
 
 /** 数据库日志记录（Sequelize `logging` 钩子写入）。 */
@@ -88,6 +96,18 @@ export interface HttpLogItem {
   query?: Record<string, unknown> | null;
   reqBody?: string | null;
   resBody?: string | null;
+  /** 操作用户 id（0 表示匿名/未登录） */
+  userId: number;
+  /** 操作账号快照，空串表示匿名 */
+  username: string;
+  /** 用户所属部门 id 快照（0 表示无部门） */
+  deptId: number;
+  /** 用户所属部门名称快照，空串表示无部门 / 未记录 */
+  deptName: string;
+  /** 浏览器名称 + 版本（由 userAgent 解析，未识别为空串） */
+  browser: string;
+  /** 操作系统名称 + 版本（由 userAgent 解析，未识别为空串） */
+  os: string;
 }
 
 /** HTTP 访问日志查询条件。 */
@@ -98,6 +118,10 @@ export interface HttpLogQuery {
   statusCode?: number;
   startTime?: string;
   endTime?: string;
+  /** 操作账号模糊匹配 */
+  username?: string;
+  /** 所属部门 id 精确过滤（0 表示筛选无部门） */
+  deptId?: number;
 }
 
 /** 单条归档结果。 */

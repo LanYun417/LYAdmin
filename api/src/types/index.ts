@@ -22,6 +22,8 @@ export interface AuthUserContext extends JwtUserPayload {
   status: number;
   /** 当前用户所属部门 id（0 表示未分配，用于数据权限计算） */
   deptId: number;
+  /** 当前用户所属部门名称（未分配为 null），用于个人中心展示与 HTTP 日志快照 */
+  deptName: string | null;
 }
 
 /** 分页请求参数。 */

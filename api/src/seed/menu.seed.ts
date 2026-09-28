@@ -385,11 +385,18 @@ const MENU_TREE: MenuSeedNode[] = [
         keepAlive: 1,
         children: [
           {
+            key: 'log:http:export',
+            menuName: '导出HTTP日志',
+            menuType: MenuType.BUTTON,
+            permission: 'log:http:export',
+            sort: 1,
+          },
+          {
             key: 'log:http:clear',
             menuName: '清空HTTP日志',
             menuType: MenuType.BUTTON,
             permission: 'log:http:clear',
-            sort: 1,
+            sort: 2,
           },
         ],
       },

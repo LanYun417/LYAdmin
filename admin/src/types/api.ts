@@ -274,6 +274,20 @@ export interface HttpLog {
   duration: number;
   ip: string;
   time: string;
+  /** 原始 User-Agent（列表 tooltip 展示） */
+  userAgent?: string;
+  /** 操作用户 id（0 表示匿名 / 未登录） */
+  userId?: number;
+  /** 操作账号快照，空串表示匿名 */
+  username?: string;
+  /** 所属部门 id 快照（0 表示无部门） */
+  deptId?: number;
+  /** 所属部门名称快照 */
+  deptName?: string;
+  /** 浏览器名称 + 版本（未识别为空串） */
+  browser?: string;
+  /** 操作系统名称 + 版本（未识别为空串） */
+  os?: string;
   /** 请求查询参数（已脱敏） */
   query?: Record<string, unknown> | null;
   /** 请求体（已脱敏、截断） */
@@ -288,6 +302,10 @@ export interface HttpLogQuery extends PageQuery {
   statusCode?: number;
   startTime?: string;
   endTime?: string;
+  /** 操作账号模糊匹配 */
+  username?: string;
+  /** 所属部门 id（0 表示无部门） */
+  deptId?: number;
 }
 
 /* ------------------------------- 文件 ------------------------------- */

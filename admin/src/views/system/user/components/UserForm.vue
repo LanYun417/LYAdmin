@@ -28,7 +28,15 @@ const formRef = ref<FormInstance>();
 const submitting = ref(false);
 const deptTree = ref<DeptNode[]>([]);
 
-const defaultForm = (): UserUpsert => ({
+/**
+ * 表单内部数据模型。
+ * `deptId` 为 `null` 表示未选择部门（提交时归一为 0，即「未分配」）。
+ */
+interface UserFormModel extends Omit<UserUpsert, 'deptId'> {
+  deptId: number | null;
+}
+
+const defaultForm = (): UserFormModel => ({
   username: '',
   password: '',
   nickname: '',
@@ -37,11 +45,11 @@ const defaultForm = (): UserUpsert => ({
   gender: '',
   status: 1,
   roleIds: [],
-  deptId: 0,
+  deptId: null,
   remark: '',
 });
 
-const form = reactive<UserUpsert>(defaultForm());
+const form = reactive<UserFormModel>(defaultForm());
 
 const isEdit = ref(false);
 
@@ -59,20 +67,11 @@ const rules: FormRules = {
   phone: [phoneRule],
 };
 
-/** 上级部门选择树（含虚拟根节点「未分配」） */
-const parentDeptTree = computed<DeptNode[]>(() => [
-  {
-    id: 0,
-    parentId: -1,
-    deptName: '未分配',
-    sort: 0,
-    status: 1,
-    leader: null,
-    phone: null,
-    email: null,
-    children: deptTree.value,
-  },
-]);
+/**
+ * 是否展示「部门」字段：与部门表单保持一致的交互 —— 无部门可选时不展示该项，
+ * 此时用户即为「未分配」状态。
+ */
+const showDeptField = computed<boolean>(() => deptTree.value.length > 0);
 
 /** 重置表单 */
 function resetForm(): void {
@@ -92,7 +91,8 @@ async function loadDetail(id: number): Promise<void> {
     gender: detail.gender ?? '',
     status: detail.status,
     roleIds: detail.roleIds ?? (detail.roles ?? []).map((role) => role.id),
-    deptId: detail.deptId ?? 0,
+    // 0（未分配）转为 null，避免下拉把 0 当未知节点显示成 "0"
+    deptId: detail.deptId ? detail.deptId : null,
     remark: detail.remark ?? '',
   });
 }
@@ -130,10 +130,11 @@ async function handleSubmit(): Promise<void> {
   try {
     if (isEdit.value && props.userId) {
       const { username: _username, password: _password, ...rest } = form;
-      await updateUserApi(props.userId, rest);
+      // deptId 为 null（清空/未选择）时归一为 0，表示未分配
+      await updateUserApi(props.userId, { ...rest, deptId: rest.deptId ?? 0 });
       ElMessage.success('更新成功');
     } else {
-      await createUserApi({ ...form });
+      await createUserApi({ ...form, deptId: form.deptId ?? 0 });
       ElMessage.success('新增成功');
     }
     emit('success');
@@ -174,15 +175,16 @@ async function handleSubmit(): Promise<void> {
           <el-option v-for="item in genderOptions" :key="item.value" :label="item.label" :value="item.value" />
         </el-select>
       </el-form-item>
-      <el-form-item label="部门">
+      <el-form-item v-if="showDeptField" label="部门">
         <el-tree-select
           v-model="form.deptId"
-          :data="parentDeptTree"
+          :data="deptTree"
           :props="{ label: 'deptName', children: 'children' }"
           node-key="id"
           check-strictly
           :render-after-expand="false"
           clearable
+          placeholder="未分配"
           style="width: 100%"
         />
       </el-form-item>

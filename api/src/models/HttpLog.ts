@@ -15,6 +15,10 @@ import { AutoIncrement, Column, DataType, Model, PrimaryKey, Table } from 'seque
     { name: 'idx_method', fields: ['method'] },
     { name: 'idx_status_code', fields: ['status_code'] },
     { name: 'idx_method_time', fields: ['method', 'time'] },
+    // 注意：user_id / dept_id 的索引**不可写在模型上** —— `sync({ alter: false })` 对
+    // 已存在的旧表也会尝试补索引，而旧表此时还没有这两列，会直接抛
+    // `ER_KEY_COLUMN_DOES_NOT_EXITS` 导致启动崩溃。二者改由 `seed/index.ts` 的迁移
+    // 「先加列、后加索引」统一管理（全新库与既有库都会走到该逻辑）。
   ],
 })
 export class HttpLog extends Model {
@@ -43,6 +47,26 @@ export class HttpLog extends Model {
 
   @Column({ type: DataType.STRING(500), allowNull: true, comment: 'User-Agent' })
   declare userAgent: string | null;
+
+  // ↓ 操作者快照：写入时从鉴权上下文（req.user）取值，与 sys_user 不做外键约束。
+  // 采用「快照」而非联表查询：①列表无需 JOIN，大表分页性能不受影响；
+  // ②用户日后调岗 / 被删除，历史日志仍如实反映当时的归属部门。
+  @Column({
+    type: DataType.BIGINT.UNSIGNED,
+    allowNull: false,
+    defaultValue: 0,
+    comment: '操作用户 id（0 为匿名/未登录）',
+  })
+  declare userId: number;
+
+  @Column({ type: DataType.STRING(50), allowNull: true, comment: '操作账号（快照）' })
+  declare username: string | null;
+
+  @Column({ type: DataType.BIGINT.UNSIGNED, allowNull: false, defaultValue: 0, comment: '所属部门 id（快照，0 为无）' })
+  declare deptId: number;
+
+  @Column({ type: DataType.STRING(50), allowNull: true, comment: '所属部门名称（快照）' })
+  declare deptName: string | null;
 
   @Column({ type: DataType.JSON, allowNull: true, comment: '查询参数（已脱敏）' })
   declare query: Record<string, unknown> | null;

@@ -67,6 +67,8 @@ const ROLE_SEEDS: RoleSeed[] = [
       'log:operation',
       'log:operation:export',
       'log:http',
+      // HTTP 日志导出属只读查看能力，与登录/操作日志导出保持一致授予 admin
+      'log:http:export',
       // 说明：admin 为「业务运营管理者」，不应持有系统级能力。以下两个权限码已回收，
       // 仅由超管（menuKeys: 'ALL'）持有：
       //   - log:http:clear —— 清空全量日志，属破坏性系统操作；

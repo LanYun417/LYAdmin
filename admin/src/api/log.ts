@@ -29,6 +29,16 @@ export function clearHttpLogsApi(): Promise<null> {
   return del<null>('/logs/http');
 }
 
+/** 导出 HTTP 访问日志（CSV） */
+export function exportHttpLogsApi(params: Omit<HttpLogQuery, 'page' | 'pageSize'>): Promise<Blob> {
+  return request<Blob>({
+    url: '/logs/http/export',
+    method: 'GET',
+    params,
+    responseType: 'blob',
+  });
+}
+
 /** 导出登录日志（CSV，P2） */
 export function exportLoginLogsApi(params: Omit<LoginLogQuery, 'page' | 'pageSize'>): Promise<Blob> {
   return request<Blob>({

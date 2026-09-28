@@ -4,7 +4,7 @@
  */
 import { Op } from 'sequelize';
 import { ERROR_MESSAGE, LogResult, Status, SUPER_ADMIN_ROLE } from '@/constants';
-import { LoginLog, Menu, Role, User } from '@/models';
+import { LoginLog, Dept, Menu, Role, User } from '@/models';
 import { getCachedAuthContext, invalidateAuthCache, setCachedAuthContext } from '@/services/authCache';
 import { getMenusByRoles } from '@/services/menu.service';
 import type { JwtPayload, MenuNode, UserBrief } from '@/types';
@@ -52,7 +52,8 @@ export function toUserBrief(user: User): UserBrief {
     gender: user.gender ?? null,
     status: Number(user.status),
     deptId: Number(user.deptId ?? 0),
-    deptName: null,
+    // 关联未加载时为 null（历史行为）；已 include Dept 时（登录、鉴权上下文）返回真实部门名
+    deptName: user.dept?.deptName ?? null,
     lastLoginAt: user.lastLoginAt,
     createdAt: user.get('createdAt') as Date,
     updatedAt: user.get('updatedAt') as Date,
@@ -129,7 +130,9 @@ export async function loadAuthUser(userId: number): Promise<AuthContext | null> 
     return cached;
   }
 
-  const user = await User.findByPk(userId, { include: [{ model: Role }] });
+  // 顺带加载部门：供个人中心展示与 HTTP 访问日志的部门快照使用。
+  // 本函数结果有 30s 进程内缓存（authCache），实际每 30 秒才多这一次 JOIN，对鉴权耗时影响可忽略。
+  const user = await User.findByPk(userId, { include: [{ model: Role }, { model: Dept, attributes: ['deptName'] }] });
   if (!user) {
     return null;
   }
@@ -150,7 +153,8 @@ export async function loadAuthUser(userId: number): Promise<AuthContext | null> 
  * @returns 双 Token 与用户简要信息
  */
 export async function login(username: string, password: string, ip: string, userAgent: string): Promise<LoginResult> {
-  const user = await User.findOne({ where: { username } });
+  // include Dept：登录响应要带上真实部门名（个人中心来源之一）
+  const user = await User.findOne({ where: { username }, include: [{ model: Dept, attributes: ['deptName'] }] });
   if (!user) {
     await writeLoginLog(username, ip, userAgent, LogResult.FAIL, ERROR_MESSAGE.LOGIN_FAILED);
     throw AppError.unauthorized(ERROR_MESSAGE.LOGIN_FAILED);

@@ -177,6 +177,12 @@ export function httpAccessLogger(): RequestHandler {
           query: hasQuery ? (redactSensitive(req.query) as Record<string, unknown>) : undefined,
           reqBody: serializeBody(req.body),
           resBody,
+          // 操作者快照：finish 时鉴权中间件早已执行完毕，req.user 可用（未登录请求为 undefined）。
+          // 取值来自鉴权上下文，无需额外查库。
+          userId: req.user?.userId ?? 0,
+          username: req.user?.username ?? null,
+          deptId: req.user?.deptId ?? 0,
+          deptName: req.user?.deptName ?? null,
         };
 
         // ① 物理文件（按天，JSON Lines）

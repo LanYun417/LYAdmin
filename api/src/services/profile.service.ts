@@ -2,7 +2,7 @@
  * 个人中心服务。
  * 模块职责：修改个人资料、修改密码（校验旧密码并写 passwordChangedAt）、更换头像。
  */
-import { User } from '@/models';
+import { Dept, User } from '@/models';
 import { invalidateAuthCache } from '@/services/authCache';
 import { toUserBrief } from '@/services/auth.service';
 import { saveFiles } from '@/services/file.service';
@@ -17,7 +17,8 @@ import type { ChangePasswordInput, UpdateProfileInput } from '@/validators/profi
  * @param input 资料参数
  */
 export async function updateProfile(userId: number, input: UpdateProfileInput): Promise<UserBrief> {
-  const user = await User.findByPk(userId);
+  // include Dept：返回体需带上部门名，避免前端 store 更新后部门信息丢失
+  const user = await User.findByPk(userId, { include: [{ model: Dept, attributes: ['deptName'] }] });
   if (!user) {
     throw AppError.notFound('用户不存在');
   }

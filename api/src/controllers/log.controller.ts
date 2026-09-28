@@ -43,6 +43,14 @@ export async function clearHttpLogs(_req: Request, res: Response): Promise<void>
   ok(res, null, '已清空所有 HTTP 日志');
 }
 
+/** 导出 HTTP 访问日志 CSV（含操作人、部门、浏览器与操作系统）。 */
+export async function exportHttpLogs(req: Request, res: Response): Promise<void> {
+  const csv = await logService.exportHttpLogs(req.query as Record<string, unknown>, timezoneOffsetFrom(req));
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', `attachment; filename="http-logs-${Date.now()}.csv"`);
+  res.send(csv);
+}
+
 /** 导出登录日志 CSV。 */
 export async function exportLoginLogs(req: Request, res: Response): Promise<void> {
   const csv = await logService.exportLoginLogs(req.query as Record<string, unknown>, timezoneOffsetFrom(req));

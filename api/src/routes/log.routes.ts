@@ -23,6 +23,7 @@ router.get(
 );
 
 router.get('/http', requirePermission('log:http:list'), asyncHandler(logController.httpLogs));
+router.get('/http/export', requirePermission('log:http:export'), asyncHandler(logController.exportHttpLogs));
 
 // 清空所有 HTTP 日志：高危破坏性操作，必须使用独立的 log:http:clear 权限码，
 // 不能复用只读的 log:http:list，否则任何能查看日志的角色都能清空日志。
