@@ -9,8 +9,31 @@ export default {
   content: ['./index.html', './src/**/*.{vue,js,ts,jsx,tsx}'],
   theme: {
     extend: {
+      // 映射 Element Plus 的语义色变量：类名更短，且自动适配亮/暗主题。
+      // 命名约定见 docs/STYLE-REFACTOR-PLAN.md §4；新增色名须与此保持一致，避免出现多套叫法。
       colors: {
         primary: 'var(--el-color-primary)',
+        success: 'var(--el-color-success)',
+        warning: 'var(--el-color-warning)',
+        danger: 'var(--el-color-danger)',
+        info: 'var(--el-color-info)',
+
+        // 背景
+        surface: 'var(--el-bg-color)',
+        page: 'var(--el-bg-color-page)',
+        overlay: 'var(--el-bg-color-overlay)',
+        'fill-light': 'var(--el-fill-color-light)',
+
+        // 文字
+        ink: 'var(--el-text-color-primary)',
+        'ink-regular': 'var(--el-text-color-regular)',
+        muted: 'var(--el-text-color-secondary)',
+        faint: 'var(--el-text-color-placeholder)',
+
+        // 边框
+        line: 'var(--el-border-color)',
+        'line-light': 'var(--el-border-color-light)',
+        'line-lighter': 'var(--el-border-color-lighter)',
       },
     },
   },
