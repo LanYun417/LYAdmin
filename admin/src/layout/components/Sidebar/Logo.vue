@@ -11,30 +11,9 @@ defineProps<{
 
 <template>
   <router-link to="/home">
-    <div class="sidebar-logo flex items-center justify-center">
-      <img class="sidebar-logo-img" :src="logoUrl" alt="logo" />
-      <span v-show="!collapsed" class="sidebar-logo-title">蓝云后台管理系统</span>
+    <div class="h-[50px] overflow-hidden border-b border-line-light flex items-center justify-center">
+      <img class="w-[23px] h-[23px]" :src="logoUrl" alt="logo" />
+      <span v-show="!collapsed" class="ml-2 text-base font-semibold text-ink whitespace-nowrap">蓝云后台管理系统</span>
     </div>
   </router-link>
 </template>
-
-<style scoped>
-.sidebar-logo {
-  height: 50px;
-  overflow: hidden;
-  border-bottom: 1px solid var(--el-border-color-light);
-}
-
-.sidebar-logo-img {
-  width: 23px;
-  height: 23px;
-}
-
-.sidebar-logo-title {
-  margin-left: 8px;
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--el-text-color-primary);
-  white-space: nowrap;
-}
-</style>

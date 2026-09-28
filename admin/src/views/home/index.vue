@@ -89,9 +89,9 @@ const todayText = new Intl.DateTimeFormat('zh-CN', {
 
 <template>
   <div v-loading="loading" class="home-page">
-    <header class="home-hero">
-      <h2 class="home-greeting">{{ greeting }}，{{ userStore.nickname }}</h2>
-      <p class="home-subtitle">今天是 {{ todayText }}，欢迎回来</p>
+    <header class="mb-4">
+      <h2 class="text-xl font-bold text-ink">{{ greeting }}，{{ userStore.nickname }}</h2>
+      <p class="mt-1.5 text-[13px] text-muted">今天是 {{ todayText }}，欢迎回来</p>
     </header>
 
     <el-row :gutter="16">
@@ -134,21 +134,3 @@ const todayText = new Intl.DateTimeFormat('zh-CN', {
     </el-row>
   </div>
 </template>
-
-<style scoped>
-.home-hero {
-  margin-bottom: 16px;
-}
-
-.home-greeting {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--el-text-color-primary);
-}
-
-.home-subtitle {
-  margin-top: 6px;
-  font-size: 13px;
-  color: var(--el-text-color-secondary);
-}
-</style>

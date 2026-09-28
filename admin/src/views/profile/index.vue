@@ -55,9 +55,9 @@ async function handleAvatarUpload(options: UploadRequestOptions): Promise<void> 
       <el-col :xs="24" :md="8">
         <el-card shadow="never">
           <template #header>个人信息</template>
-          <div class="profile-avatar flex flex-col items-center">
+          <div class="py-2 flex flex-col items-center">
             <el-upload
-              class="avatar-uploader"
+              class="cursor-pointer"
               :show-file-list="false"
               accept="image/*"
               :before-upload="beforeAvatarUpload"
@@ -67,9 +67,9 @@ async function handleAvatarUpload(options: UploadRequestOptions): Promise<void> 
                 <el-icon><BIconPlus /></el-icon>
               </el-avatar>
             </el-upload>
-            <div class="avatar-tip">点击更换头像</div>
-            <p class="profile-nickname">{{ nickname }}</p>
-            <p class="profile-username">@{{ username }}</p>
+            <div class="mt-2 text-xs text-muted">点击更换头像</div>
+            <p class="mt-3 text-base font-semibold text-ink">{{ nickname }}</p>
+            <p class="text-[13px] text-muted">@{{ username }}</p>
           </div>
           <el-descriptions :column="1" border class="mt-4">
             <el-descriptions-item label="账号">{{ username }}</el-descriptions-item>
@@ -98,31 +98,3 @@ async function handleAvatarUpload(options: UploadRequestOptions): Promise<void> 
     </el-row>
   </div>
 </template>
-
-<style scoped>
-.profile-avatar {
-  padding: 8px 0;
-}
-
-.avatar-uploader {
-  cursor: pointer;
-}
-
-.avatar-tip {
-  margin-top: 8px;
-  font-size: 12px;
-  color: var(--el-text-color-secondary);
-}
-
-.profile-nickname {
-  margin-top: 12px;
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--el-text-color-primary);
-}
-
-.profile-username {
-  font-size: 13px;
-  color: var(--el-text-color-secondary);
-}
-</style>

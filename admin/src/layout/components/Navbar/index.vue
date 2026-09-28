@@ -23,9 +23,9 @@ function handleToggle(): void {
 </script>
 
 <template>
-  <div class="navbar flex items-center justify-between shadow">
+  <div class="h-[50px] px-4 border-b border-line-light flex items-center justify-between shadow">
     <div class="flex items-center gap-3">
-      <el-icon class="navbar-toggle" @click="handleToggle">
+      <el-icon class="text-lg text-ink cursor-pointer" @click="handleToggle">
         <BIconList v-if="appStore.isMobile" />
         <BIconLayoutSidebarReverse v-else-if="!appStore.sidebarCollapsed" />
         <BIconLayoutSidebar v-else />
@@ -37,17 +37,3 @@ function handleToggle(): void {
     </div>
   </div>
 </template>
-
-<style scoped>
-.navbar {
-  height: 50px;
-  padding: 0 16px;
-  border-bottom: 1px solid var(--el-border-color-light);
-}
-
-.navbar-toggle {
-  font-size: 18px;
-  color: var(--el-text-color-primary);
-  cursor: pointer;
-}
-</style>

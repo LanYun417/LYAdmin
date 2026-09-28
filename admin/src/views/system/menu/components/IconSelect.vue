@@ -86,12 +86,16 @@ function handleSelect(name: string): void {
     <BasicDialog v-model="visible" title="选择图标" width="620px" :show-footer="false" append-to-body>
       <el-input v-model="keyword" :prefix-icon="BIconSearch" placeholder="搜索图标" clearable class="mb-3" />
       <el-scrollbar height="360px" @scroll="handleScroll">
-        <div ref="gridRef" class="icon-grid flex flex-wrap">
+        <div ref="gridRef" class="gap-1 flex flex-wrap">
           <div
             v-for="name in renderedIcons"
             :key="name"
-            class="icon-cell flex-center"
-            :class="{ active: name === modelValue }"
+            class="w-[42px] h-[42px] cursor-pointer border border-line-light rounded flex-center"
+            :class="
+              name === modelValue
+                ? 'text-primary border-primary bg-[var(--el-color-primary-light-9)]'
+                : 'hover:text-primary hover:border-primary'
+            "
             :title="name"
             @click="handleSelect(name)"
           >
@@ -99,42 +103,10 @@ function handleSelect(name: string): void {
           </div>
         </div>
       </el-scrollbar>
-      <div class="icon-count-hint">
+      <div class="mt-2 text-xs text-muted text-center">
         显示 {{ renderedIcons.length }} / {{ filteredIcons.length }}
         <template v-if="renderedIcons.length < filteredIcons.length">，滚动加载更多</template>
       </div>
     </BasicDialog>
   </div>
 </template>
-
-<style scoped>
-.icon-grid {
-  gap: 4px;
-}
-
-.icon-cell {
-  width: 42px;
-  height: 42px;
-  cursor: pointer;
-  border: 1px solid var(--el-border-color-light);
-  border-radius: 4px;
-}
-
-.icon-cell:hover {
-  color: var(--el-color-primary);
-  border-color: var(--el-color-primary);
-}
-
-.icon-cell.active {
-  color: var(--el-color-primary);
-  background-color: var(--el-color-primary-light-9);
-  border-color: var(--el-color-primary);
-}
-
-.icon-count-hint {
-  margin-top: 8px;
-  font-size: 12px;
-  color: var(--el-text-color-secondary);
-  text-align: center;
-}
-</style>

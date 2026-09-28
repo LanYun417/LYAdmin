@@ -12,34 +12,11 @@ function goHome(): void {
 </script>
 
 <template>
-  <div class="error-page flex-center">
-    <div class="error-content">
-      <h1 class="error-code">403</h1>
-      <p class="error-message">抱歉，你没有访问该页面的权限</p>
+  <div class="w-full h-full flex-center">
+    <div class="text-center">
+      <h1 class="text-[96px] font-bold text-primary">403</h1>
+      <p class="mt-3 mb-6 text-base text-muted">抱歉，你没有访问该页面的权限</p>
       <el-button type="primary" @click="goHome">返回首页</el-button>
     </div>
   </div>
 </template>
-
-<style scoped>
-.error-page {
-  width: 100%;
-  height: 100%;
-}
-
-.error-content {
-  text-align: center;
-}
-
-.error-code {
-  font-size: 96px;
-  font-weight: 700;
-  color: var(--el-color-primary);
-}
-
-.error-message {
-  margin: 12px 0 24px;
-  font-size: 16px;
-  color: var(--el-text-color-secondary);
-}
-</style>

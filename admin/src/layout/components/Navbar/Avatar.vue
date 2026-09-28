@@ -79,14 +79,14 @@ function handlePrimaryColorChange(color: string | null): void {
 <template>
   <div class="navbar-avatar flex items-center gap-4">
     <el-tooltip :content="appStore.isFullscreen ? '退出全屏' : '全屏'" placement="bottom">
-      <el-icon class="navbar-action" @click="handleToggleFullscreen">
+      <el-icon class="text-lg text-ink cursor-pointer" @click="handleToggleFullscreen">
         <BIconFullscreen v-if="!appStore.isFullscreen" />
         <BIconFullscreenExit v-else />
       </el-icon>
     </el-tooltip>
 
     <el-tooltip :content="isDark ? '切换亮色' : '切换暗黑'" placement="bottom">
-      <el-icon class="navbar-action" @click="toggleTheme">
+      <el-icon class="text-lg text-ink cursor-pointer" @click="toggleTheme">
         <BIconMoon v-if="!isDark" />
         <BIconSun v-else />
       </el-icon>
@@ -96,22 +96,17 @@ function handlePrimaryColorChange(color: string | null): void {
       <!-- el-color-picker 根节点是组件（内部 ElTooltip），直接作为
            el-tooltip 的触发子节点会触发 Vue 的“运行时指令挂到
            非元素根”警告；包一层普通元素承载 forwardRef 指令。 -->
-      <span class="navbar-color-picker-trigger">
-        <el-color-picker
-          v-model="primaryColor"
-          size="small"
-          class="navbar-color-picker"
-          @change="handlePrimaryColorChange"
-        />
+      <span class="inline-flex items-center">
+        <el-color-picker v-model="primaryColor" size="small" class="align-middle" @change="handlePrimaryColorChange" />
       </span>
     </el-tooltip>
 
     <el-dropdown trigger="click">
-      <div class="avatar-trigger flex items-center gap-2">
+      <div class="cursor-pointer outline-none flex items-center gap-2">
         <el-avatar :size="32" :src="avatar">
           <el-icon><BIconPerson /></el-icon>
         </el-avatar>
-        <span class="avatar-name">{{ nickname }}</span>
+        <span class="text-sm text-ink">{{ nickname }}</span>
       </div>
       <template #dropdown>
         <el-dropdown-menu>
@@ -122,30 +117,3 @@ function handlePrimaryColorChange(color: string | null): void {
     </el-dropdown>
   </div>
 </template>
-
-<style scoped>
-.navbar-action {
-  font-size: 18px;
-  color: var(--el-text-color-primary);
-  cursor: pointer;
-}
-
-.navbar-color-picker-trigger {
-  display: inline-flex;
-  align-items: center;
-}
-
-.navbar-color-picker {
-  vertical-align: middle;
-}
-
-.avatar-trigger {
-  cursor: pointer;
-  outline: none;
-}
-
-.avatar-name {
-  font-size: 14px;
-  color: var(--el-text-color-primary);
-}
-</style>

@@ -29,22 +29,12 @@ const collapsed = computed(() => appStore.sidebarCollapsed && !appStore.isMobile
 </script>
 
 <template>
-  <div class="sidebar flex flex-col h-full">
+  <div class="overflow-hidden flex flex-col h-full">
     <Logo :collapsed="collapsed" />
-    <el-scrollbar class="sidebar-scroll flex-1">
+    <el-scrollbar class="h-full flex-1">
       <el-menu :default-active="activeMenu" :collapse="collapsed" :collapse-transition="false" unique-opened router>
         <SidebarItem v-for="menu in menus" :key="menu.id" :item="menu" base-path="" />
       </el-menu>
     </el-scrollbar>
   </div>
 </template>
-
-<style scoped>
-.sidebar {
-  overflow: hidden;
-}
-
-.sidebar-scroll {
-  height: 100%;
-}
-</style>

@@ -27,53 +27,17 @@ const iconBg = computed(() => (/^#[0-9a-f]{6}$/i.test(props.color) ? `${props.co
 </script>
 
 <template>
-  <div class="stat-card">
+  <div
+    class="p-5 bg-surface border border-line-lighter rounded-[10px] transition duration-[250ms] hover:-translate-y-0.5 hover:border-transparent hover:shadow-[var(--el-box-shadow-light)]"
+  >
     <div class="flex items-center justify-between">
-      <div class="stat-info">
-        <p class="stat-title">{{ title }}</p>
-        <p class="stat-value">{{ displayValue }}</p>
+      <div>
+        <p class="text-[13px] text-muted">{{ title }}</p>
+        <p class="mt-2 text-[26px] font-bold tabular-nums text-ink">{{ displayValue }}</p>
       </div>
-      <div class="stat-icon flex-center" :style="{ backgroundColor: iconBg, color: color }">
+      <div class="w-12 h-12 rounded-xl flex-center" :style="{ backgroundColor: iconBg, color: color }">
         <el-icon :size="24"><component :is="icon" /></el-icon>
       </div>
     </div>
   </div>
 </template>
-
-<style scoped>
-.stat-card {
-  padding: 20px;
-  background-color: var(--el-bg-color);
-  border: 1px solid var(--el-border-color-lighter);
-  border-radius: 10px;
-  transition:
-    box-shadow 0.25s ease,
-    transform 0.25s ease,
-    border-color 0.25s ease;
-}
-
-.stat-card:hover {
-  border-color: transparent;
-  box-shadow: var(--el-box-shadow-light);
-  transform: translateY(-2px);
-}
-
-.stat-title {
-  font-size: 13px;
-  color: var(--el-text-color-secondary);
-}
-
-.stat-value {
-  margin-top: 8px;
-  font-size: 26px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  color: var(--el-text-color-primary);
-}
-
-.stat-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-}
-</style>

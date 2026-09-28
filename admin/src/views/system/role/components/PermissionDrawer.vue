@@ -78,7 +78,7 @@ async function handleSubmit(): Promise<void> {
 
 <template>
   <el-drawer :model-value="modelValue" :title="`分配权限 - ${roleName}`" size="420px" @close="handleClose">
-    <div v-loading="loading" class="permission-drawer">
+    <div v-loading="loading" class="h-full overflow-auto">
       <MenuTree ref="treeRef" :data="menuTree" :default-checked-keys="checkedKeys" />
     </div>
 
@@ -88,10 +88,3 @@ async function handleSubmit(): Promise<void> {
     </template>
   </el-drawer>
 </template>
-
-<style scoped>
-.permission-drawer {
-  height: 100%;
-  overflow: auto;
-}
-</style>
