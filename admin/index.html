@@ -5,8 +5,90 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" href="/favicon.ico" />
     <title>蓝云后台管理系统</title>
+    <!--
+      首屏加载动画样式：必须内联在这里（而非 src/styles 下的样式文件），
+      否则要等 JS 主包与样式主包加载完才会生效，刷新瞬间仍会白屏。
+    -->
+    <style>
+      #app-loading {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        align-items: center;
+        justify-content: center;
+        background-color: #f2f3f5;
+        transition: opacity 0.3s ease;
+      }
+
+      #app-loading.is-dark {
+        background-color: #141414;
+      }
+
+      /* 隐藏中：立即放行点击，并淡出 */
+      #app-loading.is-hidden {
+        pointer-events: none;
+        opacity: 0;
+      }
+
+      .app-loading__spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid rgb(64 158 255 / 20%);
+        border-top-color: var(--app-loading-accent, #409eff);
+        border-radius: 50%;
+        animation: app-loading-spin 0.8s linear infinite;
+      }
+
+      .app-loading__text {
+        margin: 0;
+        font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', Arial, sans-serif;
+        font-size: 14px;
+        color: #909399;
+      }
+
+      #app-loading.is-dark .app-loading__text {
+        color: #a3a6ad;
+      }
+
+      @keyframes app-loading-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
   </head>
   <body>
+    <!-- 首屏加载动画：随 HTML 同步渲染，早于 JS 主包；由 main.ts 在初始路由就绪后淡出并移除 -->
+    <div id="app-loading">
+      <div class="app-loading__spinner"></div>
+      <p class="app-loading__text">加载中…</p>
+    </div>
+    <script>
+      // 首屏动画的主题适配：样式主包加载前，按持久化配置决定亮/暗与主题色，避免暗黑主题下白屏闪烁。
+      // 持久化 key 见 store/modules/app.ts（ly_admin_app）与 hooks/useTheme.ts（ly_admin_theme）。
+      (function () {
+        try {
+          var el = document.getElementById('app-loading');
+          if (!el) {
+            return;
+          }
+          var raw = (localStorage.getItem('ly_admin_theme') || '').replace(/"/g, '').trim();
+          var dark = raw ? raw === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+          if (dark) {
+            el.classList.add('is-dark');
+          }
+          var appState = JSON.parse(localStorage.getItem('ly_admin_app') || '{}');
+          if (appState && appState.primaryColor) {
+            el.style.setProperty('--app-loading-accent', appState.primaryColor);
+          }
+        } catch (e) {
+          // localStorage 不可用等异常时按默认样式渲染，不影响启动
+        }
+      })();
+    </script>
     <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
