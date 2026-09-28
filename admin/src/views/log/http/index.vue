@@ -168,14 +168,18 @@ onMounted(() => {
       <el-table v-loading="loading" :data="list">
         <el-table-column type="expand">
           <template #default="{ row }">
-            <div class="http-log-detail">
-              <div class="detail-block">
-                <p class="detail-title">请求参数（Query + Body，敏感字段已脱敏）</p>
-                <pre>{{ formatParams(row as HttpLog) }}</pre>
+            <div class="py-2 px-4">
+              <div>
+                <p class="mt-2.5 mb-1 text-xs font-semibold text-muted">请求参数（Query + Body，敏感字段已脱敏）</p>
+                <pre
+                  class="max-h-60 m-0 overflow-auto whitespace-pre-wrap break-all rounded bg-fill-light px-3 py-2.5 font-mono text-xs leading-[1.6]"
+                  >{{ formatParams(row as HttpLog) }}</pre>
               </div>
-              <div v-if="row.resBody" class="detail-block">
-                <p class="detail-title">响应内容</p>
-                <pre>{{ row.resBody }}</pre>
+              <div v-if="row.resBody">
+                <p class="mt-2.5 mb-1 text-xs font-semibold text-muted">响应内容</p>
+                <pre
+                  class="max-h-60 m-0 overflow-auto whitespace-pre-wrap break-all rounded bg-fill-light px-3 py-2.5 font-mono text-xs leading-[1.6]"
+                  >{{ row.resBody }}</pre>
               </div>
             </div>
           </template>
@@ -200,31 +204,3 @@ onMounted(() => {
     </el-card>
   </div>
 </template>
-
-<style scoped>
-/* 展开行：请求参数 / 响应内容 详情 */
-.http-log-detail {
-  padding: 8px 16px;
-}
-
-.detail-title {
-  margin: 10px 0 4px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--el-text-color-secondary);
-}
-
-.detail-block pre {
-  max-height: 240px;
-  padding: 10px 12px;
-  margin: 0;
-  overflow: auto;
-  font-family: Consolas, Monaco, 'Courier New', monospace;
-  font-size: 12px;
-  line-height: 1.6;
-  word-break: break-all;
-  white-space: pre-wrap;
-  background-color: var(--el-fill-color-light);
-  border-radius: 4px;
-}
-</style>

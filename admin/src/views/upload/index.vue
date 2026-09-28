@@ -126,7 +126,7 @@ onMounted(() => {
         :before-upload="beforeUpload"
         :http-request="customUpload"
       >
-        <el-icon class="upload-icon"><BIconUpload /></el-icon>
+        <el-icon class="text-5xl text-faint"><BIconUpload /></el-icon>
         <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
         <template #tip>
           <div class="el-upload__tip">支持图片 / 文档 / 压缩包，单个文件不超过 10MB，单次最多 10 个</div>
@@ -146,7 +146,7 @@ onMounted(() => {
           <template #default="{ row }">
             <el-image
               v-if="row.mimeType?.startsWith('image/')"
-              class="file-thumb file-thumb--image"
+              class="block w-12 h-12 overflow-hidden border border-line-lighter rounded-md cursor-zoom-in"
               :src="thumbUrl(row.fileUrl)"
               :preview-src-list="[row.fileUrl]"
               preview-teleported
@@ -154,12 +154,15 @@ onMounted(() => {
               lazy
             >
               <template #error>
-                <div class="file-thumb-placeholder">
+                <div class="w-full h-full flex-center text-[22px] text-muted bg-fill-light rounded-md">
                   <el-icon><BIconFileEarmarkImage /></el-icon>
                 </div>
               </template>
             </el-image>
-            <div v-else class="file-thumb-placeholder">
+            <div
+              v-else
+              class="w-12 h-12 flex-center text-[22px] text-muted bg-fill-light border border-line-lighter rounded-md"
+            >
               <el-icon><BIconFileEarmark /></el-icon>
             </div>
           </template>
@@ -207,44 +210,3 @@ onMounted(() => {
     </el-card>
   </div>
 </template>
-
-<style scoped>
-.upload-icon {
-  font-size: 48px;
-  color: var(--el-text-color-placeholder);
-}
-
-.file-thumb {
-  display: block;
-  width: 48px;
-  height: 48px;
-  overflow: hidden;
-  border: 1px solid var(--el-border-color-lighter);
-  border-radius: 6px;
-}
-
-.file-thumb--image {
-  cursor: zoom-in;
-}
-
-/* 错误兜底态：占位需填满外层 48×48 容器且不再自带边框（边框由 .file-thumb 提供），
-   否则内层 48×48 + 1px 边框会溢出 2px 被 overflow 裁掉，导致四边边框不对称 */
-.file-thumb .file-thumb-placeholder {
-  width: 100%;
-  height: 100%;
-  border: 0;
-}
-
-.file-thumb-placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
-  font-size: 22px;
-  color: var(--el-text-color-secondary);
-  background-color: var(--el-fill-color-light);
-  border: 1px solid var(--el-border-color-lighter);
-  border-radius: 6px;
-}
-</style>

@@ -310,9 +310,9 @@ onMounted(() => {
       </el-form-item>
     </SearchForm>
 
-    <div class="gen-body flex flex-col gap-3 lg:flex-row">
+    <div class="flex flex-col gap-3 lg:flex-row">
       <!-- 左：数据表列表 -->
-      <el-card shadow="never" class="gen-table-card">
+      <el-card shadow="never" class="w-full lg:w-[480px] lg:flex-none">
         <div class="flex flex-wrap items-center justify-between gap-y-2 mb-3">
           <span class="text-[15px] font-semibold text-ink">数据表（{{ filteredTables.length }}）</span>
           <el-button :icon="BIconArrowClockwise" @click="loadTables">刷新</el-button>
@@ -332,13 +332,13 @@ onMounted(() => {
             <template #default="{ row }">{{ formatDateTime(row.createTime) }}</template>
           </el-table-column>
           <template #empty>
-            <span class="gen-empty-tip">暂无数据表</span>
+            <span class="text-[13px] text-muted">暂无数据表</span>
           </template>
         </el-table>
       </el-card>
 
       <!-- 右：生成选项 + 字段列表 -->
-      <el-card shadow="never" class="gen-detail-card">
+      <el-card shadow="never" class="flex-1 min-w-0">
         <div class="flex flex-wrap items-center justify-between gap-y-2 mb-3">
           <span class="text-[15px] font-semibold text-ink">
             生成配置
@@ -379,7 +379,7 @@ onMounted(() => {
           </div>
         </div>
 
-        <el-form :inline="true" class="gen-config-form" @submit.prevent>
+        <el-form :inline="true" class="mb-1" @submit.prevent>
           <el-form-item label="模块名">
             <el-input
               v-model="config.moduleName"
@@ -444,7 +444,7 @@ onMounted(() => {
             <el-empty v-if="!currentTable" description="请选择左侧数据表以查看字段" :image-size="80">
               <el-icon><BIconTable /></el-icon>
             </el-empty>
-            <span v-else class="gen-empty-tip">该表暂无字段</span>
+            <span v-else class="text-[13px] text-muted">该表暂无字段</span>
           </template>
         </el-table>
       </el-card>
@@ -491,37 +491,8 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.gen-body {
-  align-items: stretch;
-}
-
-.gen-table-card {
-  width: 100%;
-}
-
-/* 宽屏：左栏固定 480px 与右栏并排；窄屏由 flex-col 自动堆叠为整行宽 */
-@media (width >= 1024px) {
-  .gen-table-card {
-    flex: none;
-    width: 480px;
-  }
-}
-
-.gen-detail-card {
-  flex: 1;
-  min-width: 0;
-}
-
-.gen-config-form {
-  margin-bottom: 4px;
-}
-
-.gen-empty-tip {
-  font-size: 13px;
-  color: var(--el-text-color-secondary);
-}
-
-/* 预览弹窗：左侧文件列表 + 右侧代码 */
+/* 预览弹窗：左侧文件列表 + 右侧代码。
+   复杂嵌套 flex 布局 + 多处响应式断点，Tailwind 表达收益低，按规范 §3.5 保留 scoped 样式。 */
 .gen-preview {
   display: flex;
   height: 60vh;
