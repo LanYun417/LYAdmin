@@ -22,10 +22,11 @@
 
 **迁移前置改造（重要）**：`tailwind.config.js` 目前只映射了 `primary`，需补映射 Element Plus 的语义色变量（文字 / 背景 / 边框）。否则颜色要写成 `text-[color:var(--el-text-color-secondary)]`，**可读性反而低于原 CSS**，迁移得不偿失。
 
-> **执行状态（2026-09-28）**：**P0、P1 均已完成并推送**。
+> **执行状态（2026-09-28）**：**P0、P1、P2 均已完成并推送**。
 > P0：`d43a793`（tailwind 语义色映射）、`eb92f32`（消除 `.table-title` 重复、删除冗余工具类、迁移图表容器样式）。
 > P1：`f7554a4`（补齐 base 层 border 重置）、`33c89e1`（13 个 A 类组件样式迁移为 Tailwind，+57/−348）。
-> **P2 待办**（见 §5）；§2 / §3 的审查结论保留，作为 P2 的执行依据。
+> P2：`049332e`（抽取 `ErrorPage` 公共组件）、`23da19b`（同步自动生成声明）、`37a9601`（gen/upload/http 静态样式迁移，+26/−117）。
+> **待决策**：`IconPicker` 经复核为**全项目零调用的死代码**，原「合并」建议应改为「删除」；因涉及删除文件，留待确认后再动（见 §3）。
 
 ---
 
@@ -101,14 +102,14 @@
 
 ## 3. 重复代码治理（收益最高的低垂果实）
 
-| 重复项                                | 出现位置                                                         | 建议                                                                                                                                           |
-| ------------------------------------- | ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.table-title`（7 份逐字相同）        | user / menu / role / log-login / log-operation / log-http 与 gen | **二选一**：① 统一改用 Tailwind `text-[15px] font-semibold text-ink`；② 抽为 `index.css` 的 `@layer components` 单一类（推荐 ①，减少全局命名） |
-| 3 个错误页                            | `views/error/{403,404,500}.vue`                                  | 抽为公共组件（如 `components/ErrorPage.vue`，用 props 传状态码与颜色），删除 3 份样式                                                          |
-| `IconSelect` / `IconPicker`           | `views/system/menu/components/`、`components/`                   | 二者逻辑与样式高度重复，建议合并为一个公共组件                                                                                                 |
-| `.chart { width:100%; height:300px }` | 3 个图表组件                                                     | 改用 `w-full h-[300px]`，删除样式块                                                                                                            |
-| `.text-ellipsis` / `.full-height`     | `index.css` 定义，**全项目零引用（死代码）**                     | 与 Tailwind `truncate` / `h-full` 等价，**建议废弃并全局替换**                                                                                 |
-| `.flex-center`                        | `index.css` 定义                                                 | Tailwind 无单类等价，可保留（或改 `@layer components` 明确其为项目级复用类）                                                                   |
+| 重复项                                | 出现位置                                                         | 建议                                                                                                                                                                                                               |
+| ------------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `.table-title`（7 份逐字相同）        | user / menu / role / log-login / log-operation / log-http 与 gen | **二选一**：① 统一改用 Tailwind `text-[15px] font-semibold text-ink`；② 抽为 `index.css` 的 `@layer components` 单一类（推荐 ①，减少全局命名）                                                                     |
+| 3 个错误页                            | `views/error/{403,404,500}.vue`                                  | 抽为公共组件（如 `components/ErrorPage.vue`，用 props 传状态码与颜色），删除 3 份样式                                                                                                                              |
+| `IconSelect` / `IconPicker`           | `views/system/menu/components/`、`components/`                   | **复核发现：`IconPicker` 全项目零调用（死代码，仅被自动注册）**，而 `IconSelect` 由 `MenuForm` 使用。建议**直接删除 `IconPicker`**（约 130 行）；若确需保留其 popover 交互，则应抽出公共图标栅格复用（**待决策**） |
+| `.chart { width:100%; height:300px }` | 3 个图表组件                                                     | 改用 `w-full h-[300px]`，删除样式块                                                                                                                                                                                |
+| `.text-ellipsis` / `.full-height`     | `index.css` 定义，**全项目零引用（死代码）**                     | 与 Tailwind `truncate` / `h-full` 等价，**建议废弃并全局替换**                                                                                                                                                     |
+| `.flex-center`                        | `index.css` 定义                                                 | Tailwind 无单类等价，可保留（或改 `@layer components` 明确其为项目级复用类）                                                                                                                                       |
 
 ---
 
@@ -156,7 +157,7 @@ theme: {
 | -------------- | ------------------------------------------------------------------------------------------------------------------- | ---- | ------------------------ |
 | **P0（先做）** | ① 扩展 `tailwind.config` 色映射；② 废弃 `.text-ellipsis`/`.full-height`；③ 抽取 `.table-title`；④ 3 个图表 `.chart` | 极低 | 消除重复、建立迁移词汇表 |
 | **P1（批量）** | A 类第 4~16、23 项：error / home / StatCard / Navbar / Sidebar / Logo / IconPicker / IconSelect / PermissionDrawer  | 低   | 覆盖绝大多数「可迁尽迁」 |
-| **P2（谨慎）** | B 类的 25~27（gen / upload / http-detail）；错误页组件化、IconPicker 合并                                           | 中   | 结构性改善               |
+| **P2（谨慎）** | B 类的 25~27（gen / upload / http-detail）；错误页组件化（✅ 已完成）、IconPicker 合并（⏸ 待决策）                  | 中   | 结构性改善               |
 | **明确不做**   | `login/index.vue`、`element.scss`、所有过渡类名、主题过渡、`@layer base` 重置、layout 抽屉动画                      | —    | 这些保留 CSS 更规范      |
 
 ---
