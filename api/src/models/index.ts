@@ -13,6 +13,7 @@ import { OperationLog } from './OperationLog';
 import { Role } from './Role';
 import { RoleDept } from './RoleDept';
 import { RoleMenu } from './RoleMenu';
+import { SysConfig } from './SysConfig';
 import { User } from './User';
 import { UserRole } from './UserRole';
 
@@ -22,6 +23,7 @@ export { Menu } from './Menu';
 export { UserRole } from './UserRole';
 export { RoleMenu } from './RoleMenu';
 export { RoleDept } from './RoleDept';
+export { SysConfig } from './SysConfig';
 export { LoginLog } from './LoginLog';
 export { OperationLog } from './OperationLog';
 export { File } from './File';
@@ -45,4 +47,5 @@ export const models = [
   DictItem,
   Dept,
   RoleDept,
+  SysConfig,
 ];

@@ -4,6 +4,7 @@
  */
 import { Router } from 'express';
 import authRoutes from './auth.routes';
+import configRoutes from './config.routes';
 import dashboardRoutes from './dashboard.routes';
 import deptRoutes from './dept.routes';
 import dictRoutes from './dict.routes';
@@ -23,6 +24,7 @@ router.use('/roles', roleRoutes);
 router.use('/menus', menuRoutes);
 router.use('/depts', deptRoutes);
 router.use('/dict', dictRoutes);
+router.use('/configs', configRoutes);
 router.use('/logs', logRoutes);
 router.use('/files', fileRoutes);
 router.use('/dashboard', dashboardRoutes);

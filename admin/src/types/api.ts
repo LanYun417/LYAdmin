@@ -408,6 +408,42 @@ export interface DictDataItem {
   value: string;
 }
 
+/* ------------------------------- 参数 ------------------------------- */
+
+/** 系统参数 */
+export interface SysConfigItem {
+  id: number;
+  configName: string;
+  /** 参数键名（业务引用键，创建后不可修改） */
+  configKey: string;
+  configValue: string;
+  /** 是否内置：1 内置（禁止删除）/ 0 自定义 */
+  systemFlag: number;
+  remark: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+/** 参数分页查询参数 */
+export interface ConfigQuery extends PageQuery {
+  configName?: string;
+  configKey?: string;
+}
+
+/** 参数新增 / 编辑参数（编辑时不提交 configKey） */
+export interface ConfigUpsert {
+  configName: string;
+  configKey?: string;
+  configValue: string;
+  remark?: string;
+}
+
+/** 业务侧按键取参（键值对） */
+export interface ConfigData {
+  configKey: string;
+  configValue: string;
+}
+
 /* ------------------------------- 认证 ------------------------------- */
 
 /** 登录参数 */

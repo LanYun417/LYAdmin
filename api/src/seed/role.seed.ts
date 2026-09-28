@@ -55,6 +55,12 @@ const ROLE_SEEDS: RoleSeed[] = [
       'system:dept:add',
       'system:dept:edit',
       'system:dept:remove',
+      // 参数管理：admin 可维护系统参数
+      'system:config',
+      'system:config:query',
+      'system:config:add',
+      'system:config:edit',
+      'system:config:remove',
       'log',
       'log:login',
       'log:login:export',
@@ -96,6 +102,8 @@ const ROLE_SEEDS: RoleSeed[] = [
       'system:dict',
       // 部门管理：只读角色仅授予菜单节点（即只读的 system:dept:list），不含任何写权限码
       'system:dept',
+      // 参数管理：只读角色仅授予菜单节点（即只读的 system:config:list），不含任何写权限码
+      'system:config',
       'log',
       'log:login',
       'log:operation',

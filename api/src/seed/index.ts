@@ -5,6 +5,7 @@
 import { sequelize } from '@/config/database';
 import { DataTypes } from 'sequelize';
 import { connectDatabase, syncDatabase } from '@/config/database';
+import { seedConfig } from './config.seed';
 import { seedDict } from './dict.seed';
 import { seedMenu } from './menu.seed';
 import { seedRole } from './role.seed';
@@ -55,6 +56,7 @@ export async function runSeed(): Promise<void> {
   await seedRole(menuIdMap);
   await seedUser();
   await seedDict();
+  await seedConfig();
   await ensureUserDeptColumn();
   await ensureRoleDataScopeColumn();
   console.log('[Seed] 种子数据初始化完成');
