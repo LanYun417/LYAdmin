@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue';
+import { useMediaQuery } from '@vueuse/core';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import type { AxiosError } from 'axios';
 import { BIconArrowClockwise, BIconCodeSlash, BIconDownload, BIconMagic, BIconTable } from 'bootstrap-icons-vue';
@@ -16,6 +17,18 @@ import type { GenColumn, GenConfig, GenCreateResult, GenFile, GenTable } from '@
 import SearchForm from '@/components/SearchForm/index.vue';
 
 defineOptions({ name: 'ToolGen' });
+
+/** 窄屏（< 1024px）：左右两栏改为上下堆叠，避免右侧内容被挤压 */
+const isNarrowScreen = useMediaQuery('(max-width: 1023px)');
+/** 移动端（< 768px）：弹窗等进一步放宽 */
+const isMobileScreen = useMediaQuery('(max-width: 767px)');
+
+/** 数据表列表高度：窄屏降低，避免单页过长 */
+const tableHeight = computed<number>(() => (isNarrowScreen.value ? 400 : 560));
+/** 字段列表高度：同上 */
+const columnHeight = computed<number>(() => (isNarrowScreen.value ? 400 : 440));
+/** 预览弹窗宽度：移动端放宽到 94% */
+const previewWidth = computed<string>(() => (isMobileScreen.value ? '94%' : '70%'));
 
 /** 表列表加载态 */
 const tableLoading = ref(false);
@@ -297,10 +310,10 @@ onMounted(() => {
       </el-form-item>
     </SearchForm>
 
-    <div class="gen-body flex items-start gap-3">
+    <div class="gen-body flex flex-col gap-3 lg:flex-row">
       <!-- 左：数据表列表 -->
       <el-card shadow="never" class="gen-table-card">
-        <div class="flex items-center justify-between mb-3">
+        <div class="flex flex-wrap items-center justify-between gap-y-2 mb-3">
           <span class="table-title">数据表（{{ filteredTables.length }}）</span>
           <el-button :icon="BIconArrowClockwise" @click="loadTables">刷新</el-button>
         </div>
@@ -309,7 +322,7 @@ onMounted(() => {
           v-loading="tableLoading"
           :data="filteredTables"
           highlight-current-row
-          height="560"
+          :height="tableHeight"
           @current-change="handleCurrentChange"
         >
           <el-table-column prop="tableName" label="表名" min-width="150" show-overflow-tooltip />
@@ -326,12 +339,12 @@ onMounted(() => {
 
       <!-- 右：生成选项 + 字段列表 -->
       <el-card shadow="never" class="gen-detail-card">
-        <div class="flex items-center justify-between mb-3">
+        <div class="flex flex-wrap items-center justify-between gap-y-2 mb-3">
           <span class="table-title">
             生成配置
             <el-tag v-if="currentTable" size="small" type="info" class="ml-2">{{ currentTable.tableName }}</el-tag>
           </span>
-          <div class="flex items-center gap-2">
+          <div class="flex flex-wrap items-center gap-2">
             <el-button
               v-permission="'tool:gen:preview'"
               type="primary"
@@ -404,7 +417,7 @@ onMounted(() => {
           title="请先在左侧选择数据表，并填写模块名与业务名（作者可留空）"
         />
 
-        <el-table v-loading="columnLoading" :data="columns" height="440">
+        <el-table v-loading="columnLoading" :data="columns" :height="columnHeight">
           <el-table-column prop="columnName" label="列名" min-width="140" show-overflow-tooltip />
           <el-table-column prop="fieldName" label="字段名" min-width="140" show-overflow-tooltip />
           <el-table-column prop="columnType" label="列类型" min-width="130" show-overflow-tooltip />
@@ -441,7 +454,7 @@ onMounted(() => {
     <el-dialog
       v-model="previewVisible"
       :title="`代码预览 - ${currentTable?.tableName ?? ''}`"
-      width="70%"
+      :width="previewWidth"
       top="6vh"
       destroy-on-close
     >
@@ -489,8 +502,15 @@ onMounted(() => {
 }
 
 .gen-table-card {
-  flex: none;
-  width: 480px;
+  width: 100%;
+}
+
+/* 宽屏：左栏固定 480px 与右栏并排；窄屏由 flex-col 自动堆叠为整行宽 */
+@media (width >= 1024px) {
+  .gen-table-card {
+    flex: none;
+    width: 480px;
+  }
 }
 
 .gen-detail-card {
@@ -528,6 +548,25 @@ onMounted(() => {
   flex: 1;
   flex-direction: column;
   min-width: 0;
+}
+
+/* 移动端：预览弹窗改为上下布局（文件列表在上、代码在下），避免横向被挤压 */
+@media (width <= 767px) {
+  .gen-preview {
+    flex-direction: column;
+    height: 68vh;
+  }
+
+  .gen-preview-files {
+    width: 100%;
+    height: 40%;
+    border-right: none;
+    border-bottom: 1px solid var(--el-border-color-light);
+  }
+
+  .gen-preview-code {
+    min-height: 0;
+  }
 }
 
 .gen-preview-title {
