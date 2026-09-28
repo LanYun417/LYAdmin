@@ -3,8 +3,9 @@
  * 模块职责：按 menu → role → user 顺序执行种子，供 server 启动或 `npm run seed` 调用。
  */
 import { sequelize } from '@/config/database';
-import { DataTypes } from 'sequelize';
+import { DataTypes, Op } from 'sequelize';
 import { connectDatabase, syncDatabase } from '@/config/database';
+import { SysConfig } from '@/models';
 import { seedConfig } from './config.seed';
 import { seedDict } from './dict.seed';
 import { seedMenu } from './menu.seed';
@@ -116,6 +117,23 @@ async function ensureHttpLogOperatorColumns(): Promise<void> {
 }
 
 /**
+ * 清理历史遗留的废弃系统参数。
+ * 背景：早期实验版曾把 `sys.company.name`（参数名称"公司名称"）写入种子并入库存量数据；
+ * 后续方案改为「顶级部门即公司」，已将该项从 `CONFIG_SEEDS` 移除。由于种子只增不删，
+ * 既有库中已插入的行不会自动消失，导致参数管理页面仍列出"公司名称"。此处按 configKey
+ * 幂等删除，任何环境重启服务即自愈，且不影响其他参数。
+ */
+async function cleanupObsoleteConfigs(): Promise<void> {
+  const OBSOLETE_CONFIG_KEYS = ['sys.company.name'];
+  const deleted = await SysConfig.destroy({
+    where: { configKey: { [Op.in]: OBSOLETE_CONFIG_KEYS } },
+  });
+  if (deleted > 0) {
+    console.log(`[Seed] 已清理废弃系统参数 ${deleted} 项：${OBSOLETE_CONFIG_KEYS.join(', ')}`);
+  }
+}
+
+/**
  * 执行全部种子（幂等）。
  * 注意：字段迁移必须先于种子执行 —— 模型已声明新列（dept_id / data_scope），
  * 种子对 sys_user / sys_role 的任何查询与写入都会引用这些列；既有库首次启动时
@@ -125,6 +143,7 @@ export async function runSeed(): Promise<void> {
   await ensureUserDeptColumn();
   await ensureRoleDataScopeColumn();
   await ensureHttpLogOperatorColumns();
+  await cleanupObsoleteConfigs();
 
   const menuIdMap = await seedMenu();
   await seedRole(menuIdMap);
