@@ -6,6 +6,7 @@ import { deleteFileApi, checkFileApi, getFileListApi, uploadFilesApi } from '@/a
 import { sha256Hex } from '@/utils/hash';
 import { formatFileSize, formatDateTime } from '@/utils/format';
 import type { FileItem } from '@/types/api';
+import Pagination from '@/components/Pagination/index.vue';
 
 defineOptions({ name: 'Upload' });
 
@@ -184,29 +185,15 @@ onMounted(() => {
           </template>
         </el-table-column>
       </el-table>
-      <div class="flex justify-end mt-4">
-        <el-pagination
-          :total="total"
-          :current-page="query.page"
-          :page-size="query.pageSize"
-          :page-sizes="[10, 20, 50]"
-          layout="total, sizes, prev, pager, next"
-          background
-          @size-change="
-            (s: number) => {
-              query.pageSize = s;
-              query.page = 1;
-              handlePageChange();
-            }
-          "
-          @current-change="
-            (p: number) => {
-              query.page = p;
-              handlePageChange();
-            }
-          "
-        />
-      </div>
+      <Pagination
+        v-model:current-page="query.page"
+        v-model:page-size="query.pageSize"
+        :total="total"
+        :page-sizes="[10, 20, 50]"
+        layout="total, sizes, prev, pager, next"
+        @size-change="handlePageChange"
+        @current-change="handlePageChange"
+      />
     </el-card>
   </div>
 </template>

@@ -253,7 +253,13 @@ onMounted(() => {
         </el-table-column>
       </el-table>
 
-      <Pagination v-model:page="query.page" v-model:page-size="query.pageSize" :total="total" @change="loadList" />
+      <Pagination
+        v-model:current-page="query.page"
+        v-model:page-size="query.pageSize"
+        :total="total"
+        @size-change="loadList"
+        @current-change="loadList"
+      />
     </el-card>
 
     <UserForm v-model="formVisible" :user-id="editId" :role-options="roleOptions" @success="handleFormSuccess" />

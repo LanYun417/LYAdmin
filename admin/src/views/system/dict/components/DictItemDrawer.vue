@@ -250,7 +250,13 @@ watch(
       </el-table-column>
     </el-table>
 
-    <Pagination v-model:page="query.page" v-model:page-size="query.pageSize" :total="total" @change="loadList" />
+    <Pagination
+      v-model:current-page="query.page"
+      v-model:page-size="query.pageSize"
+      :total="total"
+      @size-change="loadList"
+      @current-change="loadList"
+    />
 
     <BasicDialog
       v-model="itemFormVisible"
