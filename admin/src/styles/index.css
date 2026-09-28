@@ -83,3 +83,23 @@
 #nprogress .bar {
   background: var(--el-color-primary) !important;
 }
+
+/* ============================================================
+ * 主题（亮/暗）切换过渡
+ * 仅在切换瞬间由 useTheme 给 <html> 挂上 .theme-transition，动画结束后移除，
+ * 因此不会常驻、不影响组件常规交互（hover / 展开 / 折叠等）。
+ * 双写类名提升优先级（0,2,1），压过组件 scoped 样式自带的 transition，
+ * 从而避免使用 !important（与 element.scss 中 .el-table.el-table 同法）。
+ * ========================================================== */
+html.theme-transition.theme-transition,
+html.theme-transition.theme-transition *,
+html.theme-transition.theme-transition *::before,
+html.theme-transition.theme-transition *::after {
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease,
+    color 0.3s ease,
+    fill 0.3s ease,
+    stroke 0.3s ease,
+    box-shadow 0.3s ease;
+}
