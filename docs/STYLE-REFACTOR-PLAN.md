@@ -170,6 +170,8 @@ theme: {
 4. **复杂视觉**：`radial-gradient` / `mask-image` / `color-mix()` / `filter` / 复杂 `@media`。
 5. **结构性机制**：`@layer base` 重置、主题切换过渡（`html.theme-transition`）。
 6. **后代选择器**（`.a .b`）：Tailwind 需 `[&_.b]:` 语法，可读性下降，**建议保留 CSS**。
+7. **全局样式命名空间钩子类**（如 `.sidebar`）：`element.scss` 中 `.sidebar .el-menu-item…` 等规则依赖模板上的该钩子类，**迁移时绝不可删除**。
+   > ⚠️ 真实事故：P1 迁移把 `Sidebar/index.vue` 的 `class="sidebar"` 一并删了，导致侧边栏菜单**高亮 / 悬停 / 左侧竖条指示器全部失效**（已由 `a55126e` 修复）。迁移前请先确认待删类名是否被全局样式或 JS 选择器引用。
 
 > ⚠️ **本项目特有坑（P1 已修复）**：关闭 Tailwind `preflight` 后，框架**不会**重置 `border-style` / `border-width`。若直接写 `border-b border-line-light`，边框会因 `border-style: none` 而**不可见**；若再补 `border-solid`，其余未指定宽度的边会取初始值 `medium`（3px）而**多出边框**。已在这个项目的 `styles/index.css` 的 `@layer base` 中补齐 `border-style: solid; border-width: 0`（提交 `f7554a4`），此后 Tailwind 边框类方可正常使用。
 
