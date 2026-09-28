@@ -127,6 +127,7 @@ onBeforeUnmount(() => {
           :effect="isActive(view) ? 'dark' : 'light'"
           :closable="!view.affix"
           :disable-transitions="true"
+          round
           @click="toView(view)"
           @close="closeView(view)"
           @contextmenu="openContextMenu($event, view)"
@@ -165,8 +166,6 @@ onBeforeUnmount(() => {
 }
 
 .tags-item {
-  height: 26px;
-  font-size: 12px;
   cursor: pointer;
   border-radius: 3px;
   box-shadow: var(--el-box-shadow-lighter);
