@@ -8,6 +8,10 @@ dist-ssr/
 build/
 *.local
 
+# 例外：Vditor 自托管静态资源必须入库 —— 否则他人 clone 后构建产物中缺少该目录，
+# 编辑器将无法离线渲染（emoji / 内容主题 / 代码高亮 / KaTeX / mermaid）。
+!admin/public/vditor/dist/
+
 # Logs
 logs/
 *.log
