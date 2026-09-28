@@ -107,7 +107,7 @@ const MENU_TREE: MenuSeedNode[] = [
         menuType: MenuType.MENU,
         path: '/system/role',
         component: 'system/role/index',
-        icon: 'BIconPersonFill',
+        icon: 'BIconShieldCheck',
         permission: 'system:role:list',
         sort: 2,
         visible: Status.ENABLED,
