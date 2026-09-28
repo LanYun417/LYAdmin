@@ -45,7 +45,7 @@ const { width: windowWidth } = useWindowSize();
 /** 响应式宽度：小屏自动压缩 */
 const responsiveWidth = computed(() => {
   if (windowWidth.value <= 768) {
-    return '92%';
+    return '98%';
   }
   return typeof props.width === 'number' ? `${props.width}px` : props.width;
 });
