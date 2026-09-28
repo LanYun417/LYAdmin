@@ -13,7 +13,7 @@ defineOptions({ name: 'Upload' });
 const loading = ref(false);
 const fileList = ref<FileItem[]>([]);
 const total = ref(0);
-const query = reactive({ page: 1, pageSize: 10, originName: '' });
+const query = reactive({ page: 1, pageSize: 20, originName: '' });
 
 /** 允许的文件类型 */
 const ACCEPT_TYPES = '.jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip';

@@ -31,7 +31,7 @@ const query = reactive({
   username: '',
   status: undefined as number | undefined,
   page: 1,
-  pageSize: 10,
+  pageSize: 20,
 });
 
 const formVisible = ref(false);

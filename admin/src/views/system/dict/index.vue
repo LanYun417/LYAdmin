@@ -26,7 +26,7 @@ const query = reactive({
   dictType: '',
   status: undefined as number | undefined,
   page: 1,
-  pageSize: 10,
+  pageSize: 20,
 });
 
 /** 类型表单弹窗 */

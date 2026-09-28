@@ -19,7 +19,7 @@ const query = reactive({
   method: '',
   statusCode: undefined as number | undefined,
   page: 1,
-  pageSize: 10,
+  pageSize: 20,
 });
 
 /** 加载 HTTP 日志 */

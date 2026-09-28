@@ -22,7 +22,7 @@ const query = reactive({
   username: '',
   result: undefined as number | undefined,
   page: 1,
-  pageSize: 10,
+  pageSize: 20,
 });
 
 /** 加载操作日志 */

@@ -35,7 +35,7 @@ const emit = defineEmits<{
 const loading = ref(false);
 const list = ref<DictItem[]>([]);
 const total = ref(0);
-const query = reactive({ dictLabel: '', page: 1, pageSize: 10 });
+const query = reactive({ dictLabel: '', page: 1, pageSize: 20 });
 
 /** 状态选项：来自字典管理中的「通用状态」（sys_common_status） */
 const { statusOptions } = useStatusDict();
