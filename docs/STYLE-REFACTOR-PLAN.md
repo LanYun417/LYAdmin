@@ -22,7 +22,10 @@
 
 **迁移前置改造（重要）**：`tailwind.config.js` 目前只映射了 `primary`，需补映射 Element Plus 的语义色变量（文字 / 背景 / 边框）。否则颜色要写成 `text-[color:var(--el-text-color-secondary)]`，**可读性反而低于原 CSS**，迁移得不偿失。
 
-> **执行状态（2026-09-28）**：**P0 批次已完成并推送** —— `d43a793`（tailwind 语义色映射）、`eb92f32`（消除 `.table-title` 重复、删除冗余工具类、迁移图表容器样式）。§5 的 P1 / P2 待办；§2 / §3 保留审查结论，作为 P1 的执行依据。
+> **执行状态（2026-09-28）**：**P0、P1 均已完成并推送**。
+> P0：`d43a793`（tailwind 语义色映射）、`eb92f32`（消除 `.table-title` 重复、删除冗余工具类、迁移图表容器样式）。
+> P1：`f7554a4`（补齐 base 层 border 重置）、`33c89e1`（13 个 A 类组件样式迁移为 Tailwind，+57/−348）。
+> **P2 待办**（见 §5）；§2 / §3 的审查结论保留，作为 P2 的执行依据。
 
 ---
 
@@ -166,6 +169,8 @@ theme: {
 4. **复杂视觉**：`radial-gradient` / `mask-image` / `color-mix()` / `filter` / 复杂 `@media`。
 5. **结构性机制**：`@layer base` 重置、主题切换过渡（`html.theme-transition`）。
 6. **后代选择器**（`.a .b`）：Tailwind 需 `[&_.b]:` 语法，可读性下降，**建议保留 CSS**。
+
+> ⚠️ **本项目特有坑（P1 已修复）**：关闭 Tailwind `preflight` 后，框架**不会**重置 `border-style` / `border-width`。若直接写 `border-b border-line-light`，边框会因 `border-style: none` 而**不可见**；若再补 `border-solid`，其余未指定宽度的边会取初始值 `medium`（3px）而**多出边框**。已在这个项目的 `styles/index.css` 的 `@layer base` 中补齐 `border-style: solid; border-width: 0`（提交 `f7554a4`），此后 Tailwind 边框类方可正常使用。
 
 ## 7. 迁移验收清单（每个批次）
 
