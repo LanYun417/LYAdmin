@@ -181,3 +181,5 @@ theme: {
 - `cd admin && npx vue-tsc --noEmit`、`npx vite build`
 - **人工目视回归**：亮/暗两种主题 + 窄屏（<768px）/ 宽屏；本项目**零自动化测试**，改动后必须手点核心页面。
 - 注意：迁移 Tailwind 后，若类名由动态字符串拼接，将被 `content` 扫描遗漏 → **禁止动态拼 Tailwind 类名**，改用完整类名映射表。
+- ⚠️ **改了 `tailwind.config.js` 必须重启 dev server**：Tailwind 配置不会热更新，否则新增的颜色 / 阴影类不会生成。典型症状：卡片丢背景色、边框变成**黑线**（`border-color` 回退到初始值 `currentColor`）。改配置后请 `Ctrl+C` 重启 `npm run dev`。
+- ⚠️ **阴影必须走 `theme.boxShadow` 定义，不要写 `shadow-[var(--x)]`**：Tailwind 会把 `var()` 判定为「阴影颜色」，只生成 `--tw-shadow-color` 而不产生 `box-shadow` 声明，阴影会完全失效（已改为 `hover:shadow-el-light`）。
