@@ -3,7 +3,7 @@
  * 模块职责：部门 CRUD、树构建（唯一操作 Dept 的层）。
  */
 import { Op, type WhereOptions } from 'sequelize';
-import { Dept } from '@/models';
+import { Dept, RoleDept, User } from '@/models';
 import { buildTree } from '@/utils/tree';
 import { AppError } from '@/utils/response';
 import type { DeptNode } from '@/types';
@@ -146,7 +146,7 @@ async function collectDescendantIds(id: number): Promise<number[]> {
   return result;
 }
 
-/** 删除部门（存在子级时拒绝）。 */
+/** 删除部门（存在子级或部门下仍有用户时拒绝；连带清理角色的「自定义部门」授权）。 */
 export async function deleteDept(id: number): Promise<void> {
   const dept = await Dept.findByPk(id);
   if (!dept) {
@@ -156,5 +156,12 @@ export async function deleteDept(id: number): Promise<void> {
   if (childCount > 0) {
     throw AppError.conflict('存在子部门，请先删除子部门');
   }
+  const userCount = await User.count({ where: { deptId: id } });
+  if (userCount > 0) {
+    throw AppError.conflict('该部门下存在用户，请先转移用户再删除');
+  }
+  // sys_role_dept 含真实外键约束（与 sys_role_menu 同一模式），删除部门前必须先清理授权，
+  // 否则删除会触发数据库级外键错误
+  await RoleDept.destroy({ where: { deptId: id } });
   await dept.destroy();
 }

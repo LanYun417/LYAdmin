@@ -9,6 +9,7 @@
     "build": "tsc -p tsconfig.json && node scripts/rewrite-alias.mjs",
     "start": "node dist/server.js",
     "seed": "ts-node -r tsconfig-paths/register src/seed/index.ts",
+    "check:models": "ts-node -r tsconfig-paths/register src/scripts/check-models.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

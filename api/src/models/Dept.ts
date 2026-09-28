@@ -38,7 +38,9 @@ export class Dept extends Model {
   @Column({ type: DataType.STRING(100), allowNull: true, comment: '邮箱' })
   declare email: string | null;
 
-  @HasMany(() => User)
+  // 显式指定外键并关闭数据库级约束（与 Menu 自关联同一模式）：
+  // 不用 @ForeignKey 装饰器建真实外键，避免与「deptId=0 表示未分配」冲突（0 不在 sys_dept 中会被约束拒绝）
+  @HasMany(() => User, { foreignKey: 'deptId', constraints: false })
   declare users: User[];
 
   @BelongsTo(() => Dept, { foreignKey: 'parentId', constraints: false })

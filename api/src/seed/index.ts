@@ -50,15 +50,19 @@ async function ensureRoleDataScopeColumn(): Promise<void> {
 
 /**
  * 执行全部种子（幂等）。
+ * 注意：字段迁移必须先于种子执行 —— 模型已声明新列（dept_id / data_scope），
+ * 种子对 sys_user / sys_role 的任何查询与写入都会引用这些列；既有库首次启动时
+ * 若先跑种子会直接报 `Unknown column`，因此迁移前置。
  */
 export async function runSeed(): Promise<void> {
+  await ensureUserDeptColumn();
+  await ensureRoleDataScopeColumn();
+
   const menuIdMap = await seedMenu();
   await seedRole(menuIdMap);
   await seedUser();
   await seedDict();
   await seedConfig();
-  await ensureUserDeptColumn();
-  await ensureRoleDataScopeColumn();
   console.log('[Seed] 种子数据初始化完成');
 }
 
