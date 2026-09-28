@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { BIconPlus, BIconTags } from 'bootstrap-icons-vue';
+import { BIconPlus } from 'bootstrap-icons-vue';
 import { deleteDictTypeApi, getDictTypeListApi, setDictTypeStatusApi } from '@/api/dict';
 import { clearDictCache, useStatusDict } from '@/hooks/useDict';
 import { formatDateTime } from '@/utils/format';
@@ -180,13 +180,7 @@ onMounted(() => {
               <el-button v-permission="'system:dict:edit'" type="primary" link @click="handleEdit(row as DictType)">
                 编辑
               </el-button>
-              <el-button
-                v-permission="'system:dict:list'"
-                type="warning"
-                link
-                :icon="BIconTags"
-                @click="handleItems(row as DictType)"
-              >
+              <el-button v-permission="'system:dict:list'" type="warning" link @click="handleItems(row as DictType)">
                 字典项
               </el-button>
               <el-button v-permission="'system:dict:remove'" type="danger" link @click="handleDelete(row as DictType)">

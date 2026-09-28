@@ -30,7 +30,8 @@ async function loadTree(): Promise<void> {
 
 /** 新增 */
 function handleAdd(parentId?: number): void {
-  // 若从某行「新增下级」进入，可在表单内默认上级；此处统一走默认（顶级）
+  // 若从某行「新增下级」进入，可在表单内默认上级；此处不预设，由用户在表单中选择
+  // （首次新增时还没有任何部门，表单不展示「上级部门」，保存后即为顶级部门）
   void parentId;
   editId.value = undefined;
   formVisible.value = true;

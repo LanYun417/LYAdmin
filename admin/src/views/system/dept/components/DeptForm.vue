@@ -6,6 +6,14 @@ import { useStatusDict } from '@/hooks/useDict';
 import BasicDialog from '@/components/BasicDialog/index.vue';
 import type { DeptNode, DeptUpsert } from '@/types/api';
 
+/**
+ * 表单内部数据模型。
+ * `parentId` 为 `null` 表示未选择上级；提交时归一为 0（顶级部门）。
+ */
+interface DeptFormModel extends Omit<DeptUpsert, 'parentId'> {
+  parentId: number | null;
+}
+
 defineOptions({ name: 'DeptForm' });
 
 const props = defineProps<{
@@ -28,8 +36,8 @@ const submitting = ref(false);
 const isEdit = ref(false);
 const deptTree = ref<DeptNode[]>([]);
 
-const defaultForm = (): DeptUpsert => ({
-  parentId: 0,
+const defaultForm = (): DeptFormModel => ({
+  parentId: null,
   deptName: '',
   leader: '',
   phone: '',
@@ -38,13 +46,15 @@ const defaultForm = (): DeptUpsert => ({
   status: 1,
 });
 
-const form = reactive<DeptUpsert>(defaultForm());
+const form = reactive<DeptFormModel>(defaultForm());
 
 const rules: FormRules = {
   deptName: [{ required: true, message: '请输入部门名称', trigger: 'blur' }],
+  // 字段隐藏时（无可选上级）不参与校验，此时提交即为顶级部门
+  parentId: [{ required: true, message: '请选择上级部门', trigger: 'change' }],
 };
 
-/** 过滤掉自身及其子树，避免上级选择成环（含虚拟根节点） */
+/** 过滤掉自身及其子树，避免上级选择成环 */
 function filterSelf(nodes: DeptNode[], selfId?: number): DeptNode[] {
   return nodes
     .filter((node) => node.id !== selfId)
@@ -54,23 +64,15 @@ function filterSelf(nodes: DeptNode[], selfId?: number): DeptNode[] {
     }));
 }
 
-/** 上级选择树（含虚拟根节点「顶级部门」） */
-const parentTree = computed<DeptNode[]>(() => {
-  const filtered = filterSelf(deptTree.value, props.deptId);
-  return [
-    {
-      id: 0,
-      parentId: -1,
-      deptName: '顶级部门',
-      sort: 0,
-      status: 1,
-      leader: null,
-      phone: null,
-      email: null,
-      children: filtered,
-    },
-  ];
-});
+/** 可选的上级部门树（真实部门，剔除自身及其子树） */
+const parentOptions = computed<DeptNode[]>(() => filterSelf(deptTree.value, props.deptId));
+
+/**
+ * 是否展示「上级部门」字段。
+ * 规则：仅当存在可选上级时才展示 —— 首次新增（尚无任何部门）或编辑顶级部门（parentId=0）时隐藏，
+ * 这种情况下该部门就是顶级部门，直接用公司名称命名即可。
+ */
+const showParentField = computed<boolean>(() => form.parentId !== 0 && parentOptions.value.length > 0);
 
 /** 重置表单 */
 function resetForm(): void {
@@ -124,11 +126,13 @@ async function handleSubmit(): Promise<void> {
   }
   submitting.value = true;
   try {
+    // parentId 为 null（未选择上级 / 首次新增）时归一为 0，即顶级部门
+    const payload: DeptUpsert = { ...form, parentId: form.parentId ?? 0 };
     if (isEdit.value && props.deptId) {
-      await updateDeptApi(props.deptId, { ...form });
+      await updateDeptApi(props.deptId, payload);
       ElMessage.success('更新成功');
     } else {
-      await createDeptApi({ ...form });
+      await createDeptApi(payload);
       ElMessage.success('新增成功');
     }
     emit('success');
@@ -149,14 +153,15 @@ async function handleSubmit(): Promise<void> {
     @confirm="handleSubmit"
   >
     <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
-      <el-form-item label="上级部门">
+      <el-form-item v-if="showParentField" label="上级部门" prop="parentId">
         <el-tree-select
           v-model="form.parentId"
-          :data="parentTree"
+          :data="parentOptions"
           :props="{ label: 'deptName', children: 'children' }"
           node-key="id"
           check-strictly
           :render-after-expand="false"
+          placeholder="请选择上级部门"
           style="width: 100%"
         />
       </el-form-item>
