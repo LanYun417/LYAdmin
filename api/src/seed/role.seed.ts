@@ -44,6 +44,11 @@ const ROLE_SEEDS: RoleSeed[] = [
       'system:user:assignRole',
       // 角色下拉（GET /api/roles/all 所需）；admin 无 system:role:list，靠此独立码拉下拉框
       'system:role:all',
+      // 字典管理：admin 可维护字典（含启停用，复用 system:dict:edit）
+      'system:dict',
+      'system:dict:add',
+      'system:dict:edit',
+      'system:dict:remove',
       'log',
       'log:login',
       'log:login:export',
@@ -78,6 +83,8 @@ const ROLE_SEEDS: RoleSeed[] = [
       'system',
       'system:user',
       'system:user:query',
+      // 字典管理：只读角色仅授予菜单节点（即只读的 system:dict:list），不含任何写权限码
+      'system:dict',
       'log',
       'log:login',
       'log:operation',

@@ -46,6 +46,13 @@ export const OPERATION_RULES: Array<{ pattern: RegExp; module: string; action: s
   { pattern: /^\/api\/gen\/preview$/, module: '代码生成', action: '预览代码' },
   { pattern: /^\/api\/gen\/download$/, module: '代码生成', action: '下载代码' },
 
+  { pattern: /^\/api\/dict\/types\/\d+\/status$/, module: '字典管理', action: '启用禁用类型' },
+  { pattern: /^\/api\/dict\/items\/\d+\/status$/, module: '字典管理', action: '启用禁用字典项' },
+  { pattern: /^\/api\/dict\/types\/\d+$/, module: '字典管理', action: '' },
+  { pattern: /^\/api\/dict\/items\/\d+$/, module: '字典管理', action: '' },
+  { pattern: /^\/api\/dict\/types$/, module: '字典管理', action: '新增类型' },
+  { pattern: /^\/api\/dict\/items$/, module: '字典管理', action: '新增字典项' },
+
   // [GEN-ANCHOR] 代码生成器自动插入位置，请勿删除（gen.writer 会在本行之前插入新模块操作日志规则）
 ];
 

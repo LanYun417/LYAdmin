@@ -3,6 +3,7 @@
  * 模块职责：按 menu → role → user 顺序执行种子，供 server 启动或 `npm run seed` 调用。
  */
 import { connectDatabase, syncDatabase } from '@/config/database';
+import { seedDict } from './dict.seed';
 import { seedMenu } from './menu.seed';
 import { seedRole } from './role.seed';
 import { seedUser } from './user.seed';
@@ -14,6 +15,7 @@ export async function runSeed(): Promise<void> {
   const menuIdMap = await seedMenu();
   await seedRole(menuIdMap);
   await seedUser();
+  await seedDict();
   console.log('[Seed] 种子数据初始化完成');
 }
 
