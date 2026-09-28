@@ -8,15 +8,18 @@
     <!--
       首屏加载动画样式：必须内联在这里（而非 src/styles 下的样式文件），
       否则要等 JS 主包与样式主包加载完才会生效，刷新瞬间仍会白屏。
+      视觉与 assets/logo.png（蓝底圆角方块 + LY）保持一致。
     -->
     <style>
       #app-loading {
+        --app-loading-accent: #409eff;
+
         position: fixed;
         inset: 0;
         z-index: 9999;
         display: flex;
         flex-direction: column;
-        gap: 16px;
+        gap: 18px;
         align-items: center;
         justify-content: center;
         background-color: #f2f3f5;
@@ -33,38 +36,124 @@
         opacity: 0;
       }
 
-      .app-loading__spinner {
-        width: 40px;
-        height: 40px;
-        border: 3px solid rgb(64 158 255 / 20%);
-        border-top-color: var(--app-loading-accent, #409eff);
-        border-radius: 50%;
-        animation: app-loading-spin 0.8s linear infinite;
+      /* 品牌标记：与 logo.png 一致的「圆角方块 + LY」 */
+      .app-loading__logo {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 56px;
+        height: 56px;
+        font-family: Georgia, 'Times New Roman', serif;
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        color: #fff;
+        background-color: var(--app-loading-accent);
+        background-image: linear-gradient(
+          150deg,
+          color-mix(in srgb, var(--app-loading-accent) 72%, #fff) 0%,
+          var(--app-loading-accent) 52%,
+          color-mix(in srgb, var(--app-loading-accent) 74%, #000) 100%
+        );
+        border-radius: 16px;
+        box-shadow: 0 10px 22px -10px color-mix(in srgb, var(--app-loading-accent) 60%, transparent);
+        animation: app-loading-breathe 2.6s ease-in-out infinite;
       }
 
-      .app-loading__text {
+      .app-loading__title {
         margin: 0;
         font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', Arial, sans-serif;
-        font-size: 14px;
+        font-size: 15px;
+        font-weight: 600;
+        letter-spacing: 1.5px;
+        color: #303133;
+      }
+
+      #app-loading.is-dark .app-loading__title {
+        color: #e5eaf3;
+      }
+
+      /* 不确定进度条 */
+      .app-loading__bar {
+        width: 168px;
+        height: 3px;
+        overflow: hidden;
+        background-color: color-mix(in srgb, var(--app-loading-accent) 15%, transparent);
+        border-radius: 999px;
+      }
+
+      .app-loading__bar > i {
+        display: block;
+        width: 42%;
+        height: 100%;
+        background-color: var(--app-loading-accent);
+        border-radius: 999px;
+        animation: app-loading-slide 1.15s cubic-bezier(0.45, 0, 0.25, 1) infinite;
+      }
+
+      .app-loading__hint {
+        margin: 0;
+        font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', Arial, sans-serif;
+        font-size: 12px;
         color: #909399;
       }
 
-      #app-loading.is-dark .app-loading__text {
+      #app-loading.is-dark .app-loading__hint {
         color: #a3a6ad;
       }
 
-      @keyframes app-loading-spin {
-        to {
-          transform: rotate(360deg);
+      @keyframes app-loading-breathe {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+
+        50% {
+          transform: scale(1.06);
+        }
+      }
+
+      @keyframes app-loading-slide {
+        0% {
+          transform: translateX(-110%);
+        }
+
+        100% {
+          transform: translateX(350%);
+        }
+      }
+
+      @keyframes app-loading-pulse {
+        0%,
+        100% {
+          opacity: 0.35;
+        }
+
+        50% {
+          opacity: 1;
+        }
+      }
+
+      /* 尊重系统的「减少动态效果」偏好：停掉位移/缩放，改为淡入淡出 */
+      @media (prefers-reduced-motion: reduce) {
+        .app-loading__logo {
+          animation: none;
+        }
+
+        .app-loading__bar > i {
+          width: 100%;
+          animation: app-loading-pulse 1.8s ease-in-out infinite;
         }
       }
     </style>
   </head>
   <body>
     <!-- 首屏加载动画：随 HTML 同步渲染，早于 JS 主包；由 main.ts 在初始路由就绪后淡出并移除 -->
-    <div id="app-loading">
-      <div class="app-loading__spinner"></div>
-      <p class="app-loading__text">加载中…</p>
+    <div id="app-loading" role="status">
+      <div class="app-loading__logo" aria-hidden="true">LY</div>
+      <p class="app-loading__title">蓝云后台管理系统</p>
+      <div class="app-loading__bar" aria-hidden="true"><i></i></div>
+      <p class="app-loading__hint">正在加载，请稍候…</p>
     </div>
     <script>
       // 首屏动画的主题适配：样式主包加载前，按持久化配置决定亮/暗与主题色，避免暗黑主题下白屏闪烁。
