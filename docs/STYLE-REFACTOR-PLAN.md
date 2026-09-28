@@ -12,15 +12,17 @@
 
 但仍有三类**确定的优化空间**：
 
-| 类别         | 说明                                                                                                                            |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------- |
-| ① 重复代码   | `.table-title` 在 6 个页面逐字重复；3 个错误页几乎相同；`IconSelect` 与 `IconPicker` 几乎相同；`.chart` 尺寸在 3 个图表组件重复 |
-| ② 可直接迁移 | 纯布局 / 间距 / 字号 / 语义色，可被 Tailwind 完全表达（如 `.chart{width:100%;height:300px}`、导航与侧边栏布局）                 |
-| ③ 与 TW 重复 | 全局自定义工具类 `.text-ellipsis` ≡ `truncate`、`.full-height` ≡ `h-full`                                                       |
+| 类别         | 说明                                                                                                                                            |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| ① 重复代码   | `.table-title` 在 7 处逐字重复（6 个列表页 + gen）；3 个错误页几乎相同；`IconSelect` 与 `IconPicker` 几乎相同；`.chart` 尺寸在 3 个图表组件重复 |
+| ② 可直接迁移 | 纯布局 / 间距 / 字号 / 语义色，可被 Tailwind 完全表达（如 `.chart{width:100%;height:300px}`、导航与侧边栏布局）                                 |
+| ③ 与 TW 重复 | 全局自定义工具类 `.text-ellipsis` ≡ `truncate`、`.full-height` ≡ `h-full`                                                                       |
 
 **必须保留 CSS**：`styles/element.scss`（EP 覆盖）、`views/login/index.vue`（复杂视觉）、Vue 过渡类名、主题切换过渡、layout 抽屉动画、`@layer base` 重置。
 
 **迁移前置改造（重要）**：`tailwind.config.js` 目前只映射了 `primary`，需补映射 Element Plus 的语义色变量（文字 / 背景 / 边框）。否则颜色要写成 `text-[color:var(--el-text-color-secondary)]`，**可读性反而低于原 CSS**，迁移得不偿失。
+
+> **执行状态（2026-09-28）**：**P0 批次已完成并推送** —— `d43a793`（tailwind 语义色映射）、`eb92f32`（消除 `.table-title` 重复、删除冗余工具类、迁移图表容器样式）。§5 的 P1 / P2 待办；§2 / §3 保留审查结论，作为 P1 的执行依据。
 
 ---
 
@@ -28,10 +30,10 @@
 
 ### 1.1 全局样式文件（2）
 
-| 文件                  | 内容                                                                                   | 判定                                                                                     |
-| --------------------- | -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `styles/index.css`    | Tailwind 三指令 + `@layer base` 最小重置 + 3 个自定义工具类 + 主题切换过渡 + NProgress | **保留**；其中 `.text-ellipsis`/`.full-height` 建议废弃改用 `truncate`/`h-full`（见 §3） |
-| `styles/element.scss` | Element Plus 覆盖（侧边栏菜单、表格、卡片、搜索区）                                    | **必须保留**（规范 §3.5 要求 EP 覆盖写在此处、带命名空间，不可用 Tailwind 替代）         |
+| 文件                  | 内容                                                                                                     | 判定                                                                                     |
+| --------------------- | -------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `styles/index.css`    | Tailwind 三指令 + `@layer base` 最小重置 + 自定义工具类（现仅 `.flex-center`）+ 主题切换过渡 + NProgress | **保留**；其中 `.text-ellipsis`/`.full-height` 建议废弃改用 `truncate`/`h-full`（见 §3） |
+| `styles/element.scss` | Element Plus 覆盖（侧边栏菜单、表格、卡片、搜索区）                                                      | **必须保留**（规范 §3.5 要求 EP 覆盖写在此处、带命名空间，不可用 Tailwind 替代）         |
 
 > `@layer base` 的最小重置**不可迁移**：项目关闭了 Tailwind `preflight`，该 `@layer base` 正是用来补齐必要重置的（规范 §3.5 明确要求）。
 
@@ -70,7 +72,7 @@
 | 21  | `views/log/operation/index.vue` :188                    | 同上                                                  | 同上                                                                                                      |
 | 22  | `views/log/http/index.vue` :204（第 1 个 style 块）     | 同上                                                  | 同上                                                                                                      |
 
-> 第 17~22 项是**逐字完全相同**的 `.table-title`（6 份），见 §3 重复治理建议。
+> 第 17~22 项是**逐字完全相同**的 `.table-title`（7 份，含 gen），见 §3 重复治理建议。
 
 ### B 类 · 部分可迁移（静态样式可迁，特殊部分必须保留）
 
@@ -96,14 +98,14 @@
 
 ## 3. 重复代码治理（收益最高的低垂果实）
 
-| 重复项                                | 出现位置                                                           | 建议                                                                                                                                           |
-| ------------------------------------- | ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.table-title`（6 份逐字相同）        | user / menu / role / log-login / log-operation / log-http 六个页面 | **二选一**：① 统一改用 Tailwind `text-[15px] font-semibold text-ink`；② 抽为 `index.css` 的 `@layer components` 单一类（推荐 ①，减少全局命名） |
-| 3 个错误页                            | `views/error/{403,404,500}.vue`                                    | 抽为公共组件（如 `components/ErrorPage.vue`，用 props 传状态码与颜色），删除 3 份样式                                                          |
-| `IconSelect` / `IconPicker`           | `views/system/menu/components/`、`components/`                     | 二者逻辑与样式高度重复，建议合并为一个公共组件                                                                                                 |
-| `.chart { width:100%; height:300px }` | 3 个图表组件                                                       | 改用 `w-full h-[300px]`，删除样式块                                                                                                            |
-| `.text-ellipsis` / `.full-height`     | `index.css` 定义，8 个模板引用                                     | 与 Tailwind `truncate` / `h-full` 等价，**建议废弃并全局替换**                                                                                 |
-| `.flex-center`                        | `index.css` 定义                                                   | Tailwind 无单类等价，可保留（或改 `@layer components` 明确其为项目级复用类）                                                                   |
+| 重复项                                | 出现位置                                                         | 建议                                                                                                                                           |
+| ------------------------------------- | ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.table-title`（7 份逐字相同）        | user / menu / role / log-login / log-operation / log-http 与 gen | **二选一**：① 统一改用 Tailwind `text-[15px] font-semibold text-ink`；② 抽为 `index.css` 的 `@layer components` 单一类（推荐 ①，减少全局命名） |
+| 3 个错误页                            | `views/error/{403,404,500}.vue`                                  | 抽为公共组件（如 `components/ErrorPage.vue`，用 props 传状态码与颜色），删除 3 份样式                                                          |
+| `IconSelect` / `IconPicker`           | `views/system/menu/components/`、`components/`                   | 二者逻辑与样式高度重复，建议合并为一个公共组件                                                                                                 |
+| `.chart { width:100%; height:300px }` | 3 个图表组件                                                     | 改用 `w-full h-[300px]`，删除样式块                                                                                                            |
+| `.text-ellipsis` / `.full-height`     | `index.css` 定义，**全项目零引用（死代码）**                     | 与 Tailwind `truncate` / `h-full` 等价，**建议废弃并全局替换**                                                                                 |
+| `.flex-center`                        | `index.css` 定义                                                 | Tailwind 无单类等价，可保留（或改 `@layer components` 明确其为项目级复用类）                                                                   |
 
 ---
 
