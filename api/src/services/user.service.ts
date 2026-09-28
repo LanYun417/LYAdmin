@@ -4,7 +4,7 @@
  */
 import { Op, type WhereOptions } from 'sequelize';
 import { Status } from '@/constants';
-import { Role, User, UserRole } from '@/models';
+import { Dept, Role, User, UserRole } from '@/models';
 import { invalidateAuthCache } from '@/services/authCache';
 import { toUserBrief } from '@/services/auth.service';
 import type { PageResult, UserDetail } from '@/types';
@@ -19,17 +19,25 @@ const BUILTIN_ADMIN = 'admin';
 /** 将 User 实例转换为详情 DTO。 */
 function toUserDetail(user: User): UserDetail {
   const roles = user.roles ?? [];
+  const dept = user.dept as Dept | undefined;
   return {
     ...toUserBrief(user),
+    deptId: Number(user.deptId ?? 0),
+    deptName: dept?.deptName ?? null,
     remark: user.remark,
     roleIds: roles.map((role) => Number(role.id)),
     roleNames: roles.map((role) => role.roleName),
   };
 }
 
-/** 按 id 查询用户（含角色）。 */
+/** 按 id 查询用户（含角色与部门）。 */
 async function findUserWithRoles(id: number): Promise<User | null> {
-  return User.findByPk(id, { include: [{ model: Role, through: { attributes: [] } }] });
+  return User.findByPk(id, {
+    include: [
+      { model: Role, through: { attributes: [] } },
+      { model: Dept, attributes: ['id', 'deptName'], required: false },
+    ],
+  });
 }
 
 /** 同步用户角色（先清后建）。 */
@@ -60,10 +68,16 @@ export async function listUsers(query: Record<string, unknown>): Promise<PageRes
   if (query.status !== undefined && query.status !== '') {
     where.status = Number(query.status);
   }
+  if (query.deptId !== undefined && query.deptId !== '' && Number(query.deptId) > 0) {
+    where.deptId = Number(query.deptId);
+  }
 
   const { rows, count } = await User.findAndCountAll({
     where,
-    include: [{ model: Role, through: { attributes: [] } }],
+    include: [
+      { model: Role, through: { attributes: [] } },
+      { model: Dept, attributes: ['id', 'deptName'], required: false },
+    ],
     order: [['id', 'DESC']],
     offset,
     limit,
@@ -103,6 +117,7 @@ export async function createUser(input: CreateUserInput): Promise<UserDetail> {
     phone: input.phone || null,
     gender: input.gender || null,
     status: input.status,
+    deptId: input.deptId,
     remark: input.remark || null,
   });
 
@@ -127,6 +142,7 @@ export async function updateUser(id: number, input: UpdateUserInput): Promise<Us
     phone: input.phone || null,
     gender: input.gender || null,
     status: input.status,
+    deptId: input.deptId,
     remark: input.remark || null,
   });
 

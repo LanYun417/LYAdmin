@@ -4,6 +4,7 @@
  */
 import {
   AutoIncrement,
+  BelongsTo,
   BelongsToMany,
   Column,
   DataType,
@@ -12,6 +13,7 @@ import {
   PrimaryKey,
   Table,
 } from 'sequelize-typescript';
+import { Dept } from './Dept';
 import { Role } from './Role';
 import { UserRole } from './UserRole';
 
@@ -73,6 +75,12 @@ export class User extends Model {
 
   @Column({ type: DataType.STRING(255), allowNull: true, comment: '备注' })
   declare remark: string | null;
+
+  @Column({ type: DataType.BIGINT.UNSIGNED, allowNull: false, defaultValue: 0, comment: '部门 id（0 表示未分配）' })
+  declare deptId: number;
+
+  @BelongsTo(() => Dept, { foreignKey: 'deptId', constraints: false })
+  declare dept: Dept;
 
   @BelongsToMany(() => Role, () => UserRole)
   declare roles: Role[];

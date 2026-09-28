@@ -49,6 +49,12 @@ const ROLE_SEEDS: RoleSeed[] = [
       'system:dict:add',
       'system:dict:edit',
       'system:dict:remove',
+      // 部门管理：admin 可维护部门树
+      'system:dept',
+      'system:dept:query',
+      'system:dept:add',
+      'system:dept:edit',
+      'system:dept:remove',
       'log',
       'log:login',
       'log:login:export',
@@ -88,6 +94,8 @@ const ROLE_SEEDS: RoleSeed[] = [
       'system:user:query',
       // 字典管理：只读角色仅授予菜单节点（即只读的 system:dict:list），不含任何写权限码
       'system:dict',
+      // 部门管理：只读角色仅授予菜单节点（即只读的 system:dept:list），不含任何写权限码
+      'system:dept',
       'log',
       'log:login',
       'log:operation',

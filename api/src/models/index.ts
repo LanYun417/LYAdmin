@@ -4,6 +4,7 @@
  */
 import { DictItem } from './DictItem';
 import { DictType } from './DictType';
+import { Dept } from './Dept';
 import { File } from './File';
 import { HttpLog } from './HttpLog';
 import { LoginLog } from './LoginLog';
@@ -25,6 +26,20 @@ export { File } from './File';
 export { HttpLog } from './HttpLog';
 export { DictType } from './DictType';
 export { DictItem } from './DictItem';
+export { Dept } from './Dept';
 
 /** 全部模型数组，传入 Sequelize 构造函数以注册表与关联。 */
-export const models = [User, Role, Menu, UserRole, RoleMenu, LoginLog, OperationLog, File, HttpLog, DictType, DictItem];
+export const models = [
+  User,
+  Role,
+  Menu,
+  UserRole,
+  RoleMenu,
+  LoginLog,
+  OperationLog,
+  File,
+  HttpLog,
+  DictType,
+  DictItem,
+  Dept,
+];

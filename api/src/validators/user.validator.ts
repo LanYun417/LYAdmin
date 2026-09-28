@@ -11,6 +11,7 @@ export const userListQuerySchema = z.object({
   pageSize: z.coerce.number().int().positive().optional(),
   username: z.string().trim().optional(),
   status: z.coerce.number().int().min(0).max(1).optional(),
+  deptId: z.coerce.number().int().min(0).optional(),
 });
 
 /** 新增用户。 */
@@ -24,6 +25,8 @@ export const createUserSchema = z.object({
   gender: z.union([z.string().trim().max(20, '性别值过长'), z.literal('')]).optional(),
   status: z.number().int().min(0).max(1).default(1),
   roleIds: z.array(z.coerce.number().int().positive()).default([]),
+  /** 部门 id（0 表示未分配） */
+  deptId: z.coerce.number().int().min(0).default(0),
   remark: z.string().max(255, '备注过长').optional(),
 });
 
@@ -36,6 +39,8 @@ export const updateUserSchema = z.object({
   gender: z.union([z.string().trim().max(20, '性别值过长'), z.literal('')]).optional(),
   status: z.number().int().min(0).max(1).default(1),
   roleIds: z.array(z.coerce.number().int().positive()).default([]),
+  /** 部门 id（0 表示未分配） */
+  deptId: z.coerce.number().int().min(0).default(0),
   remark: z.string().max(255, '备注过长').optional(),
 });
 

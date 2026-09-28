@@ -3,12 +3,13 @@ import { onMounted, reactive, ref } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { BIconPersonFill, BIconPlus } from 'bootstrap-icons-vue';
 import { deleteUserApi, getUserListApi, resetUserPasswordApi, updateUserStatusApi } from '@/api/user';
+import { getDeptTreeApi } from '@/api/dept';
 import { getAllRolesApi } from '@/api/role';
 import { useDict, useStatusDict } from '@/hooks/useDict';
 import { hasPermission } from '@/utils/permission';
 import { formatDateTime } from '@/utils/format';
 import { PASSWORD_REGEX } from '@/utils/validate';
-import type { RoleBrief, UserDetail } from '@/types/api';
+import type { DeptNode, RoleBrief, UserDetail } from '@/types/api';
 import Pagination from '@/components/Pagination/index.vue';
 import SearchForm from '@/components/SearchForm/index.vue';
 import UserForm from './components/UserForm.vue';
@@ -20,6 +21,7 @@ const loading = ref(false);
 const list = ref<UserDetail[]>([]);
 const total = ref(0);
 const roleOptions = ref<RoleBrief[]>([]);
+const deptTree = ref<DeptNode[]>([]);
 
 /** 性别字典（字典管理 → 用户性别 sys_user_sex），用于列表把值渲染成标签 */
 const { labelOf: genderLabel } = useDict('sys_user_sex');
@@ -30,6 +32,7 @@ const { statusOptions, statusLabel } = useStatusDict();
 const query = reactive({
   username: '',
   status: undefined as number | undefined,
+  deptId: undefined as number | undefined,
   page: 1,
   pageSize: 20,
 });
@@ -49,6 +52,7 @@ async function loadList(): Promise<void> {
       pageSize: query.pageSize,
       username: query.username || undefined,
       status: query.status,
+      deptId: query.deptId,
     });
     list.value = res.list ?? [];
     total.value = res.total ?? 0;
@@ -65,6 +69,14 @@ async function loadRoles(): Promise<void> {
   roleOptions.value = await getAllRolesApi();
 }
 
+/** 加载部门树（仅具备 system:dept:list 的角色可拉取，用于筛选） */
+async function loadDepts(): Promise<void> {
+  if (!hasPermission('system:dept:list')) {
+    return;
+  }
+  deptTree.value = (await getDeptTreeApi()) ?? [];
+}
+
 /** 查询 */
 function handleSearch(): void {
   query.page = 1;
@@ -75,6 +87,7 @@ function handleSearch(): void {
 function handleReset(): void {
   query.username = '';
   query.status = undefined;
+  query.deptId = undefined;
   query.page = 1;
   void loadList();
 }
@@ -162,6 +175,7 @@ function handleFormSuccess(): void {
 onMounted(() => {
   void loadList();
   void loadRoles();
+  void loadDepts();
 });
 </script>
 
@@ -175,6 +189,19 @@ onMounted(() => {
         <el-select v-model="query.status" placeholder="全部" clearable style="width: 140px">
           <el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value" />
         </el-select>
+      </el-form-item>
+      <el-form-item label="部门">
+        <el-tree-select
+          v-model="query.deptId"
+          :data="deptTree"
+          :props="{ label: 'deptName', children: 'children' }"
+          node-key="id"
+          check-strictly
+          :render-after-expand="false"
+          placeholder="全部"
+          clearable
+          style="width: 180px"
+        />
       </el-form-item>
     </SearchForm>
 
@@ -196,6 +223,9 @@ onMounted(() => {
         </el-table-column>
         <el-table-column prop="username" label="账号" min-width="120" />
         <el-table-column prop="nickname" label="昵称" min-width="120" />
+        <el-table-column label="部门" min-width="140" show-overflow-tooltip>
+          <template #default="{ row }">{{ row.deptName || '-' }}</template>
+        </el-table-column>
         <el-table-column label="角色" min-width="180">
           <template #default="{ row }">
             <el-tag v-for="role in row.roles || []" :key="role.id" size="small" class="mr-1">

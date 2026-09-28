@@ -42,6 +42,10 @@ export interface UserBrief {
   /** 性别（字典 sys_user_sex 的值：1 男 / 2 女 / 0 未知） */
   gender?: string | null;
   status?: number;
+  /** 部门 id（0 表示未分配） */
+  deptId?: number;
+  /** 部门名称（未分配时为空） */
+  deptName?: string | null;
 }
 
 /** 用户详情 */
@@ -61,6 +65,7 @@ export interface UserDetail extends UserBrief {
 export interface UserQuery extends PageQuery {
   username?: string;
   status?: number;
+  deptId?: number;
 }
 
 /** 用户新增 / 编辑参数 */
@@ -74,6 +79,8 @@ export interface UserUpsert {
   gender?: string;
   status: number;
   roleIds: number[];
+  /** 部门 id（0 表示未分配） */
+  deptId?: number;
   remark?: string;
 }
 
@@ -160,6 +167,39 @@ export interface MenuUpsert {
   status: number;
   redirect?: string;
   keepAlive: number;
+}
+
+/* ------------------------------- 部门 ------------------------------- */
+
+/** 部门树节点 */
+export interface DeptNode {
+  id: number;
+  parentId: number;
+  deptName: string;
+  sort: number;
+  status: number;
+  leader: string | null;
+  phone: string | null;
+  email: string | null;
+  children?: DeptNode[];
+}
+
+/** 部门查询参数 */
+export interface DeptQuery {
+  deptName?: string;
+  status?: number;
+  tree?: number;
+}
+
+/** 部门新增 / 编辑参数 */
+export interface DeptUpsert {
+  parentId: number;
+  deptName: string;
+  leader?: string;
+  phone?: string;
+  email?: string;
+  sort: number;
+  status: number;
 }
 
 /* ------------------------------- 日志 ------------------------------- */

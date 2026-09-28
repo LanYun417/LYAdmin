@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { reactive, ref, watch } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus';
 import { createUserApi, getUserDetailApi, updateUserApi } from '@/api/user';
+import { getDeptTreeApi } from '@/api/dept';
 import BasicDialog from '@/components/BasicDialog/index.vue';
 import { useDict, useStatusDict } from '@/hooks/useDict';
 import { emailRule, phoneRule, usernameRule } from '@/utils/validate';
-import type { RoleBrief, UserUpsert } from '@/types/api';
+import type { DeptNode, RoleBrief, UserUpsert } from '@/types/api';
 
 defineOptions({ name: 'UserForm' });
 
@@ -25,6 +26,7 @@ const emit = defineEmits<{
 
 const formRef = ref<FormInstance>();
 const submitting = ref(false);
+const deptTree = ref<DeptNode[]>([]);
 
 const defaultForm = (): UserUpsert => ({
   username: '',
@@ -35,6 +37,7 @@ const defaultForm = (): UserUpsert => ({
   gender: '',
   status: 1,
   roleIds: [],
+  deptId: 0,
   remark: '',
 });
 
@@ -56,6 +59,21 @@ const rules: FormRules = {
   phone: [phoneRule],
 };
 
+/** 上级部门选择树（含虚拟根节点「未分配」） */
+const parentDeptTree = computed<DeptNode[]>(() => [
+  {
+    id: 0,
+    parentId: -1,
+    deptName: '未分配',
+    sort: 0,
+    status: 1,
+    leader: null,
+    phone: null,
+    email: null,
+    children: deptTree.value,
+  },
+]);
+
 /** 重置表单 */
 function resetForm(): void {
   Object.assign(form, defaultForm());
@@ -74,6 +92,7 @@ async function loadDetail(id: number): Promise<void> {
     gender: detail.gender ?? '',
     status: detail.status,
     roleIds: detail.roleIds ?? (detail.roles ?? []).map((role) => role.id),
+    deptId: detail.deptId ?? 0,
     remark: detail.remark ?? '',
   });
 }
@@ -86,6 +105,7 @@ watch(
     }
     resetForm();
     isEdit.value = Boolean(props.userId);
+    deptTree.value = (await getDeptTreeApi()) ?? [];
     if (props.userId) {
       await loadDetail(props.userId);
     }
@@ -153,6 +173,18 @@ async function handleSubmit(): Promise<void> {
         <el-select v-model="form.gender" placeholder="请选择性别" clearable style="width: 100%">
           <el-option v-for="item in genderOptions" :key="item.value" :label="item.label" :value="item.value" />
         </el-select>
+      </el-form-item>
+      <el-form-item label="部门">
+        <el-tree-select
+          v-model="form.deptId"
+          :data="parentDeptTree"
+          :props="{ label: 'deptName', children: 'children' }"
+          node-key="id"
+          check-strictly
+          :render-after-expand="false"
+          clearable
+          style="width: 100%"
+        />
       </el-form-item>
       <el-form-item label="角色">
         <el-select v-model="form.roleIds" multiple placeholder="请选择角色" style="width: 100%">

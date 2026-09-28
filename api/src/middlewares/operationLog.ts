@@ -53,6 +53,9 @@ export const OPERATION_RULES: Array<{ pattern: RegExp; module: string; action: s
   { pattern: /^\/api\/dict\/types$/, module: '字典管理', action: '新增类型' },
   { pattern: /^\/api\/dict\/items$/, module: '字典管理', action: '新增字典项' },
 
+  { pattern: /^\/api\/depts\/\d+$/, module: '部门管理', action: '' },
+  { pattern: /^\/api\/depts$/, module: '部门管理', action: '新增' },
+
   // [GEN-ANCHOR] 代码生成器自动插入位置，请勿删除（gen.writer 会在本行之前插入新模块操作日志规则）
 ];
 

@@ -43,6 +43,19 @@ export interface TreeNodeBase {
   children?: TreeNodeBase[];
 }
 
+/** 部门树节点。 */
+export interface DeptNode {
+  id: number;
+  parentId: number;
+  deptName: string;
+  sort: number;
+  status: number;
+  leader: string | null;
+  phone: string | null;
+  email: string | null;
+  children?: DeptNode[];
+}
+
 /** 菜单树节点。 */
 export interface MenuNode {
   id: number;
@@ -77,6 +90,10 @@ export interface UserBrief {
   /** 性别（字典 sys_user_sex 的值） */
   gender: string | null;
   status: number;
+  /** 部门 id（0 表示未分配） */
+  deptId: number;
+  /** 部门名称（冗余展示，未分配时为空） */
+  deptName: string | null;
   lastLoginAt: Date | null;
   createdAt?: Date;
   updatedAt?: Date;

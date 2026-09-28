@@ -51,6 +51,8 @@ export function toUserBrief(user: User): UserBrief {
     phone: user.phone,
     gender: user.gender ?? null,
     status: Number(user.status),
+    deptId: Number(user.deptId ?? 0),
+    deptName: null,
     lastLoginAt: user.lastLoginAt,
     createdAt: user.get('createdAt') as Date,
     updatedAt: user.get('updatedAt') as Date,
