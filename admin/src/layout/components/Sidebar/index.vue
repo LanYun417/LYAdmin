@@ -29,7 +29,8 @@ const collapsed = computed(() => appStore.sidebarCollapsed && !appStore.isMobile
 </script>
 
 <template>
-  <div class="overflow-hidden flex flex-col h-full">
+  <!-- 注意：`sidebar` 是 element.scss 中侧边栏菜单样式（高亮 / 悬停 / 左侧竖条指示器）的命名空间钩子，勿删 -->
+  <div class="sidebar flex flex-col h-full overflow-hidden">
     <Logo :collapsed="collapsed" />
     <el-scrollbar class="h-full flex-1">
       <el-menu :default-active="activeMenu" :collapse="collapsed" :collapse-transition="false" unique-opened router>
