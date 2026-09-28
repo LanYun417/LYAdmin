@@ -20,6 +20,8 @@ export const createUserSchema = z.object({
   nickname: z.string().trim().min(1, '昵称不能为空').max(50, '昵称过长'),
   email: z.union([z.string().regex(REGEX.EMAIL, '邮箱格式不正确'), z.literal('')]).optional(),
   phone: z.union([z.string().regex(REGEX.PHONE, '手机号格式不正确'), z.literal('')]).optional(),
+  /** 性别：字典 sys_user_sex 的值（1 男 / 2 女 / 0 未知），空串表示未设置 */
+  gender: z.union([z.string().trim().max(20, '性别值过长'), z.literal('')]).optional(),
   status: z.number().int().min(0).max(1).default(1),
   roleIds: z.array(z.coerce.number().int().positive()).default([]),
   remark: z.string().max(255, '备注过长').optional(),
@@ -30,6 +32,8 @@ export const updateUserSchema = z.object({
   nickname: z.string().trim().min(1, '昵称不能为空').max(50, '昵称过长'),
   email: z.union([z.string().regex(REGEX.EMAIL, '邮箱格式不正确'), z.literal('')]).optional(),
   phone: z.union([z.string().regex(REGEX.PHONE, '手机号格式不正确'), z.literal('')]).optional(),
+  /** 性别：字典 sys_user_sex 的值（1 男 / 2 女 / 0 未知），空串表示未设置 */
+  gender: z.union([z.string().trim().max(20, '性别值过长'), z.literal('')]).optional(),
   status: z.number().int().min(0).max(1).default(1),
   roleIds: z.array(z.coerce.number().int().positive()).default([]),
   remark: z.string().max(255, '备注过长').optional(),

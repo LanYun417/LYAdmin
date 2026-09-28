@@ -3,6 +3,7 @@ import { reactive, ref, watch } from 'vue';
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus';
 import { createUserApi, getUserDetailApi, updateUserApi } from '@/api/user';
 import BasicDialog from '@/components/BasicDialog/index.vue';
+import { useDict } from '@/hooks/useDict';
 import { emailRule, phoneRule, usernameRule } from '@/utils/validate';
 import type { RoleBrief, UserUpsert } from '@/types/api';
 
@@ -31,6 +32,7 @@ const defaultForm = (): UserUpsert => ({
   nickname: '',
   email: '',
   phone: '',
+  gender: '',
   status: 1,
   roleIds: [],
   remark: '',
@@ -39,6 +41,9 @@ const defaultForm = (): UserUpsert => ({
 const form = reactive<UserUpsert>(defaultForm());
 
 const isEdit = ref(false);
+
+/** 性别下拉：数据来自字典管理中的「用户性别」（sys_user_sex），不再硬编码选项 */
+const { options: genderOptions } = useDict('sys_user_sex');
 
 const rules: FormRules = {
   username: [{ required: true, message: '请输入账号', trigger: 'blur' }, usernameRule],
@@ -63,6 +68,7 @@ async function loadDetail(id: number): Promise<void> {
     nickname: detail.nickname,
     email: detail.email ?? '',
     phone: detail.phone ?? '',
+    gender: detail.gender ?? '',
     status: detail.status,
     roleIds: detail.roleIds ?? (detail.roles ?? []).map((role) => role.id),
     remark: detail.remark ?? '',
@@ -139,6 +145,11 @@ async function handleSubmit(): Promise<void> {
       </el-form-item>
       <el-form-item label="手机号" prop="phone">
         <el-input v-model="form.phone" placeholder="请输入手机号" />
+      </el-form-item>
+      <el-form-item label="性别">
+        <el-select v-model="form.gender" placeholder="请选择性别" clearable style="width: 100%">
+          <el-option v-for="item in genderOptions" :key="item.value" :label="item.label" :value="item.value" />
+        </el-select>
       </el-form-item>
       <el-form-item label="角色">
         <el-select v-model="form.roleIds" multiple placeholder="请选择角色" style="width: 100%">

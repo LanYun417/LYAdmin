@@ -101,6 +101,7 @@ export async function createUser(input: CreateUserInput): Promise<UserDetail> {
     nickname: input.nickname,
     email: input.email || null,
     phone: input.phone || null,
+    gender: input.gender || null,
     status: input.status,
     remark: input.remark || null,
   });
@@ -124,6 +125,7 @@ export async function updateUser(id: number, input: UpdateUserInput): Promise<Us
     nickname: input.nickname,
     email: input.email || null,
     phone: input.phone || null,
+    gender: input.gender || null,
     status: input.status,
     remark: input.remark || null,
   });

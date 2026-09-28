@@ -39,6 +39,8 @@ export interface UserBrief {
   avatar: string | null;
   email?: string | null;
   phone?: string | null;
+  /** 性别（字典 sys_user_sex 的值：1 男 / 2 女 / 0 未知） */
+  gender?: string | null;
   status?: number;
 }
 
@@ -68,6 +70,8 @@ export interface UserUpsert {
   nickname: string;
   email?: string;
   phone?: string;
+  /** 性别（字典 sys_user_sex 的值），空串表示未设置 */
+  gender?: string;
   status: number;
   roleIds: number[];
   remark?: string;

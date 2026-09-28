@@ -45,6 +45,13 @@ export class User extends Model {
   @Column({ type: DataType.STRING(20), allowNull: true, comment: '手机号' })
   declare phone: string | null;
 
+  /**
+   * 性别。存字典值（见字典类型 `sys_user_sex`：1 男 / 2 女 / 0 未知）。
+   * 采用字符串存储以与 `sys_dict_item.dict_value` 直接对齐，字典值将来可扩展为任意字符串。
+   */
+  @Column({ type: DataType.STRING(20), allowNull: true, comment: '性别（字典 sys_user_sex）' })
+  declare gender: string | null;
+
   @Column({ type: DataType.TINYINT, allowNull: false, defaultValue: 1, comment: '1 启用 / 0 禁用' })
   declare status: number;
 

@@ -74,6 +74,8 @@ export interface UserBrief {
   avatar: string | null;
   email: string | null;
   phone: string | null;
+  /** 性别（字典 sys_user_sex 的值） */
+  gender: string | null;
   status: number;
   lastLoginAt: Date | null;
   createdAt?: Date;

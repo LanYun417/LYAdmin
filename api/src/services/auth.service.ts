@@ -49,6 +49,7 @@ export function toUserBrief(user: User): UserBrief {
     avatar: user.avatar,
     email: user.email,
     phone: user.phone,
+    gender: user.gender ?? null,
     status: Number(user.status),
     lastLoginAt: user.lastLoginAt,
     createdAt: user.get('createdAt') as Date,

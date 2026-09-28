@@ -4,6 +4,7 @@ import { ElMessage, ElMessageBox } from 'element-plus';
 import { BIconPersonFill, BIconPlus } from 'bootstrap-icons-vue';
 import { deleteUserApi, getUserListApi, resetUserPasswordApi, updateUserStatusApi } from '@/api/user';
 import { getAllRolesApi } from '@/api/role';
+import { useDict } from '@/hooks/useDict';
 import { hasPermission } from '@/utils/permission';
 import { formatDateTime } from '@/utils/format';
 import { PASSWORD_REGEX } from '@/utils/validate';
@@ -19,6 +20,9 @@ const loading = ref(false);
 const list = ref<UserDetail[]>([]);
 const total = ref(0);
 const roleOptions = ref<RoleBrief[]>([]);
+
+/** 性别字典（字典管理 → 用户性别 sys_user_sex），用于列表把值渲染成标签 */
+const { labelOf: genderLabel } = useDict('sys_user_sex');
 
 const query = reactive({
   username: '',
@@ -199,6 +203,11 @@ onMounted(() => {
         </el-table-column>
         <el-table-column prop="email" label="邮箱" min-width="180" show-overflow-tooltip />
         <el-table-column prop="phone" label="手机号" width="130" />
+        <el-table-column label="性别" width="80" align="center">
+          <template #default="{ row }">
+            <span>{{ genderLabel(row.gender) || '-' }}</span>
+          </template>
+        </el-table-column>
         <el-table-column label="状态" width="90" align="center">
           <template #default="{ row }">
             <el-switch :model-value="row.status === 1" @change="handleStatusChange(row as UserDetail)" />
