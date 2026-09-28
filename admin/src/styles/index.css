@@ -11,6 +11,12 @@
   *::before,
   *::after {
     box-sizing: border-box;
+
+    /* 关闭了 Tailwind preflight，需自行补齐 border 重置：
+       否则 border / border-b 等宽度类因 border-style 默认 none 而不可见；
+       且叠加 border-solid 时，未指定宽度的那几条边会取初始值 medium（3px）而多出边框。 */
+    border-style: solid;
+    border-width: 0;
   }
 
   html,
