@@ -1932,7 +1932,8 @@ export const MODULES: ModuleDoc[] = [
           'curl -X DELETE "http://localhost:3000/api/dict/types/1" \\',
           '  -H "Authorization: Bearer <accessToken>"',
         ].join('\n'),
-        notes: '不可恢复；字典项随类型一并删除。',
+        notes:
+          '不可恢复；字典项随类型一并删除。内置字典类型（sys_user_sex / sys_yes_no / sys_common_status）禁止删除。',
       },
       {
         method: 'GET',

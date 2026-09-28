@@ -9,7 +9,7 @@ import {
   setDictItemStatusApi,
   updateDictItemApi,
 } from '@/api/dict';
-import { clearDictCache } from '@/hooks/useDict';
+import { clearDictCache, useStatusDict } from '@/hooks/useDict';
 import { formatDateTime } from '@/utils/format';
 import { hasPermission } from '@/utils/permission';
 import type { DictItem, DictItemUpsert } from '@/types/api';
@@ -36,11 +36,8 @@ const list = ref<DictItem[]>([]);
 const total = ref(0);
 const query = reactive({ dictLabel: '', page: 1, pageSize: 10 });
 
-/** 启用 / 禁用列（值为 1 的项） */
-const STATUS_OPTIONS = [
-  { label: '启用', value: 1 },
-  { label: '禁用', value: 0 },
-];
+/** 状态选项：来自字典管理中的「通用状态」（sys_common_status） */
+const { statusOptions } = useStatusDict();
 
 /* ------------------------------ 列表 ------------------------------ */
 
@@ -274,7 +271,7 @@ watch(
         </el-form-item>
         <el-form-item label="状态">
           <el-radio-group v-model="itemForm.status">
-            <el-radio v-for="option in STATUS_OPTIONS" :key="option.value" :value="option.value">
+            <el-radio v-for="option in statusOptions" :key="option.value" :value="option.value">
               {{ option.label }}
             </el-radio>
           </el-radio-group>

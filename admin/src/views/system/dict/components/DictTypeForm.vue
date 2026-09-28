@@ -2,7 +2,7 @@
 import { reactive, ref, watch } from 'vue';
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus';
 import { createDictTypeApi, updateDictTypeApi } from '@/api/dict';
-import { clearDictCache } from '@/hooks/useDict';
+import { clearDictCache, useStatusDict } from '@/hooks/useDict';
 import BasicDialog from '@/components/BasicDialog/index.vue';
 import type { DictType, DictTypeUpsert } from '@/types/api';
 
@@ -23,6 +23,9 @@ const emit = defineEmits<{
 const formRef = ref<FormInstance>();
 const submitting = ref(false);
 const isEdit = ref(false);
+
+/** 状态选项：来自字典管理中的「通用状态」（sys_common_status） */
+const { statusOptions } = useStatusDict();
 
 const defaultForm = (): DictTypeUpsert => ({
   dictName: '',
@@ -126,8 +129,7 @@ async function handleSubmit(): Promise<void> {
       </el-form-item>
       <el-form-item label="状态">
         <el-radio-group v-model="form.status">
-          <el-radio :value="1">启用</el-radio>
-          <el-radio :value="0">禁用</el-radio>
+          <el-radio v-for="item in statusOptions" :key="item.value" :value="item.value">{{ item.label }}</el-radio>
         </el-radio-group>
       </el-form-item>
       <el-form-item label="备注">

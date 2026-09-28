@@ -17,7 +17,7 @@
  *
  * 注意：字典在「字典管理」页被修改后，请调用 `clearDictCache(dictType)` 使缓存失效。
  */
-import { ref, type Ref } from 'vue';
+import { computed, ref, type Ref } from 'vue';
 import { getDictDataApi } from '@/api/dict';
 import type { DictDataItem } from '@/types/api';
 
@@ -106,4 +106,27 @@ export function useDict(dictType: string): UseDictResult {
   });
 
   return { options, loading, labelOf, reload };
+}
+
+/** 通用状态字典（启用 / 禁用）的返回值。 */
+export interface UseStatusDictResult {
+  /** 状态下拉/单选选项，**值为 number**（1 启用 / 0 禁用），可直接绑 v-model */
+  statusOptions: Ref<Array<{ label: string; value: number }>>;
+  /** 状态值 → 文案（1 → 启用）；未命中时原样返回数值字符串 */
+  statusLabel: (value: unknown) => string;
+}
+
+/** 通用状态字典编码（字典管理中的「通用状态」）。 */
+const STATUS_DICT_TYPE = 'sys_common_status';
+
+/**
+ * 通用状态字典（启用 / 禁用）的快捷封装 —— 项目内「状态」筛选、表单单选、列表标签统一用它。
+ *
+ * 背景：状态字段在本项目里是 `number`（1/0），而 `sys_dict_item.dict_value` 是字符串，
+ * 这里统一把选项的 value 转成 number，业务侧无需每次手写 `Number(item.value)`。
+ */
+export function useStatusDict(): UseStatusDictResult {
+  const { options, labelOf } = useDict(STATUS_DICT_TYPE);
+  const statusOptions = computed(() => options.value.map((item) => ({ label: item.label, value: Number(item.value) })));
+  return { statusOptions, statusLabel: labelOf };
 }

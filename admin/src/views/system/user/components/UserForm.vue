@@ -3,7 +3,7 @@ import { reactive, ref, watch } from 'vue';
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus';
 import { createUserApi, getUserDetailApi, updateUserApi } from '@/api/user';
 import BasicDialog from '@/components/BasicDialog/index.vue';
-import { useDict } from '@/hooks/useDict';
+import { useDict, useStatusDict } from '@/hooks/useDict';
 import { emailRule, phoneRule, usernameRule } from '@/utils/validate';
 import type { RoleBrief, UserUpsert } from '@/types/api';
 
@@ -44,6 +44,9 @@ const isEdit = ref(false);
 
 /** 性别下拉：数据来自字典管理中的「用户性别」（sys_user_sex），不再硬编码选项 */
 const { options: genderOptions } = useDict('sys_user_sex');
+
+/** 状态选项：数据来自字典管理中的「通用状态」（sys_common_status） */
+const { statusOptions } = useStatusDict();
 
 const rules: FormRules = {
   username: [{ required: true, message: '请输入账号', trigger: 'blur' }, usernameRule],
@@ -158,8 +161,7 @@ async function handleSubmit(): Promise<void> {
       </el-form-item>
       <el-form-item label="状态">
         <el-radio-group v-model="form.status">
-          <el-radio :value="1">启用</el-radio>
-          <el-radio :value="0">禁用</el-radio>
+          <el-radio v-for="item in statusOptions" :key="item.value" :value="item.value">{{ item.label }}</el-radio>
         </el-radio-group>
       </el-form-item>
       <el-form-item label="备注">

@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { BIconArrowClockwise, BIconPlus } from 'bootstrap-icons-vue';
 import { deleteMenuApi, getMenuListApi } from '@/api/menu';
+import { useStatusDict } from '@/hooks/useDict';
 import type { MenuNode } from '@/types/api';
 import MenuForm from './components/MenuForm.vue';
 
@@ -12,6 +13,9 @@ const loading = ref(false);
 const menuTree = ref<MenuNode[]>([]);
 const formVisible = ref(false);
 const editId = ref<number | undefined>(undefined);
+
+/** 状态字典（字典管理 → 通用状态 sys_common_status），用于列表状态列文案 */
+const { statusLabel } = useStatusDict();
 
 /** 加载菜单树 */
 async function loadTree(): Promise<void> {
@@ -123,7 +127,7 @@ onMounted(() => {
         <el-table-column label="状态" width="80" align="center">
           <template #default="{ row }">
             <el-tag :type="row.status === 1 ? 'success' : 'danger'" size="small">
-              {{ row.status === 1 ? '启用' : '禁用' }}
+              {{ statusLabel(row.status) }}
             </el-tag>
           </template>
         </el-table-column>

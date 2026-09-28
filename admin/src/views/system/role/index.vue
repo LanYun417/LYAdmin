@@ -3,6 +3,7 @@ import { onMounted, reactive, ref } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { BIconPlus } from 'bootstrap-icons-vue';
 import { deleteRoleApi, getRoleListApi } from '@/api/role';
+import { useStatusDict } from '@/hooks/useDict';
 import { formatDateTime } from '@/utils/format';
 import type { Role } from '@/types/api';
 import Pagination from '@/components/Pagination/index.vue';
@@ -15,6 +16,9 @@ defineOptions({ name: 'SystemRole' });
 const loading = ref(false);
 const list = ref<Role[]>([]);
 const total = ref(0);
+
+/** 状态字典（字典管理 → 通用状态 sys_common_status），驱动状态筛选与标签文案 */
+const { statusOptions, statusLabel } = useStatusDict();
 
 const query = reactive({
   roleName: '',
@@ -104,8 +108,7 @@ onMounted(() => {
       </el-form-item>
       <el-form-item label="状态">
         <el-select v-model="query.status" placeholder="全部" clearable style="width: 140px">
-          <el-option label="启用" :value="1" />
-          <el-option label="禁用" :value="0" />
+          <el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value" />
         </el-select>
       </el-form-item>
     </SearchForm>
@@ -125,7 +128,7 @@ onMounted(() => {
         <el-table-column label="状态" width="90" align="center">
           <template #default="{ row }">
             <el-tag :type="row.status === 1 ? 'success' : 'danger'" size="small">
-              {{ row.status === 1 ? '启用' : '禁用' }}
+              {{ statusLabel(row.status) }}
             </el-tag>
           </template>
         </el-table-column>

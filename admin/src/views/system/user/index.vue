@@ -4,7 +4,7 @@ import { ElMessage, ElMessageBox } from 'element-plus';
 import { BIconPersonFill, BIconPlus } from 'bootstrap-icons-vue';
 import { deleteUserApi, getUserListApi, resetUserPasswordApi, updateUserStatusApi } from '@/api/user';
 import { getAllRolesApi } from '@/api/role';
-import { useDict } from '@/hooks/useDict';
+import { useDict, useStatusDict } from '@/hooks/useDict';
 import { hasPermission } from '@/utils/permission';
 import { formatDateTime } from '@/utils/format';
 import { PASSWORD_REGEX } from '@/utils/validate';
@@ -23,6 +23,9 @@ const roleOptions = ref<RoleBrief[]>([]);
 
 /** 性别字典（字典管理 → 用户性别 sys_user_sex），用于列表把值渲染成标签 */
 const { labelOf: genderLabel } = useDict('sys_user_sex');
+
+/** 状态字典（字典管理 → 通用状态 sys_common_status），驱动状态筛选与提示文案 */
+const { statusOptions, statusLabel } = useStatusDict();
 
 const query = reactive({
   username: '',
@@ -112,7 +115,7 @@ async function handleStatusChange(row: UserDetail): Promise<void> {
   }
   const next = row.status === 1 ? 0 : 1;
   try {
-    await ElMessageBox.confirm(`确定要${next === 1 ? '启用' : '禁用'}用户「${row.username}」吗？`, '提示', {
+    await ElMessageBox.confirm(`确定要${statusLabel(next)}用户「${row.username}」吗？`, '提示', {
       type: 'warning',
     });
   } catch {
@@ -122,7 +125,7 @@ async function handleStatusChange(row: UserDetail): Promise<void> {
   try {
     await updateUserStatusApi(row.id, next);
     row.status = next;
-    ElMessage.success(next === 1 ? '已启用' : '已禁用');
+    ElMessage.success(`已${statusLabel(next)}`);
   } catch {
     // 失败保持原状
   }
@@ -170,8 +173,7 @@ onMounted(() => {
       </el-form-item>
       <el-form-item label="状态">
         <el-select v-model="query.status" placeholder="全部" clearable style="width: 140px">
-          <el-option label="启用" :value="1" />
-          <el-option label="禁用" :value="0" />
+          <el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value" />
         </el-select>
       </el-form-item>
     </SearchForm>

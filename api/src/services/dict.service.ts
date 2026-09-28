@@ -23,6 +23,13 @@ import type {
   UpdateDictTypeInput,
 } from '@/validators/dict.validator';
 
+/**
+ * 内置字典类型：项目自身界面依赖它们（如「通用状态」驱动各页面的启用/禁用选项），
+ * 因此禁止**删除**与**禁用**，避免管理端误操作导致状态列回退成原始值 1 / 0。
+ * 与 `user.service.ts` 的 BUILTIN_ADMIN 同一思路：内置资源用常量白名单保护。
+ */
+const BUILTIN_DICT_TYPES = ['sys_user_sex', 'sys_yes_no', 'sys_common_status'];
+
 /** 字典类型（对外 DTO）。 */
 export interface DictTypeBrief {
   id: number;
@@ -168,6 +175,9 @@ export async function updateDictType(id: number, input: UpdateDictTypeInput): Pr
  */
 export async function setDictTypeStatus(id: number, status: number): Promise<DictTypeBrief> {
   const type = await mustGetDictType(id);
+  if (status !== Status.ENABLED && BUILTIN_DICT_TYPES.includes(type.dictType)) {
+    throw AppError.conflict('内置字典类型不可禁用');
+  }
   await type.update({ status });
   return toDictTypeBrief(type);
 }
@@ -178,6 +188,9 @@ export async function setDictTypeStatus(id: number, status: number): Promise<Dic
  */
 export async function deleteDictType(id: number): Promise<void> {
   const type = await mustGetDictType(id);
+  if (BUILTIN_DICT_TYPES.includes(type.dictType)) {
+    throw AppError.conflict('内置字典类型不可删除');
+  }
   await sequelize.transaction(async (transaction) => {
     await DictItem.destroy({ where: { dictType: type.dictType }, transaction });
     await type.destroy({ transaction });
