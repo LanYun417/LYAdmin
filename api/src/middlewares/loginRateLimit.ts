@@ -62,7 +62,7 @@ export function loginRateLimit(): RequestHandler {
       // ① 账号锁定：命中锁定键直接拒绝（锁由失败累计触发，TTL=ACCOUNT_LOCK_MS）
       const locked = await redis!.get(acctLockKey);
       if (locked) {
-        const ttl = await redis!.pttl(acctLockKey);
+        const ttl = await redis!.pTTL(acctLockKey);
         const remainMinutes = Math.max(1, Math.ceil((ttl > 0 ? ttl : ACCOUNT_LOCK_MS) / 60000));
         next(AppError.tooManyRequests(`登录失败次数过多，账号已锁定，请在 ${remainMinutes} 分钟后重试`));
         return;
@@ -102,7 +102,7 @@ export function loginRateLimit(): RequestHandler {
             await redis!.expire(acctFailKey, Math.ceil(ACCOUNT_WINDOW_MS / 1000));
           }
           if (count >= ACCOUNT_MAX_FAILURES) {
-            await redis!.set(acctLockKey, '1', 'PX', ACCOUNT_LOCK_MS);
+            await redis!.set(acctLockKey, '1', { PX: ACCOUNT_LOCK_MS });
           }
         } catch {
           // 降级：计数失败不影响登录结果

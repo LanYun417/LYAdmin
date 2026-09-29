@@ -34,7 +34,7 @@ export async function recordLogout(userId: number): Promise<void> {
     return;
   }
   try {
-    await redis!.set(`${LOGOUT_KEY_PREFIX}${userId}`, String(Date.now()), 'PX', LOGOUT_TTL_MS);
+    await redis!.set(`${LOGOUT_KEY_PREFIX}${userId}`, String(Date.now()), { PX: LOGOUT_TTL_MS });
   } catch {
     // 降级：Redis 写入失败不阻断登出
   }
