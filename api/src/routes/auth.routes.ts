@@ -12,6 +12,8 @@ import { loginSchema, refreshSchema } from '@/validators/auth.validator';
 
 const router = Router();
 
+// 图形验证码：公开接口（登录前获取），无需鉴权
+router.get('/captcha', asyncHandler(authController.captcha));
 // 登录路由挂载频率限制：连续失败 5 次 / 5 分钟 → 锁定 15 分钟（返回 429），登录成功清零
 router.post('/login', loginRateLimit(), validate({ body: loginSchema }), asyncHandler(authController.login));
 router.post('/refresh', validate({ body: refreshSchema }), asyncHandler(authController.refresh));

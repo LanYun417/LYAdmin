@@ -112,6 +112,16 @@ export interface UserDetail extends UserBrief {
   roles: Array<{ id: number; roleName: string }>;
 }
 
+/** 登录图形验证码。 */
+export interface CaptchaResult {
+  /** 是否启用验证码（关闭时为 false，前端据此隐藏输入项） */
+  enabled: boolean;
+  /** 验证码 id（随登录请求回传；关闭时为 null） */
+  captchaId: string | null;
+  /** 验证码图片（PNG data URL；关闭时为 null） */
+  image: string | null;
+}
+
 /** 仪表盘统计卡片。 */
 export interface DashboardStats {
   userTotal: number;

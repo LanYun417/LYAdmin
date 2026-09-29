@@ -184,6 +184,28 @@ export const MODULES: ModuleDoc[] = [
     description: '登录、令牌刷新、登出，以及当前用户的资料、菜单树与权限码。',
     endpoints: [
       {
+        method: 'GET',
+        path: '/api/auth/captcha',
+        summary: '获取图形验证码',
+        description: '生成登录用图形验证码（PNG 图片，Base64 data URL）。验证码单次有效、默认 5 分钟过期。',
+        auth: false,
+        contentType: 'application/json',
+        requestExample: 'curl -X GET "http://localhost:3000/api/auth/captcha"',
+        responseExample: [
+          '{',
+          '  "code": 200,',
+          '  "message": "success",',
+          '  "data": {',
+          '    "enabled": true,',
+          '    "captchaId": "3f1c2b8e-9a4d-4c7e-8b2f-1a2b3c4d5e6f",',
+          '    "image": "data:image/png;base64,iVBORw0KGgoAAAANS..."',
+          '  }',
+          '}',
+        ].join('\n'),
+        notes:
+          '验证码关闭时返回 enabled=false、captchaId/image 为 null；登录时需携带返回的 captchaId 与用户输入的 captchaCode。',
+      },
+      {
         method: 'POST',
         path: '/api/auth/login',
         summary: '登录',
@@ -193,11 +215,23 @@ export const MODULES: ModuleDoc[] = [
         bodyParams: [
           { name: 'username', type: 'string', required: true, description: '账号（1~50 字符）' },
           { name: 'password', type: 'string', required: true, description: '密码（1~100 字符，明文）' },
+          {
+            name: 'captchaId',
+            type: 'string',
+            required: false,
+            description: '图形验证码 id（GET /api/auth/captcha 获取；验证码启用时必填）',
+          },
+          {
+            name: 'captchaCode',
+            type: 'string',
+            required: false,
+            description: '用户输入的验证码（验证码启用时必填，单次有效）',
+          },
         ],
         requestExample: [
           'curl -X POST "http://localhost:3000/api/auth/login" \\',
           '  -H "Content-Type: application/json" \\',
-          '  -d \'{"username":"admin","password":"123456"}\'',
+          '  -d \'{"username":"admin","password":"123456","captchaId":"<captchaId>","captchaCode":"A7X9"}\'',
         ].join('\n'),
         responseExample: [
           '{',
@@ -221,7 +255,7 @@ export const MODULES: ModuleDoc[] = [
           '  }',
           '}',
         ].join('\n'),
-        notes: '账号或密码错误、账号被禁用均返回 401，并写入一条登录失败日志。',
+        notes: '验证码错误/过期返回 400；账号或密码错误、账号被禁用均返回 401，并写入一条登录失败日志。',
       },
       {
         method: 'POST',

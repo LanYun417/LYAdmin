@@ -137,6 +137,15 @@ export const config = {
     accessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN ?? '2h',
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN ?? '7d',
   },
+  /** 登录图形验证码 */
+  captcha: {
+    /** 是否启用（默认启用）；设 false 可关闭（如自动化测试环境） */
+    enabled: toBoolean(process.env.CAPTCHA_ENABLED, true),
+    /** 验证码有效期（ms，默认 5 分钟） */
+    ttlMs: toNumber(process.env.CAPTCHA_TTL_MS, 5 * 60 * 1000),
+    /** 验证码字符数（默认 4） */
+    length: toNumber(process.env.CAPTCHA_LENGTH, 4),
+  },
   /** 文件上传配置 */
   upload: {
     /** 上传根目录（绝对路径） */

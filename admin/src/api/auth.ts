@@ -2,7 +2,12 @@
  * 认证接口：登录 / 刷新 Token / 登出 / 当前用户信息、菜单树与权限码。
  */
 import { get, post } from './request';
-import type { LoginParams, LoginResult, MenuNode, ProfileResult, RefreshResult } from '@/types/api';
+import type { CaptchaResult, LoginParams, LoginResult, MenuNode, ProfileResult, RefreshResult } from '@/types/api';
+
+/** 获取登录图形验证码 */
+export function getCaptchaApi(): Promise<CaptchaResult> {
+  return get<CaptchaResult>('/auth/captcha');
+}
 
 /** 登录 */
 export function loginApi(data: LoginParams): Promise<LoginResult> {

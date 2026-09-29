@@ -488,6 +488,10 @@ export interface ConfigData {
 export interface LoginParams {
   username: string;
   password: string;
+  /** 图形验证码 id（GET /auth/captcha 获取） */
+  captchaId?: string;
+  /** 用户输入的验证码 */
+  captchaCode?: string;
 }
 
 /** 登录返回 */
@@ -495,6 +499,16 @@ export interface LoginResult {
   accessToken: string;
   refreshToken: string;
   user: UserBrief;
+}
+
+/** 登录图形验证码 */
+export interface CaptchaResult {
+  /** 是否启用验证码（关闭时为 false，前端隐藏输入项） */
+  enabled: boolean;
+  /** 验证码 id（随登录请求回传） */
+  captchaId: string | null;
+  /** 验证码图片（PNG data URL） */
+  image: string | null;
 }
 
 /** 刷新 Token 返回 */

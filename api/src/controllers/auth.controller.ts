@@ -4,6 +4,7 @@
  */
 import type { Request, Response } from 'express';
 import * as authService from '@/services/auth.service';
+import * as captchaService from '@/services/captcha.service';
 import { getClientIp } from '@/utils/logger';
 import { ok } from '@/utils/response';
 import type { LoginInput, RefreshInput } from '@/validators/auth.validator';
@@ -12,10 +13,18 @@ import type { LoginInput, RefreshInput } from '@/validators/auth.validator';
  * 登录。
  */
 export async function login(req: Request, res: Response): Promise<void> {
-  const { username, password } = req.body as LoginInput;
+  const { username, password, captchaId, captchaCode } = req.body as LoginInput;
   const userAgent = String(req.headers['user-agent'] ?? '');
-  const result = await authService.login(username, password, getClientIp(req), userAgent);
+  const result = await authService.login(username, password, captchaId, captchaCode, getClientIp(req), userAgent);
   ok(res, result, '登录成功');
+}
+
+/**
+ * 获取登录图形验证码。
+ */
+export async function captcha(_req: Request, res: Response): Promise<void> {
+  const result = await captchaService.createCaptcha();
+  ok(res, result);
 }
 
 /**

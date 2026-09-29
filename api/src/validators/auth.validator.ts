@@ -8,6 +8,9 @@ import { z } from 'zod';
 export const loginSchema = z.object({
   username: z.string().min(1, '账号不能为空').max(50, '账号过长'),
   password: z.string().min(1, '密码不能为空').max(100, '密码过长'),
+  // 图形验证码：是否必填由服务端按 config.captcha.enabled 判定（见 captcha.service）
+  captchaId: z.string().max(64).optional(),
+  captchaCode: z.string().max(16).optional(),
 });
 
 /** 刷新 Token 请求体。 */

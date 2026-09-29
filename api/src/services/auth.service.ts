@@ -6,6 +6,7 @@ import { Op } from 'sequelize';
 import { ERROR_MESSAGE, LogResult, Status, SUPER_ADMIN_ROLE } from '@/constants';
 import { LoginLog, Dept, Menu, Role, User } from '@/models';
 import { getCachedAuthContext, invalidateAuthCache, setCachedAuthContext } from '@/services/authCache';
+import { verifyCaptcha } from '@/services/captcha.service';
 import { getMenusByRoles } from '@/services/menu.service';
 import type { JwtPayload, MenuNode, UserBrief } from '@/types';
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '@/utils/jwt';
@@ -146,14 +147,28 @@ export async function loadAuthUser(userId: number): Promise<AuthContext | null> 
 }
 
 /**
- * 登录：校验账号密码与状态，签发双 Token 并写登录日志。
+ * 登录：校验图形验证码、账号密码与状态，签发双 Token 并写登录日志。
  * @param username 账号
  * @param password 明文密码
+ * @param captchaId 图形验证码 id（验证码关闭时可缺省）
+ * @param captchaCode 用户输入的验证码（验证码关闭时可缺省）
  * @param ip 客户端 IP
  * @param userAgent UA
  * @returns 双 Token 与用户简要信息
  */
-export async function login(username: string, password: string, ip: string, userAgent: string): Promise<LoginResult> {
+export async function login(
+  username: string,
+  password: string,
+  captchaId: string | undefined,
+  captchaCode: string | undefined,
+  ip: string,
+  userAgent: string,
+): Promise<LoginResult> {
+  // 图形验证码：先校验（廉价、无 DB 查询），失败直接拒绝，避免爆破请求消耗数据库
+  if (!(await verifyCaptcha(captchaId, captchaCode))) {
+    throw AppError.badRequest('验证码错误或已过期');
+  }
+
   // include Dept：登录响应要带上真实部门名（个人中心来源之一）
   const user = await User.findOne({ where: { username }, include: [{ model: Dept, attributes: ['deptName'] }] });
   if (!user) {
