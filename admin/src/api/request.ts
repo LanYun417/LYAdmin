@@ -6,7 +6,7 @@ import axios, {
   type InternalAxiosRequestConfig,
 } from 'axios';
 import type { Router } from 'vue-router';
-import { ElMessage } from 'element-plus';
+import { ElMessage } from '@/utils/element';
 import type { ApiResponse, RefreshResult } from '@/types/api';
 import { getAccessToken, getRefreshToken, removeToken, setToken } from '@/utils/auth';
 

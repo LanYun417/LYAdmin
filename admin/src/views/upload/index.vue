@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue';
-import { ElMessage, ElMessageBox, type UploadRequestOptions } from 'element-plus';
+import { ElMessage, ElMessageBox } from '@/utils/element';
+import type { UploadRequestOptions } from 'element-plus';
 import { BIconArrowClockwise, BIconFileEarmark, BIconFileEarmarkImage, BIconUpload } from 'bootstrap-icons-vue';
 import {
   checkFileApi,

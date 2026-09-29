@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue';
-import { ElMessage, ElMessageBox } from 'element-plus';
+import { ElMessage, ElMessageBox } from '@/utils/element';
 import { BIconPersonFill, BIconPlus } from 'bootstrap-icons-vue';
 import { deleteUserApi, getUserListApi, resetUserPasswordApi, updateUserStatusApi } from '@/api/user';
 import { getDeptTreeApi } from '@/api/dept';

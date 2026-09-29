@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue';
-import { ElMessage } from 'element-plus';
+import { ElMessage } from '@/utils/element';
 import { BIconArrowClockwise, BIconDownload } from 'bootstrap-icons-vue';
 import { exportLoginLogsApi, getLoginLogsApi } from '@/api/log';
 import { formatDate, formatDateTime } from '@/utils/format';

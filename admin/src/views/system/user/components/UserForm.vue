@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue';
-import { ElMessage, type FormInstance, type FormRules } from 'element-plus';
+import { ElMessage } from '@/utils/element';
+import type { FormInstance, FormRules } from 'element-plus';
 import { createUserApi, getUserDetailApi, updateUserApi } from '@/api/user';
 import { getDeptTreeApi } from '@/api/dept';
 import BasicDialog from '@/components/BasicDialog/index.vue';

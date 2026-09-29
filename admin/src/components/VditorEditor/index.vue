@@ -11,7 +11,7 @@
  * - **受控**：关闭 Vditor 的 localStorage 缓存，内容完全由外部 v-model 掌控。
  */
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import { ElMessage } from 'element-plus';
+import { ElMessage } from '@/utils/element';
 import type VditorType from 'vditor';
 import { useAppStore } from '@/store/modules/app';
 import { getAccessToken } from '@/utils/auth';

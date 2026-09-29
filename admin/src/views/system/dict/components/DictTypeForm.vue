@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { reactive, ref, watch } from 'vue';
-import { ElMessage, type FormInstance, type FormRules } from 'element-plus';
+import { ElMessage } from '@/utils/element';
+import type { FormInstance, FormRules } from 'element-plus';
 import { createDictTypeApi, updateDictTypeApi } from '@/api/dict';
 import { clearDictCache, useStatusDict } from '@/hooks/useDict';
 import BasicDialog from '@/components/BasicDialog/index.vue';

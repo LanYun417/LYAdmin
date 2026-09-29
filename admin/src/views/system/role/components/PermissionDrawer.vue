@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import { ElMessage } from 'element-plus';
+import { ElMessage } from '@/utils/element';
 import { getMenuTreeApi } from '@/api/menu';
 import { assignRoleMenusApi, getRoleMenuIdsApi } from '@/api/role';
 import type { MenuNode } from '@/types/api';

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { reactive, ref, watch } from 'vue';
-import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus';
+import { ElMessage, ElMessageBox } from '@/utils/element';
+import type { FormInstance, FormRules } from 'element-plus';
 import { BIconPlus } from 'bootstrap-icons-vue';
 import {
   createDictItemApi,

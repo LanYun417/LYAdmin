@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { ElMessage, type FormInstance, type FormRules } from 'element-plus';
+import { ElMessage } from '@/utils/element';
+import type { FormInstance, FormRules } from 'element-plus';
 import { changePasswordApi } from '@/api/profile';
 import { useUserStore } from '@/store/modules/user';
 import { usePermissionStore } from '@/store/modules/permission';

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue';
-import { ElMessage, ElMessageBox } from 'element-plus';
+import { ElMessage, ElMessageBox } from '@/utils/element';
 import { BIconPlus } from 'bootstrap-icons-vue';
 import { deleteRoleApi, getRoleListApi } from '@/api/role';
 import { useStatusDict } from '@/hooks/useDict';

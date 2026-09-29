@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue';
-import { ElMessage, type FormInstance, type FormRules } from 'element-plus';
+import { ElMessage } from '@/utils/element';
+import type { FormInstance, FormRules } from 'element-plus';
 import { updateProfileApi } from '@/api/profile';
 import { useDict } from '@/hooks/useDict';
 import { useUserStore } from '@/store/modules/user';

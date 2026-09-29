@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import { ElMessage } from 'element-plus';
+import { ElMessage } from '@/utils/element';
 import { assignUserRolesApi } from '@/api/user';
 import BasicDialog from '@/components/BasicDialog/index.vue';
 import type { RoleBrief } from '@/types/api';

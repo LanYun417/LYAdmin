@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { ElMessage, type UploadRequestOptions } from 'element-plus';
+import { ElMessage } from '@/utils/element';
+import type { UploadRequestOptions } from 'element-plus';
 import { BIconPlus } from 'bootstrap-icons-vue';
 import { uploadAvatarApi } from '@/api/profile';
 import { useDict } from '@/hooks/useDict';

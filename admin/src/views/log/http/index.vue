@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue';
 import { BIconArrowClockwise, BIconDownload, BIconTrash } from 'bootstrap-icons-vue';
-import { ElMessage, ElMessageBox } from 'element-plus';
+import { ElMessage, ElMessageBox } from '@/utils/element';
 import { clearHttpLogsApi, exportHttpLogsApi, getHttpLogsApi } from '@/api/log';
 import { getDeptTreeApi } from '@/api/dept';
 import { downloadBlob } from '@/utils/download';
