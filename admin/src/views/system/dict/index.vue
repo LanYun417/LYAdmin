@@ -123,7 +123,7 @@ async function handleDelete(row: DictType): Promise<void> {
         </el-button>
       </div>
 
-      <Table v-loading="loading" :data="list">
+      <el-table v-loading="loading" :data="list">
         <el-table-column prop="dictName" label="字典名称" min-width="150" show-overflow-tooltip />
         <el-table-column prop="dictType" label="类型编码" min-width="180" show-overflow-tooltip />
         <el-table-column label="状态" width="100" align="center">
@@ -154,7 +154,7 @@ async function handleDelete(row: DictType): Promise<void> {
             </div>
           </template>
         </el-table-column>
-      </Table>
+      </el-table>
 
       <Pagination
         v-model:current-page="query.page"

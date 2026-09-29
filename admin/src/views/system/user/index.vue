@@ -186,7 +186,7 @@ onMounted(() => {
         </el-button>
       </div>
 
-      <Table v-loading="loading" :data="list">
+      <el-table v-loading="loading" :data="list">
         <el-table-column label="头像" width="80" align="center">
           <template #default="{ row }">
             <el-avatar :size="36" :src="withUploadToken(row.avatar)">
@@ -254,7 +254,7 @@ onMounted(() => {
             </div>
           </template>
         </el-table-column>
-      </Table>
+      </el-table>
 
       <Pagination
         v-model:current-page="query.page"

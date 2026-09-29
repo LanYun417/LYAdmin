@@ -93,7 +93,7 @@ function handlePermission(row: Role): void {
         </el-button>
       </div>
 
-      <Table v-loading="loading" :data="list">
+      <el-table v-loading="loading" :data="list">
         <el-table-column prop="roleName" label="角色名称" min-width="140" />
         <el-table-column prop="roleCode" label="角色编码" min-width="140" />
         <el-table-column prop="sort" label="排序" width="80" align="center" />
@@ -131,7 +131,7 @@ function handlePermission(row: Role): void {
             </div>
           </template>
         </el-table-column>
-      </Table>
+      </el-table>
 
       <Pagination
         v-model:current-page="query.page"

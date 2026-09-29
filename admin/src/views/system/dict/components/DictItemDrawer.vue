@@ -201,7 +201,7 @@ watch(
       </el-button>
     </div>
 
-    <Table v-loading="loading" :data="list" max-height="400">
+    <el-table v-loading="loading" :data="list" max-height="400">
       <el-table-column prop="dictLabel" label="字典标签" min-width="140" show-overflow-tooltip />
       <el-table-column prop="dictValue" label="字典值" min-width="120" show-overflow-tooltip />
       <el-table-column prop="sort" label="排序" width="80" align="center" />
@@ -230,7 +230,7 @@ watch(
           </div>
         </template>
       </el-table-column>
-    </Table>
+    </el-table>
 
     <Pagination
       v-model:current-page="query.page"

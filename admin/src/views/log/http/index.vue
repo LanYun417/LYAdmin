@@ -214,7 +214,7 @@ onMounted(() => {
         </div>
       </div>
 
-      <Table v-loading="loading" :data="list">
+      <el-table v-loading="loading" :data="list">
         <el-table-column type="expand">
           <template #default="{ row }">
             <div class="py-2 px-4">
@@ -265,7 +265,7 @@ onMounted(() => {
         <el-table-column label="时间" width="180">
           <template #default="{ row }">{{ formatDateTime(row.time) }}</template>
         </el-table-column>
-      </Table>
+      </el-table>
 
       <Pagination
         v-model:current-page="query.page"

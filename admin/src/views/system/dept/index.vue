@@ -74,7 +74,7 @@ onMounted(() => {
         </div>
       </div>
 
-      <Table
+      <el-table
         v-loading="loading"
         :data="deptTree"
         row-key="id"
@@ -106,7 +106,7 @@ onMounted(() => {
             </div>
           </template>
         </el-table-column>
-      </Table>
+      </el-table>
     </el-card>
 
     <DeptForm v-model="formVisible" :dept-id="editId" @success="loadTree" />
