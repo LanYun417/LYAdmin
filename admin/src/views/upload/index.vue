@@ -314,7 +314,7 @@ onMounted(() => {
         <el-table-column label="操作" width="220" fixed="right">
           <template #default="{ row }">
             <el-link type="primary" :href="row.fileUrl" target="_blank" rel="noopener" class="mr-3"> 查看 </el-link>
-            <el-button v-permission="'file:download'" type="primary" link @click="handleDownload(row as FileItem)">
+            <el-button v-permission="'file:download'" type="success" link @click="handleDownload(row as FileItem)">
               下载
             </el-button>
             <el-button v-permission="'file:remove'" type="danger" link @click="handleDelete(row as FileItem)">
