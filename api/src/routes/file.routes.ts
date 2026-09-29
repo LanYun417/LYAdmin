@@ -21,6 +21,9 @@ router.get('/check', requirePermission('file:upload'), asyncHandler(fileControll
 
 router.get('/', requirePermission('file:list'), asyncHandler(fileController.list));
 
+// 下载：按 id 流式下传，强制附件语义
+router.get('/:id/download', requirePermission('file:download'), asyncHandler(fileController.download));
+
 router.delete('/:id', requirePermission('file:remove'), asyncHandler(fileController.remove));
 
 export default router;

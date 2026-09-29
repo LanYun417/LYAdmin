@@ -280,6 +280,40 @@ export async function listFiles(query: Record<string, unknown>): Promise<PageRes
   return buildPageResult(rows.map(toFileItem), count, page, pageSize);
 }
 
+/** 可下载文件信息（供控制器流式响应）。 */
+export interface FileDownload {
+  /** 物理文件绝对路径 */
+  absolutePath: string;
+  /** 原始文件名（用于 Content-Disposition） */
+  originName: string;
+  mimeType: string;
+  size: number;
+}
+
+/**
+ * 按 id 取得可下载文件信息（不把文件内容读入内存，交由控制器流式响应）。
+ * @param id 文件 id
+ * @throws AppError 404 记录不存在或磁盘文件已丢失
+ */
+export async function getFileForDownload(id: number): Promise<FileDownload> {
+  const record = await File.findByPk(id);
+  if (!record) {
+    throw AppError.notFound('文件不存在');
+  }
+
+  const absolutePath = resolvePhysicalPath(record.filePath);
+  if (!fs.existsSync(absolutePath)) {
+    throw AppError.notFound('文件已丢失');
+  }
+
+  return {
+    absolutePath,
+    originName: record.originName,
+    mimeType: record.mimeType,
+    size: Number(record.size),
+  };
+}
+
 /**
  * 删除文件。
  * 引用计数语义：若同一物理路径（filePath）还有其他引用记录，仅删本条记录；

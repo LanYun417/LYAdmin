@@ -1,8 +1,15 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue';
 import { ElMessage, ElMessageBox, type UploadRequestOptions } from 'element-plus';
-import { BIconArrowClockwise, BIconFileEarmark, BIconFileEarmarkImage, BIconUpload } from 'bootstrap-icons-vue';
-import { deleteFileApi, checkFileApi, getFileListApi, uploadFilesApi } from '@/api/file';
+import {
+  BIconArrowClockwise,
+  BIconDownload,
+  BIconFileEarmark,
+  BIconFileEarmarkImage,
+  BIconUpload,
+} from 'bootstrap-icons-vue';
+import { deleteFileApi, checkFileApi, downloadFileApi, getFileListApi, uploadFilesApi } from '@/api/file';
+import { downloadBlob } from '@/utils/download';
 import { sha256Hex } from '@/utils/hash';
 import { formatFileSize, formatDateTime } from '@/utils/format';
 import type { FileItem } from '@/types/api';
@@ -88,6 +95,12 @@ async function customUpload(options: UploadRequestOptions): Promise<void> {
   } catch (error) {
     options.onError?.(error as Parameters<NonNullable<UploadRequestOptions['onError']>>[0]);
   }
+}
+
+/** 下载文件：拉二进制流后由浏览器落盘（文件名用原始文件名） */
+async function handleDownload(row: FileItem): Promise<void> {
+  const blob = await downloadFileApi(row.id);
+  downloadBlob(blob, row.originName);
 }
 
 /** 删除文件 */
@@ -176,9 +189,18 @@ onMounted(() => {
         <el-table-column label="上传时间" width="180">
           <template #default="{ row }">{{ formatDateTime(row.createdAt) }}</template>
         </el-table-column>
-        <el-table-column label="操作" width="160" fixed="right">
+        <el-table-column label="操作" width="220" fixed="right">
           <template #default="{ row }">
             <el-link type="primary" :href="row.fileUrl" target="_blank" rel="noopener" class="mr-3"> 查看 </el-link>
+            <el-button
+              v-permission="'file:download'"
+              type="primary"
+              :icon="BIconDownload"
+              link
+              @click="handleDownload(row as FileItem)"
+            >
+              下载
+            </el-button>
             <el-button v-permission="'file:remove'" type="danger" link @click="handleDelete(row as FileItem)">
               删除
             </el-button>

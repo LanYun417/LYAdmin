@@ -1323,7 +1323,7 @@ export const MODULES: ModuleDoc[] = [
     key: 'file',
     name: '文件管理',
     basePath: '/api/files',
-    description: '文件上传、秒传预检、列表与删除（内容哈希去重）。',
+    description: '文件上传、秒传预检、列表、下载与删除（内容哈希去重）。静态资源 /uploads 已启用防盗链。',
     endpoints: [
       {
         method: 'POST',
@@ -1444,6 +1444,26 @@ export const MODULES: ModuleDoc[] = [
           '    "pageSize": 10',
           '  }',
           '}',
+        ].join('\n'),
+      },
+      {
+        method: 'GET',
+        path: '/api/files/:id/download',
+        summary: '下载文件',
+        description: '按 id 流式下载文件，强制附件语义（浏览器直接下载，不内联打开）。',
+        auth: true,
+        permission: 'file:download',
+        contentType: 'application/octet-stream',
+        pathParams: [{ name: 'id', type: 'number', required: true, description: '文件 id（正整数）' }],
+        requestExample: [
+          'curl -X GET "http://localhost:3000/api/files/10/download" \\',
+          '  -H "Authorization: Bearer <accessToken>" \\',
+          '  -o photo.png',
+        ].join('\n'),
+        responseExample: ['（响应为文件二进制流，非 JSON 包装）'].join('\n'),
+        notes: [
+          "Content-Disposition 为 attachment；中文文件名以 filename*=UTF-8''... 编码，不会出现乱码。",
+          '文件记录不存在、或磁盘文件已丢失时返回 404。',
         ].join('\n'),
       },
       {

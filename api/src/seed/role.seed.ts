@@ -77,6 +77,7 @@ const ROLE_SEEDS: RoleSeed[] = [
       'file',
       'file:upload',
       'file:remove',
+      'file:download',
       'tool',
       'tool:gen',
       'tool:gen:preview',

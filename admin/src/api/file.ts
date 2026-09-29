@@ -22,6 +22,15 @@ export function deleteFileApi(id: number): Promise<null> {
   return del<null>(`/files/${id}`);
 }
 
+/** 下载文件（二进制流，前端用 downloadBlob 落盘） */
+export function downloadFileApi(id: number): Promise<Blob> {
+  return request<Blob>({
+    url: `/files/${id}/download`,
+    method: 'GET',
+    responseType: 'blob',
+  });
+}
+
 /** 秒传预检：按内容哈希查询库内是否已存在相同文件 */
 export function checkFileApi(hash: string): Promise<{ exists: boolean; file: FileItem | null }> {
   return get<{ exists: boolean; file: FileItem | null }>('/files/check', { hash });

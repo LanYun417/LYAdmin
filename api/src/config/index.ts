@@ -28,6 +28,28 @@ function toNumber(value: string | undefined, fallback: number): number {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
+/**
+ * 解析防盗链 Referer 白名单：接受逗号分隔的 origin（`http://a.com`）或裸 host（`a.com`），
+ * 统一归一为小写的 `host`（含端口）。未配置时返回空数组（仅放行「无 Referer」与「同源」）。
+ * @param value 环境变量原始值
+ */
+function parseRefererHosts(value: string | undefined): string[] {
+  if (!value) {
+    return [];
+  }
+  return value
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .map((item) => {
+      try {
+        return new URL(item).host.toLowerCase();
+      } catch {
+        return item.toLowerCase();
+      }
+    });
+}
+
 /** 保留天数合理性上界提示阈值（超过仅告警，不拒绝）。 */
 const RETENTION_DAYS_MAX_HINT = 3650;
 
@@ -131,6 +153,12 @@ export const config = {
     maxSize: toNumber(process.env.UPLOAD_MAX_SIZE, 10 * 1024 * 1024),
     /** 单次最多文件数 */
     maxCount: toNumber(process.env.UPLOAD_MAX_COUNT, 10),
+    /**
+     * 防盗链 Referer 白名单（host 列表，已归一为小写）。
+     * 放行规则：无 Referer、同源（与请求 host 一致）、命中本白名单之一。
+     * 前后端分离部署（端口不同）时，需把前端 origin 配进来，否则静态资源会被判为外链。
+     */
+    allowedReferers: parseRefererHosts(process.env.UPLOAD_ALLOWED_REFERERS),
   },
   /** 跨域允许来源 */
   corsOrigin: process.env.CORS_ORIGIN ?? 'http://localhost:5173',

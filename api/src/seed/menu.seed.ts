@@ -416,6 +416,7 @@ const MENU_TREE: MenuSeedNode[] = [
     children: [
       { key: 'file:upload', menuName: '上传文件', menuType: MenuType.BUTTON, permission: 'file:upload', sort: 1 },
       { key: 'file:remove', menuName: '删除文件', menuType: MenuType.BUTTON, permission: 'file:remove', sort: 2 },
+      { key: 'file:download', menuName: '下载文件', menuType: MenuType.BUTTON, permission: 'file:download', sort: 3 },
     ],
   },
   {
