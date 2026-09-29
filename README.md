@@ -4,12 +4,11 @@
 
 ![Vue](https://img.shields.io/badge/Vue-3.5-42b883) ![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178c6) ![Vite](https://img.shields.io/badge/Vite-8-646cff) ![Element Plus](https://img.shields.io/badge/Element%20Plus-2.14-409eff) ![Tailwind](https://img.shields.io/badge/Tailwind%20CSS-3.4-38bdf8) ![Express](https://img.shields.io/badge/Express-5-000000) ![Sequelize](https://img.shields.io/badge/Sequelize-6-52b0e7) ![MySQL](https://img.shields.io/badge/MySQL-8-4479a1) ![Node](https://img.shields.io/badge/node-%3E%3D20.19-339933) ![License](https://img.shields.io/badge/License-MIT-green)
 
-<!-- 若在公开仓库，可在此处放置一张系统截图：![screenshot](./docs/screenshot.png) -->
-
 ## 目录
 
 - [项目简介](#项目简介)
 - [关于本项目](#关于本项目)
+- [界面预览](#界面预览)
 - [功能特性](#功能特性)
 - [技术栈](#技术栈)
 - [目录结构](#目录结构)
@@ -43,6 +42,18 @@ LYAdmin 面向企业内部运营 / 管理场景，提供一套可直接二次开
 
 - 全程遵循统一的工程质量门禁（ESLint / Prettier / Stylelint / 类型检查 / 依赖基线守卫），提交前须全绿。
 - 请以审阅 AI 生成代码的心态使用本仓库——欢迎通过 Issue / PR 指出问题与可改进之处。
+
+## 界面预览
+
+![首页仪表盘](./screenshot/dashboard.png)
+
+| 菜单管理                                      | 操作日志                                    |
+| --------------------------------------------- | ------------------------------------------- |
+| ![菜单管理](./screenshot/menu-management.png) | ![操作日志](./screenshot/operation-log.png) |
+
+| 代码生成                                     | 个人中心                              |
+| -------------------------------------------- | ------------------------------------- |
+| ![代码生成](./screenshot/code-generator.png) | ![个人中心](./screenshot/profile.png) |
 
 ## 功能特性
 
