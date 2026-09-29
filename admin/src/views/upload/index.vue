@@ -1,13 +1,7 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue';
 import { ElMessage, ElMessageBox, type UploadRequestOptions } from 'element-plus';
-import {
-  BIconArrowClockwise,
-  BIconDownload,
-  BIconFileEarmark,
-  BIconFileEarmarkImage,
-  BIconUpload,
-} from 'bootstrap-icons-vue';
+import { BIconArrowClockwise, BIconFileEarmark, BIconFileEarmarkImage, BIconUpload } from 'bootstrap-icons-vue';
 import {
   checkFileApi,
   deleteFileApi,
@@ -320,13 +314,7 @@ onMounted(() => {
         <el-table-column label="操作" width="220" fixed="right">
           <template #default="{ row }">
             <el-link type="primary" :href="row.fileUrl" target="_blank" rel="noopener" class="mr-3"> 查看 </el-link>
-            <el-button
-              v-permission="'file:download'"
-              type="primary"
-              :icon="BIconDownload"
-              link
-              @click="handleDownload(row as FileItem)"
-            >
+            <el-button v-permission="'file:download'" type="primary" link @click="handleDownload(row as FileItem)">
               下载
             </el-button>
             <el-button v-permission="'file:remove'" type="danger" link @click="handleDelete(row as FileItem)">
