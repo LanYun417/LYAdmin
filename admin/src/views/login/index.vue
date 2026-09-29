@@ -5,6 +5,7 @@
  */
 import { computed, onMounted, reactive, ref, type Component } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { throttle } from 'lodash-es';
 import { ElMessage } from '@/utils/element';
 import type { FormInstance, FormRules } from 'element-plus';
 import {
@@ -89,9 +90,9 @@ const rules = computed<FormRules<LoginParams>>(() => ({
   captchaCode: captchaEnabled.value ? [{ required: true, message: '请输入验证码', trigger: 'blur' }] : [],
 }));
 
-/** 提交登录 */
-async function handleLogin(): Promise<void> {
-  // 防重复提交：回车与点击可能同时触发（或连点），只处理第一次
+/** 登录提交（实际逻辑） */
+async function submitLogin(): Promise<void> {
+  // 兜底防重复：loading 期间直接忽略（与下方 throttle 双保险）
   if (loading.value || !formRef.value) {
     return;
   }
@@ -113,6 +114,13 @@ async function handleLogin(): Promise<void> {
     loading.value = false;
   }
 }
+
+/**
+ * 登录动作：用 lodash `throttle` 节流 —— 首个触发**立即执行**，1s 内的后续触发被忽略，
+ * 避免连点、以及回车与点击同时触发造成的重复登录（叠加验证码「单次有效」时第二次必然报错）。
+ * 与 `loading` 哨兵形成双保险；窗口时长按需可调。
+ */
+const handleLogin = throttle(submitLogin, 1000, { leading: true, trailing: false });
 
 onMounted(() => {
   void loadCaptcha();
