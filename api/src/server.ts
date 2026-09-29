@@ -3,6 +3,7 @@
  * 模块职责：加载装饰器元数据 → 连接数据库 → 同步建表 → 写入种子数据 → 启动 HTTP 服务。
  */
 import 'reflect-metadata';
+import fs from 'fs';
 import { createApp } from '@/app';
 import { config } from '@/config';
 import { connectDatabase, syncDatabase } from '@/config/database';
@@ -29,6 +30,13 @@ async function bootstrap(): Promise<void> {
   app.listen(config.port, () => {
     console.log(`[Server] LYAdmin API 已启动: http://localhost:${config.port}/api`);
     console.log(`[Server] 静态资源目录: http://localhost:${config.port}/uploads`);
+    // 同源部署：前端产物存在时由后端托管（含 history 回退），否则仅提供 API
+    const webEnabled = fs.existsSync(config.web.distDir);
+    console.log(
+      webEnabled
+        ? `[Server] 前端页面: http://localhost:${config.port}/（已托管 ${config.web.distDir}）`
+        : `[Server] 前端页面: 未托管（未找到 ${config.web.distDir}，请先执行 admin 构建）`,
+    );
     console.log(`[Docs] 接口文档: http://localhost:${config.port}/api-docs`);
   });
 

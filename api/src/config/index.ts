@@ -160,6 +160,15 @@ export const config = {
      */
     allowedReferers: parseRefererHosts(process.env.UPLOAD_ALLOWED_REFERERS),
   },
+  /** 前端构建产物（同源部署时由后端直接托管） */
+  web: {
+    /**
+     * 前端 `admin/dist` 目录（绝对路径）。
+     * 默认取仓库根下的 `admin/dist`；可用 WEB_DIST_DIR 覆盖。
+     * 目录不存在时后端跳过托管（纯 API 部署 / 前端独立部署场景不受影响）。
+     */
+    distDir: path.resolve(ROOT_DIR, process.env.WEB_DIST_DIR ?? '../admin/dist'),
+  },
   /** 跨域允许来源 */
   corsOrigin: process.env.CORS_ORIGIN ?? 'http://localhost:5173',
   /** 日志目录（绝对路径） */
