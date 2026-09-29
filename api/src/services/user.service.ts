@@ -3,7 +3,7 @@
  * 模块职责：用户分页查询、CRUD、角色绑定、状态切换、密码重置（唯一操作 User/Role 关联的层）。
  */
 import { Op, type WhereOptions } from 'sequelize';
-import { Status } from '@/constants';
+import { Status, SUPER_ADMIN_ROLE } from '@/constants';
 import { Dept, Role, User, UserRole } from '@/models';
 import { getDataScope } from '@/services/dataScope.service';
 import { invalidateAuthCache } from '@/services/authCache';
@@ -17,6 +17,22 @@ import type { CreateUserInput, UpdateUserInput } from '@/validators/user.validat
 /** 内置超管账号，禁止删除/禁用。 */
 const BUILTIN_ADMIN = 'admin';
 
+/**
+ * 判断用户是否为超级管理员：内置 `admin` 账号，或持有 `super_admin` 角色的用户。
+ * 超级管理员受「不可禁用 / 不可删除」保护，避免误操作导致无人可管理系统。
+ */
+async function isSuperAdminUser(user: User): Promise<boolean> {
+  if (user.username === BUILTIN_ADMIN) {
+    return true;
+  }
+  const superRole = await Role.findOne({ where: { roleCode: SUPER_ADMIN_ROLE }, attributes: ['id'] });
+  if (!superRole) {
+    return false;
+  }
+  const link = await UserRole.findOne({ where: { userId: Number(user.id), roleId: Number(superRole.id) } });
+  return Boolean(link);
+}
+
 /** 将 User 实例转换为详情 DTO。 */
 function toUserDetail(user: User): UserDetail {
   const roles = user.roles ?? [];
@@ -26,6 +42,7 @@ function toUserDetail(user: User): UserDetail {
     deptId: Number(user.deptId ?? 0),
     deptName: dept?.deptName ?? null,
     remark: user.remark,
+    isSuperAdmin: user.username === BUILTIN_ADMIN || roles.some((role) => role.roleCode === SUPER_ADMIN_ROLE),
     roles: roles.map((role) => ({ id: Number(role.id), roleName: role.roleName })),
   };
 }
@@ -160,6 +177,10 @@ export async function updateUser(id: number, input: UpdateUserInput): Promise<Us
   if (!user) {
     throw AppError.notFound('用户不存在');
   }
+  // 编辑用户表单也带「状态」字段：同样禁止把超级管理员改成禁用
+  if (input.status === Status.DISABLED && (await isSuperAdminUser(user))) {
+    throw AppError.conflict('超级管理员不可禁用');
+  }
 
   await user.update({
     nickname: input.nickname,
@@ -186,8 +207,8 @@ export async function deleteUser(id: number): Promise<void> {
   if (!user) {
     throw AppError.notFound('用户不存在');
   }
-  if (user.username === BUILTIN_ADMIN) {
-    throw AppError.conflict('内置管理员账号不可删除');
+  if (await isSuperAdminUser(user)) {
+    throw AppError.conflict('超级管理员不可删除');
   }
   await UserRole.destroy({ where: { userId: id } });
   await user.destroy();
@@ -205,8 +226,8 @@ export async function updateStatus(id: number, status: number): Promise<void> {
   if (!user) {
     throw AppError.notFound('用户不存在');
   }
-  if (user.username === BUILTIN_ADMIN && status === Status.DISABLED) {
-    throw AppError.conflict('内置管理员账号不可禁用');
+  if (status === Status.DISABLED && (await isSuperAdminUser(user))) {
+    throw AppError.conflict('超级管理员不可禁用');
   }
   await user.update({ status });
   // 启用 / 禁用：立即失效鉴权缓存，禁用后旧 Token 应立刻被拒（强制下线）

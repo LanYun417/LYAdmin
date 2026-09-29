@@ -55,6 +55,8 @@ export interface UserDetail extends UserBrief {
   status: number;
   lastLoginAt?: string | null;
   remark?: string | null;
+  /** 是否超级管理员（内置 admin 或持有 super_admin 角色）：不可禁用 / 不可删除 */
+  isSuperAdmin?: boolean;
   roles?: RoleBrief[];
   createdAt?: string;
   updatedAt?: string;

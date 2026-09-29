@@ -55,6 +55,9 @@ const form = reactive<UserFormModel>(defaultForm());
 
 const isEdit = ref(false);
 
+/** 是否正在编辑超级管理员（编辑超管时禁止改状态，与后端双重校验） */
+const editingSuperAdmin = ref(false);
+
 /** 性别下拉：数据来自字典管理中的「用户性别」（sys_user_sex），不再硬编码选项 */
 const { options: genderOptions } = useDict('sys_user_sex');
 
@@ -78,6 +81,7 @@ const showDeptField = computed<boolean>(() => deptTree.value.length > 0);
 /** 重置表单 */
 function resetForm(): void {
   Object.assign(form, defaultForm());
+  editingSuperAdmin.value = false;
   formRef.value?.clearValidate();
 }
 
@@ -97,6 +101,7 @@ async function loadDetail(id: number): Promise<void> {
     deptId: detail.deptId ? detail.deptId : null,
     remark: detail.remark ?? '',
   });
+  editingSuperAdmin.value = Boolean(detail.isSuperAdmin);
 }
 
 watch(
@@ -196,9 +201,10 @@ async function handleSubmit(): Promise<void> {
         </el-select>
       </el-form-item>
       <el-form-item label="状态">
-        <el-radio-group v-model="form.status">
+        <el-radio-group v-model="form.status" :disabled="editingSuperAdmin">
           <el-radio v-for="item in statusOptions" :key="item.value" :value="item.value">{{ item.label }}</el-radio>
         </el-radio-group>
+        <span v-if="editingSuperAdmin" class="ml-2 text-[12px] text-muted">超级管理员不可禁用</span>
       </el-form-item>
       <el-form-item label="备注">
         <el-input v-model="form.remark" type="textarea" :rows="2" placeholder="请输入备注" />

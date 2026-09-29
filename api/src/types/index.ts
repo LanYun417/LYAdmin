@@ -106,6 +106,8 @@ export interface UserBrief {
 /** 用户详情（含角色信息）。 */
 export interface UserDetail extends UserBrief {
   remark: string | null;
+  /** 是否超级管理员（内置 admin 账号，或持有 super_admin 角色）：受「不可禁用 / 不可删除」保护 */
+  isSuperAdmin: boolean;
   /** 角色对象数组（含 id 与名称），替代原先的 roleIds/roleNames 平行数组 */
   roles: Array<{ id: number; roleName: string }>;
 }

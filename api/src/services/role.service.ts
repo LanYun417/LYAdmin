@@ -3,7 +3,7 @@
  * 模块职责：角色分页/下拉查询、CRUD、菜单授权（唯一操作 Role/RoleMenu 的层）。
  */
 import { Op, type WhereOptions } from 'sequelize';
-import { DataScope, SUPER_ADMIN_ROLE } from '@/constants';
+import { DataScope, Status, SUPER_ADMIN_ROLE } from '@/constants';
 import { Role, RoleDept, RoleMenu, UserRole } from '@/models';
 import { invalidateAuthCache } from '@/services/authCache';
 import type { PageResult } from '@/types';
@@ -150,6 +150,10 @@ export async function updateRole(id: number, input: UpdateRoleInput): Promise<Ro
   const role = await Role.findByPk(id);
   if (!role) {
     throw AppError.notFound('角色不存在');
+  }
+  // 内置超管角色不可禁用（与「不可删除」一致，避免管理端误操作）
+  if (role.roleCode === SUPER_ADMIN_ROLE && input.status === Status.DISABLED) {
+    throw AppError.conflict('内置超级管理员角色不可禁用');
   }
   await role.update({
     roleName: input.roleName,

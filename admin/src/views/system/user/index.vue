@@ -80,6 +80,10 @@ function handleEdit(row: UserDetail): void {
 
 /** 删除 */
 async function handleDelete(row: UserDetail): Promise<void> {
+  if (row.isSuperAdmin) {
+    ElMessage.warning('超级管理员不可删除');
+    return;
+  }
   try {
     await ElMessageBox.confirm(`确定删除用户「${row.username}」吗？`, '提示', { type: 'warning' });
   } catch {
@@ -96,6 +100,10 @@ async function handleDelete(row: UserDetail): Promise<void> {
  * 故用函数显式判定而非 v-permission 指令。操作前二次确认，取消则不变更。
  */
 async function handleStatusChange(row: UserDetail): Promise<void> {
+  if (row.isSuperAdmin) {
+    ElMessage.warning('超级管理员不可禁用');
+    return;
+  }
   if (!hasPermission('system:user:edit')) {
     ElMessage.warning('无操作权限，无法修改用户状态');
     return;
@@ -215,7 +223,12 @@ onMounted(() => {
         </el-table-column>
         <el-table-column label="状态" width="90" align="center">
           <template #default="{ row }">
-            <el-switch :model-value="row.status === 1" @change="handleStatusChange(row as UserDetail)" />
+            <el-switch
+              :model-value="row.status === 1"
+              :disabled="row.isSuperAdmin"
+              :title="row.isSuperAdmin ? '超级管理员不可禁用' : ''"
+              @change="handleStatusChange(row as UserDetail)"
+            />
           </template>
         </el-table-column>
         <el-table-column label="最后登录" width="180">
@@ -247,6 +260,8 @@ onMounted(() => {
                 v-permission="'system:user:remove'"
                 type="danger"
                 link
+                :disabled="row.isSuperAdmin"
+                :title="row.isSuperAdmin ? '超级管理员不可删除' : ''"
                 @click="handleDelete(row as UserDetail)"
               >
                 删除
