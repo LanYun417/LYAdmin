@@ -21,7 +21,7 @@ defineProps<{
       <img class="w-6 h-6 shrink-0" :src="logoUrl" alt="logo" />
       <span
         v-show="!collapsed"
-        class="text-[15px] font-bold tracking-[0.5px] whitespace-nowrap bg-gradient-to-r from-primary to-indigo-500 bg-clip-text text-transparent"
+        class="text-[16px] font-bold tracking-[0.5px] whitespace-nowrap bg-gradient-to-r from-primary to-indigo-500 bg-clip-text text-transparent"
       >
         蓝云后台管理系统
       </span>
