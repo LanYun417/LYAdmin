@@ -1,142 +1,152 @@
 # 蓝云后台管理系统（LYAdmin）
 
-> 一套面向企业内部运营/管理场景的**通用后台管理基座**：JWT 双 Token 鉴权、RBAC 菜单 + 按钮级权限、用户/角色/菜单管理、三类日志、文件上传、ECharts 仪表盘、个人中心与错误页。
+> 一套开箱即用的通用后台管理基座：JWT 双 Token 鉴权、RBAC + 数据权限、系统管理（用户 / 角色 / 菜单 / 部门 / 字典 / 参数）、三类日志、文件管理、代码生成器与 ECharts 仪表盘。前后端 TypeScript 全覆盖，遵循严格分层与统一工程规范。
 
-![Vue](https://img.shields.io/badge/Vue-3.5-42b883) ![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178c6) ![Vite](https://img.shields.io/badge/Vite-8-646cff) ![Element Plus](https://img.shields.io/badge/Element%20Plus-2.14-409eff) ![Tailwind](https://img.shields.io/badge/Tailwind%20CSS-3.4-38bdf8) ![Express](https://img.shields.io/badge/Express-5-000000) ![Sequelize](https://img.shields.io/badge/Sequelize-6-52b0e7) ![MySQL](https://img.shields.io/badge/MySQL-8-4479a1) ![License](https://img.shields.io/badge/License-MIT-green)
+![Vue](https://img.shields.io/badge/Vue-3.5-42b883) ![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178c6) ![Vite](https://img.shields.io/badge/Vite-8-646cff) ![Element Plus](https://img.shields.io/badge/Element%20Plus-2.14-409eff) ![Tailwind](https://img.shields.io/badge/Tailwind%20CSS-3.4-38bdf8) ![Express](https://img.shields.io/badge/Express-5-000000) ![Sequelize](https://img.shields.io/badge/Sequelize-6-52b0e7) ![MySQL](https://img.shields.io/badge/MySQL-8-4479a1) ![Node](https://img.shields.io/badge/node-%3E%3D20.19-339933) ![License](https://img.shields.io/badge/License-MIT-green)
 
----
+<!-- 若在公开仓库，可在此处放置一张系统截图：![screenshot](./docs/screenshot.png) -->
 
-## 1. 功能特性
+## 目录
 
-| 模块       | 能力                                                                                                   |
-| ---------- | ------------------------------------------------------------------------------------------------------ |
-| 登录鉴权   | 账号密码登录、JWT 双 Token（access 2h / refresh 7d）、无感刷新、登出、强制下线（状态校验）             |
-| 权限管理   | RBAC 三段式（用户—角色—菜单）、后端下发菜单树 → 前端动态路由、按钮级 `v-permission` 指令               |
-| 用户管理   | 分页查询、增删改、启用/禁用、重置密码、分配角色、头像                                                  |
-| 角色管理   | 角色 CRUD、菜单授权（权限树勾选）、编码唯一校验                                                        |
-| 菜单管理   | 树形表格 CRUD、目录/菜单/按钮三类、图标选择、排序、显隐、路由/组件路径                                 |
-| 日志管理   | 登录日志、操作日志、HTTP 访问日志（列表 + 条件筛选 + 分页）                                            |
-| 文件上传   | 多文件上传（1~10）、类型/大小白名单、列表、删除、静态访问                                              |
-| 首页       | 统计卡片、近 7 日登录趋势、操作类型分布、各角色用户数（ECharts）                                       |
-| 个人中心   | 修改资料、修改密码（旧密码校验）、更换头像                                                             |
-| 布局与体验 | 侧边栏折叠、面包屑、标签页（tagsView，首页标签固定不可关闭）、keep-alive、暗黑模式、403/404/500 错误页 |
-
----
-
-## 2. 技术栈
-
-| 层            | 技术                                                                                                                                                                                       |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 前端框架      | Vue ^3.5.43 + Vue Router ^5.3.1 + Pinia ^4.0.3（`pinia-plugin-persistedstate` ^4.7.1）                                                                                                     |
-| 前端 UI       | Element Plus ^2.14.6 + `@element-plus/icons-vue` ^2.3.2 + Tailwind CSS ^3.4.19                                                                                                             |
-| 前端工具      | Vite ^8.3.0 + TypeScript ^5.9.3 + vue-tsc ^3.3.11 + axios ^1.20.0 + ECharts ^6.1.0 + dayjs ^1.11.23 + `@vueuse/core` ^15.0.0 + `lodash-es` ^4.18.1 + nprogress ^0.2.0 + sortablejs ^1.15.7 |
-| 前端按需引入  | `unplugin-auto-import` ^21.1.0 + `unplugin-vue-components` ^32.1.0                                                                                                                         |
-| 后端框架      | Express ^5.2.1 + TypeScript ^5.9.3                                                                                                                                                         |
-| 后端数据层    | Sequelize ^6.37.8 + `sequelize-typescript` ^2.1.6 + mysql2 ^3.24.4                                                                                                                         |
-| 后端安全/工具 | jsonwebtoken ^9.0.3 + bcryptjs ^3.0.3 + zod ^4.6.5 + multer ^2.4.0 + morgan ^1.12.1 + cors ^2.8.6 + dotenv ^18.0.2 + dayjs ^1.11.23 + reflect-metadata ^0.2.2                              |
-| 后端开发工具  | ts-node ^10.9.2 + nodemon ^3.1.14 + tsconfig-paths ^4.2.0                                                                                                                                  |
-| 数据库        | MySQL 8.x（库 `ly_admin`，utf8mb4）                                                                                                                                                        |
-| 工程规范      | ESLint ^10.11.0 + Prettier ^3.9.8 + Stylelint ^17.15.0 + husky ^9.1.7 + lint-staged ^17.5.1 + commitlint ^21.2.3 + cz-git ^1.14.0                                                          |
+- [项目简介](#项目简介)
+- [功能特性](#功能特性)
+- [技术栈](#技术栈)
+- [目录结构](#目录结构)
+- [快速开始](#快速开始)
+- [默认账号](#默认账号)
+- [可用脚本](#可用脚本)
+- [环境变量](#环境变量)
+- [部署](#部署)
+- [接口约定](#接口约定)
+- [文档](#文档)
+- [贡献指南](#贡献指南)
+- [常见问题](#常见问题)
+- [许可](#许可)
 
 ---
 
-## 3. 整体目录结构
+## 项目简介
 
-### 3.1 根目录（统一工程规范）
+LYAdmin 面向企业内部运营 / 管理场景，提供一套可直接二次开发的中后台起点。它把「企业后台常见但每次都重复造」的能力沉淀为开箱可用的垂直切片：鉴权、权限、系统管理、日志、文件、代码生成、仪表盘。
+
+设计取向：
+
+- **前后端分离 + 严格分层**：后端 `routes → controllers → services → models`，`services` 是唯一操作数据模型的层；前端按 `views / api / store / components` 组织。
+- **约定优先**：统一响应体、统一分页、统一错误码、菜单驱动动态路由、按钮级权限指令。
+- **零魔法密钥**：JWT 密钥等敏感配置**无默认值**，缺失将拒绝启动，避免「默认口令」事故。
+- **响应式优先**：窄屏（移动端）适配是默认要求，固定尺寸弹层一律走响应式封装。
+
+## 功能特性
+
+| 模块            | 能力                                                                                                                                         |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| 登录鉴权        | 账号密码登录、JWT 双 Token（access 2h / refresh 7d）、无感刷新、登出即时失效（Redis 黑名单）、登录频率限制、账号禁用强制下线                 |
+| 权限管理        | RBAC 三段式（用户—角色—菜单）+ **数据权限**（数据范围：全部 / 自定义部门 / 本部门及以下 / 仅本人）；菜单树 → 动态路由；按钮级 `v-permission` |
+| 用户管理        | 分页查询、增删改、启用 / 禁用、重置密码、分配角色、头像上传、部门归属                                                                        |
+| 角色管理        | 角色 CRUD、菜单授权（权限树勾选）、数据范围设置、编码唯一校验                                                                                |
+| 菜单管理        | 树形表格 CRUD、目录 / 菜单 / 按钮三类、图标选择、排序、显隐、路由与组件路径、权限标识                                                        |
+| 部门管理        | 组织树 CRUD、上级部门选择、防成环校验、删除保护                                                                                              |
+| 字典管理        | 字典类型 + 字典项两表；类型编码创建后不可改；内置字典保护；业务侧 `useDict` 缓存取数                                                         |
+| 参数管理        | 单值可调的系统参数；键名创建后不可改；内置参数禁删                                                                                           |
+| 日志管理        | 登录日志 / 操作日志 / HTTP 访问日志；条件筛选 + 导出；自动归档 + 按保留天数清理                                                              |
+| 文件管理        | 多文件上传、哈希秒传预检、类型 / 大小白名单、列表多条件筛选、下载、删除、静态访问（防盗链 + 图片按需缩放）                                   |
+| 代码生成        | 读取数据表结构 → 预览 → 生成前后端 CRUD 骨架（下载 ZIP 或写入项目目录）                                                                      |
+| 仪表盘          | 统计卡片、近 7 日登录趋势、操作类型分布、各角色用户数（ECharts）                                                                             |
+| 个人中心        | 修改资料、修改密码（旧密码校验）、更换头像                                                                                                   |
+| Markdown 编辑器 | 内置 Vditor（懒加载、资源自托管、随主题切换亮 / 暗）                                                                                         |
+| 布局与体验      | 侧边栏折叠、面包屑、标签页（tagsView）、keep-alive、暗黑模式、移动端响应式、403 / 404 / 500 错误页                                           |
+
+## 技术栈
+
+| 层             | 技术                                                                                                                                                             |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 前端框架       | Vue 3.5 + Vue Router 5 + Pinia 4（`pinia-plugin-persistedstate`）                                                                                                |
+| 前端 UI / 生态 | Element Plus 2.14 + Tailwind CSS 3.4 + `bootstrap-icons-vue` + ECharts 6 + Vditor 4 + axios + dayjs + `@vueuse/core` + `lodash-es` + nprogress                   |
+| 前端工程       | Vite 8 + TypeScript 5.9 + vue-tsc；`unplugin-auto-import` + `unplugin-vue-components` 按需引入；`vite-plugin-compression2` 构建期 gzip / brotli 压缩             |
+| 后端框架       | Express 5 + TypeScript 5.9                                                                                                                                       |
+| 后端数据层     | Sequelize 6 + `sequelize-typescript` + mysql2                                                                                                                    |
+| 后端能力       | jsonwebtoken（JWT）+ bcryptjs（口令）+ zod（校验）+ multer（上传）+ sharp（图片处理）+ redis（官方 node-redis，黑名单 / 限流）+ cors + dotenv + reflect-metadata |
+| 数据库 / 缓存  | MySQL 8.x（库 `ly_admin`，utf8mb4）；Redis（可选，缺失时相关增强自动降级）                                                                                       |
+| 工程规范       | ESLint 10 + Prettier 3.9 + Stylelint 17 + husky 9 + lint-staged 17 + commitlint 21 + cz-git + concurrently                                                       |
+
+> 代码规范见 [`docs/CODE-STYLE.md`](./docs/CODE-STYLE.md)，提交规范见 [`docs/GIT-CONVENTION.md`](./docs/GIT-CONVENTION.md)。
+
+## 目录结构
 
 ```
 ly-admin/
 ├─ admin/                     # 前端工程（Vue3 + Vite + Element Plus）
 ├─ api/                       # 后端工程（Express + TS + Sequelize）
+│  ├─ web/                    # 前端构建产物映射目录（同源部署时由后端托管，产物不入库）
+│  ├─ uploads/                # 上传文件目录（内容不入库）
+│  └─ logs/                   # 日志文件目录
 ├─ docs/                      # 项目文档（PRD / 架构 / 代码规范 / 提交规范）
 ├─ .husky/                    # Git Hooks（pre-commit / commit-msg）
+├─ scripts/                   # 根脚本（如依赖基线守卫 deps-guard.mjs）
 ├─ package.json               # 根脚本：lint / format / commit / dev（并行启动）
 ├─ eslint.config.mjs          # ESLint flat config（覆盖 admin + api）
-├─ .prettierrc.json           # Prettier 规则（printWidth 120、单引号、分号）
-├─ .prettierignore            # Prettier 忽略清单
-├─ .stylelintrc.json          # Stylelint 规则（standard + recess-order + prettier）
-├─ .stylelintignore           # Stylelint 忽略清单
-├─ .editorconfig              # 编辑器统一：UTF-8 / LF / 2 空格缩进
+├─ .prettierrc.json           # Prettier 规则
+├─ .stylelintrc.json          # Stylelint 规则
 ├─ commitlint.config.cjs      # 约定式提交校验规则
 ├─ .czrc                      # cz-git 交互式提交配置
-├─ lint-staged.config.cjs     # 暂存区文件分派 lint / format
-├─ .npmrc                     # 固定 registry 为 npmmirror
-├─ .gitignore                 # 忽略 node_modules / dist / .env / uploads 内容
-└─ README.md                  # 本文件
+├─ lint-staged.config.cjs     # 暂存区分派 lint / format
+├─ LICENSE                    # MIT
+└─ README.md
 ```
 
-### 3.2 前端 `admin/src`（展开到二级）
+**前端 `admin/src`**
 
 ```
-admin/
-├─ src/
-│  ├─ api/                    # axios 实例(request.ts) + 各模块接口(auth/user/role/menu/log/file/dashboard/profile)
-│  ├─ assets/                 # 静态资源（logo 等）
-│  ├─ components/             # 通用组件：IconPicker / MenuTree / Pagination / SearchForm
-│  ├─ directives/             # v-permission 按钮权限指令及注册
-│  ├─ hooks/                  # 组合式复用逻辑（useTable / useTheme）
-│  ├─ layout/                 # 主布局
-│  │  ├─ components/          # AppMain / Navbar / Sidebar / TagsView
-│  │  └─ index.vue
-│  ├─ router/                 # 路由实例 / 静态路由表 / 全局守卫
-│  ├─ store/                  # Pinia
-│  │  └─ modules/             # user / permission / app / tagsView
-│  ├─ styles/                 # index.css（Tailwind 入口）/ element.scss（EP 覆盖）
-│  ├─ types/                  # 全局类型 / 接口 DTO / 路由 meta
-│  ├─ utils/                  # auth / format / permission / validate
-│  ├─ views/                  # 页面：dashboard / login / upload / system / log / profile / error / redirect
-│  ├─ App.vue                 # 根组件
-│  ├─ main.ts                 # 入口：样式引入顺序、注册 Pinia/Router/指令/图标
-│  ├─ vite-env.d.ts           # Vite 环境与 .vue 模块类型声明
-│  ├─ auto-imports.d.ts       # 自动导入类型（生成物，纳入版本管理）
-│  └─ components.d.ts         # 自动注册组件类型（生成物，纳入版本管理）
-├─ index.html
-├─ vite.config.ts             # 别名 @→src、端口 5173、proxy、自动导入
-├─ tailwind.config.js         # preflight:false、darkMode:'class'
-├─ postcss.config.js
-├─ tsconfig.json / tsconfig.node.json
-└─ .env.development / .env.production
+admin/src/
+├─ api/          # axios 实例(request.ts) + 各模块接口(auth/user/role/menu/dept/dict/config/log/file/gen/dashboard/profile)
+├─ assets/       # 静态资源
+├─ components/   # 通用组件：BasicDialog / ErrorPage / IconPicker / MenuTree / Pagination / SearchForm / VditorEditor
+├─ directives/   # v-permission 按钮权限指令及注册
+├─ hooks/        # 组合式复用逻辑（useTable / useTheme / useResponsiveSize / useDict）
+├─ layout/       # 主布局（AppMain / Navbar / Sidebar / TagsView）
+├─ router/       # 路由实例 / 静态路由表 / 全局守卫
+├─ store/        # Pinia（user / permission / app / tagsView）
+├─ styles/       # index.css（Tailwind 入口）/ element.scss（EP 覆盖）
+├─ types/        # 全局类型 / 接口 DTO / 路由 meta
+├─ utils/        # auth / format / permission / validate / element(命令式 API 桶) 等
+├─ views/        # 页面：home / login / upload / system / log / profile / tool / error / redirect
+├─ App.vue       # 根组件
+└─ main.ts       # 入口：样式引入顺序、注册 Pinia/Router/指令/图标
 ```
 
-### 3.3 后端 `api/src`（展开到二级）
+**后端 `api/src`**
 
 ```
-api/
-├─ src/
-│  ├─ config/                 # index.ts（读取 .env）/ database.ts（Sequelize 实例 + sync）
-│  ├─ constants/              # 错误码 / 枚举 / 正则 / 上传白名单 / 分页默认值
-│  ├─ controllers/            # 8 个控制器：参数解析 + 调 Service + 组装响应
-│  ├─ middlewares/            # auth / permission / validate / errorHandler / operationLog / upload
-│  ├─ models/                 # 8 张表模型 + 关联（User/Role/Menu/UserRole/RoleMenu/LoginLog/OperationLog/File）
-│  ├─ routes/                 # 8 个业务路由 + index.ts 聚合
-│  ├─ seed/                   # 种子数据：menu → role → user
-│  ├─ services/               # 8 个服务：业务逻辑（唯一操作 Model 的层）
-│  ├─ types/                  # 共享类型 + express.d.ts 扩展
-│  ├─ utils/                  # response / jwt / password / pagination / tree / logger / asyncHandler
-│  ├─ validators/             # zod 校验 schema
-│  ├─ app.ts                  # 创建 Express、挂载中间件/静态/路由/错误处理
-│  └─ server.ts               # 入口：reflect-metadata → 连库 → sync → seed → listen
-├─ uploads/                   # 上传文件目录（内容不入库）
-├─ logs/                      # 日志文件目录
-├─ nodemon.json               # 热重载配置（ts-node 直跑）
-├─ tsconfig.json              # commonjs + 装饰器元数据 + 路径别名 @/*
-├─ .env / .env.example        # 环境变量
-└─ package.json
+api/src/
+├─ config/       # index.ts（读取 .env）/ database.ts（Sequelize 实例 + sync）
+├─ constants/    # 错误码 / 枚举 / 正则 / 上传白名单 / 分页默认值
+├─ controllers/  # 控制器：参数解析 + 调 Service + 组装响应
+├─ middlewares/  # auth / permission / validate / errorHandler / operationLog / upload / loginRateLimit / hotlinkGuard / imageScale
+├─ models/       # Sequelize 模型 + 关联（User/Role/Menu/Dept/DictType/DictItem/SysConfig/File/三类日志/中间表等）
+├─ routes/       # 业务路由 + index.ts 聚合（统一挂在 /api）
+├─ seed/         # 种子数据：migrate → menu → role → user → dict → config
+├─ services/     # 业务逻辑（唯一操作 Model 的层），含 dataScope / tokenBlacklist / authCache 等
+├─ logging/      # 日志子系统：文件日志 / 批量缓冲 / 归档 / 保留清理 / 进程异常捕获
+├─ docs/         # 自建接口文档（catalog + render）与路由/留痕覆盖校验
+├─ types/        # 共享类型 + express.d.ts 扩展
+├─ utils/        # response / jwt / password / pagination / tree / logger / userAgent 等
+├─ validators/   # zod 校验 schema
+├─ app.ts        # 创建 Express、挂载中间件 / 静态 / 路由 / 错误处理
+└─ server.ts     # 入口：reflect-metadata → 连库 → sync → seed → listen
 ```
 
----
+## 快速开始
 
-## 4. 快速开始
+### 环境要求
 
-### 4.1 环境要求
+| 项      | 要求                                                     |
+| ------- | -------------------------------------------------------- |
+| Node.js | >= 20.19.0（验证于 v22.x）                               |
+| npm     | >= 10                                                    |
+| MySQL   | 8.x 运行中，需提前创建数据库 `ly_admin`（utf8mb4）       |
+| Redis   | 可选。用于登出黑名单与登录限流；未配置时相关增强自动降级 |
 
-| 项      | 要求                                               |
-| ------- | -------------------------------------------------- |
-| Node.js | >= 20.19.0（本项目验证于 v22.x）                   |
-| npm     | >= 10                                              |
-| MySQL   | 8.x 运行中，需提前创建数据库 `ly_admin`（utf8mb4） |
-
-### 4.2 准备数据库
+### 1. 准备数据库
 
 ```sql
 CREATE DATABASE IF NOT EXISTS `ly_admin`
@@ -144,191 +154,252 @@ CREATE DATABASE IF NOT EXISTS `ly_admin`
   DEFAULT COLLATE utf8mb4_general_ci;
 ```
 
-> 表结构由后端首次启动时 `sequelize.sync()` **自动创建**（8 张表），无需手工建表。
+> 表结构由后端首次启动时 `sequelize.sync()` **自动创建**，无需手工建表；既有库的字段演进由种子里的幂等迁移自动补齐。
 
-### 4.3 安装依赖
+### 2. 安装依赖
+
+根依赖（工程规范工具 + husky 钩子）**务必先装**：
 
 ```bash
-# 根目录（工程规范工具，务必先装，用于装配 husky 钩子）
-npm install
-
-# 后端
-cd api && npm install
-
-# 前端
-cd ../admin && npm install
+npm install            # 根目录
+cd api && npm install  # 后端
+cd ../admin && npm install  # 前端
 ```
 
-### 4.4 配置并启动后端
+### 3. 配置环境变量
 
 ```bash
 cd api
-cp .env.example .env      # 复制模板后按需修改
-npm run dev               # 启动于 http://localhost:3000
+cp .env.example .env
 ```
 
-- 首次启动会自动建表并写入种子数据（超管账号、默认角色、完整菜单树）。
-- 健康检查：`GET http://localhost:3000/api`。
+至少需要改两处：
 
-### 4.5 启动前端
+- `DB_*`：数据库连接信息。
+- `JWT_ACCESS_SECRET` / `JWT_REFRESH_SECRET`：**必填且必须互不相同**，缺失或为空将拒绝启动。生成方式：
 
 ```bash
-cd admin
-npm run dev               # 启动于 http://localhost:5173
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 
-访问 `http://localhost:5173`，使用默认账号登录。
+完整变量清单见 [环境变量](#环境变量)。
 
-### 4.6 根目录一键并行启动
+### 4. 启动
 
 ```bash
-npm run dev               # concurrently 同时启动 api(:3000) 与 admin(:5173)
+# 根目录：并行启动前后端（api :3000，admin :5173）
+npm run dev
 ```
 
-> 前端 dev server 通过 Vite 代理将 `/api`、`/uploads` 转发到 `http://localhost:3000`，同源无跨域。
+或分别启动：
 
----
+```bash
+cd api && npm run dev      # http://localhost:3000
+cd admin && npm run dev    # http://localhost:5173
+```
 
-## 5. 默认账号
+启动后可访问：
+
+- 前端页面：<http://localhost:5173>
+- 接口文档：<http://localhost:3000/api-docs>（零依赖自建文档页）
+- 健康检查：`GET http://localhost:3000/api`
+
+> 前端 dev server 通过 Vite 代理把 `/api`、`/uploads` 转发到 `http://localhost:3000`，开发期同源、无跨域。
+
+## 默认账号
 
 | 账号    | 密码     | 角色                        |
 | ------- | -------- | --------------------------- |
 | `admin` | `123456` | 超级管理员（`super_admin`） |
 
-> ⚠️ **安全提示**：`admin` / `123456` 仅用于本地初始登录，**首次部署后请立即修改密码**（个人中心 → 修改密码），并避免在公网环境使用默认凭据。
+首次启动会自动写入上述超管账号、默认角色与完整菜单树。
 
----
+> **安全提示**：默认凭据仅用于本地初始登录。部署后请立即修改密码，并避免在公网环境使用默认口令。
 
-## 6. 可用脚本
+## 可用脚本
 
-### 6.1 根目录（`package.json`）
+### 根目录
 
-| 命令                    | 说明                                            |
-| ----------------------- | ----------------------------------------------- |
-| `npm run prepare`       | 装配 husky Git 钩子（`npm install` 后自动执行） |
-| `npm run lint`          | 全仓 ESLint 检查（`eslint . --max-warnings 0`） |
-| `npm run lint:fix`      | 全仓 ESLint 自动修复                            |
-| `npm run format`        | 全仓 Prettier 格式化                            |
-| `npm run format:check`  | 全仓 Prettier 格式校验（不写文件）              |
-| `npm run stylelint`     | 全仓 Stylelint 检查                             |
-| `npm run stylelint:fix` | 全仓 Stylelint 自动修复                         |
-| `npm run commit`        | cz-git 交互式生成规范提交                       |
-| `npm run dev:api`       | 仅启动后端                                      |
-| `npm run dev:admin`     | 仅启动前端                                      |
-| `npm run dev`           | 并行启动前后端                                  |
+| 命令                    | 说明                                           |
+| ----------------------- | ---------------------------------------------- |
+| `npm run dev`           | 并行启动前后端                                 |
+| `npm run dev:api`       | 仅启动后端                                     |
+| `npm run dev:admin`     | 仅启动前端                                     |
+| `npm run lint`          | 全仓 ESLint 检查（`--max-warnings 0`）         |
+| `npm run lint:fix`      | 全仓 ESLint 自动修复                           |
+| `npm run format`        | 全仓 Prettier 格式化                           |
+| `npm run format:check`  | 全仓 Prettier 格式校验（不写文件）             |
+| `npm run stylelint`     | 全仓 Stylelint 检查                            |
+| `npm run stylelint:fix` | 全仓 Stylelint 自动修复                        |
+| `npm run guard:deps`    | 校验三处 `package.json` 的运行时依赖与基线一致 |
+| `npm run commit`        | cz-git 交互式生成规范提交                      |
+| `npm run prepare`       | 装配 husky 钩子（`npm install` 后自动执行）    |
 
-### 6.2 前端 `admin/`
+### 前端 `admin/`
 
-| 命令                 | 说明                                     |
-| -------------------- | ---------------------------------------- |
-| `npm run dev`        | Vite 开发服务（:5173）                   |
-| `npm run build`      | 类型检查（`vue-tsc --noEmit`）+ 生产构建 |
-| `npm run build:only` | 跳过类型检查，直接构建                   |
-| `npm run preview`    | 预览构建产物                             |
-| `npm run type-check` | 仅类型检查                               |
+| 命令                 | 说明                             |
+| -------------------- | -------------------------------- |
+| `npm run dev`        | Vite 开发服务（:5173）           |
+| `npm run build`      | 类型检查 + 生产构建              |
+| `npm run build:only` | 跳过类型检查，直接构建           |
+| `npm run preview`    | 本地预览构建产物                 |
+| `npm run type-check` | 仅类型检查（`vue-tsc --noEmit`） |
 
-### 6.3 后端 `api/`
+### 后端 `api/`
 
-| 命令                | 说明                          |
-| ------------------- | ----------------------------- |
-| `npm run dev`       | nodemon + ts-node 热重载开发  |
-| `npm run build`     | 编译到 `dist/`（tsc）         |
-| `npm run start`     | 运行编译产物 `dist/server.js` |
-| `npm run seed`      | 单独执行种子数据（幂等）      |
-| `npm run typecheck` | 仅类型检查（`tsc --noEmit`）  |
+| 命令                   | 说明                                             |
+| ---------------------- | ------------------------------------------------ |
+| `npm run dev`          | nodemon + ts-node 热重载                         |
+| `npm run build`        | 编译到 `dist/`                                   |
+| `npm run start`        | 运行编译产物 `dist/server.js`                    |
+| `npm run seed`         | 单独执行种子数据（幂等）                         |
+| `npm run check:models` | 模型关联冒烟（不连库校验关联声明，改模型后必跑） |
+| `npm run typecheck`    | 仅类型检查（`tsc --noEmit`）                     |
 
----
+## 环境变量
 
-## 7. 环境变量说明
+### 后端 `api/.env`
 
-### 7.1 后端 `api/.env`
+| 变量                           | 示例值                  | 说明                                                |
+| ------------------------------ | ----------------------- | --------------------------------------------------- |
+| `NODE_ENV`                     | `development`           | 运行环境                                            |
+| `PORT`                         | `3000`                  | 后端端口                                            |
+| `DB_HOST` / `DB_PORT`          | `localhost` / `3306`    | MySQL 主机 / 端口                                   |
+| `DB_NAME` / `DB_USER`          | `ly_admin` / `root`     | 数据库名 / 账号                                     |
+| `DB_PASSWORD`                  | `your_password`         | 数据库密码（改成实际值）                            |
+| `DB_LOGGING`                   | `true`                  | 是否将 SQL 写入日志文件                             |
+| `JWT_ACCESS_SECRET`            | `<32 字节随机 hex>`     | accessToken 密钥（**必填**，无默认值）              |
+| `JWT_REFRESH_SECRET`           | `<32 字节随机 hex>`     | refreshToken 密钥（**必填**，须与上方不同）         |
+| `JWT_ACCESS_EXPIRES_IN`        | `2h`                    | accessToken 有效期                                  |
+| `JWT_REFRESH_EXPIRES_IN`       | `7d`                    | refreshToken 有效期                                 |
+| `TRUST_PROXY`                  | `1`                     | 反向代理信任跳数（仅部署在代理后设置）              |
+| `UPLOAD_DIR`                   | `uploads`               | 上传根目录（相对 `api/`）                           |
+| `UPLOAD_MAX_SIZE`              | `10485760`              | 单文件上限（字节，10MB）                            |
+| `UPLOAD_MAX_COUNT`             | `10`                    | 单次最多文件数                                      |
+| `UPLOAD_CACHE_DIR`             | `cache/images`          | 图片缩放缓存目录（须位于 `UPLOAD_DIR` 之外）        |
+| `UPLOAD_ALLOWED_REFERERS`      | `http://localhost:5173` | 防盗链 Referer 白名单（逗号分隔；同源部署无需配置） |
+| `CORS_ORIGIN`                  | `http://localhost:5173` | 允许的跨域来源                                      |
+| `LOG_DIR`                      | `logs`                  | 日志目录                                            |
+| `LOG_ARCHIVE_HOUR/MINUTE`      | `0` / `5`               | 日志归档时刻（本地时间）                            |
+| `LOG_ARCHIVE_KEEP_SOURCE`      | `false`                 | 归档后是否保留源 `.log`                             |
+| `LOG_SLOW_SQL_MS`              | `200`                   | 慢 SQL 阈值（ms）                                   |
+| `LOG_HTTP_RETENTION_DAYS`      | `7`                     | HTTP 访问日志保留天数                               |
+| `LOG_OPERATION_RETENTION_DAYS` | `180`                   | 操作日志保留天数                                    |
+| `LOG_LOGIN_RETENTION_DAYS`     | `180`                   | 登录日志保留天数                                    |
+| `LOG_RETENTION_HOUR/MINUTE`    | `0` / `10`              | 保留清理触发时刻                                    |
+| `LOG_RETENTION_ENABLED`        | `true`                  | 是否启用日志保留清理                                |
+| `REDIS_HOST` / `REDIS_PORT`    | `127.0.0.1` / `6379`    | Redis 地址（留空 `REDIS_HOST` 即视为不启用）        |
+| `REDIS_PASSWORD` / `REDIS_DB`  | 空 / `0`                | Redis 密码 / 库号                                   |
 
-| 变量                     | 示例值                    | 说明                         |
-| ------------------------ | ------------------------- | ---------------------------- |
-| `NODE_ENV`               | `development`             | 运行环境                     |
-| `PORT`                   | `3000`                    | 后端端口                     |
-| `DB_HOST`                | `localhost`               | MySQL 主机                   |
-| `DB_PORT`                | `3306`                    | MySQL 端口                   |
-| `DB_NAME`                | `ly_admin`                | 数据库名                     |
-| `DB_USER`                | `root`                    | 数据库账号                   |
-| `DB_PASSWORD`            | `your_password`           | 数据库密码（**改成实际值**） |
-| `DB_LOGGING`             | `false`                   | 是否打印 SQL                 |
-| `JWT_ACCESS_SECRET`      | `ly_admin_access_secret`  | accessToken 密钥             |
-| `JWT_REFRESH_SECRET`     | `ly_admin_refresh_secret` | refreshToken 密钥            |
-| `JWT_ACCESS_EXPIRES_IN`  | `2h`                      | accessToken 有效期           |
-| `JWT_REFRESH_EXPIRES_IN` | `7d`                      | refreshToken 有效期          |
-| `UPLOAD_DIR`             | `uploads`                 | 上传根目录（相对 `api/`）    |
-| `UPLOAD_MAX_SIZE`        | `10485760`                | 单文件上限（字节，10MB）     |
-| `UPLOAD_MAX_COUNT`       | `10`                      | 单次最多文件数               |
-| `CORS_ORIGIN`            | `http://localhost:5173`   | 允许的跨域来源               |
-| `LOG_DIR`                | `logs`                    | 日志文件目录                 |
+### 前端 `admin/.env.development` / `.env.production`
 
-### 7.2 前端 `admin/.env.development`
+| 变量                   | 示例值             | 说明                              |
+| ---------------------- | ------------------ | --------------------------------- |
+| `VITE_APP_TITLE`       | `蓝云后台管理系统` | 站点标题                          |
+| `VITE_API_BASE_URL`    | `/api`             | axios baseURL（走代理 / 同源）    |
+| `VITE_UPLOAD_BASE_URL` | `/uploads`         | 静态资源前缀                      |
+| `VITE_PORT`            | `5173`             | dev server 端口（仅 development） |
 
-| 变量                   | 示例值             | 说明                          |
-| ---------------------- | ------------------ | ----------------------------- |
-| `VITE_APP_TITLE`       | `蓝云后台管理系统` | 站点标题                      |
-| `VITE_API_BASE_URL`    | `/api`             | axios baseURL（走 Vite 代理） |
-| `VITE_UPLOAD_BASE_URL` | `/uploads`         | 静态资源前缀                  |
-| `VITE_PORT`            | `5173`             | dev server 端口               |
+## 部署
 
-### 7.3 前端 `admin/.env.production`
+### 方式一：同源部署（推荐）
 
-| 变量                   | 示例值             | 说明         |
-| ---------------------- | ------------------ | ------------ |
-| `VITE_APP_TITLE`       | `蓝云后台管理系统` | 站点标题     |
-| `VITE_API_BASE_URL`    | `/api`             | 生产同源前缀 |
-| `VITE_UPLOAD_BASE_URL` | `/uploads`         | 静态资源前缀 |
+前端产物直接构建进后端目录，由后端一并托管：
 
----
+```bash
+cd admin
+npm run build:only -- --outDir ../api/web   # 产物输出到 api/web
 
-## 8. 接口约定速览
+cd ../api
+npm run build
+NODE_ENV=production node dist/server.js
+```
+
+- 后端启动时若 `api/web` 存在，会自动托管该目录，并对前端 history 路由做 `index.html` 回退。
+- 产物目录可用 `WEB_DIST_DIR` 覆盖（相对 `api/`）。
+- 同源部署下静态资源的防盗链「同源放行」天然成立，无需配置 `UPLOAD_ALLOWED_REFERERS`。
+
+### 方式二：前后端分离部署
+
+- 前端产物部署到任意静态服务器 / Nginx。
+- 后端配置：`CORS_ORIGIN` 填前端地址；`UPLOAD_ALLOWED_REFERERS` 填前端 origin（否则 `/uploads` 静态资源会被判为外链 403）。
+- 前端 `VITE_API_BASE_URL` 指向后端地址（或由网关统一前缀）。
+
+> 生产环境建议将 `NODE_ENV=production`，并通过进程管理器（systemd / pm2 / 容器）托管；`UPLOAD_DIR`、`LOG_DIR`、`cache` 目录需保证可写与持久化。
+
+## 接口约定
 
 - **统一响应体**：成功 `{ "code": 200, "message": "success", "data": <T> }`；失败 `{ "code": <业务码>, "message": "<描述>", "data": null }`。
 - **分页**：请求 `{ page, pageSize }`；响应 `data = { list, total, page, pageSize }`。
-- **错误码**（节选）：`400` 参数校验失败 · `401` 未认证/账密错误/账号禁用 · `403` 无权限 · `404` 资源不存在 · `409` 数据冲突 · `500` 服务器错误。
-- **静态资源**：`GET /uploads/:filename`。
-- 完整接口清单见 [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) 第 5 节；响应体与错误码细则见第 6 节。
+- **错误码**（节选）：`400` 参数校验失败 · `401` 未认证 / 账密错误 / 账号禁用 · `403` 无权限 · `404` 资源不存在 · `409` 数据冲突 · `500` 服务器错误。
+- **鉴权**：除登录 / 刷新 / 接口文档外，均需在请求头携带 `Authorization: Bearer <accessToken>`。
+- **静态资源**：`GET /uploads/:filename`（启用防盗链与图片按需缩放）。
+- **在线文档**：启动后端后访问 `/api-docs`。
 
----
+完整接口清单见 [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md)，运行期以 `/api-docs` 为准。
 
-## 9. 文档索引
+## 文档
 
-| 文档          | 路径                                                           | 用途                                   |
-| ------------- | -------------------------------------------------------------- | -------------------------------------- |
-| 产品需求文档  | [`docs/PRD.md`](./docs/PRD.md)                                 | 需求范围、优先级、验收标准             |
-| 系统架构设计  | [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md)               | 技术选型、数据模型、接口清单、统一约定 |
-| 代码规范      | [`docs/CODE-STYLE.md`](./docs/CODE-STYLE.md)                   | 命名、前后端编码约定、注释、工具链     |
-| Git 提交规范  | [`docs/GIT-CONVENTION.md`](./docs/GIT-CONVENTION.md)           | 分支策略、提交信息、钩子与排查         |
-| 类图 / 时序图 | `docs/class-diagram.mermaid` · `docs/sequence-diagram.mermaid` | 结构与关键流程可视化                   |
+| 文档           | 路径                                                 | 用途                                   |
+| -------------- | ---------------------------------------------------- | -------------------------------------- |
+| 产品需求文档   | [`docs/PRD.md`](./docs/PRD.md)                       | 需求范围、优先级、验收标准             |
+| 系统架构设计   | [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md)     | 技术选型、数据模型、接口清单、统一约定 |
+| 代码规范       | [`docs/CODE-STYLE.md`](./docs/CODE-STYLE.md)         | 命名、前后端编码约定、注释、工具链     |
+| Git 提交规范   | [`docs/GIT-CONVENTION.md`](./docs/GIT-CONVENTION.md) | 分支策略、提交信息、钩子与排查         |
+| 日志子系统设计 | [`docs/system_design.md`](./docs/system_design.md)   | 日志采集 / 归档 / 保留的实现设计       |
+| 类图 / 时序图  | `docs/*.mermaid`                                     | 结构与关键流程可视化                   |
 
----
+## 贡献指南
 
-## 10. 常见问题 FAQ
+欢迎提交 Issue 与 Pull Request。
 
-**Q1：端口被占用（3000 或 5173）怎么办？**
-后端改 `api/.env` 的 `PORT`；前端改 `admin/.env.development` 的 `VITE_PORT`（`vite.config.ts` 为 `strictPort: true`，端口被占用会直接报错而非自动切换）。同时记得同步 `vite.config.ts` 中 proxy 的 `target` 端口与后端一致。
+1. **环境**：按[快速开始](#快速开始)拉起项目；根目录 `npm install` 以装配 husky 钩子。
+2. **分支**：从 `master` 切出特性分支（见 [`docs/GIT-CONVENTION.md`](./docs/GIT-CONVENTION.md) 分支策略）。
+3. **编码**：遵循 [`docs/CODE-STYLE.md`](./docs/CODE-STYLE.md)（命名、分层、注释规范）；提交信息使用 Conventional Commits（`npm run commit` 可交互生成）。
+4. **提交前自检**（务必全绿）：
 
-**Q2：数据库连不上（`ECONNREFUSED` / `Access denied`）？**
-确认 MySQL 已启动、`ly_admin` 库已创建；核对 `api/.env` 的 `DB_HOST/DB_PORT/DB_NAME/DB_USER/DB_PASSWORD`。若报 `Unknown database 'ly_admin'`，执行第 4.2 节的建库 SQL。
+   ```bash
+   npm run format:check      # Prettier
+   npm run lint              # ESLint（--max-warnings 0）
+   npm run stylelint         # Stylelint
+   npm run guard:deps        # 依赖基线
+   (cd api && npm run typecheck && npm run check:models)
+   (cd admin && npm run type-check)
+   ```
 
-**Q3：Tailwind 样式不生效？**
-本项目 Tailwind 设了 `corePlugins.preflight: false`（避免破坏 Element Plus），因此 Tailwind **不做全局重置**属预期行为。若工具类整体失效，检查：`admin/src/styles/index.css` 是否含 `@tailwind base/components/utilities`；该文件是否在 `main.ts` 中最后引入；`tailwind.config.js` 的 `content` 是否覆盖到对应 `.vue`。
+5. **PR**：说明背景与改动点，关联相关 Issue，并确保上述检查通过。
 
-**Q4：提交时 husky 钩子未安装 / 不执行？**
-在**根目录**执行 `npm install`（会自动触发 `prepare` → `husky`），确认 `.husky/` 下存在 `pre-commit` 与 `commit-msg`。只在 `admin/` 或 `api/` 装依赖不会装配钩子。
+> 新增后端业务模块、菜单 / 权限、字段迁移等有固定清单，详见 [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md)。
 
-**Q5：登录成功后菜单为空？**
-菜单由后端按当前用户角色下发。若 `super_admin` 登录仍为空，说明种子数据未写入——执行 `cd api && npm run seed` 重跑种子（幂等）；若为普通角色，检查是否已在「角色管理 → 菜单授权」中勾选菜单。
+## 常见问题
 
-**Q6：接口报 401 且反复跳登录页？**
-accessToken 过期时前端会自动刷新（`admin/src/api/request.ts` 无感刷新）；若 refreshToken 也失效则登出。检查 `api/.env` 的 `JWT_*` 配置是否与登录时一致、系统时间是否准确。
+**Q1：端口被占用（3000 / 5173）？**
+后端改 `api/.env` 的 `PORT`；前端改 `admin/.env.development` 的 `VITE_PORT`（`vite.config.ts` 为 `strictPort: true`，端口占用会直接报错而非自动切换）；同时同步 `vite.config.ts` 中 proxy 的 `target` 端口。
 
-**Q7：上传文件后访问 404？**
-确认 `api/uploads/` 目录存在且可写；静态目录挂载在 `/uploads`，前端使用 `VITE_UPLOAD_BASE_URL` 前缀拼接；确保后端已启动且前端代理已转发 `/uploads`。
+**Q2：启动即报 JWT 相关错误？**
+`JWT_ACCESS_SECRET` / `JWT_REFRESH_SECRET` 为**必填**且需互不相同。按[第 3 步](#3-配置环境变量)生成随机值填入 `api/.env`。
 
----
+**Q3：数据库连不上（`ECONNREFUSED` / `Access denied` / `Unknown database`）？**
+确认 MySQL 已启动、`ly_admin` 库已创建；核对 `api/.env` 的 `DB_*`。库不存在时执行[第 1 步](#1-准备数据库)的建库 SQL。
+
+**Q4：登录 / 鉴权正常，但登出黑名单、登录限流没生效？**
+这两项依赖 Redis。未配置 `REDIS_HOST` 时视为不启用，主流程不受影响但增强失效。需要时启动 Redis 并配置 `REDIS_*`。
+
+**Q5：Tailwind 样式不生效？**
+本项目 Tailwind 设了 `corePlugins.preflight: false`（避免破坏 Element Plus），**不做全局重置**属预期行为。若工具类整体失效，检查 `admin/src/styles/index.css` 是否含 `@tailwind base/components/utilities`、是否在 `main.ts` 末尾引入、`tailwind.config.js` 的 `content` 是否覆盖到对应文件。改了 `tailwind.config.js` 需**重启 dev server**（配置变更不会热更新）。
+
+**Q6：提交时 husky 钩子不执行？**
+在**根目录**执行 `npm install`（会触发 `prepare` → `husky`），确认 `.husky/` 下存在 `pre-commit` 与 `commit-msg`。只在 `admin/` 或 `api/` 装依赖不会装配钩子。
+
+**Q7：登录成功但菜单为空？**
+菜单由后端按当前用户角色下发。`super_admin` 仍为空说明种子未写入，执行 `cd api && npm run seed`（幂等）；普通角色请在「角色管理 → 菜单授权」中勾选。
+
+**Q8：上传文件后访问 404？**
+确认 `api/uploads/` 存在且可写；确保后端已启动、前端代理已转发 `/uploads`。分离部署时还需把前端 origin 配进 `UPLOAD_ALLOWED_REFERERS`。
+
+**Q9：接口 401 且反复跳登录？**
+accessToken 过期会由前端自动刷新（`admin/src/api/request.ts`）；refreshToken 也失效则登出。检查 `JWT_*` 配置一致性与服务器时间是否准确。
 
 ## 许可
 
-MIT
+本项目基于 [MIT 许可证](./LICENSE) 开源。
