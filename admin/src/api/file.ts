@@ -1,3 +1,6 @@
+/**
+ * 文件接口：上传、列表、下载与删除，以及类型 / 上传人筛选项和秒传预检。
+ */
 import { del, get, request } from './request';
 import type { FileItem, FileQuery, FileUploaderOption, PageResult } from '@/types/api';
 

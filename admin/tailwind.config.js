@@ -10,7 +10,7 @@ export default {
   theme: {
     extend: {
       // 映射 Element Plus 的语义色变量：类名更短，且自动适配亮/暗主题。
-      // 命名约定见 docs/STYLE-REFACTOR-PLAN.md §4；新增色名须与此保持一致，避免出现多套叫法。
+      // 新增色名须与下列命名保持一致（语义 + 用途前缀），避免出现多套叫法。
       colors: {
         primary: 'var(--el-color-primary)',
         success: 'var(--el-color-success)',

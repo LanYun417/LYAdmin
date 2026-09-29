@@ -1,3 +1,6 @@
+/**
+ * 全局指令注册入口（供 main.ts 调用）。
+ */
 import type { App } from 'vue';
 import permission from './permission';
 

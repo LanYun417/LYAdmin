@@ -1,6 +1,6 @@
 /**
  * 路由聚合入口。
- * 模块职责：将 8 个业务路由模块挂载到 `/api` 下。
+ * 模块职责：将 12 个业务路由模块挂载到 `/api` 下。
  */
 import { Router } from 'express';
 import authRoutes from './auth.routes';

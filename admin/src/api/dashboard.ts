@@ -1,3 +1,6 @@
+/**
+ * 首页仪表盘接口：统计卡片、登录趋势、操作类型分布与各角色用户数。
+ */
 import { get } from './request';
 import type { DashboardStats, LoginTrend, NameValue, RoleUserCount } from '@/types/api';
 

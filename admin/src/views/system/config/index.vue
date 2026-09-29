@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 参数配置页。模块职责：系统参数查询与增删改，内置参数禁止删除。 */
 import { ref } from 'vue';
 import { ElMessage, ElMessageBox } from '@/utils/element';
 import { BIconPlus } from 'bootstrap-icons-vue';

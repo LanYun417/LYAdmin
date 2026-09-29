@@ -9,7 +9,7 @@ interface Props {
   modelValue: boolean;
   /** 弹窗标题 */
   title?: string;
-  /** 桌面端宽度；视口 ≤768px 时自动压缩为 92%，固定宽度不再溢出移动端 */
+  /** 桌面端宽度；视口 ≤768px 时自动压缩为 98%，固定宽度不再溢出移动端 */
   width?: string | number;
   /** 确定按钮 loading（使用默认 footer 时生效） */
   confirmLoading?: boolean;

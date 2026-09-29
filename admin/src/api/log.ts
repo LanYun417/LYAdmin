@@ -1,3 +1,6 @@
+/**
+ * 日志接口：登录日志、操作日志与 HTTP 访问日志的查询、清空与 CSV 导出。
+ */
 import { del, get, request } from './request';
 import type {
   HttpLog,

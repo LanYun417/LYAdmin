@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 参数新增 / 编辑弹窗。模块职责：维护参数名称、键名（编辑时不可改）、参数值与备注。 */
 import { reactive, ref, watch } from 'vue';
 import { ElMessage } from '@/utils/element';
 import type { FormInstance, FormRules } from 'element-plus';

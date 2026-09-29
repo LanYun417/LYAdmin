@@ -1,4 +1,8 @@
 <script setup lang="ts">
+/**
+ * 用户管理页。
+ * 模块职责：用户列表查询，以及新增 / 编辑 / 删除、启停切换、重置密码、分配角色。
+ */
 import { onMounted, ref } from 'vue';
 import { ElMessage, ElMessageBox } from '@/utils/element';
 import { BIconPersonFill, BIconPlus } from 'bootstrap-icons-vue';

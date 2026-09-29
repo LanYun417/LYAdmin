@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 404 页面不存在页。模块职责：未匹配到任何路由时的兜底页。 */
 import ErrorPage from '@/components/ErrorPage/index.vue';
 
 defineOptions({ name: 'Error404' });

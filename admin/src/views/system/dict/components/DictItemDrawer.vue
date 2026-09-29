@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 字典项抽屉。模块职责：维护某个字典类型下的字典项（查询、增删改、启停），并同步清理字典缓存。 */
 import { reactive, ref, watch } from 'vue';
 import { ElMessage, ElMessageBox } from '@/utils/element';
 import type { FormInstance, FormRules } from 'element-plus';

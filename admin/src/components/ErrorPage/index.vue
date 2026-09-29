@@ -18,7 +18,7 @@ const props = withDefaults(
   },
 );
 
-/** 状态码配色类名：显式列出完整类名，避免动态拼接导致 Tailwind 扫描遗漏（见 docs/STYLE-REFACTOR-PLAN.md §7） */
+/** 状态码配色类名：显式列出完整类名，避免动态拼接导致 Tailwind 扫描遗漏。 */
 const CODE_COLOR_CLASS = {
   primary: 'text-primary',
   warning: 'text-warning',

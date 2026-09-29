@@ -39,7 +39,7 @@ export async function logout(req: Request, res: Response): Promise<void> {
  * 当前用户信息。
  */
 export async function profile(req: Request, res: Response): Promise<void> {
-  // 复用鉴权中间件已加载的上下文，避免重复 loadAuthUser（B2）
+  // 复用鉴权中间件已加载的上下文，避免重复 loadAuthUser
   const result = await authService.getProfile(req.user!.userId, req.authContext);
   ok(res, result);
 }

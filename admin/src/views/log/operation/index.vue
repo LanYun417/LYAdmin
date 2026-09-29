@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 操作日志页。模块职责：按模块、操作人、结果与时间范围查询操作记录并导出 CSV。 */
 import { ref } from 'vue';
 import { ElMessage } from '@/utils/element';
 import { BIconArrowClockwise, BIconDownload } from 'bootstrap-icons-vue';

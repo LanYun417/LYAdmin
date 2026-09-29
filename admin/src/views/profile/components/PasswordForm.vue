@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 修改密码表单。模块职责：校验原密码与两次新密码一致，修改成功后登出并跳回登录页。 */
 import { reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage } from '@/utils/element';

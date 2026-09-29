@@ -1,3 +1,6 @@
+/**
+ * 用户接口：用户分页列表、详情、增删改、状态切换、重置密码与分配角色。
+ */
 import { del, get, post, put } from './request';
 import type { PageResult, UserDetail, UserQuery, UserUpsert } from '@/types/api';
 

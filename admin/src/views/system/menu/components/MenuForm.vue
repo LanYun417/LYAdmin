@@ -1,4 +1,8 @@
 <script setup lang="ts">
+/**
+ * 菜单新增 / 编辑弹窗。
+ * 模块职责：维护目录 / 菜单 / 按钮三类节点的上级、路由、权限标识与显隐等配置。
+ */
 import { computed, reactive, ref, watch } from 'vue';
 import { ElMessage } from '@/utils/element';
 import type { FormInstance, FormRules } from 'element-plus';

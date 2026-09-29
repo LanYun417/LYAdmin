@@ -1,3 +1,7 @@
+/**
+ * 静态路由表（登录页、错误页、Layout 根路由与 404 兜底）。
+ * 动态业务路由由 permission store 依据菜单树生成后注入 Layout 下。
+ */
 import type { RouteRecordRaw } from 'vue-router';
 import Layout from '@/layout/index.vue';
 

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 分配角色弹窗。模块职责：勾选目标用户的所属角色并提交授权。 */
 import { ref, watch } from 'vue';
 import { ElMessage } from '@/utils/element';
 import { assignUserRolesApi } from '@/api/user';

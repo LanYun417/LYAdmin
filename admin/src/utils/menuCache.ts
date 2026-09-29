@@ -1,5 +1,3 @@
-import type { MenuNode } from '@/types/api';
-
 /**
  * 菜单树前端缓存（短 TTL）。
  *
@@ -10,6 +8,7 @@ import type { MenuNode } from '@/types/api';
  * 注意：仅缓存「当前会话、当前用户」的菜单。登出 / 重新登录时必须清空
  * （见 user store 的 {@link clearMenuCache} 调用点），否则可能把上一用户的菜单带过来。
  */
+import type { MenuNode } from '@/types/api';
 
 /** 缓存有效期：5 分钟。 */
 const MENU_CACHE_TTL_MS = 5 * 60 * 1000;

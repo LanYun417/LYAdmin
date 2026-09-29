@@ -1,4 +1,8 @@
 <script setup lang="ts">
+/**
+ * 个人中心页。
+ * 模块职责：展示当前用户信息与头像上传，并编排「修改资料 / 修改密码」两个子表单。
+ */
 import { computed, ref } from 'vue';
 import { ElMessage } from '@/utils/element';
 import type { UploadRequestOptions } from 'element-plus';

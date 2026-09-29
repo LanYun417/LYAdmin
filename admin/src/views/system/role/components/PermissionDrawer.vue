@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 角色授权抽屉。模块职责：展示菜单树并保存角色已勾选的菜单 / 按钮权限。 */
 import { ref, watch } from 'vue';
 import { ElMessage } from '@/utils/element';
 import { getMenuTreeApi } from '@/api/menu';

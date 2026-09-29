@@ -1,3 +1,6 @@
+/**
+ * 字典接口：字典类型与字典项的增删改查、状态切换，以及业务侧按类型取数。
+ */
 import { del, get, post, put } from './request';
 import type {
   DictDataItem,

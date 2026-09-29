@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 修改资料表单。模块职责：编辑昵称 / 邮箱 / 手机号 / 性别，成功后同步回用户 Store。 */
 import { computed, reactive, ref } from 'vue';
 import { ElMessage } from '@/utils/element';
 import type { FormInstance, FormRules } from 'element-plus';

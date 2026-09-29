@@ -4,7 +4,7 @@
  * 模块职责：把「零第三方运行时依赖」这条项目身份约束从「口头约定」变成「可执行校验」——
  * 任何人 `npm i` 一个包即被拦截。
  *
- * 校验对象：项目根 / api / admin 三处 `package.json`（见 docs/handover/DIFFERENTIATED-FEATURES.md §F8）。
+ * 校验对象：项目根 / api / admin 三处 `package.json`。
  * 校验规则：
  * - `dependencies`（运行时依赖）新增 / 移除 / 版本变更 → 校验失败（退出码 1），逐条列出哪个包、哪处 package.json；
  * - `devDependencies` 变化 → 仅告警（退出码 0），因为测试/工具类依赖不破坏运行时零依赖约束；

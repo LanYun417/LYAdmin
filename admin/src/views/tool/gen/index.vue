@@ -1,4 +1,8 @@
 <script setup lang="ts">
+/**
+ * 代码生成器页。
+ * 模块职责：选择数据表并填写模块名 / 业务名后，预览生成文件、下载 ZIP，或直接写入项目目录（同名文件需确认覆盖）。
+ */
 import { computed, onMounted, reactive, ref } from 'vue';
 import { useMediaQuery } from '@vueuse/core';
 import { ElMessage, ElMessageBox } from '@/utils/element';

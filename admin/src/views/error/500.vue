@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 500 服务异常页。模块职责：接口异常（HTTP 500）跳转时的统一落点。 */
 import ErrorPage from '@/components/ErrorPage/index.vue';
 
 defineOptions({ name: 'Error500' });

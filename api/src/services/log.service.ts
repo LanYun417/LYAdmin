@@ -182,10 +182,6 @@ export async function listOperationLogs(query: Record<string, unknown>): Promise
   return buildPageResult(list, count, page, pageSize);
 }
 
-/**
- * 分页查询 HTTP 访问日志（改查数据库 `sys_http_log`）。
- * @param query 查询参数
- */
 /** 导出单次最大行数（超过即截断，避免一次拉爆内存）。 */
 const EXPORT_MAX_ROWS = 10000;
 

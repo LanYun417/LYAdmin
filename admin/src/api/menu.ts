@@ -1,3 +1,6 @@
+/**
+ * 菜单接口：菜单列表 / 树、详情与增删改。
+ */
 import { del, get, post, put } from './request';
 import type { Menu, MenuNode, MenuQuery, MenuUpsert } from '@/types/api';
 

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 近 7 日登录趋势折线图。模块职责：渲染登录次数折线并标注峰值点。 */
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { throttle } from 'lodash-es';
 import { useResizeObserver } from '@vueuse/core';

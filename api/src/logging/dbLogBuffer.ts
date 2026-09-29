@@ -3,7 +3,7 @@
  * 模块职责：把 Sequelize `logging` 钩子产生的高频 SQL 日志**批量缓冲 + 定时落盘**，
  * 避免在请求回调中同步执行 `JSON.stringify` + 流写入，减少事件循环阻塞。
  *
- * 设计要点（见 docs/handover/PERF-BASELINE-BACKEND.md §3.4 / §4 建议 5）：
+ * 设计要点：
  * - 上游 `config/database.ts` 的 SQL 钩子只做「构造记录 + 入队」，不再直接写文件；
  * - 达到 `FLUSH_THRESHOLD` 条或距上次落盘满 `FLUSH_INTERVAL_MS` 毫秒时，批量写出；
  * - **日志内容与格式完全不变**：仍按 `logManager.writeLog('db', record)` 逐条写 JSON Lines，

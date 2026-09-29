@@ -1,3 +1,6 @@
+/**
+ * 个人中心接口：修改资料、修改密码与更换头像。
+ */
 import { put, request } from './request';
 import type { ChangePasswordParams, ProfileUpdateParams, UserBrief } from '@/types/api';
 

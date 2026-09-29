@@ -1,3 +1,6 @@
+/**
+ * 标签页 Store：维护已访问标签与 keep-alive 缓存组件名列表。
+ */
 import { ref } from 'vue';
 import { defineStore } from 'pinia';
 import type { RouteLocationNormalizedLoaded, RouteRecordNormalized } from 'vue-router';

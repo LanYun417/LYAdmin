@@ -343,9 +343,9 @@ router.use(authenticate)                       // 1. 鉴权（校验 accessToken
 ```ts
 // 1) 第三方
 import { onMounted, reactive, ref } from 'vue';
-import { ElMessage, ElMessageBox } from 'element-plus';
 import { Plus } from '@element-plus/icons-vue';
-// 2) 内部别名
+// 2) 内部别名（ElMessage/ElMessageBox 等命令式 API 一律走 `@/utils/element` 桶，禁止从包根 `element-plus` 整库引入）
+import { ElMessage, ElMessageBox } from '@/utils/element';
 import { getUserListApi } from '@/api/user';
 import { getAllRolesApi } from '@/api/role';
 import type { UserDetail } from '@/types/api';

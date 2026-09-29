@@ -240,6 +240,7 @@ export function createZip(entries: ZipEntry[]): Buffer {
     offset = writeCentralDirectoryHeader(output, offset, entry, dosTime, dosDate);
   }
 
+  // EOCD：磁盘号与中央目录起始磁盘号置 0（单文件/单磁盘）；条目数写两份（本磁盘与总计，此处相等）；无注释
   output.writeUInt32LE(END_OF_CENTRAL_DIRECTORY_SIGNATURE, offset);
   output.writeUInt16LE(0, offset + 4);
   output.writeUInt16LE(0, offset + 6);

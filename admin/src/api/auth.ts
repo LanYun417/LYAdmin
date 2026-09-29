@@ -1,3 +1,6 @@
+/**
+ * 认证接口：登录 / 刷新 Token / 登出 / 当前用户信息、菜单树与权限码。
+ */
 import { get, post } from './request';
 import type { LoginParams, LoginResult, MenuNode, ProfileResult, RefreshResult } from '@/types/api';
 

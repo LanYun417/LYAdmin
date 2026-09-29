@@ -59,8 +59,7 @@ const VDITOR_CDN = '/vditor';
  *
  * 注：`more` 菜单里的图表 / 脑图 / 五线谱 / 流程图 等需要额外自托管渲染器
  * （echarts、abcjs、markmap…），当前 `public/vditor/dist/js/` 未包含，点开那些子项会因缺少
- * 渲染器而报错；如要使用，把对应 `node_modules/vditor/dist/js/<name>` 拷入自托管目录即可
- * （详见项目长期记忆「Vditor Markdown 编辑器」一节）。
+ * 渲染器而报错；如要使用，把对应 `node_modules/vditor/dist/js/<name>` 拷入自托管目录即可。
  */
 
 /**

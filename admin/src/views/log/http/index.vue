@@ -1,4 +1,9 @@
 <script setup lang="ts">
+/**
+ * HTTP 访问日志页。
+ * 模块职责：按方法 / 状态码 / 操作账号 / 部门 / 时间范围查询访问日志，支持导出与清空，
+ * 展开行展示请求参数、User-Agent 与响应内容。
+ */
 import { onMounted, ref } from 'vue';
 import { BIconArrowClockwise, BIconDownload, BIconTrash } from 'bootstrap-icons-vue';
 import { ElMessage, ElMessageBox } from '@/utils/element';

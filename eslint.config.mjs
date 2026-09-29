@@ -16,6 +16,8 @@ export default [
       '**/dist/**',
       '**/build/**',
       '**/coverage/**',
+      // 前端构建产物映射目录（由 admin 构建输出，非源码）
+      'api/web/**',
       '**/*.min.js',
       'api/uploads/**',
       'api/logs/**',

@@ -1,3 +1,6 @@
+/**
+ * 系统参数接口：参数分页列表、详情、按键取参（业务取数）与增删改。
+ */
 import { del, get, post, put } from './request';
 import type { ConfigData, ConfigQuery, ConfigUpsert, PageResult, SysConfigItem } from '@/types/api';
 

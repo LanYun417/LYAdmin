@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 操作类型分布环形图。模块职责：渲染各操作类型占比，中心回显操作总数。 */
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { throttle } from 'lodash-es';
 import { useResizeObserver } from '@vueuse/core';

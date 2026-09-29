@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 菜单管理页。模块职责：以树表展示菜单并支持新增、编辑、删除。 */
 import { onMounted, ref } from 'vue';
 import { ElMessage, ElMessageBox } from '@/utils/element';
 import { BIconArrowClockwise, BIconPlus } from 'bootstrap-icons-vue';

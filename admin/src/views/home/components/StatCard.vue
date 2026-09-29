@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 指标统计卡片。模块职责：展示单个指标的名称、数值与主题色图标。 */
 import { computed } from 'vue';
 import type { Component } from 'vue';
 

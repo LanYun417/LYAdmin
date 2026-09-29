@@ -9,7 +9,7 @@ import { setRequestRouter } from '@/api/request';
 // 样式引入顺序（架构文档 1.4 风险 A）：
 // 1) Element Plus 暗黑变量（组件基础样式由 unplugin 的 ElementPlusResolver 按组件按需注入，不在此全量引入，
 //    避免整份 index.css 约 52 kB gzip 被拖进首屏）
-// 2) NProgress → 3) Tailwind 入口样式
+// 2) NProgress → 3) Tailwind 入口样式 → 4) Element Plus 覆盖样式（element.scss）
 import 'element-plus/theme-chalk/dark/css-vars.css';
 import 'nprogress/nprogress.css';
 import '@/styles/index.css';

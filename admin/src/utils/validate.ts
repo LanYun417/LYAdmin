@@ -1,3 +1,7 @@
+/**
+ * 表单校验工具：常用正则、轻量判定函数与 Element Plus 表单规则。
+ * 规则统一允许空值（必填交由 `requiredRule` 或表单 `required` 控制），避免「先报格式错、再报必填错」。
+ */
 import type { FormItemRule } from 'element-plus';
 
 /** 手机号正则 */

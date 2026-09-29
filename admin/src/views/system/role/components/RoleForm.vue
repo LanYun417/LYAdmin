@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 角色新增 / 编辑弹窗。模块职责：维护角色基础信息与数据范围（含「自定义部门」的可见部门选择）。 */
 import { reactive, ref, watch } from 'vue';
 import { ElMessage } from '@/utils/element';
 import type { FormInstance, FormRules } from 'element-plus';

@@ -1,3 +1,6 @@
+/**
+ * 全局路由守卫：登录态校验、动态路由首次注入、路由级权限校验，以及标题与 NProgress 维护。
+ */
 import type { Router } from 'vue-router';
 import NProgress from 'nprogress';
 import { useUserStore } from '@/store/modules/user';

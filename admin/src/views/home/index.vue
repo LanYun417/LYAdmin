@@ -1,4 +1,9 @@
 <script setup lang="ts">
+/**
+ * 首页仪表盘。
+ * 模块职责：聚合统计卡片、登录趋势、操作类型分布与各角色用户数四项数据，
+ * 并交给对应图表子组件渲染。
+ */
 import { computed, onMounted, ref } from 'vue';
 import { BIconFolder, BIconGraphUp, BIconList, BIconPerson } from 'bootstrap-icons-vue';
 import {

@@ -58,7 +58,7 @@ async function handleLogout(): Promise<void> {
   void router.push('/login');
 }
 
-/** 切换全屏（P2） */
+/** 切换全屏 */
 function handleToggleFullscreen(): void {
   if (document.fullscreenElement) {
     void document.exitFullscreen();
@@ -69,7 +69,7 @@ function handleToggleFullscreen(): void {
   }
 }
 
-/** 切换主题色（P2）：立即应用到 CSS 变量并持久化 */
+/** 切换主题色：立即应用到 CSS 变量并持久化 */
 function handlePrimaryColorChange(color: string | null): void {
   const value = color || DEFAULT_PRIMARY_COLOR;
   appStore.setPrimaryColor(value);

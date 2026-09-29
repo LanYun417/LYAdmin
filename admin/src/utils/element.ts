@@ -1,7 +1,7 @@
 /**
  * Element Plus 命令式 API（ElMessage / ElMessageBox）按需引入入口。
  *
- * 背景：业务层曾直接 `import { ElMessage } from '@/utils/element';`，从包根引入会触发
+ * 背景：业务层原先直接 `import { ElMessage } from 'element-plus'`，从包根引入会触发
  * 整库打包（约 284 kB 原始 / 90 kB gzip 被拖进首屏）。这里改从子路径引入并显式加载样式，
  * 与「组件按需加载」保持一致，显著减小首屏 JS。
  *

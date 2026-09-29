@@ -1,3 +1,6 @@
+/**
+ * 路由实例创建与全局守卫注册（history 模式、滚动复位到顶部）。
+ */
 import { createRouter, createWebHistory, type Router } from 'vue-router';
 import { constantRoutes } from './routes';
 import { setupRouterGuard } from './guard';

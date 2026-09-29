@@ -325,7 +325,6 @@ export interface FileItem {
   deduplicated?: boolean;
 }
 
-/** 文件查询参数 */
 /** 文件查询参数（多条件 AND 组合） */
 export interface FileQuery extends PageQuery {
   originName?: string;

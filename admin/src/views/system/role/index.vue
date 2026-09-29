@@ -1,4 +1,5 @@
 <script setup lang="ts">
+/** 角色管理页。模块职责：角色列表查询与增删改，并进入菜单权限分配抽屉。 */
 import { ref } from 'vue';
 import { ElMessage, ElMessageBox } from '@/utils/element';
 import { BIconPlus } from 'bootstrap-icons-vue';

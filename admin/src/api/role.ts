@@ -1,3 +1,6 @@
+/**
+ * 角色接口：角色分页列表、下拉选项、增删改与菜单授权。
+ */
 import { del, get, post, put } from './request';
 import type { PageResult, Role, RoleBrief, RoleQuery, RoleUpsert } from '@/types/api';
 

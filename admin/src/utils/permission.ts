@@ -1,3 +1,7 @@
+/**
+ * 权限判定工具（按钮权限码 / 角色），供 `v-permission` 指令与页面逻辑共用。
+ * 统一 fail-closed（空参数视为无权限），与后端 `requirePermission` 语义保持一致。
+ */
 import { useUserStore } from '@/store/modules/user';
 
 /**

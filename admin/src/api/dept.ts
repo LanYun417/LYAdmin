@@ -1,3 +1,6 @@
+/**
+ * 部门接口：部门列表 / 树、详情与增删改。
+ */
 import { del, get, post, put } from './request';
 import type { DeptNode, DeptQuery, DeptUpsert } from '@/types/api';
 

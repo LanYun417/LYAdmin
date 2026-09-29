@@ -1,3 +1,8 @@
+/**
+ * axios 实例与请求 / 响应拦截器（全站 HTTP 唯一出口）。
+ * 模块职责：统一 baseURL 与超时、注入 Token 与时区请求头、解包统一响应体，
+ * 并集中处理 401 无感刷新、403 跳转与错误提示；对业务层只暴露 get / post / put / del。
+ */
 import axios, {
   type AxiosError,
   type AxiosInstance,
