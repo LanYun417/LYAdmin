@@ -91,15 +91,16 @@ const rules = computed<FormRules<LoginParams>>(() => ({
 
 /** 提交登录 */
 async function handleLogin(): Promise<void> {
-  if (!formRef.value) {
-    return;
-  }
-  const valid = await formRef.value.validate().catch(() => false);
-  if (!valid) {
+  // 防重复提交：回车与点击可能同时触发（或连点），只处理第一次
+  if (loading.value || !formRef.value) {
     return;
   }
   loading.value = true;
   try {
+    const valid = await formRef.value.validate().catch(() => false);
+    if (!valid) {
+      return;
+    }
     await userStore.login(form);
     permissionStore.resetRoutes();
     ElMessage.success('登录成功');
@@ -190,7 +191,6 @@ onMounted(() => {
                 placeholder="请输入验证码"
                 maxlength="6"
                 autocomplete="off"
-                @keyup.enter="handleLogin"
               />
               <img
                 v-if="captchaImage"
