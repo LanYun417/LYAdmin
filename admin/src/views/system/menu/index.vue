@@ -92,7 +92,7 @@ onMounted(() => {
         </div>
       </div>
 
-      <el-table
+      <Table
         v-loading="loading"
         :data="menuTree"
         row-key="id"
@@ -143,7 +143,7 @@ onMounted(() => {
             </div>
           </template>
         </el-table-column>
-      </el-table>
+      </Table>
     </el-card>
 
     <MenuForm v-model="formVisible" :menu-id="editId" @success="loadTree" />

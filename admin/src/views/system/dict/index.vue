@@ -158,7 +158,7 @@ onMounted(() => {
         </el-button>
       </div>
 
-      <el-table v-loading="loading" :data="list">
+      <Table v-loading="loading" :data="list">
         <el-table-column prop="dictName" label="字典名称" min-width="150" show-overflow-tooltip />
         <el-table-column prop="dictType" label="类型编码" min-width="180" show-overflow-tooltip />
         <el-table-column label="状态" width="100" align="center">
@@ -189,7 +189,7 @@ onMounted(() => {
             </div>
           </template>
         </el-table-column>
-      </el-table>
+      </Table>
 
       <Pagination
         v-model:current-page="query.page"

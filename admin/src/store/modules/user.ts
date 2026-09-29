@@ -3,6 +3,7 @@ import { defineStore } from 'pinia';
 import { getMenusApi, getProfileApi, loginApi, logoutApi } from '@/api/auth';
 import type { LoginParams, MenuNode, UserDetail } from '@/types/api';
 import { getAccessToken, getRefreshToken, removeToken, setToken } from '@/utils/auth';
+import { clearMenuCache, getMenuCache, setMenuCache } from '@/utils/menuCache';
 
 export const useUserStore = defineStore(
   'user',
@@ -41,6 +42,8 @@ export const useUserStore = defineStore(
       setToken(res.accessToken, res.refreshToken);
       userInfo.value = res.user as UserDetail;
       loaded.value = false;
+      // 重新登录应拉取新用户的菜单，清掉上一用户的缓存
+      clearMenuCache();
     }
 
     /** 拉取当前用户信息（含角色、权限码） */
@@ -51,17 +54,25 @@ export const useUserStore = defineStore(
       permissions.value = res.permissions ?? [];
     }
 
-    /** 拉取当前用户菜单树 */
-    async function fetchMenus(): Promise<MenuNode[]> {
+    /** 拉取当前用户菜单树（命中短 TTL 缓存则跳过网络请求） */
+    async function fetchMenus(force = false): Promise<MenuNode[]> {
+      if (!force) {
+        const cached = getMenuCache();
+        if (cached) {
+          menus.value = cached;
+          return cached;
+        }
+      }
       const menuTree = await getMenusApi();
-      menus.value = Array.isArray(menuTree) ? menuTree : [];
-      return menus.value;
+      const list = Array.isArray(menuTree) ? menuTree : [];
+      menus.value = list;
+      setMenuCache(list);
+      return list;
     }
 
-    /** 加载用户信息 + 菜单树（路由守卫调用） */
+    /** 加载用户信息 + 菜单树（路由守卫调用）。profile 与 menus 互不依赖，并行拉取减少首屏 RTT。 */
     async function loadUserInfo(): Promise<void> {
-      await fetchProfile();
-      await fetchMenus();
+      await Promise.all([fetchProfile(), fetchMenus()]);
       loaded.value = true;
     }
 
@@ -84,6 +95,7 @@ export const useUserStore = defineStore(
       permissions.value = [];
       menus.value = [];
       loaded.value = false;
+      clearMenuCache();
       removeToken();
     }
 

@@ -153,7 +153,7 @@ onMounted(() => {
         </div>
       </div>
 
-      <el-table v-loading="loading" :data="list">
+      <Table v-loading="loading" :data="list">
         <el-table-column prop="module" label="模块" width="120" />
         <el-table-column prop="action" label="动作" width="110" />
         <el-table-column prop="username" label="操作人" width="120" />
@@ -178,7 +178,7 @@ onMounted(() => {
         <el-table-column label="操作时间" width="180">
           <template #default="{ row }">{{ formatDateTime(row.createdAt) }}</template>
         </el-table-column>
-      </el-table>
+      </Table>
 
       <Pagination
         v-model:current-page="query.page"

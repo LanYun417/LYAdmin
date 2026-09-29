@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { throttle } from 'lodash-es';
 import { useResizeObserver } from '@vueuse/core';
 import echarts from '@/utils/echarts';
 import { getChartPalette, hexToRgba, verticalGradient } from '@/utils/chartTheme';
@@ -78,10 +79,19 @@ function render(): void {
   });
 }
 
-/** 自适应尺寸 */
-function resize(): void {
-  chart?.resize();
-}
+/**
+ * 自适应尺寸。
+ * 用 lodash-es 的 throttle 限频：窗口拖拽、侧边栏折叠 / 展开等场景下，
+ * ResizeObserver 会在短时间内高频触发，直接同步调用 echarts.resize() 会带来大量重复的重排版开销；
+ * 限频到 100ms（leading+trailing）既能即时响应首次变化，又避免连续重排。
+ */
+const resize = throttle(
+  (): void => {
+    chart?.resize();
+  },
+  100,
+  { leading: true, trailing: true },
+);
 
 /**
  * 监听图表容器尺寸变化（而非只监听 window resize）。
@@ -97,6 +107,7 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+  resize.cancel();
   chart?.dispose();
   chart = null;
 });

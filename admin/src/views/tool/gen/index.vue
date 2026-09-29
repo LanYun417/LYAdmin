@@ -318,7 +318,7 @@ onMounted(() => {
           <el-button :icon="BIconArrowClockwise" @click="loadTables">刷新</el-button>
         </div>
 
-        <el-table
+        <Table
           v-loading="tableLoading"
           :data="filteredTables"
           highlight-current-row
@@ -334,7 +334,7 @@ onMounted(() => {
           <template #empty>
             <span class="text-[13px] text-muted">暂无数据表</span>
           </template>
-        </el-table>
+        </Table>
       </el-card>
 
       <!-- 右：生成选项 + 字段列表 -->
@@ -417,7 +417,7 @@ onMounted(() => {
           title="请先在左侧选择数据表，并填写模块名与业务名（作者可留空）"
         />
 
-        <el-table v-loading="columnLoading" :data="columns" :height="columnHeight">
+        <Table v-loading="columnLoading" :data="columns" :height="columnHeight">
           <el-table-column prop="columnName" label="列名" min-width="140" show-overflow-tooltip />
           <el-table-column prop="fieldName" label="字段名" min-width="140" show-overflow-tooltip />
           <el-table-column prop="columnType" label="列类型" min-width="130" show-overflow-tooltip />
@@ -446,7 +446,7 @@ onMounted(() => {
             </el-empty>
             <span v-else class="text-[13px] text-muted">该表暂无字段</span>
           </template>
-        </el-table>
+        </Table>
       </el-card>
     </div>
 

@@ -278,7 +278,7 @@ onMounted(() => {
           <el-button :icon="BIconArrowClockwise" size="small" @click="loadFiles">刷新</el-button>
         </div>
       </template>
-      <el-table v-loading="loading" :data="fileList">
+      <Table v-loading="loading" :data="fileList">
         <el-table-column label="预览" width="88" align="center">
           <template #default="{ row }">
             <el-image
@@ -323,7 +323,7 @@ onMounted(() => {
             </el-button>
           </template>
         </el-table-column>
-      </el-table>
+      </Table>
       <Pagination
         v-model:current-page="query.page"
         v-model:page-size="query.pageSize"

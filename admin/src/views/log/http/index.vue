@@ -244,7 +244,7 @@ onMounted(() => {
         </div>
       </div>
 
-      <el-table v-loading="loading" :data="list">
+      <Table v-loading="loading" :data="list">
         <el-table-column type="expand">
           <template #default="{ row }">
             <div class="py-2 px-4">
@@ -253,6 +253,12 @@ onMounted(() => {
                 <pre
                   class="max-h-60 m-0 overflow-auto whitespace-pre-wrap break-all rounded bg-fill-light px-3 py-2.5 font-mono text-xs leading-[1.6]"
                   >{{ formatParams(row as HttpLog) }}</pre>
+              </div>
+              <div>
+                <p class="mt-2.5 mb-1 text-xs font-semibold text-muted">User-Agent</p>
+                <pre
+                  class="max-h-60 m-0 overflow-auto whitespace-pre-wrap break-all rounded bg-fill-light px-3 py-2.5 font-mono text-xs leading-[1.6]"
+                  >{{ row.userAgent || '无 User-Agent' }}</pre>
               </div>
               <div v-if="row.resBody">
                 <p class="mt-2.5 mb-1 text-xs font-semibold text-muted">响应内容</p>
@@ -280,35 +286,16 @@ onMounted(() => {
           <template #default="{ row }">{{ displayOrDash(row.deptName) }}</template>
         </el-table-column>
         <el-table-column label="浏览器" width="150" show-overflow-tooltip>
-          <!-- 未识别时展示「未知」，原始 UA 通过 tooltip 全量可见 -->
-          <template #default="{ row }">
-            <el-tooltip
-              :content="row.userAgent || '无 User-Agent'"
-              placement="top"
-              :show-after="300"
-              :disabled="!row.userAgent"
-            >
-              <span>{{ row.browser || '未知' }}</span>
-            </el-tooltip>
-          </template>
+          <template #default="{ row }">{{ row.browser || '未知' }}</template>
         </el-table-column>
         <el-table-column label="操作系统" width="150" show-overflow-tooltip>
-          <template #default="{ row }">
-            <el-tooltip
-              :content="row.userAgent || '无 User-Agent'"
-              placement="top"
-              :show-after="300"
-              :disabled="!row.userAgent"
-            >
-              <span>{{ row.os || '未知' }}</span>
-            </el-tooltip>
-          </template>
+          <template #default="{ row }">{{ row.os || '未知' }}</template>
         </el-table-column>
         <el-table-column prop="ip" label="IP" width="150" />
         <el-table-column label="时间" width="180">
           <template #default="{ row }">{{ formatDateTime(row.time) }}</template>
         </el-table-column>
-      </el-table>
+      </Table>
 
       <Pagination
         v-model:current-page="query.page"

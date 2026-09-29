@@ -128,7 +128,7 @@ onMounted(() => {
         </div>
       </div>
 
-      <el-table v-loading="loading" :data="list">
+      <Table v-loading="loading" :data="list">
         <el-table-column prop="username" label="账号" min-width="120" />
         <el-table-column prop="ip" label="IP 地址" width="140" />
         <el-table-column prop="userAgent" label="User-Agent" min-width="220" show-overflow-tooltip />
@@ -143,7 +143,7 @@ onMounted(() => {
         <el-table-column label="登录时间" width="180">
           <template #default="{ row }">{{ formatDateTime(row.loginAt) }}</template>
         </el-table-column>
-      </el-table>
+      </Table>
 
       <Pagination
         v-model:current-page="query.page"

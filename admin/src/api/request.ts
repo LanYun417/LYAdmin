@@ -7,7 +7,7 @@ import axios, {
 } from 'axios';
 import type { Router } from 'vue-router';
 import { ElMessage } from '@/utils/element';
-import type { ApiResponse, RefreshResult } from '@/types/api';
+import type { ApiResponse, MenuNode, RefreshResult } from '@/types/api';
 import { getAccessToken, getRefreshToken, removeToken, setToken } from '@/utils/auth';
 
 /** 业务成功码 */
@@ -24,6 +24,16 @@ interface RetryableConfig extends InternalAxiosRequestConfig {
   /** 是否已重试过（避免无限循环） */
   _retry?: boolean;
 }
+
+/**
+ * 菜单树 ETag / 缓存支持。
+ *
+ * 后端若在 `/auth/menus` 响应上返回 `ETag`，这里记下并在后续同名请求带 `If-None-Match`；
+ * 后端回 `304 Not Modified` 时，直接复用上次缓存的菜单数据，省去重复传输。
+ * 当前后端尚未下发 ETag，该逻辑处于就绪态（不主动改后端行为、不影响现有 200 流程）。
+ */
+let menuETag = '';
+let cachedMenuData: MenuNode[] | null = null;
 
 /* --------------------------- 路由导航注入（避免循环依赖） --------------------------- */
 
@@ -144,6 +154,10 @@ service.interceptors.request.use(
     }
     // 告知后端当前用户时区偏移（CSV 导出等由后端按用户时区格式化时间）
     config.headers.set('X-Timezone-Offset', String(new Date().getTimezoneOffset()));
+    // 菜单树：若此前拿到过 ETag，带 If-None-Match 以便后端判定 304（后端未下发 ETag 时为空串，无副作用）
+    if (config.url?.endsWith('/auth/menus') && menuETag) {
+      config.headers.set('If-None-Match', menuETag);
+    }
     if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
       // 交由浏览器自动携带 multipart boundary
       config.headers.delete('Content-Type');
@@ -158,12 +172,25 @@ service.interceptors.request.use(
 // 响应拦截：统一解包 + 401 无感刷新 + 403 跳转
 service.interceptors.response.use(
   (response: AxiosResponse<ApiResponse>) => {
+    // 304 Not Modified：菜单树未变化，复用上次缓存（需后端返回 ETag）
+    if (response.status === 304 && cachedMenuData) {
+      return cachedMenuData as unknown as AxiosResponse;
+    }
     const res = response.data;
     // 非标准响应（如文件流）直接返回
     if (res === null || res === undefined || typeof res.code === 'undefined') {
       return response.data as unknown as AxiosResponse;
     }
     if (res.code === SUCCESS_CODE) {
+      // 捕获菜单树 ETag，供后续 If-None-Match 使用
+      if (response.config.url?.endsWith('/auth/menus')) {
+        const headers = response.headers as unknown as Record<string, string | undefined>;
+        const etag = headers.etag ?? headers.ETag;
+        if (etag) {
+          menuETag = etag;
+          cachedMenuData = res.data as MenuNode[];
+        }
+      }
       return res.data as unknown as AxiosResponse;
     }
     if (res.code === UNAUTHORIZED_CODE) {
