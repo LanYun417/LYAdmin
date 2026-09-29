@@ -11,6 +11,7 @@ import type { JwtPayload, MenuNode, UserBrief } from '@/types';
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '@/utils/jwt';
 import { comparePassword } from '@/utils/password';
 import { AppError } from '@/utils/response';
+import { isTokenRevoked, recordLogout } from '@/services/tokenBlacklist';
 
 // 对外统一从 auth 服务导出缓存失效能力（实现见 `services/authCache.ts`）：
 // 写操作触发权限变更时调用，详见 authCache.ts 顶部的失效点清单。
@@ -201,6 +202,9 @@ export async function refresh(refreshToken: string): Promise<TokenPair> {
   if (!user) {
     throw AppError.unauthorized('用户不存在');
   }
+  if (await isTokenRevoked(Number(user.id), payload.iat)) {
+    throw AppError.unauthorized(ERROR_MESSAGE.LOGOUT_INVALIDATED);
+  }
   if (Number(user.status) !== Status.ENABLED) {
     throw AppError.unauthorized(ERROR_MESSAGE.ACCOUNT_DISABLED);
   }
@@ -263,8 +267,10 @@ export async function getUserMenus(userId: number, context?: AuthContext | null)
 }
 
 /**
- * 登出（无状态方案：服务端不维护黑名单，仅作占位）。
+ * 登出：在 Redis 记录该用户的登出时间，使其此前签发的令牌（access/refresh）立即失效。
+ * 依赖 Redis；Redis 不可用/未配置时静默降级（不写入黑名单，接口仍返回成功）。
+ * @param userId 用户 ID（由鉴权中间件从令牌解析并挂载到 `req.user`）
  */
-export async function logout(): Promise<void> {
-  return Promise.resolve();
+export async function logout(userId: number): Promise<void> {
+  await recordLogout(userId);
 }

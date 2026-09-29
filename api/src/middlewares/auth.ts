@@ -7,6 +7,7 @@ import type { NextFunction, Request, Response } from 'express';
 import { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
 import { ERROR_MESSAGE, Status } from '@/constants';
 import { loadAuthUser } from '@/services/auth.service';
+import { isTokenRevoked } from '@/services/tokenBlacklist';
 import { AppError } from '@/utils/response';
 import { verifyAccessToken } from '@/utils/jwt';
 import type { JwtPayload } from '@/types';
@@ -57,6 +58,11 @@ export async function authenticate(req: Request, _res: Response, next: NextFunct
       }
     }
 
+    // 登出后旧 Token 失效（Redis 黑名单：登出即令该用户旧令牌失效）
+    if (await isTokenRevoked(Number(user.id), payload.iat)) {
+      throw AppError.unauthorized(ERROR_MESSAGE.LOGOUT_INVALIDATED);
+    }
+
     req.user = {
       userId: Number(user.id),
       username: user.username,
@@ -73,4 +79,23 @@ export async function authenticate(req: Request, _res: Response, next: NextFunct
   } catch (error) {
     next(error);
   }
+}
+
+/**
+ * 静态资源鉴权中间件（用于 `/uploads`）。
+ *
+ * 后端已对 `/uploads` 启用访问控制（仅登录用户可读取上传的文件）。但浏览器渲染
+ * `<img>` / `<el-avatar>` / `<el-image>` 时**不会**自动附带 `Authorization` 头，
+ * 因此前端在静态资源 URL 上拼接 `?token=<accessToken>` 查询参数；本中间件优先读取
+ * `Authorization: Bearer` 头（API 直接请求场景），缺失时回退到 `req.query.token`，
+ * 再复用 {@link authenticate} 完成令牌校验、用户状态与改密失效检查，并挂载 `req.user`。
+ *
+ * 顺序上本中间件位于 `hotlinkGuard` / 图片缩放 / `express.static` 之前：未通过鉴权即
+ * 短路返回 401，连文件都不必读，也不浪费缩放算力。
+ */
+export async function authenticateStatic(req: Request, res: Response, next: NextFunction): Promise<void> {
+  if (!req.headers.authorization && typeof req.query.token === 'string') {
+    req.headers.authorization = `Bearer ${req.query.token}`;
+  }
+  return authenticate(req, res, next);
 }

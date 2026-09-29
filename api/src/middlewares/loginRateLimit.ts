@@ -1,21 +1,20 @@
 /**
- * 登录频率限制中间件（零依赖，进程内滑动窗口）。
+ * 登录频率限制中间件（Redis 共享存储，双维度）。
  * 模块职责：统计登录失败次数，超限即返回 429。采用**双维度并存**：
  *  1. 账号维度：键 =「客户端 IP + 用户名」，防「集中爆破某个固定账号」；
  *  2. IP 维度：键 =「客户端 IP」，防「同一来源轮换大量 username 撞库/撒网」（账号维度对此无效）。
- * 任一维度超限即拒绝；登录成功后仅清零账号维度计数（IP 维度作为兜底，仅随窗口自然滑出）。
+ * 任一维度超限即拒绝；登录成功后仅清零账号维度计数（IP 维度作为兜底，随窗口自然过期）。
  *
- * 设计要点：
- * - 滑动窗口：仅统计最近一个窗口内的失败时间戳，过期自动失效；
- * - 仅在「密码/账号错误（401）」时计失败，参数校验失败（400）等不计入；
- * - IP 维度阈值刻意比账号维度宽松，避免办公室 N 人共用出口 IP 时被误伤。
+ * 与旧版（进程内内存）的差异：
+ * - 旧版为进程内 `Map`，**进程重启即清空**且**多实例不共享**；本版改用 Redis，跨重启/跨实例生效；
+ * - 计数窗口由「滑动窗口」改为「固定窗口」（基于 Redis `INCR` + `EXPIRE`），实现更稳健，
+ *   对频率限制目标（拦爆破/撞库）无实质影响；账号维度触发后仍保留独立的「锁定键」(TTL=15min)。
  *
- * 局限（重要，勿误判为实现缺陷）：
- * - 进程内内存方案：**进程重启即清空**，且**多实例部署不共享**计数；
- * - **真实生产建议在反向代理层（如 nginx `limit_req`）做限流**，应用层此处为兜底；
- * - 当前为单体部署，够用；将来集群化需改用 Redis 等共享存储。
+ * 降级：Redis 不可用/未配置时，本中间件**直接放行**且不计数（fail-open），避免 Redis 故障
+ * 阻塞登录（宁可限流失效，不可阻断正常登录）。
  */
 import type { NextFunction, Request, RequestHandler, Response } from 'express';
+import { isRedisReady, redis } from '@/config/redis';
 import { getClientIp } from '@/utils/logger';
 import { AppError } from '@/utils/response';
 
@@ -34,57 +33,6 @@ const IP_WINDOW_MS = 5 * 60 * 1000;
 /** IP 维度：窗口内同一 IP 允许的最大失败次数（比账号维度宽松，避免共用出口 IP 误伤）。 */
 const IP_MAX_FAILURES = 20;
 
-/** 惰性清理的调用间隔：每 N 次请求做一次过期键清理，避免 Map 无限增长。 */
-const SWEEP_INTERVAL = 200;
-
-/** 单个账号键的计数状态。 */
-interface FailureRecord {
-  /** 窗口内的失败时间戳（毫秒）列表 */
-  failures: number[];
-  /** 锁定截止时间戳；0 表示未锁定 */
-  lockedUntil: number;
-}
-
-/** 账号维度状态表：key「IP|username」→ 计数状态。 */
-const accountStore = new Map<string, FailureRecord>();
-
-/** IP 维度状态表：key「IP」→ 窗口内失败时间戳列表。 */
-const ipStore = new Map<string, number[]>();
-
-/** 自上次清理以来经过的请求数。 */
-let sinceSweep = 0;
-
-/** 获取（或初始化）指定账号键的状态。 */
-function getAccountRecord(key: string): FailureRecord {
-  let record = accountStore.get(key);
-  if (!record) {
-    record = { failures: [], lockedUntil: 0 };
-    accountStore.set(key, record);
-  }
-  return record;
-}
-
-/** 过滤出窗口内的失败时间戳。 */
-function withinWindow(times: number[], now: number, windowMs: number): number[] {
-  return times.filter((ts) => now - ts < windowMs);
-}
-
-/** 清理两个维度中已过期（无窗口内失败且未锁定）的键，防止 Map 无限增长。 */
-function sweepExpired(now: number): void {
-  accountStore.forEach((record, key) => {
-    const hasRecentFailure = record.failures.some((ts) => now - ts < ACCOUNT_WINDOW_MS);
-    const locked = record.lockedUntil > now;
-    if (!hasRecentFailure && !locked) {
-      accountStore.delete(key);
-    }
-  });
-  ipStore.forEach((times, key) => {
-    if (withinWindow(times, now, IP_WINDOW_MS).length === 0) {
-      ipStore.delete(key);
-    }
-  });
-}
-
 /** 由客户端 IP 与请求用户名构造账号维度键：优先 IP + username，取不到 username 时退化为仅 IP。 */
 function buildAccountKey(req: Request, ip: string): string {
   const body = req.body as { username?: unknown } | undefined;
@@ -97,62 +45,81 @@ function buildAccountKey(req: Request, ip: string): string {
  * @returns Express 中间件
  */
 export function loginRateLimit(): RequestHandler {
-  return (req: Request, res: Response, next: NextFunction): void => {
-    const now = Date.now();
-    sinceSweep += 1;
-    if (sinceSweep >= SWEEP_INTERVAL) {
-      sinceSweep = 0;
-      sweepExpired(now);
-    }
-
+  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const ip = getClientIp(req);
-
-    // ① IP 维度（撞库/撒网防护）：窗口内失败达阈值即拒绝。message 与账号锁定区分，便于排查。
-    const ipFailures = withinWindow(ipStore.get(ip) ?? [], now, IP_WINDOW_MS);
-    if (ipFailures.length >= IP_MAX_FAILURES) {
-      next(AppError.tooManyRequests('该网络登录尝试过于频繁，请稍后重试'));
-      return;
-    }
-
-    // ② 账号维度（针对固定账号的爆破防护）
     const accountKey = buildAccountKey(req, ip);
-    const record = getAccountRecord(accountKey);
+    const acctFailKey = `login:fail:acct:${accountKey}`;
+    const acctLockKey = `login:lock:acct:${accountKey}`;
+    const ipFailKey = `login:fail:ip:${ip}`;
 
-    if (record.lockedUntil > now) {
-      const remainMinutes = Math.ceil((record.lockedUntil - now) / 60000);
-      next(AppError.tooManyRequests(`登录失败次数过多，账号已锁定，请在 ${remainMinutes} 分钟后重试`));
+    // Redis 不可用 → 降级放行（不阻断登录），也不计数
+    if (!isRedisReady()) {
+      next();
       return;
     }
 
-    // 锁定已过期：清除该次锁定与过期失败记录，重新开始统计
-    if (record.lockedUntil !== 0 && record.lockedUntil <= now) {
-      record.lockedUntil = 0;
-    }
-    record.failures = withinWindow(record.failures, now, ACCOUNT_WINDOW_MS);
+    try {
+      // ① 账号锁定：命中锁定键直接拒绝（锁由失败累计触发，TTL=ACCOUNT_LOCK_MS）
+      const locked = await redis!.get(acctLockKey);
+      if (locked) {
+        const ttl = await redis!.pttl(acctLockKey);
+        const remainMinutes = Math.max(1, Math.ceil((ttl > 0 ? ttl : ACCOUNT_LOCK_MS) / 60000));
+        next(AppError.tooManyRequests(`登录失败次数过多，账号已锁定，请在 ${remainMinutes} 分钟后重试`));
+        return;
+      }
 
+      // ② IP 维度（撞库/撒网防护）：读取窗口内失败计数（仅失败计入，成功不增）
+      const ipRaw = await redis!.get(ipFailKey);
+      const ipFailures = ipRaw ? Number(ipRaw) : 0;
+      if (ipFailures >= IP_MAX_FAILURES) {
+        next(AppError.tooManyRequests('该网络登录尝试过于频繁，请稍后重试'));
+        return;
+      }
+    } catch {
+      // Redis 读取异常 → 降级放行（fail-open），避免因中间件自身异常锁死登录
+      next();
+      return;
+    }
+
+    // 请求结束后，按响应状态累计失败 / 清零账号维度
     res.on('finish', () => {
       const status = res.statusCode;
       if (status >= 200 && status < 300) {
-        // 登录成功：清零账号维度计数（IP 维度不在此清零，作为兜底仅随窗口滑出）
-        accountStore.delete(accountKey);
+        // 登录成功：清零账号维度计数（IP 维度随窗口自然过期，不作清除）
+        void redis!.del(acctFailKey).catch(() => {});
         return;
       }
       if (status !== 401) {
         // 仅账号/密码错误计入失败；其它状态（400 校验失败等）不计
         return;
       }
-      const finishedAt = Date.now();
 
-      // 账号维度：记录失败并在达阈值时锁定
-      const current = getAccountRecord(accountKey);
-      current.failures = withinWindow(current.failures, finishedAt, ACCOUNT_WINDOW_MS);
-      current.failures.push(finishedAt);
-      if (current.failures.length >= ACCOUNT_MAX_FAILURES) {
-        current.lockedUntil = finishedAt + ACCOUNT_LOCK_MS;
-      }
+      // 账号维度：累计失败；达到阈值即上锁
+      void (async () => {
+        try {
+          const count = await redis!.incr(acctFailKey);
+          if (count === 1) {
+            await redis!.expire(acctFailKey, Math.ceil(ACCOUNT_WINDOW_MS / 1000));
+          }
+          if (count >= ACCOUNT_MAX_FAILURES) {
+            await redis!.set(acctLockKey, '1', 'PX', ACCOUNT_LOCK_MS);
+          }
+        } catch {
+          // 降级：计数失败不影响登录结果
+        }
+      })();
 
-      // IP 维度：记录失败（仅保留窗口内时间戳）
-      ipStore.set(ip, [...withinWindow(ipStore.get(ip) ?? [], finishedAt, IP_WINDOW_MS), finishedAt]);
+      // IP 维度：累计失败（仅保留窗口内计数，由 EXPIRE 自然过期）
+      void (async () => {
+        try {
+          const count = await redis!.incr(ipFailKey);
+          if (count === 1) {
+            await redis!.expire(ipFailKey, Math.ceil(IP_WINDOW_MS / 1000));
+          }
+        } catch {
+          // 降级
+        }
+      })();
     });
 
     next();

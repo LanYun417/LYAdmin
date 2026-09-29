@@ -8,6 +8,7 @@ import { useDict } from '@/hooks/useDict';
 import { useUserStore } from '@/store/modules/user';
 import ProfileForm from './components/ProfileForm.vue';
 import PasswordForm from './components/PasswordForm.vue';
+import { withUploadToken } from '@/utils/uploadToken';
 
 defineOptions({ name: 'Profile' });
 
@@ -68,7 +69,7 @@ async function handleAvatarUpload(options: UploadRequestOptions): Promise<void> 
               :before-upload="beforeAvatarUpload"
               :http-request="handleAvatarUpload"
             >
-              <el-avatar v-loading="uploading" :size="100" :src="avatar">
+              <el-avatar v-loading="uploading" :size="100" :src="withUploadToken(avatar)">
                 <el-icon aria-hidden="true"><BIconPlus /></el-icon>
               </el-avatar>
             </el-upload>

@@ -19,6 +19,7 @@ import { formatFileSize, formatDateTime } from '@/utils/format';
 import type { FileItem, FileUploaderOption } from '@/types/api';
 import Pagination from '@/components/Pagination/index.vue';
 import SearchForm from '@/components/SearchForm/index.vue';
+import { withUploadToken } from '@/utils/uploadToken';
 
 defineOptions({ name: 'Upload' });
 
@@ -255,8 +256,8 @@ onMounted(() => {
             <el-image
               v-if="row.mimeType?.startsWith('image/')"
               class="block w-12 h-12 overflow-hidden border border-line-lighter rounded-md cursor-zoom-in"
-              :src="thumbUrl(row.fileUrl)"
-              :preview-src-list="[row.fileUrl]"
+              :src="withUploadToken(thumbUrl(row.fileUrl))"
+              :preview-src-list="[withUploadToken(row.fileUrl)]"
               preview-teleported
               fit="cover"
               lazy
@@ -285,7 +286,9 @@ onMounted(() => {
         </el-table-column>
         <el-table-column label="操作" width="220" fixed="right">
           <template #default="{ row }">
-            <el-link type="primary" :href="row.fileUrl" target="_blank" rel="noopener" class="mr-3"> 查看 </el-link>
+            <el-link type="primary" :href="withUploadToken(row.fileUrl)" target="_blank" rel="noopener" class="mr-3">
+              查看
+            </el-link>
             <el-button v-permission="'file:download'" type="success" link @click="handleDownload(row as FileItem)">
               下载
             </el-button>

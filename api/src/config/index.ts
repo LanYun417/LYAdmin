@@ -170,6 +170,16 @@ export const config = {
      */
     distDir: path.resolve(ROOT_DIR, process.env.WEB_DIST_DIR ?? 'web'),
   },
+  /**
+   * Redis 配置（登出令牌黑名单 / 登录频率限制的共享存储）。
+   * 未配置 REDIS_HOST 时视为「不启用」，相关增强整体降级关闭（见 config/redis.ts）。
+   */
+  redis: {
+    host: process.env.REDIS_HOST ?? '',
+    port: toNumber(process.env.REDIS_PORT, 6379),
+    password: process.env.REDIS_PASSWORD ?? '',
+    db: toNumber(process.env.REDIS_DB, 0),
+  },
   /** 跨域允许来源 */
   corsOrigin: process.env.CORS_ORIGIN ?? 'http://localhost:5173',
   /** 日志目录（绝对路径） */

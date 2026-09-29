@@ -15,6 +15,7 @@ import Pagination from '@/components/Pagination/index.vue';
 import SearchForm from '@/components/SearchForm/index.vue';
 import UserForm from './components/UserForm.vue';
 import AssignRoleDialog from './components/AssignRoleDialog.vue';
+import { withUploadToken } from '@/utils/uploadToken';
 
 defineOptions({ name: 'SystemUser' });
 
@@ -184,7 +185,7 @@ onMounted(() => {
       <Table v-loading="loading" :data="list">
         <el-table-column label="头像" width="80" align="center">
           <template #default="{ row }">
-            <el-avatar :size="36" :src="row.avatar">
+            <el-avatar :size="36" :src="withUploadToken(row.avatar)">
               <el-icon aria-hidden="true"><BIconPersonFill /></el-icon>
             </el-avatar>
           </template>

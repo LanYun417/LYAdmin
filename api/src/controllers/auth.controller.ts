@@ -30,8 +30,8 @@ export async function refresh(req: Request, res: Response): Promise<void> {
 /**
  * 登出。
  */
-export async function logout(_req: Request, res: Response): Promise<void> {
-  await authService.logout();
+export async function logout(req: Request, res: Response): Promise<void> {
+  await authService.logout(Number(req.user!.userId));
   ok(res, null, '退出登录成功');
 }
 

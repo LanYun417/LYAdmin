@@ -58,6 +58,29 @@ function truncateText(text: string): string {
 }
 
 /**
+ * 对疑似 JSON 的响应文本做脱敏后重新序列化。
+ *
+ * 请求体 / query 已通过 {@link redactSensitive} 脱敏，但响应体（resBody）此前未脱敏。
+ * 登录（`/api/auth/login`）、刷新（`/api/auth/refresh`）等接口会在响应里回传
+ * `accessToken` / `refreshToken`，若不处理会随访问日志落盘（物理文件 + `sys_http_log` 表），
+ * 造成 JWT 凭据泄露。此处对齐请求体逻辑，对响应中的敏感键值同样掩码。
+ *
+ * 非 JSON 文本（或已被截断导致无法解析的 JSON）原样返回——无法可靠定位凭据，且
+ * 截断后本就只剩片段，泄露面可控。
+ */
+function redactJsonText(text: string): string {
+  const trimmed = text.trim();
+  if (trimmed.length === 0 || (trimmed[0] !== '{' && trimmed[0] !== '[')) {
+    return text;
+  }
+  try {
+    return JSON.stringify(redactSensitive(JSON.parse(trimmed)));
+  } catch {
+    return text;
+  }
+}
+
+/**
  * 序列化请求体：对象先脱敏再紧凑序列化；纯字符串尝试按 JSON 解析脱敏。
  * @param value 请求体（express.json 解析结果或原始字符串）
  */
@@ -161,7 +184,7 @@ export function httpAccessLogger(): RequestHandler {
         let resBody: string | undefined;
         if (!skipResBody && totalBytes > 0) {
           resBody = /json|text|html|xml/i.test(contentType)
-            ? truncateText(text)
+            ? truncateText(redactJsonText(text))
             : `（二进制响应，共 ${totalBytes} 字节）`;
         }
 

@@ -10,6 +10,7 @@ import morgan from 'morgan';
 import { config } from '@/config';
 import { registerDocsRoutes } from '@/docs';
 import { errorHandler, notFoundHandler } from '@/middlewares/errorHandler';
+import { authenticateStatic } from '@/middlewares/auth';
 import { hotlinkGuard } from '@/middlewares/hotlinkGuard';
 import { imageScaleMiddleware } from '@/middlewares/imageScale';
 import { operationLog } from '@/middlewares/operationLog';
@@ -49,11 +50,14 @@ export function createApp(): Express {
   app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 
   // 静态资源：上传目录（Express 5 直接挂载即可，无需通配路由）
-  // 顺序：防盗链 → 图片缩放 → 静态出图。
-  // 防盗链放最前，外链请求直接 403，连文件都不必读；
-  // 图片按需缩放中间件须在 static 之前：命中合法 ?scale= 且为图片时返回缩放结果，
-  // 否则 next() 交由 static 出原图。
-  app.use('/uploads', hotlinkGuard, imageScaleMiddleware(), express.static(config.upload.dir));
+  // 顺序：鉴权 → 防盗链 → 图片缩放 → 静态出图。
+  // ① 鉴权放最前：仅登录用户可读取上传的文件，杜绝未授权直链访问（P0 安全修复）；
+  //    浏览器 <img>/<el-avatar> 无法自动带 Authorization 头，故前端在 URL 上拼 ?token=，
+  //    authenticateStatic 会回退读取该查询参数（见 middlewares/auth.ts）。
+  // ② 防盗链放鉴权之后，外链请求直接 403，连文件都不必读；
+  // ③ 图片按需缩放中间件须在 static 之前：命中合法 ?scale= 且为图片时返回缩放结果，
+  //    否则 next() 交由 static 出原图。
+  app.use('/uploads', authenticateStatic, hotlinkGuard, imageScaleMiddleware(), express.static(config.upload.dir));
 
   // 操作日志（拦截写操作，异步落库）
   app.use(operationLog());
