@@ -33,6 +33,14 @@ export function createApp(): Express {
   }
   app.disable('x-powered-by');
 
+  // 关闭动态响应的 ETag。
+  // 背景：Express 默认给 res.json/res.send 加 ETag，浏览器（以及前端 request.ts 里的
+  // If-None-Match 逻辑）会对 /api 的 GET 发条件请求并收到 **304**；而 304 无响应体、
+  // axios 默认只把 2xx 视为成功 → 304 落到错误分支，表现为「登录成功但守卫拉取菜单/资料
+  // 失败、被弹回 /login」并弹出 `请求失败（304）`。这里从源头关闭，杜绝动态响应产生 304。
+  // 静态资源（/uploads、/web 产物）走 express.static 自带的 ETag，不受此处影响。
+  app.set('etag', false);
+
   // 跨域兜底（前端开发期走 Vite 代理，此处便于 Postman/curl 直连）
   app.use(
     cors({
