@@ -1,5 +1,7 @@
 node_modules/
 dist/
+# 前端构建产物（由 admin 构建输出，属生成物，不入库）
+web/
 logs/
 *.log
 .env

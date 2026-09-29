@@ -163,11 +163,12 @@ export const config = {
   /** 前端构建产物（同源部署时由后端直接托管） */
   web: {
     /**
-     * 前端 `admin/dist` 目录（绝对路径）。
-     * 默认取仓库根下的 `admin/dist`；可用 WEB_DIST_DIR 覆盖。
+     * 前端产物目录（绝对路径）。
+     * 默认取 `api/web`（与后端同目录，便于整目录部署）；可用 WEB_DIST_DIR 覆盖。
+     * 注意：不要用 `api/dist` —— 那是后端 TS 的编译输出目录，会被 `npm run build` 覆盖。
      * 目录不存在时后端跳过托管（纯 API 部署 / 前端独立部署场景不受影响）。
      */
-    distDir: path.resolve(ROOT_DIR, process.env.WEB_DIST_DIR ?? '../admin/dist'),
+    distDir: path.resolve(ROOT_DIR, process.env.WEB_DIST_DIR ?? 'web'),
   },
   /** 跨域允许来源 */
   corsOrigin: process.env.CORS_ORIGIN ?? 'http://localhost:5173',
