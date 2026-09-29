@@ -79,14 +79,26 @@ function handlePrimaryColorChange(color: string | null): void {
 <template>
   <div class="navbar-avatar flex items-center gap-4">
     <el-tooltip :content="appStore.isFullscreen ? '退出全屏' : '全屏'" placement="bottom">
-      <el-icon class="text-lg text-ink cursor-pointer" @click="handleToggleFullscreen">
+      <el-icon
+        class="text-lg text-ink cursor-pointer"
+        role="button"
+        tabindex="0"
+        :aria-label="appStore.isFullscreen ? '退出全屏' : '全屏'"
+        @click="handleToggleFullscreen"
+      >
         <BIconFullscreen v-if="!appStore.isFullscreen" />
         <BIconFullscreenExit v-else />
       </el-icon>
     </el-tooltip>
 
     <el-tooltip :content="isDark ? '切换亮色' : '切换暗黑'" placement="bottom">
-      <el-icon class="text-lg text-ink cursor-pointer" @click="toggleTheme">
+      <el-icon
+        class="text-lg text-ink cursor-pointer"
+        role="button"
+        tabindex="0"
+        :aria-label="isDark ? '切换亮色' : '切换暗黑'"
+        @click="toggleTheme"
+      >
         <BIconMoon v-if="!isDark" />
         <BIconSun v-else />
       </el-icon>
@@ -104,7 +116,7 @@ function handlePrimaryColorChange(color: string | null): void {
     <el-dropdown trigger="click">
       <div class="cursor-pointer outline-none flex items-center gap-2">
         <el-avatar :size="32" :src="avatar">
-          <el-icon><BIconPerson /></el-icon>
+          <el-icon aria-hidden="true"><BIconPerson /></el-icon>
         </el-avatar>
         <span class="text-sm text-ink">{{ nickname }}</span>
       </div>

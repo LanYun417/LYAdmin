@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { ElMessage, ElMessageBox } from '@/utils/element';
 import { BIconPersonFill, BIconPlus } from 'bootstrap-icons-vue';
 import { deleteUserApi, getUserListApi, resetUserPasswordApi, updateUserStatusApi } from '@/api/user';
 import { getDeptTreeApi } from '@/api/dept';
 import { getAllRolesApi } from '@/api/role';
 import { useDict, useStatusDict } from '@/hooks/useDict';
+import { useTable } from '@/hooks/useTable';
 import { hasPermission } from '@/utils/permission';
 import { formatDateTime } from '@/utils/format';
 import { PASSWORD_REGEX } from '@/utils/validate';
@@ -17,9 +18,6 @@ import AssignRoleDialog from './components/AssignRoleDialog.vue';
 
 defineOptions({ name: 'SystemUser' });
 
-const loading = ref(false);
-const list = ref<UserDetail[]>([]);
-const total = ref(0);
 const roleOptions = ref<RoleBrief[]>([]);
 const deptTree = ref<DeptNode[]>([]);
 
@@ -29,37 +27,23 @@ const { labelOf: genderLabel } = useDict('sys_user_sex');
 /** 状态字典（字典管理 → 通用状态 sys_common_status），驱动状态筛选与提示文案 */
 const { statusOptions, statusLabel } = useStatusDict();
 
-const query = reactive({
-  username: '',
-  status: undefined as number | undefined,
-  deptId: undefined as number | undefined,
-  page: 1,
-  pageSize: 20,
-});
+const { loading, list, total, query, search, reset, getList, changePage, changePageSize } = useTable(
+  (p) =>
+    getUserListApi({
+      page: p.page,
+      pageSize: p.pageSize,
+      username: p.username || undefined,
+      status: p.status,
+      deptId: p.deptId,
+    }),
+  { username: '', status: undefined as number | undefined, deptId: undefined as number | undefined },
+);
 
 const formVisible = ref(false);
 const editId = ref<number | undefined>(undefined);
 const assignVisible = ref(false);
 const assignUserId = ref<number | undefined>(undefined);
 const assignRoleIds = ref<number[]>([]);
-
-/** 加载用户列表 */
-async function loadList(): Promise<void> {
-  loading.value = true;
-  try {
-    const res = await getUserListApi({
-      page: query.page,
-      pageSize: query.pageSize,
-      username: query.username || undefined,
-      status: query.status,
-      deptId: query.deptId,
-    });
-    list.value = res.list ?? [];
-    total.value = res.total ?? 0;
-  } finally {
-    loading.value = false;
-  }
-}
 
 /** 加载角色下拉（仅具备 system:role:all 的角色可拉取，避免无权限角色触发 403 整页跳转） */
 async function loadRoles(): Promise<void> {
@@ -75,21 +59,6 @@ async function loadDepts(): Promise<void> {
     return;
   }
   deptTree.value = (await getDeptTreeApi()) ?? [];
-}
-
-/** 查询 */
-function handleSearch(): void {
-  query.page = 1;
-  void loadList();
-}
-
-/** 重置 */
-function handleReset(): void {
-  query.username = '';
-  query.status = undefined;
-  query.deptId = undefined;
-  query.page = 1;
-  void loadList();
 }
 
 /** 新增 */
@@ -113,7 +82,7 @@ async function handleDelete(row: UserDetail): Promise<void> {
   }
   await deleteUserApi(row.id);
   ElMessage.success('删除成功');
-  await loadList();
+  await getList();
 }
 
 /**
@@ -169,11 +138,10 @@ function handleAssignRole(row: UserDetail): void {
 
 /** 表单提交成功 */
 function handleFormSuccess(): void {
-  void loadList();
+  void getList();
 }
 
 onMounted(() => {
-  void loadList();
   void loadRoles();
   void loadDepts();
 });
@@ -181,9 +149,9 @@ onMounted(() => {
 
 <template>
   <div class="user-page">
-    <SearchForm @search="handleSearch" @reset="handleReset">
+    <SearchForm @search="search" @reset="reset">
       <el-form-item label="用户名">
-        <el-input v-model="query.username" placeholder="请输入用户名" clearable @keyup.enter="handleSearch" />
+        <el-input v-model="query.username" placeholder="请输入用户名" clearable @keyup.enter="search" />
       </el-form-item>
       <el-form-item label="状态">
         <el-select v-model="query.status" placeholder="全部" clearable style="width: 140px">
@@ -217,7 +185,7 @@ onMounted(() => {
         <el-table-column label="头像" width="80" align="center">
           <template #default="{ row }">
             <el-avatar :size="36" :src="row.avatar">
-              <el-icon><BIconPersonFill /></el-icon>
+              <el-icon aria-hidden="true"><BIconPersonFill /></el-icon>
             </el-avatar>
           </template>
         </el-table-column>
@@ -287,8 +255,8 @@ onMounted(() => {
         v-model:current-page="query.page"
         v-model:page-size="query.pageSize"
         :total="total"
-        @size-change="loadList"
-        @current-change="loadList"
+        @size-change="changePageSize"
+        @current-change="changePage"
       />
     </el-card>
 

@@ -442,7 +442,7 @@ onMounted(() => {
           </el-table-column>
           <template #empty>
             <el-empty v-if="!currentTable" description="请选择左侧数据表以查看字段" :image-size="80">
-              <el-icon><BIconTable /></el-icon>
+              <el-icon aria-hidden="true"><BIconTable /></el-icon>
             </el-empty>
             <span v-else class="text-[13px] text-muted">该表暂无字段</span>
           </template>

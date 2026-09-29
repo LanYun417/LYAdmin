@@ -60,7 +60,7 @@ function closeDrawer(): void {
           <AppMain />
         </el-scrollbar>
         <!-- 返回顶部：作用于内容区滚动容器 -->
-        <el-backtop target=".content-scrollbar .el-scrollbar__wrap" :right="24" :bottom="24">
+        <el-backtop target=".content-scrollbar .el-scrollbar__wrap" :right="24" :bottom="24" aria-label="返回顶部">
           <el-icon :size="18" class="backtop-rocket"><BIconRocketFill /></el-icon>
         </el-backtop>
       </main>

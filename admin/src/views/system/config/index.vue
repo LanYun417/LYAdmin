@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue';
+import { ref } from 'vue';
 import { ElMessage, ElMessageBox } from '@/utils/element';
 import { BIconPlus } from 'bootstrap-icons-vue';
 import { deleteConfigApi, getConfigListApi } from '@/api/config';
+import { useTable } from '@/hooks/useTable';
 import type { SysConfigItem } from '@/types/api';
 import Pagination from '@/components/Pagination/index.vue';
 import SearchForm from '@/components/SearchForm/index.vue';
@@ -10,50 +11,19 @@ import ConfigForm from './components/ConfigForm.vue';
 
 defineOptions({ name: 'SystemConfig' });
 
-const loading = ref(false);
-const list = ref<SysConfigItem[]>([]);
-const total = ref(0);
-
-const query = reactive({
-  configName: '',
-  configKey: '',
-  page: 1,
-  pageSize: 20,
-});
+const { loading, list, total, query, search, reset, getList, changePage, changePageSize } = useTable(
+  (p) =>
+    getConfigListApi({
+      page: p.page,
+      pageSize: p.pageSize,
+      configName: p.configName || undefined,
+      configKey: p.configKey || undefined,
+    }),
+  { configName: '', configKey: '' },
+);
 
 const formVisible = ref(false);
 const editId = ref<number | undefined>(undefined);
-
-/** 加载参数列表 */
-async function loadList(): Promise<void> {
-  loading.value = true;
-  try {
-    const res = await getConfigListApi({
-      page: query.page,
-      pageSize: query.pageSize,
-      configName: query.configName || undefined,
-      configKey: query.configKey || undefined,
-    });
-    list.value = res.list ?? [];
-    total.value = res.total ?? 0;
-  } finally {
-    loading.value = false;
-  }
-}
-
-/** 查询 */
-function handleSearch(): void {
-  query.page = 1;
-  void loadList();
-}
-
-/** 重置 */
-function handleReset(): void {
-  query.configName = '';
-  query.configKey = '';
-  query.page = 1;
-  void loadList();
-}
 
 /** 新增 */
 function handleAdd(): void {
@@ -80,27 +50,23 @@ async function handleDelete(row: SysConfigItem): Promise<void> {
   }
   await deleteConfigApi(row.id);
   ElMessage.success('删除成功');
-  await loadList();
+  await getList();
 }
 
 /** 表单提交成功 */
 function handleFormSuccess(): void {
-  void loadList();
+  void getList();
 }
-
-onMounted(() => {
-  void loadList();
-});
 </script>
 
 <template>
   <div class="config-page">
-    <SearchForm @search="handleSearch" @reset="handleReset">
+    <SearchForm @search="search" @reset="reset">
       <el-form-item label="参数名称">
-        <el-input v-model="query.configName" placeholder="请输入参数名称" clearable @keyup.enter="handleSearch" />
+        <el-input v-model="query.configName" placeholder="请输入参数名称" clearable @keyup.enter="search" />
       </el-form-item>
       <el-form-item label="参数键名">
-        <el-input v-model="query.configKey" placeholder="请输入参数键名" clearable @keyup.enter="handleSearch" />
+        <el-input v-model="query.configKey" placeholder="请输入参数键名" clearable @keyup.enter="search" />
       </el-form-item>
     </SearchForm>
 
@@ -153,8 +119,8 @@ onMounted(() => {
         v-model:current-page="query.page"
         v-model:page-size="query.pageSize"
         :total="total"
-        @size-change="loadList"
-        @current-change="loadList"
+        @size-change="changePageSize"
+        @current-change="changePage"
       />
     </el-card>
 

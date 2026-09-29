@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { ElMessage, ElMessageBox } from '@/utils/element';
 import type { UploadRequestOptions } from 'element-plus';
 import { BIconArrowClockwise, BIconFileEarmark, BIconFileEarmarkImage, BIconUpload } from 'bootstrap-icons-vue';
@@ -12,6 +12,7 @@ import {
   getFileUploadersApi,
   uploadFilesApi,
 } from '@/api/file';
+import { useTable } from '@/hooks/useTable';
 import { downloadBlob } from '@/utils/download';
 import { sha256Hex } from '@/utils/hash';
 import { formatFileSize, formatDateTime } from '@/utils/format';
@@ -24,9 +25,6 @@ defineOptions({ name: 'Upload' });
 /** KB → 字节换算（表单按 KB 录入，接口按字节过滤） */
 const BYTES_PER_KB = 1024;
 
-const loading = ref(false);
-const fileList = ref<FileItem[]>([]);
-const total = ref(0);
 /** 文件类型选项：库内 mimeType 去重结果，新增类型自动同步，无硬编码 */
 const typeOptions = ref<string[]>([]);
 /** 上传人选项：库内 uploader_id 去重后关联用户表，动态生成 */
@@ -34,15 +32,37 @@ const uploaderOptions = ref<FileUploaderOption[]>([]);
 /** 上传时间范围（与日志模块一致：value-format 直接产出字符串） */
 const dateRange = ref<string[]>([]);
 
-const query = reactive({
-  page: 1,
-  pageSize: 20,
-  originName: '',
-  mimeType: '',
-  uploaderId: undefined as number | undefined,
-  minSizeKB: undefined as number | undefined,
-  maxSizeKB: undefined as number | undefined,
-});
+const {
+  loading,
+  list: fileList,
+  total,
+  query,
+  getList,
+  search,
+  reset,
+  changePage,
+  changePageSize,
+} = useTable(
+  (p) =>
+    getFileListApi({
+      page: p.page,
+      pageSize: p.pageSize,
+      originName: p.originName.trim() || undefined,
+      mimeType: p.mimeType || undefined,
+      uploaderId: p.uploaderId,
+      startTime: dateRange.value[0] || undefined,
+      endTime: dateRange.value[1] || undefined,
+      minSize: p.minSizeKB === undefined ? undefined : Math.round(p.minSizeKB * BYTES_PER_KB),
+      maxSize: p.maxSizeKB === undefined ? undefined : Math.round(p.maxSizeKB * BYTES_PER_KB),
+    }),
+  {
+    originName: '',
+    mimeType: '',
+    uploaderId: undefined as number | undefined,
+    minSizeKB: undefined as number | undefined,
+    maxSizeKB: undefined as number | undefined,
+  },
+);
 
 /** 允许的文件类型 */
 const ACCEPT_TYPES = '.jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip';
@@ -63,31 +83,6 @@ function thumbUrl(url: string): string {
   return `${url}${separator}scale=${THUMB_SCALE}`;
 }
 
-/** 加载文件列表（多条件组合查询） */
-async function loadFiles(): Promise<void> {
-  loading.value = true;
-  try {
-    const res = await getFileListApi({
-      page: query.page,
-      pageSize: query.pageSize,
-      originName: query.originName.trim() || undefined,
-      mimeType: query.mimeType || undefined,
-      uploaderId: query.uploaderId,
-      startTime: dateRange.value[0] || undefined,
-      endTime: dateRange.value[1] || undefined,
-      minSize: query.minSizeKB === undefined ? undefined : Math.round(query.minSizeKB * BYTES_PER_KB),
-      maxSize: query.maxSizeKB === undefined ? undefined : Math.round(query.maxSizeKB * BYTES_PER_KB),
-    });
-    fileList.value = res.list ?? [];
-    total.value = res.total ?? 0;
-  } catch {
-    fileList.value = [];
-    total.value = 0;
-  } finally {
-    loading.value = false;
-  }
-}
-
 /** 加载筛选下拉选项（文件类型 / 上传人，均来自库内去重查询） */
 async function loadFilterOptions(): Promise<void> {
   try {
@@ -100,24 +95,6 @@ async function loadFilterOptions(): Promise<void> {
   } catch {
     uploaderOptions.value = [];
   }
-}
-
-/** 查询：回到第 1 页重新拉取 */
-function handleSearch(): void {
-  query.page = 1;
-  void loadFiles();
-}
-
-/** 重置：清空全部筛选条件并回到第 1 页 */
-function handleReset(): void {
-  query.originName = '';
-  query.mimeType = '';
-  query.uploaderId = undefined;
-  query.minSizeKB = undefined;
-  query.maxSizeKB = undefined;
-  dateRange.value = [];
-  query.page = 1;
-  void loadFiles();
 }
 
 /** 上传前校验 */
@@ -134,7 +111,7 @@ async function doUpload(options: UploadRequestOptions, file: File): Promise<void
   const res = await uploadFilesApi([file]);
   options.onSuccess?.(res);
   ElMessage.success('上传成功');
-  await loadFiles();
+  await getList();
   // 新文件可能带来新的 MIME 类型 / 上传人，同步刷新下拉，保证选项与库中数据一致
   await loadFilterOptions();
 }
@@ -180,16 +157,10 @@ async function handleDelete(row: FileItem): Promise<void> {
   }
   await deleteFileApi(row.id);
   ElMessage.success('删除成功');
-  await loadFiles();
-}
-
-/** 分页变化 */
-function handlePageChange(): void {
-  void loadFiles();
+  await getList();
 }
 
 onMounted(() => {
-  void loadFiles();
   void loadFilterOptions();
 });
 </script>
@@ -207,7 +178,7 @@ onMounted(() => {
         :before-upload="beforeUpload"
         :http-request="customUpload"
       >
-        <el-icon class="text-5xl text-faint"><BIconUpload /></el-icon>
+        <el-icon class="text-5xl text-faint" aria-hidden="true"><BIconUpload /></el-icon>
         <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
         <template #tip>
           <div class="el-upload__tip">支持图片 / 文档 / 压缩包，单个文件不超过 10MB，单次最多 10 个</div>
@@ -215,14 +186,14 @@ onMounted(() => {
       </el-upload>
     </el-card>
 
-    <SearchForm class="mt-4" @search="handleSearch" @reset="handleReset">
+    <SearchForm class="mt-4" @search="search" @reset="reset">
       <el-form-item label="文件名">
         <el-input
           v-model="query.originName"
           placeholder="请输入文件名"
           clearable
           style="width: 160px"
-          @keyup.enter="handleSearch"
+          @keyup.enter="search"
         />
       </el-form-item>
       <el-form-item label="文件类型">
@@ -275,7 +246,7 @@ onMounted(() => {
       <template #header>
         <div class="flex items-center justify-between">
           <span>文件列表</span>
-          <el-button :icon="BIconArrowClockwise" size="small" @click="loadFiles">刷新</el-button>
+          <el-button :icon="BIconArrowClockwise" size="small" @click="getList">刷新</el-button>
         </div>
       </template>
       <Table v-loading="loading" :data="fileList">
@@ -292,7 +263,7 @@ onMounted(() => {
             >
               <template #error>
                 <div class="w-full h-full flex-center text-[22px] text-muted bg-fill-light rounded-md">
-                  <el-icon><BIconFileEarmarkImage /></el-icon>
+                  <el-icon aria-hidden="true"><BIconFileEarmarkImage /></el-icon>
                 </div>
               </template>
             </el-image>
@@ -300,7 +271,7 @@ onMounted(() => {
               v-else
               class="w-12 h-12 flex-center text-[22px] text-muted bg-fill-light border border-line-lighter rounded-md"
             >
-              <el-icon><BIconFileEarmark /></el-icon>
+              <el-icon aria-hidden="true"><BIconFileEarmark /></el-icon>
             </div>
           </template>
         </el-table-column>
@@ -330,8 +301,8 @@ onMounted(() => {
         :total="total"
         :page-sizes="[10, 20, 50]"
         layout="total, sizes, prev, pager, next"
-        @size-change="handlePageChange"
-        @current-change="handlePageChange"
+        @size-change="changePageSize"
+        @current-change="changePage"
       />
     </el-card>
   </div>

@@ -11,9 +11,10 @@ import {
   updateDictItemApi,
 } from '@/api/dict';
 import { clearDictCache, useStatusDict } from '@/hooks/useDict';
+import { useTable } from '@/hooks/useTable';
 import { formatDateTime } from '@/utils/format';
 import { hasPermission } from '@/utils/permission';
-import type { DictItem, DictItemUpsert } from '@/types/api';
+import type { DictItem, DictItemUpsert, PageResult } from '@/types/api';
 import BasicDialog from '@/components/BasicDialog/index.vue';
 import Pagination from '@/components/Pagination/index.vue';
 import { useResponsiveSize } from '@/hooks/useResponsiveSize';
@@ -33,11 +34,6 @@ const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void;
 }>();
 
-const loading = ref(false);
-const list = ref<DictItem[]>([]);
-const total = ref(0);
-const query = reactive({ dictLabel: '', page: 1, pageSize: 20 });
-
 /** 状态选项：来自字典管理中的「通用状态」（sys_common_status） */
 const { statusOptions } = useStatusDict();
 
@@ -46,38 +42,22 @@ const { size: drawerSize } = useResponsiveSize(860);
 
 /* ------------------------------ 列表 ------------------------------ */
 
-/** 加载字典项列表 */
-async function loadList(): Promise<void> {
-  if (!props.dictType) {
-    return;
-  }
-  loading.value = true;
-  try {
-    const res = await getDictItemListApi({
+const { loading, list, total, query, getList, search, reset, changePage, changePageSize } = useTable(
+  (p): Promise<PageResult<DictItem>> => {
+    // 抽屉由外部 watch 打开时触发拉取，dictType 必传；此处兜底空结果，避免传入空类型查询
+    if (!props.dictType) {
+      return Promise.resolve({ list: [], total: 0, page: p.page, pageSize: p.pageSize });
+    }
+    return getDictItemListApi({
       dictType: props.dictType,
-      page: query.page,
-      pageSize: query.pageSize,
-      dictLabel: query.dictLabel || undefined,
+      page: p.page,
+      pageSize: p.pageSize,
+      dictLabel: p.dictLabel || undefined,
     });
-    list.value = res.list ?? [];
-    total.value = res.total ?? 0;
-  } finally {
-    loading.value = false;
-  }
-}
-
-/** 查询 */
-function handleSearch(): void {
-  query.page = 1;
-  void loadList();
-}
-
-/** 重置 */
-function handleReset(): void {
-  query.dictLabel = '';
-  query.page = 1;
-  void loadList();
-}
+  },
+  { dictLabel: '' },
+  { immediate: false },
+);
 
 /** 删除 */
 async function handleDelete(row: DictItem): Promise<void> {
@@ -89,7 +69,7 @@ async function handleDelete(row: DictItem): Promise<void> {
   await deleteDictItemApi(row.id);
   ElMessage.success('删除成功');
   clearDictCache(props.dictType);
-  await loadList();
+  await getList();
 }
 
 /**
@@ -101,7 +81,7 @@ async function handleToggleStatus(row: DictItem): Promise<void> {
   await setDictItemStatusApi(row.id, next);
   ElMessage.success(next === 1 ? '已启用' : '已禁用');
   clearDictCache(props.dictType);
-  await loadList();
+  await getList();
 }
 
 /* ------------------------------ 新增 / 编辑 ------------------------------ */
@@ -174,7 +154,7 @@ async function handleItemSubmit(): Promise<void> {
     }
     clearDictCache(props.dictType);
     itemFormVisible.value = false;
-    await loadList();
+    await getList();
   } finally {
     itemSubmitting.value = false;
   }
@@ -191,7 +171,7 @@ watch(
     if (visible) {
       query.dictLabel = '';
       query.page = 1;
-      void loadList();
+      void getList();
     }
   },
 );
@@ -205,10 +185,10 @@ watch(
         placeholder="请输入字典标签"
         clearable
         style="width: 200px"
-        @keyup.enter="handleSearch"
+        @keyup.enter="search"
       />
-      <el-button type="primary" @click="handleSearch">查询</el-button>
-      <el-button @click="handleReset">重置</el-button>
+      <el-button type="primary" @click="search">查询</el-button>
+      <el-button @click="reset">重置</el-button>
       <el-button
         v-permission="'system:dict:add'"
         type="primary"
@@ -255,8 +235,8 @@ watch(
       v-model:current-page="query.page"
       v-model:page-size="query.pageSize"
       :total="total"
-      @size-change="loadList"
-      @current-change="loadList"
+      @size-change="changePageSize"
+      @current-change="changePage"
     />
 
     <BasicDialog

@@ -110,7 +110,7 @@ onMounted(() => {
         </el-table-column>
         <el-table-column label="图标" width="80" align="center">
           <template #default="{ row }">
-            <el-icon v-if="row.icon"><component :is="row.icon" /></el-icon>
+            <el-icon v-if="row.icon" aria-hidden="true"><component :is="row.icon" /></el-icon>
           </template>
         </el-table-column>
         <el-table-column prop="path" label="路由路径" min-width="150" show-overflow-tooltip />

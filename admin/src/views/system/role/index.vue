@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue';
+import { ref } from 'vue';
 import { ElMessage, ElMessageBox } from '@/utils/element';
 import { BIconPlus } from 'bootstrap-icons-vue';
 import { deleteRoleApi, getRoleListApi } from '@/api/role';
 import { useStatusDict } from '@/hooks/useDict';
+import { useTable } from '@/hooks/useTable';
 import { formatDateTime } from '@/utils/format';
 import { DATA_SCOPE_OPTIONS, type Role } from '@/types/api';
 import Pagination from '@/components/Pagination/index.vue';
@@ -13,10 +14,6 @@ import PermissionDrawer from './components/PermissionDrawer.vue';
 
 defineOptions({ name: 'SystemRole' });
 
-const loading = ref(false);
-const list = ref<Role[]>([]);
-const total = ref(0);
-
 /** 状态字典（字典管理 → 通用状态 sys_common_status），驱动状态筛选与标签文案 */
 const { statusOptions, statusLabel } = useStatusDict();
 
@@ -25,49 +22,22 @@ function dataScopeLabel(value?: number): string {
   return DATA_SCOPE_OPTIONS.find((item) => item.value === value)?.label ?? '全部数据';
 }
 
-const query = reactive({
-  roleName: '',
-  status: undefined as number | undefined,
-  page: 1,
-  pageSize: 20,
-});
+const { loading, list, total, query, search, reset, getList, changePage, changePageSize } = useTable(
+  (p) =>
+    getRoleListApi({
+      page: p.page,
+      pageSize: p.pageSize,
+      roleName: p.roleName || undefined,
+      status: p.status,
+    }),
+  { roleName: '', status: undefined as number | undefined },
+);
 
 const formVisible = ref(false);
 const editId = ref<number | undefined>(undefined);
 const permissionVisible = ref(false);
 const permissionRoleId = ref<number | undefined>(undefined);
 const permissionRoleName = ref('');
-
-/** 加载角色列表 */
-async function loadList(): Promise<void> {
-  loading.value = true;
-  try {
-    const res = await getRoleListApi({
-      page: query.page,
-      pageSize: query.pageSize,
-      roleName: query.roleName || undefined,
-      status: query.status,
-    });
-    list.value = res.list ?? [];
-    total.value = res.total ?? 0;
-  } finally {
-    loading.value = false;
-  }
-}
-
-/** 查询 */
-function handleSearch(): void {
-  query.page = 1;
-  void loadList();
-}
-
-/** 重置 */
-function handleReset(): void {
-  query.roleName = '';
-  query.status = undefined;
-  query.page = 1;
-  void loadList();
-}
 
 /** 新增 */
 function handleAdd(): void {
@@ -90,7 +60,7 @@ async function handleDelete(row: Role): Promise<void> {
   }
   await deleteRoleApi(row.id);
   ElMessage.success('删除成功');
-  await loadList();
+  await getList();
 }
 
 /** 分配权限 */
@@ -99,17 +69,13 @@ function handlePermission(row: Role): void {
   permissionRoleName.value = row.roleName;
   permissionVisible.value = true;
 }
-
-onMounted(() => {
-  void loadList();
-});
 </script>
 
 <template>
   <div class="role-page">
-    <SearchForm @search="handleSearch" @reset="handleReset">
+    <SearchForm @search="search" @reset="reset">
       <el-form-item label="角色名称">
-        <el-input v-model="query.roleName" placeholder="请输入角色名称" clearable @keyup.enter="handleSearch" />
+        <el-input v-model="query.roleName" placeholder="请输入角色名称" clearable @keyup.enter="search" />
       </el-form-item>
       <el-form-item label="状态">
         <el-select v-model="query.status" placeholder="全部" clearable style="width: 140px">
@@ -170,12 +136,12 @@ onMounted(() => {
         v-model:current-page="query.page"
         v-model:page-size="query.pageSize"
         :total="total"
-        @size-change="loadList"
-        @current-change="loadList"
+        @size-change="changePageSize"
+        @current-change="changePage"
       />
     </el-card>
 
-    <RoleForm v-model="formVisible" :role-id="editId" @success="loadList" />
+    <RoleForm v-model="formVisible" :role-id="editId" @success="getList" />
 
     <PermissionDrawer v-model="permissionVisible" :role-id="permissionRoleId" :role-name="permissionRoleName" />
   </div>

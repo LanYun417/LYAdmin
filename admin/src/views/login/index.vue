@@ -133,7 +133,13 @@ async function handleLogin(): Promise<void> {
 
         <el-form ref="formRef" :model="form" :rules="rules" size="large" @keyup.enter="handleLogin">
           <el-form-item prop="username">
-            <el-input v-model="form.username" :prefix-icon="BIconPerson" placeholder="请输入账号" clearable />
+            <el-input
+              v-model="form.username"
+              :prefix-icon="BIconPerson"
+              placeholder="请输入账号"
+              clearable
+              autocomplete="username"
+            />
           </el-form-item>
           <el-form-item prop="password">
             <el-input
@@ -142,6 +148,7 @@ async function handleLogin(): Promise<void> {
               :prefix-icon="BIconLock"
               placeholder="请输入密码"
               show-password
+              autocomplete="current-password"
             />
           </el-form-item>
           <el-form-item>

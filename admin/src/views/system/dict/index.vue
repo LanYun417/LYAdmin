@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue';
+import { ref } from 'vue';
 import { ElMessage, ElMessageBox } from '@/utils/element';
 import { BIconPlus } from 'bootstrap-icons-vue';
 import { deleteDictTypeApi, getDictTypeListApi, setDictTypeStatusApi } from '@/api/dict';
+import { useTable } from '@/hooks/useTable';
 import { clearDictCache, useStatusDict } from '@/hooks/useDict';
 import { formatDateTime } from '@/utils/format';
 import { hasPermission } from '@/utils/permission';
@@ -14,20 +15,20 @@ import DictItemDrawer from './components/DictItemDrawer.vue';
 
 defineOptions({ name: 'SystemDict' });
 
-const loading = ref(false);
-const list = ref<DictType[]>([]);
-const total = ref(0);
-
 /** 状态字典（字典管理 → 通用状态 sys_common_status），驱动状态筛选与提示文案 */
 const { statusOptions, statusLabel } = useStatusDict();
 
-const query = reactive({
-  dictName: '',
-  dictType: '',
-  status: undefined as number | undefined,
-  page: 1,
-  pageSize: 20,
-});
+const { loading, list, total, query, search, reset, getList, changePage, changePageSize } = useTable(
+  (p) =>
+    getDictTypeListApi({
+      page: p.page,
+      pageSize: p.pageSize,
+      dictName: p.dictName || undefined,
+      dictType: p.dictType || undefined,
+      status: p.status,
+    }),
+  { dictName: '', dictType: '', status: undefined as number | undefined },
+);
 
 /** 类型表单弹窗 */
 const formVisible = ref(false);
@@ -37,39 +38,6 @@ const editingRow = ref<DictType | null>(null);
 const itemVisible = ref(false);
 const itemDictType = ref('');
 const itemDictName = ref('');
-
-/** 加载字典类型列表 */
-async function loadList(): Promise<void> {
-  loading.value = true;
-  try {
-    const res = await getDictTypeListApi({
-      page: query.page,
-      pageSize: query.pageSize,
-      dictName: query.dictName || undefined,
-      dictType: query.dictType || undefined,
-      status: query.status,
-    });
-    list.value = res.list ?? [];
-    total.value = res.total ?? 0;
-  } finally {
-    loading.value = false;
-  }
-}
-
-/** 查询 */
-function handleSearch(): void {
-  query.page = 1;
-  void loadList();
-}
-
-/** 重置 */
-function handleReset(): void {
-  query.dictName = '';
-  query.dictType = '';
-  query.status = undefined;
-  query.page = 1;
-  void loadList();
-}
 
 /** 新增 */
 function handleAdd(): void {
@@ -109,7 +77,7 @@ async function handleToggleStatus(row: DictType): Promise<void> {
   await setDictTypeStatusApi(row.id, next);
   ElMessage.success(`已${action}`);
   clearDictCache(row.dictType);
-  await loadList();
+  await getList();
 }
 
 /** 删除（连带删除其下字典项） */
@@ -126,22 +94,18 @@ async function handleDelete(row: DictType): Promise<void> {
   await deleteDictTypeApi(row.id);
   ElMessage.success('删除成功');
   clearDictCache(row.dictType);
-  await loadList();
+  await getList();
 }
-
-onMounted(() => {
-  void loadList();
-});
 </script>
 
 <template>
   <div class="dict-page">
-    <SearchForm @search="handleSearch" @reset="handleReset">
+    <SearchForm @search="search" @reset="reset">
       <el-form-item label="字典名称">
-        <el-input v-model="query.dictName" placeholder="请输入字典名称" clearable @keyup.enter="handleSearch" />
+        <el-input v-model="query.dictName" placeholder="请输入字典名称" clearable @keyup.enter="search" />
       </el-form-item>
       <el-form-item label="类型编码">
-        <el-input v-model="query.dictType" placeholder="请输入类型编码" clearable @keyup.enter="handleSearch" />
+        <el-input v-model="query.dictType" placeholder="请输入类型编码" clearable @keyup.enter="search" />
       </el-form-item>
       <el-form-item label="状态">
         <el-select v-model="query.status" placeholder="全部" clearable style="width: 140px">
@@ -195,12 +159,12 @@ onMounted(() => {
         v-model:current-page="query.page"
         v-model:page-size="query.pageSize"
         :total="total"
-        @size-change="loadList"
-        @current-change="loadList"
+        @size-change="changePageSize"
+        @current-change="changePage"
       />
     </el-card>
 
-    <DictTypeForm v-model="formVisible" :row="editingRow" @success="loadList" />
+    <DictTypeForm v-model="formVisible" :row="editingRow" @success="getList" />
 
     <DictItemDrawer v-model="itemVisible" :dict-type="itemDictType" :dict-name="itemDictName" />
   </div>

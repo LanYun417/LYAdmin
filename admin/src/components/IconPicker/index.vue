@@ -87,7 +87,10 @@ const { size: popoverWidth } = useResponsiveSize(360, '92%');
                 ? 'text-primary border-primary bg-[var(--el-color-primary-light-9)]'
                 : 'hover:text-primary hover:border-primary'
             "
+            role="button"
+            tabindex="0"
             :title="name"
+            :aria-label="name"
             @click="selectIcon(name)"
           >
             <el-icon :size="20">

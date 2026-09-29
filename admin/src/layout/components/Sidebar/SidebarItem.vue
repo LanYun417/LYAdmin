@@ -40,7 +40,7 @@ const fullPath = computed(() => resolvePath(props.item.path));
 <template>
   <el-sub-menu v-if="!isLeaf" :index="fullPath">
     <template #title>
-      <el-icon v-if="item.icon">
+      <el-icon v-if="item.icon" aria-hidden="true">
         <component :is="item.icon" />
       </el-icon>
       <span>{{ item.menuName }}</span>
@@ -49,7 +49,7 @@ const fullPath = computed(() => resolvePath(props.item.path));
   </el-sub-menu>
 
   <el-menu-item v-else :index="fullPath">
-    <el-icon v-if="item.icon">
+    <el-icon v-if="item.icon" aria-hidden="true">
       <component :is="item.icon" />
     </el-icon>
     <template #title>

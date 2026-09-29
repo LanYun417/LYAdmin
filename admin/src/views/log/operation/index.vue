@@ -1,65 +1,32 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue';
+import { ref } from 'vue';
 import { ElMessage } from '@/utils/element';
 import { BIconArrowClockwise, BIconDownload } from 'bootstrap-icons-vue';
 import { exportOperationLogsApi, getOperationLogsApi } from '@/api/log';
+import { useTable } from '@/hooks/useTable';
 import { formatDate, formatDateTime, formatDuration } from '@/utils/format';
 import { downloadBlob } from '@/utils/download';
-import type { OperationLog } from '@/types/api';
 import Pagination from '@/components/Pagination/index.vue';
 import SearchForm from '@/components/SearchForm/index.vue';
 
 defineOptions({ name: 'LogOperation' });
 
-const loading = ref(false);
 const exporting = ref(false);
-const list = ref<OperationLog[]>([]);
-const total = ref(0);
 const dateRange = ref<string[]>([]);
 
-const query = reactive({
-  module: '',
-  username: '',
-  result: undefined as number | undefined,
-  page: 1,
-  pageSize: 20,
-});
-
-/** 加载操作日志 */
-async function loadList(): Promise<void> {
-  loading.value = true;
-  try {
-    const res = await getOperationLogsApi({
-      page: query.page,
-      pageSize: query.pageSize,
-      module: query.module || undefined,
-      username: query.username || undefined,
-      result: query.result,
+const { loading, list, total, query, getList, search, reset, changePage, changePageSize } = useTable(
+  (p) =>
+    getOperationLogsApi({
+      page: p.page,
+      pageSize: p.pageSize,
+      module: p.module || undefined,
+      username: p.username || undefined,
+      result: p.result,
       startTime: dateRange.value[0] || undefined,
       endTime: dateRange.value[1] || undefined,
-    });
-    list.value = res.list ?? [];
-    total.value = res.total ?? 0;
-  } finally {
-    loading.value = false;
-  }
-}
-
-/** 查询 */
-function handleSearch(): void {
-  query.page = 1;
-  void loadList();
-}
-
-/** 重置 */
-function handleReset(): void {
-  query.module = '';
-  query.username = '';
-  query.result = undefined;
-  dateRange.value = [];
-  query.page = 1;
-  void loadList();
-}
+    }),
+  { module: '', username: '', result: undefined as number | undefined },
+);
 
 /** 导出操作日志（P2）：按当前筛选条件导出，不带分页参数 */
 async function handleExport(): Promise<void> {
@@ -101,20 +68,16 @@ function methodTag(method: string): EpTagType {
       return 'info';
   }
 }
-
-onMounted(() => {
-  void loadList();
-});
 </script>
 
 <template>
   <div class="log-operation-page">
-    <SearchForm @search="handleSearch" @reset="handleReset">
+    <SearchForm @search="search" @reset="reset">
       <el-form-item label="模块">
         <el-input v-model="query.module" placeholder="请输入模块" clearable />
       </el-form-item>
       <el-form-item label="操作人">
-        <el-input v-model="query.username" placeholder="请输入操作人" clearable @keyup.enter="handleSearch" />
+        <el-input v-model="query.username" placeholder="请输入操作人" clearable @keyup.enter="search" />
       </el-form-item>
       <template #advanced>
         <el-form-item label="结果">
@@ -149,7 +112,7 @@ onMounted(() => {
           >
             导出
           </el-button>
-          <el-button :icon="BIconArrowClockwise" @click="loadList">刷新</el-button>
+          <el-button :icon="BIconArrowClockwise" @click="getList">刷新</el-button>
         </div>
       </div>
 
@@ -184,8 +147,8 @@ onMounted(() => {
         v-model:current-page="query.page"
         v-model:page-size="query.pageSize"
         :total="total"
-        @size-change="loadList"
-        @current-change="loadList"
+        @size-change="changePageSize"
+        @current-change="changePage"
       />
     </el-card>
   </div>

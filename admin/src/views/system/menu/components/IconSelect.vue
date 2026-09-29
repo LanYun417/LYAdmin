@@ -78,7 +78,7 @@ function handleSelect(name: string): void {
   <div class="icon-select flex items-center gap-2">
     <el-input :model-value="modelValue" placeholder="请选择图标" readonly style="width: 220px">
       <template #prefix>
-        <el-icon v-if="modelValue"><component :is="modelValue" /></el-icon>
+        <el-icon v-if="modelValue" aria-hidden="true"><component :is="modelValue" /></el-icon>
       </template>
     </el-input>
     <el-button @click="handleOpen">选择图标</el-button>
@@ -96,7 +96,10 @@ function handleSelect(name: string): void {
                 ? 'text-primary border-primary bg-[var(--el-color-primary-light-9)]'
                 : 'hover:text-primary hover:border-primary'
             "
+            role="button"
+            tabindex="0"
             :title="name"
+            :aria-label="name"
             @click="handleSelect(name)"
           >
             <el-icon :size="20"><component :is="name" /></el-icon>

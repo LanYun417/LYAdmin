@@ -36,7 +36,7 @@ const iconBg = computed(() => (/^#[0-9a-f]{6}$/i.test(props.color) ? `${props.co
         <p class="mt-2 text-[26px] font-bold tabular-nums text-ink">{{ displayValue }}</p>
       </div>
       <div class="w-12 h-12 rounded-xl flex-center" :style="{ backgroundColor: iconBg, color: color }">
-        <el-icon :size="24"><component :is="icon" /></el-icon>
+        <el-icon :size="24" aria-hidden="true"><component :is="icon" /></el-icon>
       </div>
     </div>
   </div>

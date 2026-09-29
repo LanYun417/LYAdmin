@@ -1,62 +1,31 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue';
+import { ref } from 'vue';
 import { ElMessage } from '@/utils/element';
 import { BIconArrowClockwise, BIconDownload } from 'bootstrap-icons-vue';
 import { exportLoginLogsApi, getLoginLogsApi } from '@/api/log';
+import { useTable } from '@/hooks/useTable';
 import { formatDate, formatDateTime } from '@/utils/format';
 import { downloadBlob } from '@/utils/download';
-import type { LoginLog } from '@/types/api';
 import Pagination from '@/components/Pagination/index.vue';
 import SearchForm from '@/components/SearchForm/index.vue';
 
 defineOptions({ name: 'LogLogin' });
 
-const loading = ref(false);
 const exporting = ref(false);
-const list = ref<LoginLog[]>([]);
-const total = ref(0);
 const dateRange = ref<string[]>([]);
 
-const query = reactive({
-  username: '',
-  status: undefined as number | undefined,
-  page: 1,
-  pageSize: 20,
-});
-
-/** 加载登录日志 */
-async function loadList(): Promise<void> {
-  loading.value = true;
-  try {
-    const res = await getLoginLogsApi({
-      page: query.page,
-      pageSize: query.pageSize,
-      username: query.username || undefined,
-      status: query.status,
+const { loading, list, total, query, getList, search, reset, changePage, changePageSize } = useTable(
+  (p) =>
+    getLoginLogsApi({
+      page: p.page,
+      pageSize: p.pageSize,
+      username: p.username || undefined,
+      status: p.status,
       startTime: dateRange.value[0] || undefined,
       endTime: dateRange.value[1] || undefined,
-    });
-    list.value = res.list ?? [];
-    total.value = res.total ?? 0;
-  } finally {
-    loading.value = false;
-  }
-}
-
-/** 查询 */
-function handleSearch(): void {
-  query.page = 1;
-  void loadList();
-}
-
-/** 重置 */
-function handleReset(): void {
-  query.username = '';
-  query.status = undefined;
-  dateRange.value = [];
-  query.page = 1;
-  void loadList();
-}
+    }),
+  { username: '', status: undefined as number | undefined },
+);
 
 /** 导出登录日志（P2）：按当前筛选条件导出，不带分页参数 */
 async function handleExport(): Promise<void> {
@@ -79,17 +48,13 @@ async function handleExport(): Promise<void> {
     exporting.value = false;
   }
 }
-
-onMounted(() => {
-  void loadList();
-});
 </script>
 
 <template>
   <div class="log-login-page">
-    <SearchForm @search="handleSearch" @reset="handleReset">
+    <SearchForm @search="search" @reset="reset">
       <el-form-item label="账号">
-        <el-input v-model="query.username" placeholder="请输入账号" clearable @keyup.enter="handleSearch" />
+        <el-input v-model="query.username" placeholder="请输入账号" clearable @keyup.enter="search" />
       </el-form-item>
       <el-form-item label="结果">
         <el-select v-model="query.status" placeholder="全部" clearable style="width: 140px">
@@ -124,7 +89,7 @@ onMounted(() => {
           >
             导出
           </el-button>
-          <el-button :icon="BIconArrowClockwise" @click="loadList">刷新</el-button>
+          <el-button :icon="BIconArrowClockwise" @click="getList">刷新</el-button>
         </div>
       </div>
 
@@ -149,8 +114,8 @@ onMounted(() => {
         v-model:current-page="query.page"
         v-model:page-size="query.pageSize"
         :total="total"
-        @size-change="loadList"
-        @current-change="loadList"
+        @size-change="changePageSize"
+        @current-change="changePage"
       />
     </el-card>
   </div>

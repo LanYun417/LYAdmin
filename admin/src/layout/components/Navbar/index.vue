@@ -25,7 +25,13 @@ function handleToggle(): void {
 <template>
   <div class="h-[50px] px-4 border-b border-line-light flex items-center justify-between shadow">
     <div class="flex items-center gap-3">
-      <el-icon class="text-lg text-ink cursor-pointer" @click="handleToggle">
+      <el-icon
+        class="text-lg text-ink cursor-pointer"
+        role="button"
+        tabindex="0"
+        :aria-label="appStore.isMobile ? '切换侧边栏' : appStore.sidebarCollapsed ? '展开侧边栏' : '折叠侧边栏'"
+        @click="handleToggle"
+      >
         <BIconList v-if="appStore.isMobile" />
         <BIconLayoutSidebarReverse v-else-if="!appStore.sidebarCollapsed" />
         <BIconLayoutSidebar v-else />

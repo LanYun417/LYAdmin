@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { BIconArrowClockwise, BIconDownload, BIconTrash } from 'bootstrap-icons-vue';
 import { ElMessage, ElMessageBox } from '@/utils/element';
 import { clearHttpLogsApi, exportHttpLogsApi, getHttpLogsApi } from '@/api/log';
 import { getDeptTreeApi } from '@/api/dept';
+import { useTable } from '@/hooks/useTable';
 import { downloadBlob } from '@/utils/download';
 import { formatDate, formatDateTime, formatDuration } from '@/utils/format';
 import type { DeptNode, HttpLog } from '@/types/api';
@@ -12,46 +13,28 @@ import SearchForm from '@/components/SearchForm/index.vue';
 
 defineOptions({ name: 'LogHttp' });
 
-const loading = ref(false);
 const exporting = ref(false);
-const list = ref<HttpLog[]>([]);
-const total = ref(0);
 const dateRange = ref<string[]>([]);
 const deptTree = ref<DeptNode[]>([]);
 
-const query = reactive({
-  method: '',
-  statusCode: undefined as number | undefined,
-  username: '',
-  deptId: undefined as number | undefined,
-  page: 1,
-  pageSize: 20,
-});
+const { loading, list, total, query, getList, search, reset, changePage, changePageSize } = useTable(
+  (p) =>
+    getHttpLogsApi({
+      page: p.page,
+      pageSize: p.pageSize,
+      method: p.method || undefined,
+      statusCode: p.statusCode,
+      startTime: dateRange.value[0] || undefined,
+      endTime: dateRange.value[1] || undefined,
+      username: p.username.trim() || undefined,
+      deptId: p.deptId,
+    }),
+  { method: '', statusCode: undefined as number | undefined, username: '', deptId: undefined as number | undefined },
+);
 
 /** 兜底文案：空值统一展示为短横线 */
 function displayOrDash(value?: string | null): string {
   return value || '-';
-}
-
-/** 加载 HTTP 日志 */
-async function loadList(): Promise<void> {
-  loading.value = true;
-  try {
-    const res = await getHttpLogsApi({
-      page: query.page,
-      pageSize: query.pageSize,
-      method: query.method || undefined,
-      statusCode: query.statusCode,
-      startTime: dateRange.value[0] || undefined,
-      endTime: dateRange.value[1] || undefined,
-      username: query.username.trim() || undefined,
-      deptId: query.deptId,
-    });
-    list.value = res.list ?? [];
-    total.value = res.total ?? 0;
-  } finally {
-    loading.value = false;
-  }
 }
 
 /** 导出 HTTP 日志：按当前筛选条件导出，不带分页参数 */
@@ -81,23 +64,6 @@ async function handleExport(): Promise<void> {
 /** 加载部门树（用于部门筛选） */
 async function loadDeptTree(): Promise<void> {
   deptTree.value = (await getDeptTreeApi()) ?? [];
-}
-
-/** 查询 */
-function handleSearch(): void {
-  query.page = 1;
-  void loadList();
-}
-
-/** 重置 */
-function handleReset(): void {
-  query.method = '';
-  query.statusCode = undefined;
-  query.username = '';
-  query.deptId = undefined;
-  dateRange.value = [];
-  query.page = 1;
-  void loadList();
 }
 
 /** 状态码颜色：2xx 成功绿 / 3xx 重定向灰 / 4xx 客户端错误黄 / 5xx 服务端错误红 */
@@ -162,11 +128,10 @@ async function handleClear(): Promise<void> {
   await clearHttpLogsApi();
   ElMessage.success('已清空所有 HTTP 日志');
   query.page = 1;
-  await loadList();
+  await getList();
 }
 
 onMounted(() => {
-  void loadList();
   // 部门树仅用于筛选；无权限时静默跳过（与用户管理页处理一致）
   void loadDeptTree().catch(() => {
     deptTree.value = [];
@@ -176,7 +141,7 @@ onMounted(() => {
 
 <template>
   <div class="log-http-page">
-    <SearchForm @search="handleSearch" @reset="handleReset">
+    <SearchForm @search="search" @reset="reset">
       <el-form-item label="请求方法">
         <el-select v-model="query.method" placeholder="全部" clearable style="width: 140px">
           <el-option label="GET" value="GET" />
@@ -194,7 +159,7 @@ onMounted(() => {
           placeholder="请输入账号"
           clearable
           style="width: 160px"
-          @keyup.enter="handleSearch"
+          @keyup.enter="search"
         />
       </el-form-item>
       <template #advanced>
@@ -237,7 +202,7 @@ onMounted(() => {
           >
             导出
           </el-button>
-          <el-button :icon="BIconArrowClockwise" @click="loadList">刷新</el-button>
+          <el-button :icon="BIconArrowClockwise" @click="getList">刷新</el-button>
           <el-button v-permission="'log:http:clear'" type="danger" plain :icon="BIconTrash" @click="handleClear"
             >清空所有日志</el-button
           >
@@ -301,8 +266,8 @@ onMounted(() => {
         v-model:current-page="query.page"
         v-model:page-size="query.pageSize"
         :total="total"
-        @size-change="loadList"
-        @current-change="loadList"
+        @size-change="changePageSize"
+        @current-change="changePage"
       />
     </el-card>
   </div>
