@@ -326,8 +326,28 @@ export interface FileItem {
 }
 
 /** 文件查询参数 */
+/** 文件查询参数（多条件 AND 组合） */
 export interface FileQuery extends PageQuery {
   originName?: string;
+  /** 文件类型（MIME）精确匹配；可选值由 GET /files/types 动态提供，不硬编码 */
+  mimeType?: string;
+  /** 上传人 id；可选值由 GET /files/uploaders 动态提供 */
+  uploaderId?: number;
+  /** 上传时间起（ISO 8601） */
+  startTime?: string;
+  /** 上传时间止（ISO 8601） */
+  endTime?: string;
+  /** 最小文件大小（字节） */
+  minSize?: number;
+  /** 最大文件大小（字节） */
+  maxSize?: number;
+}
+
+/** 上传人选项（库内去重 + 关联用户表，动态生成） */
+export interface FileUploaderOption {
+  id: number;
+  username: string;
+  nickname: string;
 }
 
 /* ------------------------------ 仪表盘 ------------------------------ */

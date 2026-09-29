@@ -22,6 +22,16 @@ export async function list(req: Request, res: Response): Promise<void> {
   ok(res, result);
 }
 
+/** 文件类型选项（对库内已有文件去重，供筛选下拉使用）。 */
+export async function types(_req: Request, res: Response): Promise<void> {
+  ok(res, await fileService.listFileTypes());
+}
+
+/** 上传人选项（对库内已有上传人去重并关联用户表，供筛选下拉使用）。 */
+export async function uploaders(_req: Request, res: Response): Promise<void> {
+  ok(res, await fileService.listFileUploaders());
+}
+
 /** 校验内容哈希格式（SHA-256 十六进制 64 位）。 */
 function assertValidHash(hash: string): void {
   if (!/^[a-f0-9]{64}$/i.test(hash)) {

@@ -7,7 +7,7 @@ import fs from 'fs';
 import path from 'path';
 import { Op, type WhereOptions } from 'sequelize';
 import { config } from '@/config';
-import { File } from '@/models';
+import { File, User } from '@/models';
 import type { PageResult } from '@/types';
 import { buildPageResult, parsePagination } from '@/utils/pagination';
 import { AppError } from '@/utils/response';
@@ -258,8 +258,33 @@ export async function checkFileByHash(hash: string): Promise<FileItem | null> {
 }
 
 /**
- * 分页查询文件列表。
- * @param query 查询参数（page/pageSize/originName）
+ * 解析筛选用的数值（空值/非法值返回 undefined，表示「该条件不参与过滤」）。
+ * @param value 原始入参
+ */
+function toFilterNumber(value: unknown): number | undefined {
+  if (value === undefined || value === null || value === '') {
+    return undefined;
+  }
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : undefined;
+}
+
+/**
+ * 解析筛选用的时间（ISO 8601 字符串；非法返回 undefined）。
+ * 非法时间静默忽略而非报错，避免前端偶发传空串导致整列表 500。
+ * @param value 原始入参
+ */
+function toFilterDate(value: unknown): Date | undefined {
+  if (typeof value !== 'string' || !value.trim()) {
+    return undefined;
+  }
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? undefined : date;
+}
+
+/**
+ * 分页查询文件列表（多条件组合，均为 AND）。
+ * @param query 查询参数（page/pageSize/originName/mimeType/uploaderId/startTime/endTime/minSize/maxSize）
  */
 export async function listFiles(query: Record<string, unknown>): Promise<PageResult<FileItem>> {
   const { page, pageSize, offset, limit } = parsePagination(query);
@@ -270,6 +295,46 @@ export async function listFiles(query: Record<string, unknown>): Promise<PageRes
     where.originName = { [Op.like]: `%${originName}%` };
   }
 
+  // 文件类型（MIME）精确匹配。可选值由 listFileTypes() 动态去重提供，
+  // 此处**不做任何枚举硬编码**——库里新增类型即可被筛到。
+  const mimeType = typeof query.mimeType === 'string' ? query.mimeType.trim() : '';
+  if (mimeType) {
+    where.mimeType = mimeType;
+  }
+
+  const uploaderId = toFilterNumber(query.uploaderId);
+  if (uploaderId !== undefined && uploaderId > 0) {
+    where.uploaderId = uploaderId;
+  }
+
+  // 上传时间范围（created_at）：沿用日志模块的 startTime / endTime（ISO 8601）命名
+  const startTime = toFilterDate(query.startTime);
+  const endTime = toFilterDate(query.endTime);
+  if (startTime || endTime) {
+    const range: Record<symbol, unknown> = {};
+    if (startTime) {
+      range[Op.gte] = startTime;
+    }
+    if (endTime) {
+      range[Op.lte] = endTime;
+    }
+    where.createdAt = range;
+  }
+
+  // 文件大小范围（字节）
+  const minSize = toFilterNumber(query.minSize);
+  const maxSize = toFilterNumber(query.maxSize);
+  if (minSize !== undefined || maxSize !== undefined) {
+    const range: Record<symbol, unknown> = {};
+    if (minSize !== undefined) {
+      range[Op.gte] = minSize;
+    }
+    if (maxSize !== undefined) {
+      range[Op.lte] = maxSize;
+    }
+    where.size = range;
+  }
+
   const { rows, count } = await File.findAndCountAll({
     where,
     order: [['id', 'DESC']],
@@ -278,6 +343,60 @@ export async function listFiles(query: Record<string, unknown>): Promise<PageRes
   });
 
   return buildPageResult(rows.map(toFileItem), count, page, pageSize);
+}
+
+/**
+ * 文件类型（MIME）选项：**对库内已有文件去重查询**得到，无硬编码枚举。
+ * 库里新增类型后，下拉选项随之自动同步。
+ * @returns MIME 字符串数组（升序）
+ */
+export async function listFileTypes(): Promise<string[]> {
+  const rows = await File.findAll({
+    attributes: ['mimeType'],
+    group: ['mimeType'],
+    order: [['mimeType', 'ASC']],
+    raw: true,
+  });
+  return rows.map((row) => String(row.mimeType ?? '')).filter(Boolean);
+}
+
+/** 上传人选项（id + 账号 + 昵称）。 */
+export interface FileUploaderOption {
+  id: number;
+  username: string;
+  nickname: string;
+}
+
+/**
+ * 上传人选项：**对库内已存在的 uploader_id 去重**后，关联 sys_user 取展示名。
+ * 纯动态生成，无硬编码；历史文件的上传人被删除时自然不再出现在选项里。
+ * @returns 上传人选项数组（按 id 升序）
+ */
+export async function listFileUploaders(): Promise<FileUploaderOption[]> {
+  const rows = await File.findAll({
+    attributes: ['uploaderId'],
+    where: { uploaderId: { [Op.ne]: null } },
+    group: ['uploaderId'],
+    raw: true,
+  });
+
+  const ids = rows.map((row) => Number(row.uploaderId)).filter((id) => Number.isInteger(id) && id > 0);
+
+  if (ids.length === 0) {
+    return [];
+  }
+
+  const users = await User.findAll({
+    where: { id: { [Op.in]: ids } },
+    attributes: ['id', 'username', 'nickname'],
+    order: [['id', 'ASC']],
+  });
+
+  return users.map((user) => ({
+    id: Number(user.id),
+    username: user.username,
+    nickname: user.nickname,
+  }));
 }
 
 /** 可下载文件信息（供控制器流式响应）。 */

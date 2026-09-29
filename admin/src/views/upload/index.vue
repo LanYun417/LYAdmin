@@ -8,19 +8,46 @@ import {
   BIconFileEarmarkImage,
   BIconUpload,
 } from 'bootstrap-icons-vue';
-import { deleteFileApi, checkFileApi, downloadFileApi, getFileListApi, uploadFilesApi } from '@/api/file';
+import {
+  checkFileApi,
+  deleteFileApi,
+  downloadFileApi,
+  getFileListApi,
+  getFileTypesApi,
+  getFileUploadersApi,
+  uploadFilesApi,
+} from '@/api/file';
 import { downloadBlob } from '@/utils/download';
 import { sha256Hex } from '@/utils/hash';
 import { formatFileSize, formatDateTime } from '@/utils/format';
-import type { FileItem } from '@/types/api';
+import type { FileItem, FileUploaderOption } from '@/types/api';
 import Pagination from '@/components/Pagination/index.vue';
+import SearchForm from '@/components/SearchForm/index.vue';
 
 defineOptions({ name: 'Upload' });
+
+/** KB → 字节换算（表单按 KB 录入，接口按字节过滤） */
+const BYTES_PER_KB = 1024;
 
 const loading = ref(false);
 const fileList = ref<FileItem[]>([]);
 const total = ref(0);
-const query = reactive({ page: 1, pageSize: 20, originName: '' });
+/** 文件类型选项：库内 mimeType 去重结果，新增类型自动同步，无硬编码 */
+const typeOptions = ref<string[]>([]);
+/** 上传人选项：库内 uploader_id 去重后关联用户表，动态生成 */
+const uploaderOptions = ref<FileUploaderOption[]>([]);
+/** 上传时间范围（与日志模块一致：value-format 直接产出字符串） */
+const dateRange = ref<string[]>([]);
+
+const query = reactive({
+  page: 1,
+  pageSize: 20,
+  originName: '',
+  mimeType: '',
+  uploaderId: undefined as number | undefined,
+  minSizeKB: undefined as number | undefined,
+  maxSizeKB: undefined as number | undefined,
+});
 
 /** 允许的文件类型 */
 const ACCEPT_TYPES = '.jpg,.jpeg,.png,.gif,.webp,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip';
@@ -41,11 +68,21 @@ function thumbUrl(url: string): string {
   return `${url}${separator}scale=${THUMB_SCALE}`;
 }
 
-/** 加载文件列表 */
+/** 加载文件列表（多条件组合查询） */
 async function loadFiles(): Promise<void> {
   loading.value = true;
   try {
-    const res = await getFileListApi({ ...query });
+    const res = await getFileListApi({
+      page: query.page,
+      pageSize: query.pageSize,
+      originName: query.originName.trim() || undefined,
+      mimeType: query.mimeType || undefined,
+      uploaderId: query.uploaderId,
+      startTime: dateRange.value[0] || undefined,
+      endTime: dateRange.value[1] || undefined,
+      minSize: query.minSizeKB === undefined ? undefined : Math.round(query.minSizeKB * BYTES_PER_KB),
+      maxSize: query.maxSizeKB === undefined ? undefined : Math.round(query.maxSizeKB * BYTES_PER_KB),
+    });
     fileList.value = res.list ?? [];
     total.value = res.total ?? 0;
   } catch {
@@ -54,6 +91,38 @@ async function loadFiles(): Promise<void> {
   } finally {
     loading.value = false;
   }
+}
+
+/** 加载筛选下拉选项（文件类型 / 上传人，均来自库内去重查询） */
+async function loadFilterOptions(): Promise<void> {
+  try {
+    typeOptions.value = await getFileTypesApi();
+  } catch {
+    typeOptions.value = [];
+  }
+  try {
+    uploaderOptions.value = await getFileUploadersApi();
+  } catch {
+    uploaderOptions.value = [];
+  }
+}
+
+/** 查询：回到第 1 页重新拉取 */
+function handleSearch(): void {
+  query.page = 1;
+  void loadFiles();
+}
+
+/** 重置：清空全部筛选条件并回到第 1 页 */
+function handleReset(): void {
+  query.originName = '';
+  query.mimeType = '';
+  query.uploaderId = undefined;
+  query.minSizeKB = undefined;
+  query.maxSizeKB = undefined;
+  dateRange.value = [];
+  query.page = 1;
+  void loadFiles();
 }
 
 /** 上传前校验 */
@@ -71,6 +140,8 @@ async function doUpload(options: UploadRequestOptions, file: File): Promise<void
   options.onSuccess?.(res);
   ElMessage.success('上传成功');
   await loadFiles();
+  // 新文件可能带来新的 MIME 类型 / 上传人，同步刷新下拉，保证选项与库中数据一致
+  await loadFilterOptions();
 }
 
 /**
@@ -124,6 +195,7 @@ function handlePageChange(): void {
 
 onMounted(() => {
   void loadFiles();
+  void loadFilterOptions();
 });
 </script>
 
@@ -147,6 +219,62 @@ onMounted(() => {
         </template>
       </el-upload>
     </el-card>
+
+    <SearchForm class="mt-4" @search="handleSearch" @reset="handleReset">
+      <el-form-item label="文件名">
+        <el-input
+          v-model="query.originName"
+          placeholder="请输入文件名"
+          clearable
+          style="width: 160px"
+          @keyup.enter="handleSearch"
+        />
+      </el-form-item>
+      <el-form-item label="文件类型">
+        <el-select v-model="query.mimeType" placeholder="全部" clearable style="width: 190px">
+          <el-option v-for="item in typeOptions" :key="item" :label="item" :value="item" />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="上传人">
+        <el-select v-model="query.uploaderId" placeholder="全部" clearable style="width: 150px">
+          <el-option
+            v-for="item in uploaderOptions"
+            :key="item.id"
+            :label="item.nickname || item.username"
+            :value="item.id"
+          />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="上传时间">
+        <el-date-picker
+          v-model="dateRange"
+          type="datetimerange"
+          value-format="YYYY-MM-DD HH:mm:ss"
+          range-separator="至"
+          start-placeholder="开始时间"
+          end-placeholder="结束时间"
+        />
+      </el-form-item>
+      <el-form-item label="大小(KB)">
+        <div class="flex items-center gap-1">
+          <el-input-number
+            v-model="query.minSizeKB"
+            :min="0"
+            :controls="false"
+            placeholder="最小"
+            style="width: 80px"
+          />
+          <span class="text-muted">-</span>
+          <el-input-number
+            v-model="query.maxSizeKB"
+            :min="0"
+            :controls="false"
+            placeholder="最大"
+            style="width: 80px"
+          />
+        </div>
+      </el-form-item>
+    </SearchForm>
 
     <el-card shadow="never" class="mt-4">
       <template #header>

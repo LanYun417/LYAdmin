@@ -21,6 +21,10 @@ router.get('/check', requirePermission('file:upload'), asyncHandler(fileControll
 
 router.get('/', requirePermission('file:list'), asyncHandler(fileController.list));
 
+// 筛选项来源（动态去重，无硬编码枚举）：须注册在 /:id/download 之前
+router.get('/types', requirePermission('file:list'), asyncHandler(fileController.types));
+router.get('/uploaders', requirePermission('file:list'), asyncHandler(fileController.uploaders));
+
 // 下载：按 id 流式下传，强制附件语义
 router.get('/:id/download', requirePermission('file:download'), asyncHandler(fileController.download));
 

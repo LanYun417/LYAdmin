@@ -1,5 +1,5 @@
 import { del, get, request } from './request';
-import type { FileItem, FileQuery, PageResult } from '@/types/api';
+import type { FileItem, FileQuery, FileUploaderOption, PageResult } from '@/types/api';
 
 /** 上传文件（支持 1~10 个） */
 export function uploadFilesApi(files: File[]): Promise<FileItem[]> {
@@ -20,6 +20,16 @@ export function getFileListApi(params: FileQuery): Promise<PageResult<FileItem>>
 /** 删除文件（P2） */
 export function deleteFileApi(id: number): Promise<null> {
   return del<null>(`/files/${id}`);
+}
+
+/** 文件类型选项：对库内 mimeType 去重，库里新增类型后下拉自动同步 */
+export function getFileTypesApi(): Promise<string[]> {
+  return get<string[]>('/files/types');
+}
+
+/** 上传人选项：对库内 uploader_id 去重并关联用户表 */
+export function getFileUploadersApi(): Promise<FileUploaderOption[]> {
+  return get<FileUploaderOption[]>('/files/uploaders');
 }
 
 /** 下载文件（二进制流，前端用 downloadBlob 落盘） */
