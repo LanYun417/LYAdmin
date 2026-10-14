@@ -4,13 +4,13 @@
       <stop offset="0%" stop-color="#409EFF"/>
       <stop offset="100%" stop-color="#36CFC9"/>
     </linearGradient>
-    <linearGradient id="lyAdminLogoText" gradientUnits="userSpaceOnUse" x1="210" y1="0" x2="537" y2="0">
+    <linearGradient id="lyAdminLogoText" gradientUnits="userSpaceOnUse" x1="180" y1="0" x2="537" y2="0">
       <stop offset="0%" stop-color="#409EFF"/>
       <stop offset="100%" stop-color="#36CFC9"/>
     </linearGradient>
   </defs>
-  <!-- 图标底 -->
-  <rect x="20" y="20" width="160" height="160" rx="44" fill="url(#lyAdminLogoIcon)"/>
+  <!-- 图标底：100×100，垂直居中 -->
+  <rect x="50" y="50" width="100" height="100" rx="28" fill="url(#lyAdminLogoIcon)"/>
   <!-- 图标内 L/Y -->
   <text
     x="100"
@@ -18,14 +18,14 @@
     text-anchor="middle"
     dominant-baseline="central"
     font-family="'Courier', 'Courier New', monospace"
-    font-size="88"
+    font-size="56"
     font-weight="bold"
     fill="#fff"
-    letter-spacing="-4"
+    letter-spacing="-2"
   >LY</text>
   <!-- 中文名：渐变 -->
   <text
-    x="210"
+    x="180"
     y="90"
     font-family="'Poppins', 'PingFang SC', 'Microsoft YaHei', sans-serif"
     font-size="40"
@@ -35,7 +35,7 @@
   >蓝云后台管理系统</text>
   <!-- 英文名 -->
   <text
-    x="210"
+    x="180"
     y="137"
     font-family="'KaiTi', 'STKaiti', '楷体', 'Kaiti SC', serif"
     font-size="22"
