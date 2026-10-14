@@ -191,13 +191,14 @@ onMounted(() => {
             />
           </el-form-item>
           <el-form-item v-if="captchaEnabled" prop="captchaCode">
-            <div class="flex w-full items-center gap-3">
+            <div class="flex w-full flex-nowrap items-center gap-3">
               <el-input
                 v-model="form.captchaCode"
                 :prefix-icon="BIconShieldCheck"
                 placeholder="请输入验证码"
                 maxlength="6"
                 autocomplete="off"
+                class="min-w-0 flex-1"
               />
               <img
                 v-if="captchaImage"

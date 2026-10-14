@@ -1,5 +1,3 @@
-<h1 align="center">蓝云后台管理系统（LYAdmin）</h1>
-
 <p align="center">
   <img src="admin/src/assets/logo.svg" alt="LYAdmin 蓝云后台管理系统" width="480">
 </p>
