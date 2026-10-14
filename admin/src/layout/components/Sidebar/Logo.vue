@@ -3,7 +3,7 @@
  * 侧边栏顶部品牌区。
  * 模块职责：展示 Logo 与系统名称，点击返回首页；折叠态下仅显示 Logo。
  */
-import logoUrl from '@/assets/logo.png';
+import logoUrl from '@/assets/logo-mark.svg';
 
 defineOptions({ name: 'SidebarLogo' });
 

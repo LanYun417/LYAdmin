@@ -15,7 +15,7 @@ import {
   BIconPerson,
   BIconShieldCheck,
 } from 'bootstrap-icons-vue';
-import logoUrl from '@/assets/logo.png';
+import logoUrl from '@/assets/logo-mark.svg';
 import { getCaptchaApi } from '@/api/auth';
 import { useUserStore } from '@/store/modules/user';
 import { usePermissionStore } from '@/store/modules/permission';

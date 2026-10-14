@@ -1,5 +1,11 @@
 # 蓝云后台管理系统（LYAdmin）
 
+<p align="center">
+  <img src="admin/src/assets/logo.svg" alt="LYAdmin 蓝云后台管理系统" width="480">
+</p>
+
+<p align="center"><em>开箱即用的通用后台管理基座</em></p>
+
 > 一套开箱即用的通用后台管理基座：JWT 双 Token 鉴权、RBAC + 数据权限、系统管理（用户 / 角色 / 菜单 / 部门 / 字典 / 参数）、三类日志、文件管理、代码生成器与 ECharts 仪表盘。前后端 TypeScript 全覆盖，遵循严格分层与统一工程规范。
 
 ![Vue](https://img.shields.io/badge/Vue-3.5-42b883) ![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178c6) ![Vite](https://img.shields.io/badge/Vite-8-646cff) ![Element Plus](https://img.shields.io/badge/Element%20Plus-2.14-409eff) ![Tailwind](https://img.shields.io/badge/Tailwind%20CSS-3.4-38bdf8) ![Express](https://img.shields.io/badge/Express-5-000000) ![Sequelize](https://img.shields.io/badge/Sequelize-6-52b0e7) ![MySQL](https://img.shields.io/badge/MySQL-8-4479a1) ![Node](https://img.shields.io/badge/node-%3E%3D24-339933) ![License](https://img.shields.io/badge/License-MIT-green)
