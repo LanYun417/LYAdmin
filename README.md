@@ -18,7 +18,6 @@
 - [环境变量](#环境变量)
 - [部署](#部署)
 - [接口约定](#接口约定)
-- [文档](#文档)
 - [贡献指南](#贡献指南)
 - [常见问题](#常见问题)
 - [许可](#许可)
@@ -88,7 +87,7 @@ LYAdmin 面向企业内部运营 / 管理场景，提供一套可直接二次开
 | 数据库 / 缓存  | MySQL 8.x（库 `ly_admin`，utf8mb4）；Redis（可选，缺失时相关增强自动降级）                                                                                       |
 | 工程规范       | ESLint 10 + Prettier 3.9 + Stylelint 17 + husky 9 + lint-staged 17 + commitlint 21 + cz-git + concurrently                                                       |
 
-> 代码规范见 [`docs/CODE-STYLE.md`](./docs/CODE-STYLE.md)，提交规范见 [`docs/GIT-CONVENTION.md`](./docs/GIT-CONVENTION.md)。
+> 代码规范由 ESLint / Prettier / Stylelint 统一约束，提交信息由 commitlint 校验，均由 husky 钩子在提交前自动拦截。
 
 ## 目录结构
 
@@ -99,7 +98,6 @@ ly-admin/
 │  ├─ web/                    # 前端构建产物映射目录（同源部署时由后端托管，产物不入库）
 │  ├─ uploads/                # 上传文件目录（内容不入库）
 │  └─ logs/                   # 日志文件目录
-├─ docs/                      # 项目文档（PRD / 架构 / 代码规范 / 提交规范）
 ├─ .husky/                    # Git Hooks（pre-commit / commit-msg）
 ├─ scripts/                   # 根脚本（如依赖基线守卫 deps-guard.mjs）
 ├─ package.json               # 根脚本：lint / format / commit / dev（并行启动）
@@ -355,26 +353,15 @@ NODE_ENV=production node dist/server.js
 - **静态资源**：`GET /uploads/:filename`（启用防盗链与图片按需缩放）。
 - **在线文档**：启动后端后访问 `/api-docs`。
 
-完整接口清单见 [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md)，运行期以 `/api-docs` 为准。
-
-## 文档
-
-| 文档           | 路径                                                 | 用途                                   |
-| -------------- | ---------------------------------------------------- | -------------------------------------- |
-| 产品需求文档   | [`docs/PRD.md`](./docs/PRD.md)                       | 需求范围、优先级、验收标准             |
-| 系统架构设计   | [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md)     | 技术选型、数据模型、接口清单、统一约定 |
-| 代码规范       | [`docs/CODE-STYLE.md`](./docs/CODE-STYLE.md)         | 命名、前后端编码约定、注释、工具链     |
-| Git 提交规范   | [`docs/GIT-CONVENTION.md`](./docs/GIT-CONVENTION.md) | 分支策略、提交信息、钩子与排查         |
-| 日志子系统设计 | [`docs/system_design.md`](./docs/system_design.md)   | 日志采集 / 归档 / 保留的实现设计       |
-| 类图 / 时序图  | `docs/*.mermaid`                                     | 结构与关键流程可视化                   |
+完整接口清单以运行期 `/api-docs` 为准。
 
 ## 贡献指南
 
 欢迎提交 Issue 与 Pull Request。
 
 1. **环境**：按[快速开始](#快速开始)拉起项目；根目录 `npm install` 以装配 husky 钩子。
-2. **分支**：从 `master` 切出特性分支（见 [`docs/GIT-CONVENTION.md`](./docs/GIT-CONVENTION.md) 分支策略）。
-3. **编码**：遵循 [`docs/CODE-STYLE.md`](./docs/CODE-STYLE.md)（命名、分层、注释规范）；提交信息使用 Conventional Commits（`npm run commit` 可交互生成）。
+2. **分支**：从 `master` 切出特性分支（命名 `feature/*` / `fix/*` / `hotfix/*`）。
+3. **编码**：遵循 ESLint / Prettier / Stylelint 规范（见根目录工程配置）；提交信息使用 Conventional Commits（`npm run commit` 可交互生成）。
 4. **提交前自检**（务必全绿）：
 
    ```bash
@@ -388,7 +375,7 @@ NODE_ENV=production node dist/server.js
 
 5. **PR**：说明背景与改动点，关联相关 Issue，并确保上述检查通过。
 
-> 新增后端业务模块、菜单 / 权限、字段迁移等有固定清单，详见 [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md)。
+> 新增后端业务模块、菜单 / 权限、字段迁移等请遵循分层约定（routes → controllers → services → models，service 为唯一操作 Model 的层）。
 
 ## 常见问题
 
