@@ -6,7 +6,7 @@ import { getMenuTreeApi } from '@/api/menu';
 import { assignRoleMenusApi, getRoleMenuIdsApi } from '@/api/role';
 import type { MenuNode } from '@/types/api';
 import MenuTree from '@/components/MenuTree/index.vue';
-import { useResponsiveSize } from '@/hooks/useResponsiveSize';
+import { useResponsiveSize } from '@/composables/useResponsiveSize';
 
 defineOptions({ name: 'PermissionDrawer' });
 

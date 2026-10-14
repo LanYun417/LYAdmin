@@ -16,7 +16,7 @@ import {
   getFileUploadersApi,
   uploadFilesApi,
 } from '@/api/file';
-import { useTable } from '@/hooks/useTable';
+import { useTable } from '@/composables/useTable';
 import { downloadBlob } from '@/utils/download';
 import { sha256Hex } from '@/utils/hash';
 import { formatFileSize, formatDateTime } from '@/utils/format';

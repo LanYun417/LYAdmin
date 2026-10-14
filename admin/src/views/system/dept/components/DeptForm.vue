@@ -4,7 +4,7 @@ import { computed, reactive, ref, watch } from 'vue';
 import { ElMessage } from '@/utils/element';
 import type { FormInstance, FormRules } from 'element-plus';
 import { createDeptApi, getDeptDetailApi, getDeptTreeApi, updateDeptApi } from '@/api/dept';
-import { useStatusDict } from '@/hooks/useDict';
+import { useStatusDict } from '@/composables/useDict';
 import BasicDialog from '@/components/BasicDialog/index.vue';
 import type { DeptNode, DeptUpsert } from '@/types/api';
 

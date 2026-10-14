@@ -4,7 +4,7 @@ import { reactive, ref, watch } from 'vue';
 import { ElMessage } from '@/utils/element';
 import type { FormInstance, FormRules } from 'element-plus';
 import { createDictTypeApi, updateDictTypeApi } from '@/api/dict';
-import { clearDictCache, useStatusDict } from '@/hooks/useDict';
+import { clearDictCache, useStatusDict } from '@/composables/useDict';
 import BasicDialog from '@/components/BasicDialog/index.vue';
 import type { DictType, DictTypeUpsert } from '@/types/api';
 

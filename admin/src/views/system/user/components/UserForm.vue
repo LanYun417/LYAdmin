@@ -6,7 +6,7 @@ import type { FormInstance, FormRules } from 'element-plus';
 import { createUserApi, getUserDetailApi, updateUserApi } from '@/api/user';
 import { getDeptTreeApi } from '@/api/dept';
 import BasicDialog from '@/components/BasicDialog/index.vue';
-import { useDict, useStatusDict } from '@/hooks/useDict';
+import { useDict, useStatusDict } from '@/composables/useDict';
 import { emailRule, phoneRule, usernameRule } from '@/utils/validate';
 import type { DeptNode, RoleBrief, UserUpsert } from '@/types/api';
 

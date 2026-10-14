@@ -7,7 +7,7 @@ import { computed, reactive, ref, watch } from 'vue';
 import { ElMessage } from '@/utils/element';
 import type { FormInstance, FormRules } from 'element-plus';
 import { createMenuApi, getMenuDetailApi, getMenuTreeApi, updateMenuApi } from '@/api/menu';
-import { useStatusDict } from '@/hooks/useDict';
+import { useStatusDict } from '@/composables/useDict';
 import BasicDialog from '@/components/BasicDialog/index.vue';
 import type { MenuNode, MenuUpsert } from '@/types/api';
 import IconSelect from './IconSelect.vue';

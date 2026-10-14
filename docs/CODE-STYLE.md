@@ -13,7 +13,7 @@
 2. **单一职责**：一个文件只承担一个明确职责；一个函数只做一件事。后端严格分层（见第 4 节），前端组件按「页面 / 业务组件 / 通用组件」划界。
 3. **可读性优先**：命名见名知义，避免魔法值（统一收敛到 `api/src/constants`），复杂逻辑必须写注释（见第 5 节）。
 4. **零容忍未通过 lint 的提交**：根目录 `npm run lint`（`eslint . --max-warnings 0`）必须零错误、零警告；提交前钩子 `pre-commit` 会再次拦截（见第 8 节）。
-5. **不重复造轮子**：能用工具链默认行为解决的，不写自定义配置；能复用的先看 `admin/src/hooks`、`admin/src/components`、`api/src/utils`。
+5. **不重复造轮子**：能用工具链默认行为解决的，不写自定义配置；能复用的先看 `admin/src/composables`、`admin/src/components`、`api/src/utils`。
 
 ---
 
@@ -188,7 +188,7 @@ export const useUserStore = defineStore(
 ### 3.9 指令、Hook 与工具函数约定
 
 - 自定义指令放 `admin/src/directives/`，通过 `directives/index.ts` 的 `setupDirectives(app)` 统一注册；`v-permission` 用于按钮级显隐，值为权限码字符串。
-- 可复用的组合式逻辑放 `admin/src/hooks/`（`useTable` / `useTheme`），命名以 `use` 开头，返回 `ref`/`reactive` 与操作函数。
+- 可复用的组合式逻辑放 `admin/src/composables/`（`useTable` / `useTheme`），命名以 `use` 开头，返回 `ref`/`reactive` 与操作函数。
 - 纯函数工具放 `admin/src/utils/`，必须无副作用、可单测；按职责拆文件（`auth` 管 Token、`format` 管格式化、`permission` 管权限判定、`validate` 管表单规则与正则）。
 - 工具函数优先从已有依赖取用（`dayjs`、`lodash-es`、`@vueuse/core`），不要重复实现。
 

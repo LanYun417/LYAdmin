@@ -4,7 +4,7 @@ import { ref } from 'vue';
 import { ElMessage } from '@/utils/element';
 import { BIconArrowClockwise, BIconDownload } from 'bootstrap-icons-vue';
 import { exportLoginLogsApi, getLoginLogsApi } from '@/api/log';
-import { useTable } from '@/hooks/useTable';
+import { useTable } from '@/composables/useTable';
 import { formatDate, formatDateTime } from '@/utils/format';
 import { downloadBlob } from '@/utils/download';
 import Pagination from '@/components/Pagination/index.vue';

@@ -4,7 +4,7 @@ import { ref } from 'vue';
 import { ElMessage, ElMessageBox } from '@/utils/element';
 import { BIconPlus } from 'bootstrap-icons-vue';
 import { deleteConfigApi, getConfigListApi } from '@/api/config';
-import { useTable } from '@/hooks/useTable';
+import { useTable } from '@/composables/useTable';
 import type { SysConfigItem } from '@/types/api';
 import Pagination from '@/components/Pagination/index.vue';
 import SearchForm from '@/components/SearchForm/index.vue';

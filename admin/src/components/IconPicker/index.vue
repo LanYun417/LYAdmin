@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { BIconSearch } from 'bootstrap-icons-vue';
 import { appIconNames } from '@/utils/icons';
-import { useResponsiveSize } from '@/hooks/useResponsiveSize';
+import { useResponsiveSize } from '@/composables/useResponsiveSize';
 
 defineOptions({ name: 'IconPicker' });
 

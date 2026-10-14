@@ -426,8 +426,8 @@ flowchart TB
 | --- | ------------------------------------ | -------------------------------- |
 | 125 | `admin/src/directives/permission.ts` | `v-permission` 按钮级权限指令    |
 | 126 | `admin/src/directives/index.ts`      | 指令统一注册                     |
-| 127 | `admin/src/hooks/useTable.ts`        | 列表分页/查询通用逻辑（P2 复用） |
-| 128 | `admin/src/hooks/useTheme.ts`        | 暗黑模式切换封装                 |
+| 127 | `admin/src/composables/useTable.ts`  | 列表分页/查询通用逻辑（P2 复用） |
+| 128 | `admin/src/composables/useTheme.ts`  | 暗黑模式切换封装                 |
 
 **布局（9）**
 

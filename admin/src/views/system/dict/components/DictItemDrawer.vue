@@ -11,14 +11,14 @@ import {
   setDictItemStatusApi,
   updateDictItemApi,
 } from '@/api/dict';
-import { clearDictCache, useStatusDict } from '@/hooks/useDict';
-import { useTable } from '@/hooks/useTable';
+import { clearDictCache, useStatusDict } from '@/composables/useDict';
+import { useTable } from '@/composables/useTable';
 import { formatDateTime } from '@/utils/format';
 import { hasPermission } from '@/utils/permission';
 import type { DictItem, DictItemUpsert, PageResult } from '@/types/api';
 import BasicDialog from '@/components/BasicDialog/index.vue';
 import Pagination from '@/components/Pagination/index.vue';
-import { useResponsiveSize } from '@/hooks/useResponsiveSize';
+import { useResponsiveSize } from '@/composables/useResponsiveSize';
 
 defineOptions({ name: 'DictItemDrawer' });
 

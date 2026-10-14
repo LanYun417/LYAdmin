@@ -4,7 +4,7 @@ import { onMounted, ref } from 'vue';
 import { ElMessage, ElMessageBox } from '@/utils/element';
 import { BIconArrowClockwise, BIconPlus } from 'bootstrap-icons-vue';
 import { deleteMenuApi, getMenuListApi } from '@/api/menu';
-import { useStatusDict } from '@/hooks/useDict';
+import { useStatusDict } from '@/composables/useDict';
 import type { MenuNode } from '@/types/api';
 import MenuForm from './components/MenuForm.vue';
 

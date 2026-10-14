@@ -9,7 +9,7 @@ import { BIconArrowClockwise, BIconDownload, BIconTrash } from 'bootstrap-icons-
 import { ElMessage, ElMessageBox } from '@/utils/element';
 import { clearHttpLogsApi, exportHttpLogsApi, getHttpLogsApi } from '@/api/log';
 import { getDeptTreeApi } from '@/api/dept';
-import { useTable } from '@/hooks/useTable';
+import { useTable } from '@/composables/useTable';
 import { downloadBlob } from '@/utils/download';
 import { formatDate, formatDateTime, formatDuration } from '@/utils/format';
 import type { DeptNode, HttpLog } from '@/types/api';

@@ -4,7 +4,7 @@ import { onMounted, ref } from 'vue';
 import { ElMessage, ElMessageBox } from '@/utils/element';
 import { BIconArrowClockwise, BIconPlus } from 'bootstrap-icons-vue';
 import { deleteDeptApi, getDeptListApi } from '@/api/dept';
-import { useStatusDict } from '@/hooks/useDict';
+import { useStatusDict } from '@/composables/useDict';
 import type { DeptNode } from '@/types/api';
 import DeptForm from './components/DeptForm.vue';
 

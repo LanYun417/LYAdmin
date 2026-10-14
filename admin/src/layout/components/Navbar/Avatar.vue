@@ -16,7 +16,7 @@ import {
 import { useUserStore } from '@/store/modules/user';
 import { usePermissionStore } from '@/store/modules/permission';
 import { useAppStore } from '@/store/modules/app';
-import { useTheme } from '@/hooks/useTheme';
+import { useTheme } from '@/composables/useTheme';
 import { applyPrimaryColor, DEFAULT_PRIMARY_COLOR } from '@/utils/theme';
 import { withUploadToken } from '@/utils/uploadToken';
 

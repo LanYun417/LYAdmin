@@ -8,7 +8,7 @@ import { ElMessage } from '@/utils/element';
 import type { UploadRequestOptions } from 'element-plus';
 import { BIconPlus } from 'bootstrap-icons-vue';
 import { uploadAvatarApi } from '@/api/profile';
-import { useDict } from '@/hooks/useDict';
+import { useDict } from '@/composables/useDict';
 import { useUserStore } from '@/store/modules/user';
 import ProfileForm from './components/ProfileForm.vue';
 import PasswordForm from './components/PasswordForm.vue';

@@ -4,7 +4,7 @@ import { computed, reactive, ref } from 'vue';
 import { ElMessage } from '@/utils/element';
 import type { FormInstance, FormRules } from 'element-plus';
 import { updateProfileApi } from '@/api/profile';
-import { useDict } from '@/hooks/useDict';
+import { useDict } from '@/composables/useDict';
 import { useUserStore } from '@/store/modules/user';
 import { emailRule, phoneRule } from '@/utils/validate';
 import type { ProfileUpdateParams } from '@/types/api';

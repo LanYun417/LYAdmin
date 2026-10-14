@@ -5,7 +5,7 @@ import { ElMessage } from '@/utils/element';
 import type { FormInstance, FormRules } from 'element-plus';
 import { createRoleApi, getRoleListApi, updateRoleApi } from '@/api/role';
 import { getDeptTreeApi } from '@/api/dept';
-import { useStatusDict } from '@/hooks/useDict';
+import { useStatusDict } from '@/composables/useDict';
 import { hasPermission } from '@/utils/permission';
 import BasicDialog from '@/components/BasicDialog/index.vue';
 import { DATA_SCOPE_OPTIONS, type DeptNode, type RoleUpsert } from '@/types/api';
