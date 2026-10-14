@@ -3,7 +3,7 @@
  * 模块职责：服务启动时立即补跑一次归档（覆盖停机跨天/多天场景），
  * 随后自调度到次日 `archiveHour:archiveMinute`（默认 00:05）执行归档，每次执行后重算延迟防漂移。
  *
- * 设计（见 docs/system_design.md §3.6）：不引入 cron 依赖，使用原生 `setTimeout` 自调度。
+ * 设计：不引入 cron 依赖，使用原生 `setTimeout` 自调度。
  */
 import dayjs from 'dayjs';
 import { config } from '@/config';

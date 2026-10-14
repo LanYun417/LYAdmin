@@ -4,7 +4,7 @@
  * （unhandledRejection / uncaughtException）统一构造为 `ErrorLogRecord`，
  * 写入 error 日志文件（`logs/error/YYYY-M-D.log`，JSON Lines）。
  *
- * 约定（见 docs/system_design.md §3.7 / §8）：
+ * 约定：
  * - 仅写文件，**绝不写数据库**，避免递归。
  * - 任何写入失败都内部吞掉并 console.error，绝不向调用方抛出、绝不引发二次崩溃。
  * - 支持传入 Express `req`，自动提取 method/url/ip/userId。

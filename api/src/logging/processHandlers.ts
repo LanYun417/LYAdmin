@@ -2,7 +2,7 @@
  * 进程级生命周期处理。
  * 模块职责：注册进程级异常与退出信号处理器，保证异常落盘、日志流优雅关闭。
  *
- * 注册内容（见 docs/system_design.md §2.2 / §7 T04）：
+ * 注册内容：
  * - `unhandledRejection`：记录到 error 日志（不退出，交由上层兜底）。
  * - `uncaughtException`：记录到 error 日志后 `process.exit(1)`（进程状态已不确定）。
  * - `SIGINT` / `SIGTERM`：`stopLogScheduler()` + `closeAllStreams()` 后退出（优雅关闭）。
