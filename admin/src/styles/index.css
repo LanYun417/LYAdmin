@@ -6,13 +6,16 @@
  * 列表去符号等），会破坏 Element Plus 的按钮 / 表格 / 图片预览外观。
  * 省略后由下方 `@layer base` 自行补齐必要重置，语义色与阴影见 `@theme`。
  *
- * 注意：拆分层序不可随意增删——`theme` 必须最先（CSS 变量来源），
- * `utilities` 次之（工具类生成）。
+ * ⚠️ 两条硬约束，改动前务必确认：
+ * 1. 必须用无引号的 `@import "tailwindcss/..."` 官方写法。写成 `url(...)` 形式
+ *    （stylelint import-notation 会自动改写）会导致 Tailwind 解析不到，
+ *    工具类静默不生成、页面样式全面失效，且构建不报错——极难排查。
+ * 2. 不要手动写 `@layer theme, base, components, utilities;` 顺序声明：
+ *    引入 layer(...) 修饰后无需该声明，多余声明反而会让输出层级与预期不符。
+ *    Element Plus 样式无层级，工具类若被包进 @layer 会整体压不过 EP。
  */
-@layer theme, base, components, utilities;
-
-@import url('tailwindcss/theme.css') layer(theme);
-@import url('tailwindcss/utilities.css') layer(utilities);
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
 
 /**
  * 设计令牌（v4 用 `@theme` 取代 v3 的 `tailwind.config.js` theme.extend）。

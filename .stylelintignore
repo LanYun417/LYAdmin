@@ -1,5 +1,8 @@
 node_modules
 dist
+dist-ssr
+# 构建验证用临时输出目录（如 vite build --outDir dist-csscheck）
+dist-*/
 build
 # 前端构建产物映射目录（由 admin 构建输出，非源码）
 api/web

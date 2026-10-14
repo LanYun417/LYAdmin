@@ -102,13 +102,39 @@ v4 用 `@theme` 定义令牌（取代 v3 的 `theme.extend.colors`），定义�
 
 ## 常见错误
 
-| 现象                           | 原因                     | 解决                                                          |
-| ------------------------------ | ------------------------ | ------------------------------------------------------------- |
-| 工具类不生效                   | 类名是动态拼接           | 用完整类名拼写，不要运行时拼字符串                            |
-| el-button 背景透明 / 标题变小  | preflight 被注入         | 确认省略了 `preflight.css` 导入，勿用 `@import "tailwindcss"` |
-| 未知 at-rule 报错（stylelint） | v4 指令未放行            | `.stylelintrc.json` 的 `ignoreAtRules` 需含 v4 指令           |
-| 生产环境样式丢失               | 构建期被裁剪             | 确认类名为静态可扫描                                          |
-| 阴影不显示                     | 写了 `shadow-[var(--x)]` | 改用 `@theme` 的 `--shadow-el-light`                          |
+| 现象                             | 原因                          | 解决                                                          |
+| -------------------------------- | ----------------------------- | ------------------------------------------------------------- |
+| 工具类不生效                     | 类名是动态拼接                | 用完整类名拼写，不要运行时拼字符串                            |
+| el-button 背景透明 / 标题变小    | preflight 被注入              | 确认省略了 `preflight.css` 导入，勿用 `@import "tailwindcss"` |
+| 未知 at-rule 报错（stylelint）   | v4 指令未放行                 | `.stylelintrc.json` 的 `ignoreAtRules` 需含 v4 指令           |
+| 生产环境样式丢失                 | 构建期被裁剪                  | 确认类名为静态可扫描                                          |
+| 阴影不显示                       | 写了 `shadow-[var(--x)]`      | 改用 `@theme` 的 `--shadow-el-light`                          |
+| **全站工具类失效、样式全面崩溃** | `@import` 被写成 `url()` 形式 | 见下方「致命陷阱」，必须用无引号写法                          |
+
+### 致命陷阱：`@import` 写成 `url()` 会让工具类整体静默失效
+
+Tailwind v4 要求用**无引号字符串**形式导入：
+
+```css
+/* ✅ 正确 */
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+/* ❌ 错误：Tailwind 完全不解析，按普通 CSS 原样保留 */
+@import url('tailwindcss/utilities.css') layer(utilities);
+```
+
+写成 `url(...)` 时**构建不报任何错**，但产物里会出现 `@layer utilities{@tailwind utilities;}`——
+`@tailwind` 是 v3 指令残留。所有工具类（`flex`、`w-full`、`text-ink`…）静默不生成，页面样式全面崩溃。
+
+**成因**：stylelint 的 `import-notation` 规则默认会把 `@import 'x'` 改写成 `@import url('x')`。
+本项目已在 `.stylelintrc.json` 关闭该规则：
+
+```json
+"import-notation": null
+```
+
+**排查手法**：产物 CSS 中 `grep '@tailwind'`，有残留即中招；再看 utilities 段字节数，正常应在 15KB 以上。
 
 > v4 的类名探测默认自动进行且随文件变更热更新，**不再有** v3「改配置需重启 dev server」的问题；
 > 但改动 `@theme` 令牌后仍建议重启一次 dev server 以确保产物刷新。

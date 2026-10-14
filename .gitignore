@@ -5,6 +5,8 @@ node_modules/
 # Build output
 dist/
 dist-ssr/
+# 构建验证用的临时输出目录（如 vite build --outDir dist-csscheck）
+dist-*/
 build/
 *.local
 
