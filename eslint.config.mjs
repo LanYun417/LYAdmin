@@ -14,6 +14,9 @@ export default [
     ignores: [
       '**/node_modules/**',
       '**/dist/**',
+      // 构建验证用临时输出目录（如 vite build --outDir dist-verify），
+      // **/dist/** 匹配不到 dist-xxx 形式，需显式排除，否则 lint 需遍历整个产物
+      '**/dist-*/**',
       '**/build/**',
       '**/coverage/**',
       // 前端构建产物映射目录（由 admin 构建输出，非源码）
