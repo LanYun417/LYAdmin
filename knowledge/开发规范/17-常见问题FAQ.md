@@ -3,7 +3,7 @@
 ## 环境 / 安装类
 
 **Q1：npm install 报引擎不满足？**
-Node 版本低于 `engines` 要求的 `>=20.19.0`。`node -v` 核对；本机为 24.x 通常满足。开发机只需 >=20.19.0，不要求固定 24。
+Node 版本低于 `engines` 要求的 `>=24.0.0`（即 24+）。`node -v` 核对；本机为 24.x 通常满足。
 
 **Q2：安装缓慢或超时？**
 确认根 `.npmrc` 指向 npmmirror 镜像（`registry=https://registry.npmmirror.com`）；公司网络按需在 `.npmrc` 追加配置。
