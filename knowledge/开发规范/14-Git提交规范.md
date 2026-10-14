@@ -13,6 +13,7 @@
 ```
 
 - header（首行）必填，不超过 **100** 字符（commitlint `header-max-length: 100`）。
+- body 每行不超过 **100** 字符（commitlint `body-max-line-length: 100`，继承自 `@commitlint/config-conventional`）；footer 同此约束。
 - body、footer 可选；写 body/footer 时与 header 之间必须空一行。
 
 ## 2. type 类型
