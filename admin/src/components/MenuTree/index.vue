@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { nextTick, ref, watch } from 'vue';
 import type { MenuNode } from '@/types/api';
 
 defineOptions({ name: 'MenuTree' });

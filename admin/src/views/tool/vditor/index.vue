@@ -6,7 +6,7 @@
  *
  * 本页为纯前端示例，不涉及任何后端接口。
  */
-import { computed, ref } from 'vue';
+
 import VditorEditor from '@/components/VditorEditor/index.vue';
 
 defineOptions({ name: 'ToolVditor' });

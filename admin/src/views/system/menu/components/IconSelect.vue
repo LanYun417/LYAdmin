@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /** 图标选择器。模块职责：从已注册图标中搜索并滚动分批渲染，避免一次性挂载全部图标 SVG。 */
-import { computed, ref, watch } from 'vue';
+
 import { BIconSearch } from 'bootstrap-icons-vue';
 import { appIconNames } from '@/utils/icons';
 import BasicDialog from '@/components/BasicDialog/index.vue';

@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-import { useRouter } from 'vue-router';
-
 defineOptions({ name: 'ErrorPage' });
 
 const props = withDefaults(

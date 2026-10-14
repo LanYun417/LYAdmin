@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /** 字典类型管理页。模块职责：字典类型查询与增删改、启停，并进入字典项抽屉。 */
-import { ref } from 'vue';
+
 import { ElMessage, ElMessageBox } from '@/utils/element';
 import { BIconPlus } from 'bootstrap-icons-vue';
 import { deleteDictTypeApi, getDictTypeListApi, setDictTypeStatusApi } from '@/api/dict';

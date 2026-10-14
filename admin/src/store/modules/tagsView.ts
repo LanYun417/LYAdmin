@@ -1,10 +1,8 @@
 /**
  * 标签页 Store：维护已访问标签与 keep-alive 缓存组件名列表。
  */
-import { ref } from 'vue';
-import { defineStore } from 'pinia';
-import type { RouteLocationNormalizedLoaded, RouteRecordNormalized } from 'vue-router';
 
+import type { RouteLocationNormalizedLoaded, RouteRecordNormalized } from 'vue-router';
 /** 标签页项 */
 export interface TagView {
   /** 路由名（用于 keep-alive include） */

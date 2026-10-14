@@ -1,8 +1,6 @@
 /**
  * 弹层响应式尺寸 hook：视口不足以容纳桌面固定宽度时，降级为窄屏宽度。
  */
-import { computed } from 'vue';
-import { useWindowSize } from '@vueuse/core';
 
 /**
  * 弹层响应式尺寸。

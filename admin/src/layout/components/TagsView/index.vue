@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, reactive, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
 import { useTagsViewStore, type TagView } from '@/store/modules/tagsView';
 
 defineOptions({ name: 'TagsView' });

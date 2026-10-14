@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { watch } from 'vue';
 import zhCn from 'element-plus/es/locale/lang/zh-cn';
 import { useAppStore } from '@/store/modules/app';
 import { applyPrimaryColor } from '@/utils/theme';

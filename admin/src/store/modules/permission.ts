@@ -1,9 +1,9 @@
 /**
  * 权限 Store：依据后端菜单树生成动态路由并收集按钮权限码。
  */
-import { defineComponent, h, ref } from 'vue';
+
 import { RouterView, type RouteRecordRaw } from 'vue-router';
-import { defineStore } from 'pinia';
+
 import type { MenuNode } from '@/types/api';
 import type { AppRouteMeta } from '@/types/router';
 import { AFFIX_TAB_PATHS } from '@/router/routes';

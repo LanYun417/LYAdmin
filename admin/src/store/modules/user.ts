@@ -1,8 +1,7 @@
 /**
  * 用户 Store：登录 / 登出、Token 与当前用户信息（角色、权限码、菜单树）。
  */
-import { computed, ref } from 'vue';
-import { defineStore } from 'pinia';
+
 import { getMenusApi, getProfileApi, loginApi, logoutApi } from '@/api/auth';
 import type { LoginParams, MenuNode, UserDetail } from '@/types/api';
 import { getAccessToken, getRefreshToken, removeToken, setToken } from '@/utils/auth';

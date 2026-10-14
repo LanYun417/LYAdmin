@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /** 用户新增 / 编辑弹窗。模块职责：维护账号、基础信息、部门与角色，提交后通知父级刷新列表。 */
-import { computed, reactive, ref, watch } from 'vue';
+
 import { ElMessage } from '@/utils/element';
 import type { FormInstance, FormRules } from 'element-plus';
 import { createUserApi, getUserDetailApi, updateUserApi } from '@/api/user';

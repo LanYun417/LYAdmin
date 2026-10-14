@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /** 字典类型新增 / 编辑弹窗。模块职责：维护字典名称、类型编码（创建后不可改）与状态。 */
-import { reactive, ref, watch } from 'vue';
+
 import { ElMessage } from '@/utils/element';
 import type { FormInstance, FormRules } from 'element-plus';
 import { createDictTypeApi, updateDictTypeApi } from '@/api/dict';

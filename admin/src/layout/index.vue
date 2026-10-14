@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue';
-import { useMediaQuery } from '@vueuse/core';
 import { BIconRocketFill } from 'bootstrap-icons-vue';
 import { useAppStore } from '@/store/modules/app';
 import Sidebar from './components/Sidebar/index.vue';

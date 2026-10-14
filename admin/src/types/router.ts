@@ -2,7 +2,6 @@
  * 路由相关类型：路由 meta 元信息与面包屑项。
  */
 import type { RouteRecordRaw } from 'vue-router';
-
 /**
  * 路由 meta 元信息。
  * 扩展自 Record，兼容 vue-router 的 RouteMeta 约束。

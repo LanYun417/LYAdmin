@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-import { useRouter } from 'vue-router';
 import { ElMessageBox } from '@/utils/element';
 // 注意：BIconLayoutSidebar / BIconLayoutSidebarReverse 是「侧边栏折叠」的方向图标，
 // 已被 Navbar 的侧边栏开关使用。全屏切换使用 BIconFullscreen（进入全屏）与

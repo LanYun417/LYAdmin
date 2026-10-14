@@ -4,7 +4,6 @@
  * 模块职责：读取 `/:path(.*)` 路由参数后立即 replace 到目标路径，
  * 供 keep-alive 页面在不整页刷新的前提下强制重建组件。
  */
-import { useRoute, useRouter } from 'vue-router';
 
 defineOptions({ name: 'Redirect' });
 

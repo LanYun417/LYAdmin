@@ -1,7 +1,7 @@
 /**
  * `v-permission` 按钮级权限指令：无权限时移除元素。
  */
-import type { Directive, DirectiveBinding } from 'vue';
+import type { Directive } from 'vue';
 import { hasPermission } from '@/utils/permission';
 
 /**

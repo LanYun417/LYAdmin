@@ -1,8 +1,6 @@
 /**
  * 应用级 UI 状态：侧边栏折叠、暗黑模式、主题色、全屏与移动端抽屉。
  */
-import { ref } from 'vue';
-import { defineStore } from 'pinia';
 
 export const useAppStore = defineStore(
   'app',

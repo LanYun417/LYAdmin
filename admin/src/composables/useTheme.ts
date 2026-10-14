@@ -1,8 +1,7 @@
 /**
  * 暗黑模式 hook：基于 VueUse `useDark` 切换 `html.dark`，并同步到 app store、切换时带颜色过渡。
  */
-import { computed, watch } from 'vue';
-import { useDark, useToggle } from '@vueuse/core';
+
 import { useAppStore } from '@/store/modules/app';
 
 /** 主题切换过渡时长（ms），与 `styles/index.css` 中 `.theme-transition` 的 transition 保持一致 */

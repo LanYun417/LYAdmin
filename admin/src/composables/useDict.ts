@@ -17,7 +17,7 @@
  *
  * 注意：字典在「字典管理」页被修改后，请调用 `clearDictCache(dictType)` 使缓存失效。
  */
-import { computed, ref, type Ref } from 'vue';
+
 import { getDictDataApi } from '@/api/dict';
 import type { DictDataItem } from '@/types/api';
 

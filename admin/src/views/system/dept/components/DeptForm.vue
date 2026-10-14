@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /** 部门新增 / 编辑弹窗。模块职责：维护部门信息与上级归属，并避免层级选择成环。 */
-import { computed, reactive, ref, watch } from 'vue';
+
 import { ElMessage } from '@/utils/element';
 import type { FormInstance, FormRules } from 'element-plus';
 import { createDeptApi, getDeptDetailApi, getDeptTreeApi, updateDeptApi } from '@/api/dept';

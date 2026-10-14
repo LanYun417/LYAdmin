@@ -1,8 +1,8 @@
 <script setup lang="ts">
 /** 各角色用户数柱状图。模块职责：按角色维度渲染用户数，最大值柱高亮，跟随主题重绘。 */
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
+
 import { throttle } from 'lodash-es';
-import { useResizeObserver } from '@vueuse/core';
+
 import echarts from '@/utils/echarts';
 import { getChartPalette, hexToRgba, verticalGradient } from '@/utils/chartTheme';
 import { useAppStore } from '@/store/modules/app';

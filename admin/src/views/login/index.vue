@@ -3,8 +3,7 @@
  * 登录页。
  * 模块职责：账号密码表单校验与登录，成功后重置权限路由并跳转到重定向目标（默认首页）。
  */
-import { computed, onMounted, reactive, ref, type Component } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+
 import { throttle } from 'lodash-es';
 import { ElMessage } from '@/utils/element';
 import type { FormInstance, FormRules } from 'element-plus';

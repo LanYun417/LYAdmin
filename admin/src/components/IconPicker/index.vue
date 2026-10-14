@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
 import { BIconSearch } from 'bootstrap-icons-vue';
 import { appIconNames } from '@/utils/icons';
 import { useResponsiveSize } from '@/composables/useResponsiveSize';
