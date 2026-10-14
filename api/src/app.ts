@@ -65,7 +65,7 @@ export function createApp(): Express {
   // ② 防盗链放鉴权之后，外链请求直接 403，连文件都不必读；
   // ③ 图片按需缩放中间件须在 static 之前：命中合法 ?scale= 且为图片时返回缩放结果，
   //    否则 next() 交由 static 出原图。
-  app.use('/uploads', authenticateStatic, hotlinkGuard, imageScaleMiddleware(), express.static(config.upload.dir));
+  app.use('/static', authenticateStatic, hotlinkGuard, imageScaleMiddleware(), express.static(config.upload.dir));
 
   // 操作日志（拦截写操作，异步落库）
   app.use(operationLog());

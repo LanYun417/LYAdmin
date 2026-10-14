@@ -60,11 +60,11 @@ export default defineConfig(({ mode }) => {
       open: true,
       proxy: {
         '/api': {
-          target: 'http://localhost:3000',
+          target: 'http://localhost:5090',
           changeOrigin: true,
         },
         '/uploads': {
-          target: 'http://localhost:3000',
+          target: 'http://localhost:5090',
           changeOrigin: true,
         },
       },
