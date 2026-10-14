@@ -157,7 +157,7 @@
     </div>
     <script>
       // 首屏动画的主题适配：样式主包加载前，按持久化配置决定亮/暗与主题色，避免暗黑主题下白屏闪烁。
-      // 持久化 key 见 store/modules/app.ts（ly_admin_app）与 hooks/useTheme.ts（ly_admin_theme）。
+      // 持久化 key 见 store/modules/app.ts（ly_admin_app）与 composables/useTheme.ts（ly_admin_theme）。
       (function () {
         try {
           var el = document.getElementById('app-loading');

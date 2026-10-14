@@ -119,7 +119,7 @@ admin/src/
 ├─ assets/       # 静态资源
 ├─ components/   # 通用组件：BasicDialog / ErrorPage / IconPicker / MenuTree / Pagination / SearchForm / VditorEditor
 ├─ directives/   # v-permission 按钮权限指令及注册
-├─ hooks/        # 组合式复用逻辑（useTable / useTheme / useResponsiveSize / useDict）
+├─ composables/  # 组合式复用逻辑（useTable / useTheme / useResponsiveSize / useDict）
 ├─ layout/       # 主布局（AppMain / Navbar / Sidebar / TagsView）
 ├─ router/       # 路由实例 / 静态路由表 / 全局守卫
 ├─ store/        # Pinia（user / permission / app / tagsView）
