@@ -148,10 +148,20 @@ export const config = {
   },
   /** 文件上传配置 */
   upload: {
-    /** 上传根目录（绝对路径） */
+    /** 上传根目录（绝对路径，磁盘上的真实物理存储路径） */
     dir: path.resolve(ROOT_DIR, process.env.UPLOAD_DIR ?? 'uploads'),
-    /** 相对 api/ 的目录名，用于拼接 URL */
+    /**
+     * 相对 api/ 的存储目录名（物理目录名），用于拼接 DB 中记录的 filePath 并解析磁盘文件。
+     * 指向磁盘上的真实目录（与 `dir` 同源），不可与对外路由 `route` 混淆。
+     */
     dirName: process.env.UPLOAD_DIR ?? 'uploads',
+    /**
+     * 对外静态资源路由前缀（URL 上的挂载路径）。
+     * 浏览器访问上传文件走此路由（如 `/static/<fileName>`），由 `app.ts` 挂载；
+     * 物理存储目录仍为 `dirName`(uploads)，二者刻意分离——存储路径不变，仅路由改名。
+     * 可用 UPLOAD_ROUTE 覆盖，默认 `static`。
+     */
+    route: process.env.UPLOAD_ROUTE ?? 'static',
     /**
      * 图片缩放缓存目录（绝对路径），默认 <api>/cache/images。
      * 必须位于静态服务根目录（upload.dir）之外，避免缓存文件被公开访问；

@@ -1,6 +1,6 @@
 /**
  * 静态资源防盗链中间件。
- * 模块职责：校验 `/uploads` 请求的 Referer，阻止**外部站点**把本站资源嵌到自己的页面里白嫖流量。
+ * 模块职责：校验 `/static` 请求的 Referer，阻止**外部站点**把本站资源嵌到自己的页面里白嫖流量。
  *
  * 与鉴权无关：本中间件**不做登录校验**。防盗链只解决「别的网站盗用你的图片/文件」，
  * 不解决「未登录用户直接打开直链」——后者是访问控制范畴，需另行加鉴权，两者互不依赖。
@@ -26,7 +26,7 @@ function resolveRefererHost(referer: string): string {
 /**
  * 防盗链校验。
  * 挂载位置：必须位于 `express.static` 之前，例如
- * `app.use('/uploads', hotlinkGuard, imageScaleMiddleware(), express.static(config.upload.dir))`。
+ * `app.use('/static', hotlinkGuard, imageScaleMiddleware(), express.static(config.upload.dir))`。
  */
 export function hotlinkGuard(req: Request, res: Response, next: NextFunction): void {
   const referer = req.headers.referer ?? '';

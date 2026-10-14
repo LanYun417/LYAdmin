@@ -29,7 +29,7 @@ async function bootstrap(): Promise<void> {
   const app = createApp();
   app.listen(config.port, () => {
     console.log(`[Server] LYAdmin API 已启动: http://localhost:${config.port}/api`);
-    console.log(`[Server] 静态资源目录: http://localhost:${config.port}/uploads`);
+    console.log(`[Server] 静态资源目录: http://localhost:${config.port}/${config.upload.route}`);
     // 同源部署：前端产物存在时由后端托管（含 history 回退），否则仅提供 API
     const webEnabled = fs.existsSync(config.web.distDir);
     console.log(

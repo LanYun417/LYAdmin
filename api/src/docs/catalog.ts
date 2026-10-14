@@ -124,7 +124,7 @@ export const GENERAL: GeneralDoc = {
     '分页响应的 data 结构为：{ "list": [...], "total": 100, "page": 1, "pageSize": 10 }。',
   ].join('\n'),
   staticAssets: [
-    '上传文件通过静态目录对外访问：GET /uploads/<fileName>。',
+    '上传文件通过静态目录对外访问：GET /static/<fileName>。',
     '图片支持按需等比缩放：在 URL 追加 ?scale=<比例>，比例取值 0.1 ~ 1（如 ?scale=0.1）。',
     'scale 为 1 或不传时返回原图；非图片或非法 scale 参数忽略缩放，返回原文件。',
     '缩放结果带浏览器缓存（Cache-Control: public, max-age=604800，7 天）。',
@@ -1363,7 +1363,7 @@ export const MODULES: ModuleDoc[] = [
     key: 'file',
     name: '文件管理',
     basePath: '/api/files',
-    description: '文件上传、秒传预检、列表、下载与删除（内容哈希去重）。静态资源 /uploads 已启用防盗链。',
+    description: '文件上传、秒传预检、列表、下载与删除（内容哈希去重）。静态资源 /static 已启用防盗链。',
     endpoints: [
       {
         method: 'POST',
@@ -1391,7 +1391,7 @@ export const MODULES: ModuleDoc[] = [
           '      "originName": "photo.png",',
           '      "fileName": "1758671000000_ab12cd34.png",',
           '      "filePath": "uploads/1758671000000_ab12cd34.png",',
-          '      "fileUrl": "/uploads/1758671000000_ab12cd34.png",',
+          '      "fileUrl": "/static/1758671000000_ab12cd34.png",',
           '      "mimeType": "image/png",',
           '      "size": 20480,',
           '      "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",',
@@ -1431,7 +1431,7 @@ export const MODULES: ModuleDoc[] = [
           '      "originName": "photo.png",',
           '      "fileName": "1758671000000_ab12cd34.png",',
           '      "filePath": "uploads/1758671000000_ab12cd34.png",',
-          '      "fileUrl": "/uploads/1758671000000_ab12cd34.png",',
+          '      "fileUrl": "/static/1758671000000_ab12cd34.png",',
           '      "mimeType": "image/png",',
           '      "size": 20480,',
           '      "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",',
@@ -1487,7 +1487,7 @@ export const MODULES: ModuleDoc[] = [
           '        "originName": "photo.png",',
           '        "fileName": "1758671000000_ab12cd34.png",',
           '        "filePath": "uploads/1758671000000_ab12cd34.png",',
-          '        "fileUrl": "/uploads/1758671000000_ab12cd34.png",',
+          '        "fileUrl": "/static/1758671000000_ab12cd34.png",',
           '        "mimeType": "image/png",',
           '        "size": 20480,',
           '        "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",',
@@ -1930,7 +1930,7 @@ export const MODULES: ModuleDoc[] = [
           '{',
           '  "code": 200,',
           '  "message": "头像更新成功",',
-          '  "data": { "avatar": "/uploads/1758671000000_ef56gh78.png" }',
+          '  "data": { "avatar": "/static/1758671000000_ef56gh78.png" }',
           '}',
         ].join('\n'),
       },
@@ -2673,7 +2673,7 @@ export const ENDPOINT_TOTAL: number = ALL_ENDPOINTS.length;
  * @returns 去重后的候选挂载前缀列表
  */
 export function buildProbeMounts(): string[] {
-  const set = new Set<string>(['/api', '/uploads']);
+  const set = new Set<string>(['/api', '/static']);
   MODULES.forEach((module) => {
     const segments = module.basePath.split('/').filter(Boolean);
     let acc = '';

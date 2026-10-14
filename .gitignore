@@ -42,6 +42,7 @@ coverage/
 .eslintcache
 .stylelintcache
 
-# AI 助手本地工作数据（会话记忆等，不属于项目源码）
+# AI 助手本地工作数据（会话记忆、Skills 等，不属于项目源码）
 .workbuddy-ai/
-.workbuddy
+.workbuddy/
+.agents/

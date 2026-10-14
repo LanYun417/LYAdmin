@@ -1,6 +1,6 @@
 /**
  * 图片按需缩放中间件。
- * 模块职责：拦截 `/uploads` 下的静态资源请求，若带合法 `?scale=` 且目标为图片，
+ * 模块职责：拦截 `/static` 下的静态资源请求，若带合法 `?scale=` 且目标为图片，
  * 则返回等比缩放后的缓存图片；不适用（无参数/非法/非图片/越界/异常）时调用 next()
  * 交由后续 express.static 出原图，绝不因缩放失败导致图片不可访问。
  */
@@ -21,7 +21,7 @@ const CACHE_MAX_AGE = 604800;
 
 /**
  * 将请求相对路径解析为上传根目录内的绝对路径，并校验不越界（防目录穿越）。
- * 中间件挂载在 `/uploads` 下，`req.path` 已是去掉挂载前缀的相对路径（如 `/xxx.png`）。
+ * 中间件挂载在 `/static` 下，`req.path` 已是去掉挂载前缀的相对路径（如 `/xxx.png`）。
  * @param reqPath 请求相对路径
  * @returns 合法且在根目录内返回绝对路径；越界/非法返回 null
  */
@@ -46,7 +46,7 @@ function resolveSafePath(reqPath: string): string | null {
 
 /**
  * 创建图片按需缩放中间件。
- * 用法：`app.use('/uploads', imageScaleMiddleware(), express.static(config.upload.dir))`
+ * 用法：`app.use('/static', imageScaleMiddleware(), express.static(config.upload.dir))`
  * @returns Express 请求处理中间件
  */
 export function imageScaleMiddleware(): RequestHandler {

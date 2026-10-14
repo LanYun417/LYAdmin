@@ -160,7 +160,7 @@ function captureResponseBody(res: Response): () => { text: string; totalBytes: n
  */
 export function httpAccessLogger(): RequestHandler {
   return (req, res, next) => {
-    // 只记录后端 API 请求：静态资源（/uploads）等其他请求一律不记录。
+    // 只记录后端 API 请求：静态资源（/static）等其他请求一律不记录。
     // 注意：必须用 originalUrl（挂载前完整路径）——req.path 是随 req.url
     // 变化的惰性属性，finish 时已被路由剥掉挂载前缀（如 /stats）。
     const requestPath = (req.originalUrl || req.url || '').split('?')[0];

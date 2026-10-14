@@ -221,7 +221,7 @@ cd admin && npm run dev    # http://localhost:5173
 - 接口文档：<http://localhost:3000/api-docs>（零依赖自建文档页）
 - 健康检查：`GET http://localhost:3000/api`
 
-> 前端 dev server 通过 Vite 代理把 `/api`、`/uploads` 转发到 `http://localhost:3000`，开发期同源、无跨域。
+> 前端 dev server 通过 Vite 代理把 `/api`、`/static` 转发到 `http://localhost:3000`，开发期同源、无跨域。
 
 ## 默认账号
 
@@ -314,7 +314,7 @@ cd admin && npm run dev    # http://localhost:5173
 | ---------------------- | ------------------ | --------------------------------- |
 | `VITE_APP_TITLE`       | `蓝云后台管理系统` | 站点标题                          |
 | `VITE_API_BASE_URL`    | `/api`             | axios baseURL（走代理 / 同源）    |
-| `VITE_UPLOAD_BASE_URL` | `/uploads`         | 静态资源前缀                      |
+| `VITE_UPLOAD_BASE_URL` | `/static`          | 静态资源前缀                      |
 | `VITE_PORT`            | `5173`             | dev server 端口（仅 development） |
 
 ## 部署
@@ -339,7 +339,7 @@ NODE_ENV=production node dist/server.js
 ### 方式二：前后端分离部署
 
 - 前端产物部署到任意静态服务器 / Nginx。
-- 后端配置：`CORS_ORIGIN` 填前端地址；`UPLOAD_ALLOWED_REFERERS` 填前端 origin（否则 `/uploads` 静态资源会被判为外链 403）。
+- 后端配置：`CORS_ORIGIN` 填前端地址；`UPLOAD_ALLOWED_REFERERS` 填前端 origin（否则 `/static` 静态资源会被判为外链 403）。
 - 前端 `VITE_API_BASE_URL` 指向后端地址（或由网关统一前缀）。
 
 > 生产环境建议将 `NODE_ENV=production`，并通过进程管理器（systemd / pm2 / 容器）托管；`UPLOAD_DIR`、`LOG_DIR`、`cache` 目录需保证可写与持久化。
@@ -350,7 +350,7 @@ NODE_ENV=production node dist/server.js
 - **分页**：请求 `{ page, pageSize }`；响应 `data = { list, total, page, pageSize }`。
 - **错误码**（节选）：`400` 参数校验失败 · `401` 未认证 / 账密错误 / 账号禁用 · `403` 无权限 · `404` 资源不存在 · `409` 数据冲突 · `500` 服务器错误。
 - **鉴权**：除登录 / 刷新 / 接口文档外，均需在请求头携带 `Authorization: Bearer <accessToken>`。
-- **静态资源**：`GET /uploads/:filename`（启用防盗链与图片按需缩放）。
+- **静态资源**：`GET /static/:filename`（启用防盗链与图片按需缩放）。
 - **在线文档**：启动后端后访问 `/api-docs`。
 
 完整接口清单以运行期 `/api-docs` 为准。
@@ -401,7 +401,7 @@ NODE_ENV=production node dist/server.js
 菜单由后端按当前用户角色下发。`super_admin` 仍为空说明种子未写入，执行 `cd api && npm run seed`（幂等）；普通角色请在「角色管理 → 菜单授权」中勾选。
 
 **Q8：上传文件后访问 404？**
-确认 `api/uploads/` 存在且可写；确保后端已启动、前端代理已转发 `/uploads`。分离部署时还需把前端 origin 配进 `UPLOAD_ALLOWED_REFERERS`。
+确认 `api/uploads/` 存在且可写；确保后端已启动、前端代理已转发 `/static`。分离部署时还需把前端 origin 配进 `UPLOAD_ALLOWED_REFERERS`。
 
 **Q9：接口 401 且反复跳登录？**
 accessToken 过期会由前端自动刷新（`admin/src/api/request.ts`）；refreshToken 也失效则登出。检查 `JWT_*` 配置一致性与服务器时间是否准确。

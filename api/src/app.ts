@@ -38,7 +38,7 @@ export function createApp(): Express {
   // If-None-Match 逻辑）会对 /api 的 GET 发条件请求并收到 **304**；而 304 无响应体、
   // axios 默认只把 2xx 视为成功 → 304 落到错误分支，表现为「登录成功但守卫拉取菜单/资料
   // 失败、被弹回 /login」并弹出 `请求失败（304）`。这里从源头关闭，杜绝动态响应产生 304。
-  // 静态资源（/uploads、/web 产物）走 express.static 自带的 ETag，不受此处影响。
+  // 静态资源（/static、/web 产物）走 express.static 自带的 ETag，不受此处影响。
   app.set('etag', false);
 
   // 跨域兜底（前端开发期走 Vite 代理，此处便于 Postman/curl 直连）
@@ -65,7 +65,14 @@ export function createApp(): Express {
   // ② 防盗链放鉴权之后，外链请求直接 403，连文件都不必读；
   // ③ 图片按需缩放中间件须在 static 之前：命中合法 ?scale= 且为图片时返回缩放结果，
   //    否则 next() 交由 static 出原图。
-  app.use('/static', authenticateStatic, hotlinkGuard, imageScaleMiddleware(), express.static(config.upload.dir));
+  // 挂载路径由 config.upload.route 控制（默认 static）；物理目录仍为 config.upload.dir（uploads）。
+  app.use(
+    `/${config.upload.route}`,
+    authenticateStatic,
+    hotlinkGuard,
+    imageScaleMiddleware(),
+    express.static(config.upload.dir),
+  );
 
   // 操作日志（拦截写操作，异步落库）
   app.use(operationLog());
@@ -85,20 +92,20 @@ export function createApp(): Express {
   // 零依赖自建接口文档（公开访问，不含敏感信息；路径位于 /api 之外，不与业务路由冲突）
   registerDocsRoutes(app);
 
-  // 前端静态产物（同源部署）：必须挂在业务路由 /uploads /api-docs 之后、404 之前。
+  // 前端静态产物（同源部署）：必须挂在业务路由 /static /api-docs 之后、404 之前。
   // 命中产物文件则直接出静态资源；未命中的页面请求回退 index.html，保证 Vue Router
   // history 模式下刷新子路由（如 /system/user）不会 404。
   // 产物目录不存在时整体跳过，纯 API 部署场景不受影响。
   if (fs.existsSync(config.web.distDir)) {
     app.use(express.static(config.web.distDir));
     app.use((req: Request, res: Response, next: NextFunction) => {
-      // 非页面请求（写方法、/api 接口、/uploads、/api-docs）交给后续 404，
+      // 非页面请求（写方法、/api 接口、/static 静态资源、/api-docs）交给后续 404，
       // 绝不能把 JSON 接口回退成 HTML，否则前端拿到的 404 是 HTML 而非统一 JSON 结构
       if (req.method !== 'GET' && req.method !== 'HEAD') {
         next();
         return;
       }
-      if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
+      if (req.path.startsWith('/api') || req.path.startsWith(`/${config.upload.route}`)) {
         next();
         return;
       }

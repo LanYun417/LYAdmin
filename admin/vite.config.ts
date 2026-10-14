@@ -11,7 +11,7 @@ import { compression } from 'vite-plugin-compression2';
  *
  * 关键点：
  * - 路径别名 `@` → `src`
- * - dev server 固定 5173 端口，代理 `/api`、`/uploads` 到后端 `http://localhost:3000`
+ * - dev server 固定 5173 端口，代理 `/api`、`/static` 到后端 `http://localhost:3000`
  * - Element Plus 按需引入（unplugin-auto-import + unplugin-vue-components）
  * - `auto-imports.d.ts` / `components.d.ts` 生成于项目根，供 tsconfig include，须纳入版本管理
  */
@@ -63,7 +63,7 @@ export default defineConfig(({ mode }) => {
           target: 'http://localhost:5090',
           changeOrigin: true,
         },
-        '/uploads': {
+        '/static': {
           target: 'http://localhost:5090',
           changeOrigin: true,
         },

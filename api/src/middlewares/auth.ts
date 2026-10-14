@@ -82,9 +82,9 @@ export async function authenticate(req: Request, _res: Response, next: NextFunct
 }
 
 /**
- * 静态资源鉴权中间件（用于 `/uploads`）。
+ * 静态资源鉴权中间件（用于 `/static`）。
  *
- * 后端已对 `/uploads` 启用访问控制（仅登录用户可读取上传的文件）。但浏览器渲染
+ * 后端已对 `/static` 启用访问控制（仅登录用户可读取上传的文件）。但浏览器渲染
  * `<img>` / `<el-avatar>` / `<el-image>` 时**不会**自动附带 `Authorization` 头，
  * 因此前端在静态资源 URL 上拼接 `?token=<accessToken>` 查询参数；本中间件优先读取
  * `Authorization: Bearer` 头（API 直接请求场景），缺失时回退到 `req.query.token`，

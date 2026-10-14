@@ -228,7 +228,7 @@ export async function saveFiles(files: Express.Multer.File[], uploaderId: number
     }
 
     const relativePath = path.join(config.upload.dirName, file.filename).replace(/\\/g, '/');
-    const fileUrl = `/${config.upload.dirName}/${file.filename}`;
+    const fileUrl = `/${config.upload.route}/${file.filename}`;
 
     const record = await File.create({
       originName,
