@@ -9,8 +9,8 @@ const props = withDefaults(
     title: string;
     /** 数值 */
     value: number | string;
-    /** 图标组件 */
-    icon?: Component;
+    /** 图标名（Bootstrap Icons 原生类名，不含 `bi-` 前缀，如 `person`） */
+    icon?: string;
     /** 主题色 */
     color?: string;
   }>(),
@@ -35,7 +35,7 @@ const iconBg = computed(() => (/^#[0-9a-f]{6}$/i.test(props.color) ? `${props.co
         <p class="mt-2 text-[26px] font-bold tabular-nums text-ink">{{ displayValue }}</p>
       </div>
       <div class="w-12 h-12 rounded-xl flex-center" :style="{ backgroundColor: iconBg, color: color }">
-        <el-icon :size="24" aria-hidden="true"><component :is="icon" /></el-icon>
+        <el-icon :size="24" aria-hidden="true"><i :class="`bi bi-${icon}`" /></el-icon>
       </div>
     </div>
   </div>

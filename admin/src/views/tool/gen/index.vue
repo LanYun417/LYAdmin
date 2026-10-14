@@ -6,7 +6,6 @@
 
 import { ElMessage, ElMessageBox } from '@/utils/element';
 import type { AxiosError } from 'axios';
-import { BIconArrowClockwise, BIconCodeSlash, BIconDownload, BIconMagic, BIconTable } from 'bootstrap-icons-vue';
 import {
   createGenCodeApi,
   downloadGenCodeApi,
@@ -318,7 +317,9 @@ onMounted(() => {
       <el-card shadow="never" class="w-full lg:w-[480px] lg:flex-none">
         <div class="flex flex-wrap items-center justify-between gap-y-2 mb-3">
           <span class="text-[15px] font-semibold text-ink">数据表（{{ filteredTables.length }}）</span>
-          <el-button :icon="BIconArrowClockwise" @click="loadTables">刷新</el-button>
+          <el-button @click="loadTables">
+            <template #icon><i class="bi bi-arrow-clockwise" /></template>刷新</el-button
+          >
         </div>
 
         <el-table
@@ -352,31 +353,31 @@ onMounted(() => {
               v-permission="'tool:gen:preview'"
               type="primary"
               plain
-              :icon="BIconCodeSlash"
               :loading="previewLoading"
               :disabled="!currentTable"
               @click="handlePreview"
             >
+              <template #icon><i class="bi bi-code-slash" /></template>
               预览代码
             </el-button>
             <el-button
               v-permission="'tool:gen:download'"
               type="success"
-              :icon="BIconDownload"
               :loading="downloadLoading"
               :disabled="!currentTable"
               @click="handleDownload"
             >
+              <template #icon><i class="bi bi-download" /></template>
               下载 ZIP
             </el-button>
             <el-button
               v-permission="'tool:gen:create'"
               type="warning"
-              :icon="BIconMagic"
               :loading="createLoading"
               :disabled="!currentTable"
               @click="handleGenerate(false)"
             >
+              <template #icon><i class="bi bi-magic" /></template>
               生成到项目
             </el-button>
           </div>
@@ -445,7 +446,7 @@ onMounted(() => {
           </el-table-column>
           <template #empty>
             <el-empty v-if="!currentTable" description="请选择左侧数据表以查看字段" :image-size="80">
-              <el-icon aria-hidden="true"><BIconTable /></el-icon>
+              <el-icon aria-hidden="true"><i class="bi bi-table" /></el-icon>
             </el-empty>
             <span v-else class="text-[13px] text-muted">该表暂无字段</span>
           </template>

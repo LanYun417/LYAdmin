@@ -3,7 +3,6 @@
 
 import { ElMessage, ElMessageBox } from '@/utils/element';
 import type { FormInstance, FormRules } from 'element-plus';
-import { BIconPlus } from 'bootstrap-icons-vue';
 import {
   createDictItemApi,
   deleteDictItemApi,
@@ -190,13 +189,8 @@ watch(
       />
       <el-button type="primary" @click="search">查询</el-button>
       <el-button @click="reset">重置</el-button>
-      <el-button
-        v-permission="'system:dict:add'"
-        type="primary"
-        :icon="BIconPlus"
-        class="ml-auto"
-        @click="handleAddItem"
-      >
+      <el-button v-permission="'system:dict:add'" type="primary" class="ml-auto" @click="handleAddItem">
+        <template #icon><i class="bi bi-plus" /></template>
         新增字典项
       </el-button>
     </div>

@@ -94,7 +94,7 @@ LYAdmin 面向企业内部运营 / 管理场景，提供一套可直接二次开
 | 层             | 技术                                                                                                                                                             |
 | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 前端框架       | Vue 3.5 + Vue Router 5 + Pinia 4（`pinia-plugin-persistedstate`）                                                                                                |
-| 前端 UI / 生态 | Element Plus 2.14 + Tailwind CSS 4.3 + `bootstrap-icons-vue` + ECharts 6 + Vditor 4 + axios + dayjs + `@vueuse/core` + `lodash-es` + nprogress                   |
+| 前端 UI / 生态 | Element Plus 2.14 + Tailwind CSS 4.3 + `bootstrap-icons` + ECharts 6 + Vditor 4 + axios + dayjs + `@vueuse/core` + `lodash-es` + nprogress                       |
 | 前端工程       | Vite 8 + TypeScript 5.9 + vue-tsc；`unplugin-auto-import` + `unplugin-vue-components` 按需引入；`vite-plugin-compression2` 构建期 gzip / brotli 压缩             |
 | 后端框架       | Express 5 + TypeScript 5.9                                                                                                                                       |
 | 后端数据层     | Sequelize 6 + `sequelize-typescript` + mysql2                                                                                                                    |
@@ -143,7 +143,7 @@ admin/src/
 ├─ utils/        # auth / format / permission / validate / element(命令式 API 桶) 等
 ├─ views/        # 页面：home / login / upload / system / log / profile / tool / error / redirect
 ├─ App.vue       # 根组件
-└─ main.ts       # 入口：样式引入顺序、注册 Pinia/Router/指令/图标
+└─ main.ts       # 入口：样式引入顺序、注册 Pinia/Router/指令
 ```
 
 **后端 `api/src`**

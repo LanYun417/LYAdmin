@@ -2,7 +2,6 @@
 /** 登录日志页。模块职责：按账号、结果与时间范围查询登录记录并导出 CSV。 */
 
 import { ElMessage } from '@/utils/element';
-import { BIconArrowClockwise, BIconDownload } from 'bootstrap-icons-vue';
 import { exportLoginLogsApi, getLoginLogsApi } from '@/api/log';
 import { useTable } from '@/composables/useTable';
 import { formatDate, formatDateTime } from '@/utils/format';
@@ -81,16 +80,13 @@ async function handleExport(): Promise<void> {
       <div class="flex items-center justify-between mb-3">
         <span class="text-[15px] font-semibold text-ink">登录日志</span>
         <div class="flex items-center gap-2">
-          <el-button
-            v-permission="'log:login:export'"
-            type="primary"
-            :icon="BIconDownload"
-            :loading="exporting"
-            @click="handleExport"
-          >
+          <el-button v-permission="'log:login:export'" type="primary" :loading="exporting" @click="handleExport">
+            <template #icon><i class="bi bi-download" /></template>
             导出
           </el-button>
-          <el-button :icon="BIconArrowClockwise" @click="getList">刷新</el-button>
+          <el-button @click="getList">
+            <template #icon><i class="bi bi-arrow-clockwise" /></template>刷新</el-button
+          >
         </div>
       </div>
 

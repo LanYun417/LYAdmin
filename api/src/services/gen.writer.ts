@@ -258,7 +258,7 @@ function buildMenuSeedBlock(moduleName: string, businessName: string, cnName: st
     `    menuName: '${cnName}',`,
     '    menuType: MenuType.DIRECTORY,',
     `    path: '/${moduleName}',`,
-    "    icon: 'BIconGear',",
+    "    icon: 'gear',",
     `    sort: ${sort},`,
     '    visible: Status.ENABLED,',
     `    redirect: '/${moduleName}/${businessName}',`,

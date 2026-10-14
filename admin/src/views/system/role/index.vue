@@ -2,7 +2,6 @@
 /** 角色管理页。模块职责：角色列表查询与增删改，并进入菜单权限分配抽屉。 */
 
 import { ElMessage, ElMessageBox } from '@/utils/element';
-import { BIconPlus } from 'bootstrap-icons-vue';
 import { deleteRoleApi, getRoleListApi } from '@/api/role';
 import { useStatusDict } from '@/composables/useDict';
 import { useTable } from '@/composables/useTable';
@@ -88,7 +87,8 @@ function handlePermission(row: Role): void {
     <el-card shadow="never">
       <div class="flex items-center justify-between mb-3">
         <span class="text-[15px] font-semibold text-ink">角色列表</span>
-        <el-button v-permission="'system:role:add'" type="primary" :icon="BIconPlus" @click="handleAdd">
+        <el-button v-permission="'system:role:add'" type="primary" @click="handleAdd">
+          <template #icon><i class="bi bi-plus" /></template>
           新增角色
         </el-button>
       </div>

@@ -9,7 +9,6 @@
 import { throttle } from 'lodash-es';
 import { ElMessage } from '@/utils/element';
 import type { FormInstance, FormRules } from 'element-plus';
-import { BIconLock, BIconPerson, BIconShieldCheck } from 'bootstrap-icons-vue';
 import logoUrl from '@/assets/logo-mark.svg';
 import { getCaptchaApi } from '@/api/auth';
 import { useUserStore } from '@/store/modules/user';
@@ -115,34 +114,32 @@ onMounted(() => {
 
       <el-form ref="formRef" :model="form" :rules="rules" size="large" @keyup.enter="handleLogin">
         <el-form-item prop="username">
-          <el-input
-            v-model="form.username"
-            :prefix-icon="BIconPerson"
-            placeholder="请输入账号"
-            clearable
-            autocomplete="username"
-          />
+          <el-input v-model="form.username" placeholder="请输入账号" clearable autocomplete="username">
+            <template #prefix><i class="bi bi-person" /></template>
+          </el-input>
         </el-form-item>
         <el-form-item prop="password">
           <el-input
             v-model="form.password"
             type="password"
-            :prefix-icon="BIconLock"
             placeholder="请输入密码"
             show-password
             autocomplete="current-password"
-          />
+          >
+            <template #prefix><i class="bi bi-lock" /></template>
+          </el-input>
         </el-form-item>
         <el-form-item v-if="captchaEnabled" prop="captchaCode">
           <div class="flex w-full flex-nowrap items-center gap-3">
             <el-input
               v-model="form.captchaCode"
-              :prefix-icon="BIconShieldCheck"
               placeholder="请输入验证码"
               maxlength="6"
               autocomplete="off"
               class="min-w-0 flex-1"
-            />
+            >
+              <template #prefix><i class="bi bi-shield-check" /></template>
+            </el-input>
             <img
               v-if="captchaImage"
               :src="captchaImage"

@@ -5,7 +5,6 @@
  */
 
 import { ElMessage, ElMessageBox } from '@/utils/element';
-import { BIconPersonFill, BIconPlus } from 'bootstrap-icons-vue';
 import { deleteUserApi, getUserListApi, resetUserPasswordApi, updateUserStatusApi } from '@/api/user';
 import { getDeptTreeApi } from '@/api/dept';
 import { getAllRolesApi } from '@/api/role';
@@ -189,7 +188,8 @@ onMounted(() => {
     <el-card shadow="never">
       <div class="flex items-center justify-between mb-3">
         <span class="text-[15px] font-semibold text-ink">用户列表</span>
-        <el-button v-permission="'system:user:add'" type="primary" :icon="BIconPlus" @click="handleAdd">
+        <el-button v-permission="'system:user:add'" type="primary" @click="handleAdd">
+          <template #icon><i class="bi bi-plus" /></template>
           新增用户
         </el-button>
       </div>
@@ -198,7 +198,7 @@ onMounted(() => {
         <el-table-column label="头像" width="80" align="center">
           <template #default="{ row }">
             <el-avatar :size="36" :src="withUploadToken(row.avatar)">
-              <el-icon aria-hidden="true"><BIconPersonFill /></el-icon>
+              <el-icon aria-hidden="true"><i class="bi bi-person-fill" /></el-icon>
             </el-avatar>
           </template>
         </el-table-column>

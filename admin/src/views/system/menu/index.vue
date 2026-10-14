@@ -2,7 +2,6 @@
 /** 菜单管理页。模块职责：以树表展示菜单并支持新增、编辑、删除。 */
 
 import { ElMessage, ElMessageBox } from '@/utils/element';
-import { BIconArrowClockwise, BIconPlus } from 'bootstrap-icons-vue';
 import { deleteMenuApi, getMenuListApi } from '@/api/menu';
 import { useStatusDict } from '@/composables/useDict';
 import type { MenuNode } from '@/types/api';
@@ -86,8 +85,11 @@ onMounted(() => {
       <div class="flex items-center justify-between mb-3">
         <span class="text-[15px] font-semibold text-ink">菜单列表</span>
         <div class="flex items-center gap-2">
-          <el-button :icon="BIconArrowClockwise" @click="loadTree">刷新</el-button>
-          <el-button v-permission="'system:menu:add'" type="primary" :icon="BIconPlus" @click="handleAdd">
+          <el-button @click="loadTree">
+            <template #icon><i class="bi bi-arrow-clockwise" /></template>刷新</el-button
+          >
+          <el-button v-permission="'system:menu:add'" type="primary" @click="handleAdd">
+            <template #icon><i class="bi bi-plus" /></template>
             新增菜单
           </el-button>
         </div>
@@ -111,7 +113,7 @@ onMounted(() => {
         </el-table-column>
         <el-table-column label="图标" width="80" align="center">
           <template #default="{ row }">
-            <el-icon v-if="row.icon" aria-hidden="true"><component :is="row.icon" /></el-icon>
+            <el-icon v-if="row.icon" aria-hidden="true"><i :class="`bi bi-${row.icon}`" /></el-icon>
           </template>
         </el-table-column>
         <el-table-column prop="path" label="路由路径" min-width="150" show-overflow-tooltip />

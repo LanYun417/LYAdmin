@@ -5,7 +5,6 @@
  * 展开行展示请求参数、User-Agent 与响应内容。
  */
 
-import { BIconArrowClockwise, BIconDownload, BIconTrash } from 'bootstrap-icons-vue';
 import { ElMessage, ElMessageBox } from '@/utils/element';
 import { clearHttpLogsApi, exportHttpLogsApi, getHttpLogsApi } from '@/api/log';
 import { getDeptTreeApi } from '@/api/dept';
@@ -198,18 +197,15 @@ onMounted(() => {
       <div class="flex items-center justify-between mb-3">
         <span class="text-[15px] font-semibold text-ink">HTTP 访问日志</span>
         <div class="flex flex-wrap items-center gap-2">
-          <el-button
-            v-permission="'log:http:export'"
-            type="primary"
-            :icon="BIconDownload"
-            :loading="exporting"
-            @click="handleExport"
-          >
+          <el-button v-permission="'log:http:export'" type="primary" :loading="exporting" @click="handleExport">
+            <template #icon><i class="bi bi-download" /></template>
             导出
           </el-button>
-          <el-button :icon="BIconArrowClockwise" @click="getList">刷新</el-button>
-          <el-button v-permission="'log:http:clear'" type="danger" plain :icon="BIconTrash" @click="handleClear"
-            >清空所有日志</el-button
+          <el-button @click="getList">
+            <template #icon><i class="bi bi-arrow-clockwise" /></template>刷新</el-button
+          >
+          <el-button v-permission="'log:http:clear'" type="danger" plain @click="handleClear">
+            <template #icon><i class="bi bi-trash" /></template>清空所有日志</el-button
           >
         </div>
       </div>

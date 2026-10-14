@@ -2,7 +2,6 @@
 /** 部门管理页。模块职责：以树表展示部门并支持新增、编辑、删除。 */
 
 import { ElMessage, ElMessageBox } from '@/utils/element';
-import { BIconArrowClockwise, BIconPlus } from 'bootstrap-icons-vue';
 import { deleteDeptApi, getDeptListApi } from '@/api/dept';
 import { useStatusDict } from '@/composables/useDict';
 import type { DeptNode } from '@/types/api';
@@ -67,8 +66,11 @@ onMounted(() => {
       <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
         <span class="text-[15px] font-semibold text-ink">部门列表</span>
         <div class="flex items-center gap-2">
-          <el-button :icon="BIconArrowClockwise" @click="loadTree">刷新</el-button>
-          <el-button v-permission="'system:dept:add'" type="primary" :icon="BIconPlus" @click="handleAdd()">
+          <el-button @click="loadTree">
+            <template #icon><i class="bi bi-arrow-clockwise" /></template>刷新</el-button
+          >
+          <el-button v-permission="'system:dept:add'" type="primary" @click="handleAdd()">
+            <template #icon><i class="bi bi-plus" /></template>
             新增部门
           </el-button>
         </div>

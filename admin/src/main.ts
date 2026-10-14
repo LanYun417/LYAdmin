@@ -2,7 +2,6 @@ import App from './App.vue';
 import router from './router';
 import pinia from './store';
 import { setupDirectives } from './directives';
-import { appIcons } from '@/utils/icons';
 import { setRequestRouter } from '@/api/request';
 
 // 样式引入顺序（架构文档 1.4 风险 A）：
@@ -11,6 +10,9 @@ import { setRequestRouter } from '@/api/request';
 // 2) NProgress → 3) Tailwind 入口样式 → 4) Element Plus 覆盖样式（element.scss）
 import 'element-plus/theme-chalk/dark/css-vars.css';
 import 'nprogress/nprogress.css';
+// Bootstrap Icons 图标字体（全量 2078 个）：以 CSS 类名使用（`<i class="bi bi-house" />`），
+// 无需逐个注册组件，菜单里任选图标都立即可用；字体文件由 Vite 构建时抽取为独立静态资源。
+import 'bootstrap-icons/font/bootstrap-icons.css';
 import '@/styles/index.css';
 import '@/styles/element.scss';
 
@@ -39,13 +41,6 @@ const app = createApp(App);
 // 注入 router 实例到请求层：使 request 拦截器能以「路由内跳转」（非整页刷新）处理
 // 401/403，同时避免 request.ts 直接 import router 造成循环依赖（依赖链 router → guard → store → api/request）。
 setRequestRouter(router);
-
-// 按需注册 Bootstrap Icons（仅注册实际使用的图标，注册名形如 BIconPerson）。
-// 不用 `BootstrapIconsPlugin`（会注册全量 2052 个图标，引入约 222 kB gzip 的无用 chunk）；
-// 逐个 `app.component` 注册后，`<component :is="item.icon" />` 的动态渲染能力保持不变。
-Object.entries(appIcons).forEach(([name, icon]) => {
-  app.component(name, icon);
-});
 
 app.use(pinia);
 // app.use(router) 会在此处触发「首次导航」——首屏加载动画正是覆盖这一段等待

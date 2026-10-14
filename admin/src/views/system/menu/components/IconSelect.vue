@@ -1,11 +1,13 @@
 <script setup lang="ts">
-/** 图标选择器。模块职责：从已注册图标中搜索并滚动分批渲染，避免一次性挂载全部图标 SVG。 */
+/** 图标选择器。模块职责：从全部 Bootstrap Icons 中搜索并滚动分批渲染。 */
 
-import { BIconSearch } from 'bootstrap-icons-vue';
-import { appIconNames } from '@/utils/icons';
+import glyphs from 'bootstrap-icons/font/bootstrap-icons.json';
 import BasicDialog from '@/components/BasicDialog/index.vue';
 
 defineOptions({ name: 'IconSelect' });
+
+/** 全部图标名（Bootstrap Icons 原生类名，不含 `bi-` 前缀），如 `house`、`diagram-3`。 */
+const iconNames: string[] = Object.keys(glyphs);
 
 defineProps<{
   /** 当前选中的图标名 */
@@ -29,13 +31,13 @@ const visibleCount = ref(BATCH_SIZE);
 /** 图标网格容器，用于定位 el-scrollbar 的滚动容器 */
 const gridRef = ref<HTMLElement | null>(null);
 
-/** 过滤后的图标名（完整结果，用于搜索匹配与总数展示）。候选来自已注册图标，保证「可选即可用」。 */
+/** 过滤后的图标名（完整结果，用于搜索匹配与总数展示）。候选为全部 2078 个原生图标。 */
 const filteredIcons = computed(() => {
   const key = keyword.value.trim().toLowerCase();
   if (!key) {
-    return appIconNames;
+    return iconNames;
   }
-  return appIconNames.filter((name) => name.toLowerCase().includes(key));
+  return iconNames.filter((name) => name.toLowerCase().includes(key));
 });
 
 /** 实际渲染到 DOM 的图标名（仅一个窗口，避免一次性创建大量节点） */
@@ -79,13 +81,15 @@ function handleSelect(name: string): void {
   <div class="icon-select flex items-center gap-2">
     <el-input :model-value="modelValue" placeholder="请选择图标" readonly style="width: 220px">
       <template #prefix>
-        <el-icon v-if="modelValue" aria-hidden="true"><component :is="modelValue" /></el-icon>
+        <el-icon v-if="modelValue" aria-hidden="true"><i :class="`bi bi-${modelValue}`" /></el-icon>
       </template>
     </el-input>
     <el-button @click="handleOpen">选择图标</el-button>
 
     <BasicDialog v-model="visible" title="选择图标" width="620px" :show-footer="false" append-to-body>
-      <el-input v-model="keyword" :prefix-icon="BIconSearch" placeholder="搜索图标" clearable class="mb-3" />
+      <el-input v-model="keyword" placeholder="搜索图标" clearable class="mb-3">
+        <template #prefix><i class="bi bi-search" /></template>
+      </el-input>
       <el-scrollbar height="360px" @scroll="handleScroll">
         <div ref="gridRef" class="gap-1 flex flex-wrap">
           <div
@@ -103,7 +107,7 @@ function handleSelect(name: string): void {
             :aria-label="name"
             @click="handleSelect(name)"
           >
-            <el-icon :size="20"><component :is="name" /></el-icon>
+            <el-icon :size="20"><i :class="`bi bi-${name}`" /></el-icon>
           </div>
         </div>
       </el-scrollbar>

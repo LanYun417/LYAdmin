@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { BIconSearch } from 'bootstrap-icons-vue';
-import { appIconNames } from '@/utils/icons';
+import glyphs from 'bootstrap-icons/font/bootstrap-icons.json';
 import { useResponsiveSize } from '@/composables/useResponsiveSize';
 
 defineOptions({ name: 'IconPicker' });
+
+/** 全部图标名（Bootstrap Icons 原生类名，不含 `bi-` 前缀），如 `house`、`diagram-3`。 */
+const iconNames: string[] = Object.keys(glyphs);
 
 defineProps<{
   /** 当前选中的图标名 */
@@ -26,13 +28,13 @@ const visibleCount = ref(BATCH_SIZE);
 /** 图标网格容器，用于定位 el-scrollbar 的滚动容器 */
 const gridRef = ref<HTMLElement | null>(null);
 
-/** 过滤后的图标名（完整结果，用于搜索匹配与总数展示）。候选来自已注册图标，保证「可选即可用」。 */
+/** 过滤后的图标名（完整结果，用于搜索匹配与总数展示）。候选为全部 2078 个原生图标，任选即可用。 */
 const filteredIcons = computed(() => {
   const key = keyword.value.trim().toLowerCase();
   if (!key) {
-    return appIconNames;
+    return iconNames;
   }
-  return appIconNames.filter((name) => name.toLowerCase().includes(key));
+  return iconNames.filter((name) => name.toLowerCase().includes(key));
 });
 
 /** 实际渲染到 DOM 的图标名（仅一个窗口，避免一次性创建大量节点） */
@@ -74,7 +76,9 @@ const { size: popoverWidth } = useResponsiveSize(360, '92%');
       <el-input :model-value="modelValue" placeholder="点击选择图标" readonly clearable />
     </template>
     <div class="icon-picker">
-      <el-input v-model="keyword" :prefix-icon="BIconSearch" placeholder="搜索图标" clearable class="mb-2" />
+      <el-input v-model="keyword" placeholder="搜索图标" clearable class="mb-2">
+        <template #prefix><i class="bi bi-search" /></template>
+      </el-input>
       <el-scrollbar height="280px" @scroll="handleScroll">
         <div ref="gridRef" class="gap-1 flex flex-wrap">
           <div
@@ -93,7 +97,7 @@ const { size: popoverWidth } = useResponsiveSize(360, '92%');
             @click="selectIcon(name)"
           >
             <el-icon :size="20">
-              <component :is="name" />
+              <i :class="`bi bi-${name}`" />
             </el-icon>
           </div>
         </div>

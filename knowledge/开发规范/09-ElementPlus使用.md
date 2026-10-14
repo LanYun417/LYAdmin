@@ -18,6 +18,36 @@
 - 组件由 `unplugin-vue-components` + `ElementPlusResolver` 按需注册，用到哪个组件加载哪个组件的 CSS。
 - 项目自有组件（`src/components`）也走 `Components` 的 `dirs` 自动注册，可直接使用 `<BasicDialog>` / `<Pagination>` 等。
 
+## 图标：Bootstrap Icons 字体方案
+
+图标统一用 `bootstrap-icons` 的**图标字体**，直接写 CSS 类名，**不 import 任何组件**：
+
+```vue
+<!-- 普通场景 -->
+<el-icon><i class="bi bi-house" /></el-icon>
+
+<!-- el-button：走 #icon 插槽（EP 会自动包一层 el-icon） -->
+<el-button type="primary" @click="handleAdd">
+  <template #icon><i class="bi bi-plus" /></template>
+  新增
+</el-button>
+
+<!-- el-input：走 #prefix 插槽 -->
+<el-input v-model="keyword" placeholder="搜索">
+  <template #prefix><i class="bi bi-search" /></template>
+</el-input>
+
+<!-- el-dropdown-item 没有 icon 插槽，直接内联（其 CSS 命中 i{margin-right:5px}） -->
+<el-dropdown-item @click="goProfile"><i class="bi bi-person" /> 个人中心</el-dropdown-item>
+```
+
+要点：
+
+- **类名 = `bi bi-<原生名>`**，原名取自 [图标清单](https://icons.getbootstrap.com/)（如 `bi-diagram-3`、`bi-folder2-open`、`bi-person-fill`）。
+- **不要用 `:icon="..."` 传图标**：该 prop 只接受组件对象，字体方案下传字符串会被当成组件名解析而失效。
+- **无注册表、无需登记**：全部 2078 个图标可用，菜单里任选图标都立即可用，新增图标不必改代码或重新构建。
+- 数据库 `sys_menu.icon` 存的是**原生名**（不含 `bi-` 前缀，如 `diagram-3`）；渲染时拼成 `bi bi-<原生名>` 类名。
+
 ## 命令式 API：必须走桶文件（重要）
 
 `ElMessage` / `ElMessageBox` **不自动导入**，统一从 `utils/element.ts` 引入（避免整库打包）：

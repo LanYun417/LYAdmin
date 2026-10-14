@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { BIconLayoutSidebar, BIconLayoutSidebarReverse, BIconList } from 'bootstrap-icons-vue';
 import { useAppStore } from '@/store/modules/app';
 import Breadcrumb from './Breadcrumb.vue';
 import Avatar from './Avatar.vue';
@@ -32,9 +31,9 @@ function handleToggle(): void {
         :aria-label="appStore.isMobile ? '切换侧边栏' : appStore.sidebarCollapsed ? '展开侧边栏' : '折叠侧边栏'"
         @click="handleToggle"
       >
-        <BIconList v-if="appStore.isMobile" />
-        <BIconLayoutSidebarReverse v-else-if="!appStore.sidebarCollapsed" />
-        <BIconLayoutSidebar v-else />
+        <i v-if="appStore.isMobile" class="bi bi-list" />
+        <i v-else-if="!appStore.sidebarCollapsed" class="bi bi-layout-sidebar-reverse" />
+        <i v-else class="bi bi-layout-sidebar" />
       </el-icon>
       <Breadcrumb />
     </div>

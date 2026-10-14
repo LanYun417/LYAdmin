@@ -2,7 +2,6 @@
 /** 参数配置页。模块职责：系统参数查询与增删改，内置参数禁止删除。 */
 
 import { ElMessage, ElMessageBox } from '@/utils/element';
-import { BIconPlus } from 'bootstrap-icons-vue';
 import { deleteConfigApi, getConfigListApi } from '@/api/config';
 import { useTable } from '@/composables/useTable';
 import type { SysConfigItem } from '@/types/api';
@@ -74,7 +73,8 @@ function handleFormSuccess(): void {
     <el-card shadow="never">
       <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
         <span class="text-[15px] font-semibold text-ink">参数列表</span>
-        <el-button v-permission="'system:config:add'" type="primary" :icon="BIconPlus" @click="handleAdd">
+        <el-button v-permission="'system:config:add'" type="primary" @click="handleAdd">
+          <template #icon><i class="bi bi-plus" /></template>
           新增参数
         </el-button>
       </div>

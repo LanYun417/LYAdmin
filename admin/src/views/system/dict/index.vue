@@ -2,7 +2,6 @@
 /** 字典类型管理页。模块职责：字典类型查询与增删改、启停，并进入字典项抽屉。 */
 
 import { ElMessage, ElMessageBox } from '@/utils/element';
-import { BIconPlus } from 'bootstrap-icons-vue';
 import { deleteDictTypeApi, getDictTypeListApi, setDictTypeStatusApi } from '@/api/dict';
 import { useTable } from '@/composables/useTable';
 import { clearDictCache, useStatusDict } from '@/composables/useDict';
@@ -118,7 +117,8 @@ async function handleDelete(row: DictType): Promise<void> {
     <el-card shadow="never">
       <div class="flex flex-wrap items-center justify-between gap-y-2 mb-3">
         <span class="text-[15px] font-semibold text-ink">字典类型</span>
-        <el-button v-permission="'system:dict:add'" type="primary" :icon="BIconPlus" @click="handleAdd">
+        <el-button v-permission="'system:dict:add'" type="primary" @click="handleAdd">
+          <template #icon><i class="bi bi-plus" /></template>
           新增字典类型
         </el-button>
       </div>

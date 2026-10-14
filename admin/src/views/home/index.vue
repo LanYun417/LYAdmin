@@ -5,7 +5,6 @@
  * 并交给对应图表子组件渲染。
  */
 
-import { BIconFolder, BIconGraphUp, BIconList, BIconPerson } from 'bootstrap-icons-vue';
 import {
   getDashboardStatsApi,
   getLoginTrendApi,
@@ -101,16 +100,16 @@ const todayText = new Intl.DateTimeFormat('zh-CN', {
 
     <el-row :gutter="16">
       <el-col :xs="24" :sm="12" :md="6" class="my-1">
-        <StatCard title="用户总数" :value="stats.userTotal" :icon="BIconPerson" color="#409eff" />
+        <StatCard title="用户总数" :value="stats.userTotal" icon="person" color="#409eff" />
       </el-col>
       <el-col :xs="24" :sm="12" :md="6" class="my-1">
-        <StatCard title="角色总数" :value="stats.roleTotal" :icon="BIconFolder" color="#67c23a" />
+        <StatCard title="角色总数" :value="stats.roleTotal" icon="folder" color="#67c23a" />
       </el-col>
       <el-col :xs="24" :sm="12" :md="6" class="my-1">
-        <StatCard title="菜单总数" :value="stats.menuTotal" :icon="BIconList" color="#e6a23c" />
+        <StatCard title="菜单总数" :value="stats.menuTotal" icon="list" color="#e6a23c" />
       </el-col>
       <el-col :xs="24" :sm="12" :md="6" class="my-1">
-        <StatCard title="今日登录" :value="stats.todayLoginCount" :icon="BIconGraphUp" color="#f56c6c" />
+        <StatCard title="今日登录" :value="stats.todayLoginCount" icon="graph-up" color="#f56c6c" />
       </el-col>
     </el-row>
 

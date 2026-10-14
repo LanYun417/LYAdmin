@@ -5,7 +5,7 @@
 import { sequelize } from '@/config/database';
 import { DataTypes, Op } from 'sequelize';
 import { connectDatabase, syncDatabase } from '@/config/database';
-import { SysConfig } from '@/models';
+import { SysConfig, Menu } from '@/models';
 import { seedConfig } from './config.seed';
 import { seedDict } from './dict.seed';
 import { seedMenu } from './menu.seed';
@@ -134,6 +134,63 @@ async function cleanupObsoleteConfigs(): Promise<void> {
 }
 
 /**
+ * 已知歧义的旧图标组件名 → 原生图标名。
+ *
+ * 原生类名的数字连字符规则**不一致**：`diagram-3` 对应 `BIconDiagram3`（数字前有连字符），
+ * 而 `speedometer2` 对应 `BIconSpeedometer2`（数字前无连字符）。两者组件名形式完全相同，
+ * 却指向不同的原生类名，无法用统一规则还原，只能显式列出。
+ * 实际会出现在库里的只有旧注册表收录过的图标，其中仅 diagram 系列命中该歧义。
+ */
+const LEGACY_ICON_ALIASES: Record<string, string> = {
+  BIconDiagram2: 'diagram-2',
+  BIconDiagram3: 'diagram-3',
+};
+
+/**
+ * 旧组件名（`BIconBarChartLine`）→ 原生图标名（`bar-chart-line`）。
+ * @param legacy 旧格式组件名
+ * @returns 原生图标名
+ */
+function toNativeIconName(legacy: string): string {
+  const alias = LEGACY_ICON_ALIASES[legacy];
+  if (alias) {
+    return alias;
+  }
+  return legacy
+    .replace(/^BIcon/, '')
+    .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+    .replace(/([A-Z])([A-Z][a-z])/g, '$1-$2')
+    .toLowerCase();
+}
+
+/**
+ * 历史数据迁移：把 `sys_menu.icon` 中旧的图标**组件名**转成 Bootstrap Icons 原生类名（幂等）。
+ *
+ * 背景：图标方案已由 `bootstrap-icons-vue` 的 SVG 组件改为 `bootstrap-icons` 的图标字体，
+ * 前端改为直接使用 CSS 类名（`<i class="bi bi-diagram-3" />`），组件注册表已废弃。
+ * 库里遗留的旧值（形如 `BIconDiagram3`）无法再渲染，故在启动时一次性归一化。
+ * 迁移完成后不再有匹配行，后续启动为空操作。
+ */
+async function migrateLegacyMenuIcons(): Promise<void> {
+  const rows = await Menu.findAll({
+    where: { icon: { [Op.like]: 'BIcon%' } },
+    attributes: ['id', 'icon'],
+  });
+  if (rows.length === 0) {
+    return;
+  }
+  await Promise.all(
+    rows.map(async (row) => {
+      const legacy = String(row.icon);
+      const native = toNativeIconName(legacy);
+      await Menu.update({ icon: native }, { where: { id: row.id } });
+      console.log(`[Seed] 菜单图标已迁移：${legacy} -> ${native}`);
+    }),
+  );
+  console.log(`[Seed] 已迁移 ${rows.length} 个历史菜单图标为 Bootstrap Icons 原生类名`);
+}
+
+/**
  * 执行全部种子（幂等）。
  * 注意：字段迁移必须先于种子执行 —— 模型已声明新列（dept_id / data_scope），
  * 种子对 sys_user / sys_role 的任何查询与写入都会引用这些列；既有库首次启动时
@@ -144,6 +201,7 @@ export async function runSeed(): Promise<void> {
   await ensureRoleDataScopeColumn();
   await ensureHttpLogOperatorColumns();
   await cleanupObsoleteConfigs();
+  await migrateLegacyMenuIcons();
 
   const menuIdMap = await seedMenu();
   await seedRole(menuIdMap);

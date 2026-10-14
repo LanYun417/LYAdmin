@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { BIconRocketFill } from 'bootstrap-icons-vue';
 import { useAppStore } from '@/store/modules/app';
 import Sidebar from './components/Sidebar/index.vue';
 import Navbar from './components/Navbar/index.vue';
@@ -59,7 +58,7 @@ function closeDrawer(): void {
         </el-scrollbar>
         <!-- 返回顶部：作用于内容区滚动容器 -->
         <el-backtop target=".content-scrollbar .el-scrollbar__wrap" :right="24" :bottom="24" aria-label="返回顶部">
-          <el-icon :size="18" class="backtop-rocket"><BIconRocketFill /></el-icon>
+          <el-icon :size="18" class="backtop-rocket"><i class="bi bi-rocket-fill" /></el-icon>
         </el-backtop>
       </main>
     </div>

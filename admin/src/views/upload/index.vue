@@ -6,7 +6,6 @@
 
 import { ElMessage, ElMessageBox } from '@/utils/element';
 import type { UploadRequestOptions } from 'element-plus';
-import { BIconArrowClockwise, BIconFileEarmark, BIconFileEarmarkImage, BIconUpload } from 'bootstrap-icons-vue';
 import {
   checkFileApi,
   deleteFileApi,
@@ -183,7 +182,7 @@ onMounted(() => {
         :before-upload="beforeUpload"
         :http-request="customUpload"
       >
-        <el-icon class="text-5xl text-faint" aria-hidden="true"><BIconUpload /></el-icon>
+        <el-icon class="text-5xl text-faint" aria-hidden="true"><i class="bi bi-upload" /></el-icon>
         <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
         <template #tip>
           <div class="el-upload__tip">支持图片 / 文档 / 压缩包，单个文件不超过 10MB，单次最多 10 个</div>
@@ -251,7 +250,9 @@ onMounted(() => {
       <template #header>
         <div class="flex items-center justify-between">
           <span>文件列表</span>
-          <el-button :icon="BIconArrowClockwise" size="small" @click="getList">刷新</el-button>
+          <el-button size="small" @click="getList">
+            <template #icon><i class="bi bi-arrow-clockwise" /></template>刷新</el-button
+          >
         </div>
       </template>
       <el-table v-loading="loading" :data="fileList">
@@ -268,7 +269,7 @@ onMounted(() => {
             >
               <template #error>
                 <div class="w-full h-full flex-center text-[22px] text-muted bg-fill-light rounded-md">
-                  <el-icon aria-hidden="true"><BIconFileEarmarkImage /></el-icon>
+                  <el-icon aria-hidden="true"><i class="bi bi-file-earmark-image" /></el-icon>
                 </div>
               </template>
             </el-image>
@@ -276,7 +277,7 @@ onMounted(() => {
               v-else
               class="w-12 h-12 flex-center text-[22px] text-muted bg-fill-light border border-line-lighter rounded-md"
             >
-              <el-icon aria-hidden="true"><BIconFileEarmark /></el-icon>
+              <el-icon aria-hidden="true"><i class="bi bi-file-earmark" /></el-icon>
             </div>
           </template>
         </el-table-column>

@@ -6,7 +6,6 @@
 
 import { ElMessage } from '@/utils/element';
 import type { UploadRequestOptions } from 'element-plus';
-import { BIconPlus } from 'bootstrap-icons-vue';
 import { uploadAvatarApi } from '@/api/profile';
 import { useDict } from '@/composables/useDict';
 import { useUserStore } from '@/store/modules/user';
@@ -74,7 +73,7 @@ async function handleAvatarUpload(options: UploadRequestOptions): Promise<void> 
               :http-request="handleAvatarUpload"
             >
               <el-avatar v-loading="uploading" :size="100" :src="withUploadToken(avatar)">
-                <el-icon aria-hidden="true"><BIconPlus /></el-icon>
+                <el-icon aria-hidden="true"><i class="bi bi-plus" /></el-icon>
               </el-avatar>
             </el-upload>
             <div class="mt-2 text-xs text-muted">点击更换头像</div>

@@ -2,7 +2,6 @@
 /** 操作日志页。模块职责：按模块、操作人、结果与时间范围查询操作记录并导出 CSV。 */
 
 import { ElMessage } from '@/utils/element';
-import { BIconArrowClockwise, BIconDownload } from 'bootstrap-icons-vue';
 import { exportOperationLogsApi, getOperationLogsApi } from '@/api/log';
 import { useTable } from '@/composables/useTable';
 import { formatDate, formatDateTime, formatDuration } from '@/utils/format';
@@ -104,16 +103,13 @@ function methodTag(method: string): EpTagType {
       <div class="flex items-center justify-between mb-3">
         <span class="text-[15px] font-semibold text-ink">操作日志</span>
         <div class="flex items-center gap-2">
-          <el-button
-            v-permission="'log:operation:export'"
-            type="primary"
-            :icon="BIconDownload"
-            :loading="exporting"
-            @click="handleExport"
-          >
+          <el-button v-permission="'log:operation:export'" type="primary" :loading="exporting" @click="handleExport">
+            <template #icon><i class="bi bi-download" /></template>
             导出
           </el-button>
-          <el-button :icon="BIconArrowClockwise" @click="getList">刷新</el-button>
+          <el-button @click="getList">
+            <template #icon><i class="bi bi-arrow-clockwise" /></template>刷新</el-button
+          >
         </div>
       </div>
 
