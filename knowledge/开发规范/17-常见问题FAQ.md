@@ -31,13 +31,13 @@ Node 版本低于 `engines` 要求的 `>=24.0.0`（即 24+）。`node -v` 核对
 ## 样式类
 
 **Q9：Element Plus 按钮背景透明 / 样式错乱？**
-Tailwind preflight 已关闭（`corePlugins.preflight: false`）。若 border 类不可见或渲染黑线，确认 `src/styles/index.css` 的 `@layer base` 中 border 重置未被删除。
+Tailwind preflight 已关闭（v4 采用拆分导入并**省略 `preflight.css`**，不使用 `@import "tailwindcss"`）。若 border 类不可见或渲染黑线，确认 `src/styles/index.css` 的 `@layer base` 中 border 重置未被删除。
 
 **Q10：Tailwind 工具类不生效？**
-检查 `tailwind.config.js` 的 `content` 覆盖到 `.vue`；改了 `tailwind.config.js` 或 `theme` 映射后**需重启 dev server**（配置变更不热更新）。
+本项目用 Tailwind v4，类名自动探测且随文件变更热更新。若工具类整体失效，检查 `admin/src/styles/index.css` 是否含 `@import url('tailwindcss/utilities.css')`、是否在 `main.ts` 末尾引入。改动 `@theme` 令牌后建议重启一次 dev server 确保产物刷新。
 
 **Q11：用了 `shadow-[var(--el-...)]` 阴影不显示？**
-Tailwind 会把 `var()` 当阴影颜色，导致 box-shadow 不生成。改用 `theme.boxShadow` 里定义的 `shadow-el-light`（见 10）。
+Tailwind 会把 `var()` 当阴影颜色，导致 box-shadow 不生成。改用 `@theme` 里定义的 `--shadow-el-light`（见 10）。
 
 ## Git 类
 

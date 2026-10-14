@@ -13,7 +13,7 @@
   <img src="https://img.shields.io/badge/TypeScript-5.9-3178c6" alt="TypeScript" height="20">
   <img src="https://img.shields.io/badge/Vite-8-646cff" alt="Vite" height="20">
   <img src="https://img.shields.io/badge/Element%20Plus-2.14-409eff" alt="Element Plus" height="20">
-  <img src="https://img.shields.io/badge/Tailwind%20CSS-3.4-38bdf8" alt="Tailwind CSS" height="20">
+  <img src="https://img.shields.io/badge/Tailwind%20CSS-4.3-38bdf8" alt="Tailwind CSS" height="20">
   <img src="https://img.shields.io/badge/Express-5-000000" alt="Express" height="20">
   <img src="https://img.shields.io/badge/Sequelize-6-52b0e7" alt="Sequelize" height="20">
   <img src="https://img.shields.io/badge/MySQL-8-4479a1" alt="MySQL" height="20">
@@ -96,7 +96,7 @@ LYAdmin 面向企业内部运营 / 管理场景，提供一套可直接二次开
 | 层             | 技术                                                                                                                                                             |
 | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 前端框架       | Vue 3.5 + Vue Router 5 + Pinia 4（`pinia-plugin-persistedstate`）                                                                                                |
-| 前端 UI / 生态 | Element Plus 2.14 + Tailwind CSS 3.4 + `bootstrap-icons-vue` + ECharts 6 + Vditor 4 + axios + dayjs + `@vueuse/core` + `lodash-es` + nprogress                   |
+| 前端 UI / 生态 | Element Plus 2.14 + Tailwind CSS 4.3 + `bootstrap-icons-vue` + ECharts 6 + Vditor 4 + axios + dayjs + `@vueuse/core` + `lodash-es` + nprogress                   |
 | 前端工程       | Vite 8 + TypeScript 5.9 + vue-tsc；`unplugin-auto-import` + `unplugin-vue-components` 按需引入；`vite-plugin-compression2` 构建期 gzip / brotli 压缩             |
 | 后端框架       | Express 5 + TypeScript 5.9                                                                                                                                       |
 | 后端数据层     | Sequelize 6 + `sequelize-typescript` + mysql2                                                                                                                    |
@@ -140,7 +140,7 @@ admin/src/
 ├─ layout/       # 主布局（AppMain / Navbar / Sidebar / TagsView）
 ├─ router/       # 路由实例 / 静态路由表 / 全局守卫
 ├─ store/        # Pinia（user / permission / app / tagsView）
-├─ styles/       # index.css（Tailwind 入口）/ element.scss（EP 覆盖）
+├─ styles/       # index.css（Tailwind v4 入口 + @theme 令牌）/ element.scss（EP 覆盖）
 ├─ types/        # 全局类型 / 接口 DTO / 路由 meta
 ├─ utils/        # auth / format / permission / validate / element(命令式 API 桶) 等
 ├─ views/        # 页面：home / login / upload / system / log / profile / tool / error / redirect
@@ -409,7 +409,7 @@ NODE_ENV=production node dist/server.js
 这两项依赖 Redis。未配置 `REDIS_HOST` 时视为不启用，主流程不受影响但增强失效。需要时启动 Redis 并配置 `REDIS_*`。
 
 **Q5：Tailwind 样式不生效？**
-本项目 Tailwind 设了 `corePlugins.preflight: false`（避免破坏 Element Plus），**不做全局重置**属预期行为。若工具类整体失效，检查 `admin/src/styles/index.css` 是否含 `@tailwind base/components/utilities`、是否在 `main.ts` 末尾引入、`tailwind.config.js` 的 `content` 是否覆盖到对应文件。改了 `tailwind.config.js` 需**重启 dev server**（配置变更不会热更新）。
+本项目 Tailwind 采用 v4的 CSS 优先配置，**刻意不引入 preflight**（避免破坏 Element Plus），**不做全局重置**属预期行为。若工具类整体失效，检查 `admin/src/styles/index.css` 是否含 `@import url('tailwindcss/utilities.css')`、是否在 `main.ts` 末尾引入。改动 `@theme` 令牌后建议重启一次 dev server 确保产物刷新。
 
 **Q6：提交时 husky 钩子不执行？**
 在**根目录**执行 `npm install`（会触发 `prepare` → `husky`），确认 `.husky/` 下存在 `pre-commit` 与 `commit-msg`。只在 `admin/` 或 `api/` 装依赖不会装配钩子。

@@ -1,61 +1,90 @@
 # 10 - Tailwind CSS 使用
 
-## 选型：v3（preflight 关闭）
+## 选型：v4（preflight 关闭）
 
-本项目采用 **Tailwind CSS v3**（已验证与 Element Plus 共存的方案最成熟）。关键配置：
+本项目采用 **Tailwind CSS v4**（4.3.x），通过 `@tailwindcss/vite` 插件接入。
 
-```js
-// admin/tailwind.config.js
-export default {
-  darkMode: 'class', // 与 Element Plus html.dark 方案对齐
-  corePlugins: { preflight: false }, // 关键：关闭 CSS Reset
-  content: ['./index.html', './src/**/*.{vue,js,ts,jsx,tsx}'],
-  theme: {
-    extend: {
-      colors: {/* 映射 Element Plus 语义色，见下 */},
-      boxShadow: { 'el-light': 'var(--el-box-shadow-light)' },
-    },
-  },
-  plugins: [],
-};
-```
+> **历史沿革**：项目此前锁定 v3.4，原因是当时 Tailwind v4 尚未支持 Vite 8（本项目用Vite 8 Rolldown），
+> 属真实硬性阻塞。自 **Tailwind v4.2.2（2026-03-18）加入 Vite 8 支持**后该阻塞已解除，
+> 故升级至 v4。选型原则仍是「默认最新稳定版，除非存在依赖冲突」。
+
+关键配置集中在 `src/styles/index.css`（v4 采用 CSS 优先配置，**不再有** `tailwind.config.js` / `postcss.config.js`）：
 
 ```js
-// postcss.config.js
-export default { plugins: { tailwindcss: {}, autoprefixer: {} } };
+// admin/vite.config.ts
+import tailwindcss from '@tailwindcss/vite';
+
+export default defineConfig({
+  plugins: [vue(), tailwindcss()],
+});
 ```
 
 ```css
-/* src/styles/index.css */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* admin/src/styles/index.css —— 拆分导入，故意省略 preflight.css */
+@layer theme, base, components, utilities;
+@import url('tailwindcss/theme.css') layer(theme);
+@import url('tailwindcss/utilities.css') layer(utilities);
+
+@theme {
+  /* 设计令牌，见下方语义色映射 */
+}
 ```
 
 ## 为什么关闭 preflight
 
 Tailwind preflight 是激进的全局 Reset（`button { background: transparent }`、`img { display: block }` 等），会破坏 Element Plus 的按钮、表格、图片预览样式。本项目关闭 preflight，由 Element Plus 自带 reset 兜底，并在 `src/styles/index.css` 的 `@layer base` 自行补齐**必要**的 base 重置（box-sizing、border、body、img、a、ul/ol、h1-h6/p 等）。
 
+**v4 的关闭方式**：不使用 `@import "tailwindcss"`（它会自动注入 preflight），而是**按官方拆分导入 theme / utilities 两层并省略 preflight.css**。v3 的 `corePlugins: { preflight: false }` 已失效。
+
 > **不要删** `@layer base` 里的 `border-color/style/width` 重置：preflight 关闭后，缺了它 `border` 类不可见，或叠加 `border-solid` 时多出 3px 黑线。
 
-## 语义色映射（theme.colors）
+## v3 → v4 迁移要点
 
-Tailwind 类名直接映射到 Element Plus 的 CSS 变量，自动适配亮/暗主题，避免两套叫法：
+| 项目        | v3                             | v4                                    |
+| ----------- | ------------------------------ | ------------------------------------- |
+| 接入        | postcss.config.js              | `@tailwindcss/vite` 插件              |
+| 配置        | tailwind.config.js             | CSS 内 `@theme` / `@source`           |
+| 入口        | `@tailwind base;`              | `@import "tailwindcss"`（或拆分导入） |
+| 关preflight | `corePlugins.preflight: false` | 省略 `preflight.css` 导入             |
+| 类名探测    | `content` 数组                 | 自动探测（可用 `@source` 补充）       |
 
-| 分类   | 类名                                          |
-| ------ | --------------------------------------------- |
-| 语义色 | `primary` `success` `warning` `danger` `info` |
-| 背景   | `surface` `page` `overlay` `fill-light`       |
-| 文字   | `ink` `ink-regular` `muted` `faint`           |
-| 边框   | `line` `line-light` `line-lighter`            |
+已知的 v4 破坏性变更（本项目**均未使用**，无需改码）：`start-*`/`end-*` → `inset-s-*`/`inset-e-*`、`overflow-ellipsis` → `text-ellipsis`、`flex-shrink-*`/`flex-grow-*` → `shrink-*`/`grow-*`。
+
+## 语义色映射（`@theme` 设计令牌）
+
+Tailwind 类名直接映射到 Element Plus 的 CSS 变量，自动适配亮/暗主题，避免两套叫法。
+
+v4 用 `@theme` 定义令牌（取代 v3 的 `theme.extend.colors`），定义在 `src/styles/index.css`：
+
+| 分类   | 类名                                          | `@theme` 令牌        |
+| ------ | --------------------------------------------- | -------------------- |
+| 语义色 | `primary` `success` `warning` `danger` `info` | `--color-*`          |
+| 背景   | `surface` `page` `overlay` `fill-light`       | `--color-surface` 等 |
+| 文字   | `ink` `ink-regular` `muted` `faint`           | `--color-ink` 等     |
+| 边框   | `line` `line-light` `line-lighter`            | `--color-line` 等    |
+
+```css
+@theme {
+  --color-primary: var(--el-color-primary);
+  --color-line-lighter: var(--el-border-color-lighter);
+}
+```
 
 ```html
 <div class="bg-surface text-ink border-line">...</div>
 ```
 
+新增令牌须遵循「语义 + 用途前缀」命名，避免出现多套叫法。
+
 ## 阴影约定
 
-阴影必须走 `theme.boxShadow` 定义（`shadow-el-light`），**不要**写成 `shadow-[var(--el-box-shadow-light)]`——Tailwind 会把 `var()` 判定为阴影颜色，只生成 `--tw-shadow-color` 而不产生 `box-shadow` 声明，导致阴影失效（真实缺陷）。
+阴影必须走 `@theme` 的 `--shadow-*` 令牌（`shadow-el-light`），**不要**写成 `shadow-[var(--el-box-shadow-light)]`——Tailwind 会把 `var()` 判定为阴影颜色，只生成 `--tw-shadow-color` 而不产生 `box-shadow` 声明，导致阴影失效（真实缺陷）。
+
+```css
+@theme {
+  --shadow-el-light: var(--el-box-shadow-light);
+}
+```
 
 ## 使用示例
 
@@ -73,10 +102,13 @@ Tailwind 类名直接映射到 Element Plus 的 CSS 变量，自动适配亮/暗
 
 ## 常见错误
 
-| 现象                           | 原因                     | 解决                                          |
-| ------------------------------ | ------------------------ | --------------------------------------------- |
-| 工具类不生效                   | content 未覆盖文件路径   | 检查 content glob 包含 `.vue`                 |
-| el-button 背景透明             | preflight 冲突           | 确认 `corePlugins.preflight: false`           |
-| 生产环境样式丢失               | 类名是动态拼接           | 用完整类名或 safelist                         |
-| 改了 tailwind.config.js 不生效 | 配置变更不热更新         | **重启 dev server**                           |
-| 阴影不显示                     | 写了 `shadow-[var(--x)]` | 改用 `theme.boxShadow` 里的 `shadow-el-light` |
+| 现象                           | 原因                     | 解决                                                          |
+| ------------------------------ | ------------------------ | ------------------------------------------------------------- |
+| 工具类不生效                   | 类名是动态拼接           | 用完整类名拼写，不要运行时拼字符串                            |
+| el-button 背景透明 / 标题变小  | preflight 被注入         | 确认省略了 `preflight.css` 导入，勿用 `@import "tailwindcss"` |
+| 未知 at-rule 报错（stylelint） | v4 指令未放行            | `.stylelintrc.json` 的 `ignoreAtRules` 需含 v4 指令           |
+| 生产环境样式丢失               | 构建期被裁剪             | 确认类名为静态可扫描                                          |
+| 阴影不显示                     | 写了 `shadow-[var(--x)]` | 改用 `@theme` 的 `--shadow-el-light`                          |
+
+> v4 的类名探测默认自动进行且随文件变更热更新，**不再有** v3「改配置需重启 dev server」的问题；
+> 但改动 `@theme` 令牌后仍建议重启一次 dev server 以确保产物刷新。

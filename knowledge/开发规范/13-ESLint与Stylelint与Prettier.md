@@ -92,7 +92,7 @@ export default [
 }
 ```
 
-> 放开 `selector-class-pattern` / `custom-property-pattern` 以兼容 Element Plus 的 BEM 类名与 `--el-*` 变量；`at-rule-no-unknown` 放行 Tailwind 指令（`@tailwind` / `@apply` / `@layer` 等）。
+> 放开 `selector-class-pattern` / `custom-property-pattern` 以兼容 Element Plus 的 BEM 类名与 `--el-*` 变量；`at-rule-no-unknown` 放行 Tailwind 指令（v3 的 `@tailwind` / `@apply` / `@layer`，以及 v4 的 `@theme` / `@source` / `@utility` / `@variant` / `@custom-variant` / `@plugin` / `@config`）。
 
 ## 命令（根目录）
 

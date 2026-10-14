@@ -1,4 +1,5 @@
 import vue from '@vitejs/plugin-vue';
+import tailwindcss from '@tailwindcss/vite';
 import { defineConfig, loadEnv } from 'vite';
 import { fileURLToPath, URL } from 'node:url';
 import AutoImport from 'unplugin-auto-import/vite';
@@ -13,6 +14,8 @@ import { compression } from 'vite-plugin-compression2';
  * - 路径别名 `@` → `src`
  * - dev server 固定 5173 端口，代理 `/api`、`/static` 到后端 `http://localhost:3000`
  * - Element Plus 按需引入（unplugin-auto-import + unplugin-vue-components）
+ * - Tailwind CSS v4 通过 `@tailwindcss/vite` 插件接入（无需 postcss.config.js）；
+ *   主题令牌与 preflight 决策写在 `src/styles/index.css`
  * - `auto-imports.d.ts` / `components.d.ts` 生成于项目根，供 tsconfig include，须纳入版本管理
  */
 export default defineConfig(({ mode }) => {
@@ -21,6 +24,7 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [
       vue(),
+      tailwindcss(),
       AutoImport({
         imports: ['vue', 'vue-router', 'pinia', '@vueuse/core'],
         resolvers: [ElementPlusResolver()],

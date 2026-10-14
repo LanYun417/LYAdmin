@@ -1,6 +1,59 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/**
+ * Tailwind CSS v4 入口。
+ *
+ * 采用「拆分导入」而非 `@import "tailwindcss"`，目的是**故意省略 preflight.css**：
+ * Preflight 是基于 modern-normalize 的激进全局 Reset（button 背景清空、h1 字号归零、
+ * 列表去符号等），会破坏 Element Plus 的按钮 / 表格 / 图片预览外观。
+ * 省略后由下方 `@layer base` 自行补齐必要重置，语义色与阴影见 `@theme`。
+ *
+ * 注意：拆分层序不可随意增删——`theme` 必须最先（CSS 变量来源），
+ * `utilities` 次之（工具类生成）。
+ */
+@layer theme, base, components, utilities;
+
+@import url('tailwindcss/theme.css') layer(theme);
+@import url('tailwindcss/utilities.css') layer(utilities);
+
+/**
+ * 设计令牌（v4 用 `@theme` 取代 v3 的 `tailwind.config.js` theme.extend）。
+ * 类名直接映射 Element Plus 的 CSS 变量，自动适配亮/暗主题，
+ * 避免项目里出现两套颜色叫法。
+ *
+ * 命名约定：语义 + 用途前缀（如 primary / ink-regular / border-line）。
+ * 新增令牌须与下列命名保持一致。
+ */
+@theme {
+  /* 状态色 */
+  --color-primary: var(--el-color-primary);
+  --color-success: var(--el-color-success);
+  --color-warning: var(--el-color-warning);
+  --color-danger: var(--el-color-danger);
+  --color-info: var(--el-color-info);
+
+  /* 背景 */
+  --color-surface: var(--el-bg-color);
+  --color-page: var(--el-bg-color-page);
+  --color-overlay: var(--el-bg-color-overlay);
+  --color-fill-light: var(--el-fill-color-light);
+
+  /* 文字 */
+  --color-ink: var(--el-text-color-primary);
+  --color-ink-regular: var(--el-text-color-regular);
+  --color-muted: var(--el-text-color-secondary);
+  --color-faint: var(--el-text-color-placeholder);
+
+  /* 边框 */
+  --color-line: var(--el-border-color);
+  --color-line-light: var(--el-border-color-light);
+  --color-line-lighter: var(--el-border-color-lighter);
+
+  /**
+   * 阴影必须走 `--shadow-*` 令牌定义，不能写成 `shadow-[var(--x)]` 任意值——
+   * Tailwind 会把 var() 判定为「阴影颜色」，只生成 --tw-shadow-color 而不产生
+   * box-shadow 声明，导致阴影完全失效（2026-09-28 真实缺陷）。
+   */
+  --shadow-el-light: var(--el-box-shadow-light);
+}
 
 /**
  * 最小 base 重置（因关闭了 Tailwind preflight，需自行补齐关键重置）。
@@ -15,8 +68,8 @@
     /* 关闭了 Tailwind preflight，需自行补齐 border 重置：
        1) border-style 默认 none，缺了它 border / border-b 等宽度类不可见；
           而叠加 border-solid 时，未指定宽度的边会取初始值 medium(3px) 多出边框；
-       2) 预置 border-color —— preflight 会把默认边框色设为浅灰，缺了它则回退到初始值
-          currentColor（文字色），一旦某个颜色类未生效就会渲染出刺眼的「黑线」。 */
+       2) 预置 border-color —— 一旦某个颜色类未生效就会回退到初始值
+          currentColor（文字色），渲染出刺眼的「黑线」。 */
     border-color: var(--el-border-color);
     border-style: solid;
     border-width: 0;
