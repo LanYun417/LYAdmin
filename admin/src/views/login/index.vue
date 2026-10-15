@@ -46,17 +46,69 @@ const form = reactive<LoginParams>({
 const captchaImage = ref('');
 /** 是否启用验证码（后端可关闭，关闭时隐藏输入项） */
 const captchaEnabled = ref(false);
+/**
+ * 是否正在自动重试验证码。
+ * 仅在**首次请求失败后**置位：正常加载只需几十毫秒，不会触发，避免提示闪现；
+ * 后端未就绪时则会立刻显示「验证码加载中…」，而不是让验证码区域一片空白。
+ */
+const captchaRetrying = ref(false);
+/** 自动重试已耗尽，需用户手动重试 */
+const captchaFailed = ref(false);
 
-/** 拉取 / 刷新验证码（单次有效：登录失败后需刷新） */
-async function loadCaptcha(): Promise<void> {
+/** 验证码失败后的自动重试上限（覆盖后端启动窗口） */
+const CAPTCHA_RETRY_LIMIT = 5;
+/** 验证码自动重试间隔（ms） */
+const CAPTCHA_RETRY_DELAY = 1500;
+
+/** 自动重试计时器（卸载时清理，避免离开页面后仍在轮询） */
+let captchaRetryTimer: ReturnType<typeof setTimeout> | null = null;
+/** 已自动重试次数 */
+let captchaRetryCount = 0;
+
+/** 取消进行中的自动重试 */
+function clearCaptchaRetry(): void {
+  if (captchaRetryTimer !== null) {
+    clearTimeout(captchaRetryTimer);
+    captchaRetryTimer = null;
+  }
+}
+
+/**
+ * 拉取 / 刷新验证码（单次有效：登录失败后需刷新）。
+ *
+ * 失败后**不再静默吞掉**：最常见的失败原因是**后端尚未就绪** —— 前端由 Vite 秒级就绪，
+ * 而后端要等连库、建表与种子数据全部跑完才 `listen`；页面若落在这段窗口内加载，
+ * 验证码请求会直接失败。旧实现吞掉该错误，验证码区域整块不渲染，用户必须点一次登录、
+ * 被后端以「验证码错误」拒绝后才看到验证码。现改为失败后自动重试，耗尽上限再交由
+ * 界面提示手动重试。
+ * @param isRetry 内部自动重试标记；用户手动触发时省略（会重置计数并清除已有计时器）
+ */
+async function loadCaptcha(isRetry = false): Promise<void> {
+  clearCaptchaRetry();
+  if (!isRetry) {
+    captchaRetryCount = 0;
+    captchaFailed.value = false;
+  }
   try {
     const res = await getCaptchaApi();
     captchaEnabled.value = res.enabled;
     captchaImage.value = res.image ?? '';
     form.captchaId = res.captchaId ?? '';
     form.captchaCode = '';
-  } catch {
-    // 获取失败不阻断登录页渲染；提交时由后端校验兜底拦截
+    captchaRetrying.value = false;
+    captchaFailed.value = false;
+  } catch (error) {
+    console.error('[login] 获取验证码失败：', error);
+    if (captchaRetryCount >= CAPTCHA_RETRY_LIMIT) {
+      captchaRetrying.value = false;
+      captchaFailed.value = true;
+      return;
+    }
+    captchaRetryCount += 1;
+    captchaRetrying.value = true;
+    captchaRetryTimer = setTimeout(() => {
+      void loadCaptcha(true);
+    }, CAPTCHA_RETRY_DELAY);
   }
 }
 
@@ -101,6 +153,9 @@ const handleLogin = throttle(submitLogin, 1000, { leading: true, trailing: false
 onMounted(() => {
   void loadCaptcha();
 });
+
+// 离开登录页时取消进行中的重试计时器，避免页面卸载后仍在轮询
+onBeforeUnmount(clearCaptchaRetry);
 </script>
 
 <template>
@@ -145,10 +200,28 @@ onMounted(() => {
               :src="captchaImage"
               alt="验证码"
               title="点击刷新"
-              class="h-[40px] w-[110px] shrink-0 cursor-pointer rounded-md border border-line-light"
-              @click="loadCaptcha"
+              class="h-10 w-27.5 shrink-0 cursor-pointer rounded-md border border-line-light"
+              @click="loadCaptcha()"
             />
           </div>
+        </el-form-item>
+        <!-- 验证码加载中 / 加载失败：给出明确状态，避免用户误判为「本页无需验证码」 -->
+        <el-form-item v-else-if="captchaRetrying">
+          <p class="text-[13px] text-muted">验证码加载中…</p>
+        </el-form-item>
+        <el-form-item v-else-if="captchaFailed">
+          <p class="text-[13px] text-muted">
+            验证码加载失败，
+            <span
+              class="cursor-pointer text-primary underline"
+              role="button"
+              tabindex="0"
+              @click="loadCaptcha()"
+              @keyup.enter="loadCaptcha()"
+            >
+              重新加载
+            </span>
+          </p>
         </el-form-item>
         <el-form-item>
           <el-button type="primary" class="login-button" :loading="loading" @click="handleLogin"> 登 录 </el-button>

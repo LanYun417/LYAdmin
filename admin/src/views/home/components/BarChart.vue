@@ -115,5 +115,5 @@ watch(() => [appStore.dark, appStore.primaryColor], render);
 </script>
 
 <template>
-  <div ref="chartRef" class="w-full h-[300px]" />
+  <div ref="chartRef" class="w-full h-75" />
 </template>

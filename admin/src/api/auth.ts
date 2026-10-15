@@ -4,9 +4,15 @@
 import { get, post } from './request';
 import type { CaptchaResult, LoginParams, LoginResult, MenuNode, ProfileResult, RefreshResult } from '@/types/api';
 
-/** 获取登录图形验证码 */
+/**
+ * 获取登录图形验证码。
+ *
+ * 以 `silentError` 静默失败：登录页已自带「加载中 / 加载失败可重新加载」状态，
+ * 且失败后会自动重试；若仍走统一错误提示，会在后端未就绪时连续弹出多条「网络异常」。
+ * 失败由调用方（登录页）负责呈现，故此处不弹提示、仅抛出异常。
+ */
 export function getCaptchaApi(): Promise<CaptchaResult> {
-  return get<CaptchaResult>('/auth/captcha');
+  return get<CaptchaResult>('/auth/captcha', undefined, { silentError: true });
 }
 
 /** 登录 */

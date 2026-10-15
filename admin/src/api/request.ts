@@ -28,6 +28,29 @@ const USER_PERSIST_KEY = 'ly_admin_user';
 interface RetryableConfig extends InternalAxiosRequestConfig {
   /** 是否已重试过（避免无限循环） */
   _retry?: boolean;
+  /**
+   * 为 true 时拦截器**不弹**错误提示，交由调用方自行处理。
+   * 适用于两类请求：调用方自带错误状态展示、或失败后会自动重试——
+   * 否则瞬时故障会连续弹出多条相同提示。
+   */
+  silentError?: boolean;
+}
+
+/** 对外暴露的请求配置（在 axios 配置上追加项目自定义开关）。 */
+export interface RequestConfig extends AxiosRequestConfig {
+  /** 为 true 时不弹通用错误提示（语义同 {@link RetryableConfig.silentError}） */
+  silentError?: boolean;
+}
+
+/**
+ * 按请求配置决定是否弹出错误提示。
+ * @param config 请求配置
+ * @param message 提示文案
+ */
+function notifyError(config: RequestConfig | undefined, message: string): void {
+  if (!config?.silentError) {
+    ElMessage.error(message);
+  }
 }
 
 /* --------------------------- 路由导航注入（避免循环依赖） --------------------------- */
@@ -176,13 +199,13 @@ service.interceptors.response.use(
       return Promise.reject(new Error(res.message || '登录状态已失效'));
     }
     if (res.code === FORBIDDEN_CODE) {
-      ElMessage.error(res.message || '无访问权限');
+      notifyError(response.config as RequestConfig, res.message || '无访问权限');
       if (!isOnForbiddenPage()) {
         redirectTo('/403');
       }
       return Promise.reject(new Error(res.message || '无访问权限'));
     }
-    ElMessage.error(res.message || '请求失败');
+    notifyError(response.config as RequestConfig, res.message || '请求失败');
     return Promise.reject(new Error(res.message || '请求失败'));
   },
   async (error: AxiosError<ApiResponse>) => {
@@ -191,7 +214,7 @@ service.interceptors.response.use(
 
     // 无响应（网络异常 / 超时）
     if (!response) {
-      ElMessage.error(error.message || '网络异常，请稍后重试');
+      notifyError(originalConfig, error.message || '网络异常，请稍后重试');
       return Promise.reject(error);
     }
 
@@ -200,7 +223,7 @@ service.interceptors.response.use(
 
     // 403：跳转无权限页
     if (status === FORBIDDEN_CODE || businessCode === FORBIDDEN_CODE) {
-      ElMessage.error(response.data?.message || '无访问权限');
+      notifyError(originalConfig, response.data?.message || '无访问权限');
       if (!isOnForbiddenPage()) {
         redirectTo('/403');
       }
@@ -253,7 +276,7 @@ service.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    ElMessage.error(response.data?.message || `请求失败（${status}）`);
+    notifyError(originalConfig, response.data?.message || `请求失败（${status}）`);
     return Promise.reject(error);
   },
 );
@@ -263,27 +286,27 @@ service.interceptors.response.use(
  *
  * @param config axios 请求配置
  */
-export function request<T = unknown>(config: AxiosRequestConfig): Promise<T> {
+export function request<T = unknown>(config: RequestConfig): Promise<T> {
   return service.request(config) as unknown as Promise<T>;
 }
 
 /** GET 请求 */
-export function get<T = unknown>(url: string, params?: object, config?: AxiosRequestConfig): Promise<T> {
+export function get<T = unknown>(url: string, params?: object, config?: RequestConfig): Promise<T> {
   return request<T>({ url, method: 'GET', params, ...config });
 }
 
 /** POST 请求 */
-export function post<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
+export function post<T = unknown>(url: string, data?: unknown, config?: RequestConfig): Promise<T> {
   return request<T>({ url, method: 'POST', data, ...config });
 }
 
 /** PUT 请求 */
-export function put<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
+export function put<T = unknown>(url: string, data?: unknown, config?: RequestConfig): Promise<T> {
   return request<T>({ url, method: 'PUT', data, ...config });
 }
 
 /** DELETE 请求 */
-export function del<T = unknown>(url: string, params?: object, config?: AxiosRequestConfig): Promise<T> {
+export function del<T = unknown>(url: string, params?: object, config?: RequestConfig): Promise<T> {
   return request<T>({ url, method: 'DELETE', params, ...config });
 }
 
