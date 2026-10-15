@@ -37,11 +37,13 @@ service.interceptors.response.use(
   async (error) => { /* 网络异常 / 401 无感刷新 / 403 跳转 */ },
 );
 
-export function get<T = unknown>(url: string, params?: object, config?: AxiosRequestConfig): Promise<T> { /* ... */ }
-export function post<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> { /* ... */ }
-export function put<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> { /* ... */ }
-export function del<T = unknown>(url: string, params?: object, config?: AxiosRequestConfig): Promise<T> { /* ... */ }
+export function get<T = unknown>(url: string, params?: object, config?: RequestConfig): Promise<T> { /* ... */ }
+export function post<T = unknown>(url: string, data?: unknown, config?: RequestConfig): Promise<T> { /* ... */ }
+export function put<T = unknown>(url: string, data?: unknown, config?: RequestConfig): Promise<T> { /* ... */ }
+export function del<T = unknown>(url: string, params?: object, config?: RequestConfig): Promise<T> { /* ... */ }
 ```
+
+`RequestConfig` 是项目扩展类型（在 axios 配置上追加自定义开关），从 `api/request.ts` 导出。
 
 ## 设计要点
 
@@ -52,6 +54,8 @@ export function del<T = unknown>(url: string, params?: object, config?: AxiosReq
 5. **403 跳转**：统一跳 `/403`（带命名空间的错误页），避免散落各处。
 6. **路由内跳转（避免循环依赖）**：`request.ts` 通过 `setRequestRouter(router)` 注入路由实例（由 `main.ts` 调用），拦截器中用 `router.push` 而非整页刷新。直接 `import router` 会与 `router → guard → store → api/request` 形成循环依赖。
 7. 二进制下载（`responseType: 'blob'`）在拦截器中按"非标准响应"直接放行。
+8. **顶部进度条由请求驱动**：NProgress 挂在本文件，**不挂在路由守卫上**。路由跳转本身不产生网络请求（懒加载 chunk 走打包器），而页面数据加载一律经 axios，挂请求上更贴合「在等后端」的语义。按「进行中请求数」计数，**归零才 `done()`**——否则并发请求中首个完成就会让进度条提前消失。
+9. **`silent` 静默请求**：config 传 `{ silent: true }` 时，拦截器不弹通用错误提示、也不驱动进度条。用于「调用方自带加载 / 失败状态」或「会自动重试」的请求，否则瞬时故障会连弹多条提示、进度条反复闪动。目前 `getCaptchaApi` 在用（登录页验证码自带状态且失败自动重试）。
 
 ## 调用示例
 

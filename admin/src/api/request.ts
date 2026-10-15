@@ -1,7 +1,11 @@
 /**
  * axios 实例与请求 / 响应拦截器（全站 HTTP 唯一出口）。
- * 模块职责：统一 baseURL 与超时、注入 Token 与时区请求头、解包统一响应体，
- * 并集中处理 401 无感刷新、403 跳转与错误提示；对业务层只暴露 get / post / put / del。
+ * 模块职责：统一 baseURL 与超时、驱动顶部进度条、注入 Token 与时区请求头、
+ * 解包统一响应体，并集中处理 401 无感刷新、403 跳转与错误提示；
+ * 对业务层只暴露 get / post / put / del。
+ *
+ * 进度条说明：NProgress 挂在本文件（由请求驱动），**不再**挂在路由守卫上。
+ * 计数方式为「进行中请求数」，归零才 `done()`，以正确处理并发请求。
  */
 import axios, {
   type AxiosError,
@@ -10,6 +14,7 @@ import axios, {
   type AxiosResponse,
   type InternalAxiosRequestConfig,
 } from 'axios';
+import NProgress from 'nprogress';
 import type { Router } from 'vue-router';
 import { ElMessage } from '@/utils/element';
 import type { ApiResponse, RefreshResult } from '@/types/api';
@@ -24,22 +29,32 @@ const FORBIDDEN_CODE = 403;
 /** 持久化 Store 的 key（登出时需一并清理） */
 const USER_PERSIST_KEY = 'ly_admin_user';
 
+// 顶部进度条参数：关闭右上角转圈；trickle 略调快，让长请求看起来更「在动」
+NProgress.configure({ showSpinner: false, trickleSpeed: 120 });
+
 /** 带重试标记的请求配置 */
 interface RetryableConfig extends InternalAxiosRequestConfig {
   /** 是否已重试过（避免无限循环） */
   _retry?: boolean;
   /**
-   * 为 true 时拦截器**不弹**错误提示，交由调用方自行处理。
-   * 适用于两类请求：调用方自带错误状态展示、或失败后会自动重试——
-   * 否则瞬时故障会连续弹出多条相同提示。
+   * 是否已计入顶部进度条的请求数。
+   * 响应阶段据此判断要不要回减——静默请求不计数，若照样回减会把计数减成负数
+   * 并提前 `done()`。
    */
-  silentError?: boolean;
+  _progressCounted?: boolean;
+  /**
+   * 静默请求：拦截器**不弹**通用错误提示、**不驱动**顶部进度条，
+   * 交互反馈完全交由调用方自行呈现。
+   * 适用于「调用方自带加载 / 失败状态」或「失败后会自动重试」的请求，
+   * 否则瞬时故障会连续弹出多条提示、进度条也会反复闪动。
+   */
+  silent?: boolean;
 }
 
 /** 对外暴露的请求配置（在 axios 配置上追加项目自定义开关）。 */
 export interface RequestConfig extends AxiosRequestConfig {
-  /** 为 true 时不弹通用错误提示（语义同 {@link RetryableConfig.silentError}） */
-  silentError?: boolean;
+  /** 静默请求（语义同 {@link RetryableConfig.silent}） */
+  silent?: boolean;
 }
 
 /**
@@ -48,8 +63,46 @@ export interface RequestConfig extends AxiosRequestConfig {
  * @param message 提示文案
  */
 function notifyError(config: RequestConfig | undefined, message: string): void {
-  if (!config?.silentError) {
+  if (!config?.silent) {
     ElMessage.error(message);
+  }
+}
+
+/* --------------------------- 顶部进度条（由请求驱动） --------------------------- */
+
+/**
+ * 进行中的请求数。
+ *
+ * 进度条由**请求**驱动（不再挂在路由守卫上）。并发请求必须计数：否则首个请求完成
+ * 就会调用 `done()`，导致仍有请求在途时进度条提前消失。
+ */
+let pendingRequestCount = 0;
+
+/** 发起请求：计数由 0 → 1 时启动进度条 */
+function startProgress(): void {
+  pendingRequestCount += 1;
+  if (pendingRequestCount === 1) {
+    NProgress.start();
+  }
+}
+
+/** 请求结束（无论成功或失败）：计数归零时结束进度条 */
+function finishProgress(): void {
+  pendingRequestCount = Math.max(0, pendingRequestCount - 1);
+  if (pendingRequestCount === 0) {
+    NProgress.done();
+  }
+}
+
+/**
+ * 若该请求计入过进度条，则回减计数；未计入的（静默请求）直接忽略。
+ * 回减后立即清标记，避免同一请求被重复回减。
+ * @param config 请求配置
+ */
+function finishCountedProgress(config: RetryableConfig | undefined): void {
+  if (config?._progressCounted) {
+    config._progressCounted = false;
+    finishProgress();
   }
 }
 
@@ -163,7 +216,7 @@ async function requestNewToken(): Promise<string | null> {
 
 /* ------------------------------ 拦截器 ------------------------------ */
 
-// 请求拦截：附加 accessToken、处理 Content-Type
+// 请求拦截：附加 accessToken、处理 Content-Type、启动进度条
 service.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = getAccessToken();
@@ -178,6 +231,14 @@ service.interceptors.request.use(
     } else if (config.data !== undefined && !config.headers.has('Content-Type')) {
       config.headers.set('Content-Type', 'application/json');
     }
+    // 进度计数放在最后：若上方任一步骤抛错，请求会在响应拦截器之前短路，
+    // 届时无人回减计数，进度条将永久卡住。放在 return 前可把该窗口缩到最小。
+    // 静默请求不计入（如登录页验证码：自带加载状态且会自动重试，计入会随重试反复闪动）
+    const retryable = config as RetryableConfig;
+    if (!retryable.silent) {
+      retryable._progressCounted = true;
+      startProgress();
+    }
     return config;
   },
   (error: AxiosError) => Promise.reject(error),
@@ -186,6 +247,8 @@ service.interceptors.request.use(
 // 响应拦截：统一解包 + 401 无感刷新 + 403 跳转
 service.interceptors.response.use(
   (response: AxiosResponse<ApiResponse>) => {
+    // 请求已返回，先归还它占用的进度（与业务码无关）
+    finishCountedProgress(response.config as RetryableConfig | undefined);
     const res = response.data;
     // 非标准响应（如文件流）直接返回
     if (res === null || res === undefined || typeof res.code === 'undefined') {
@@ -211,6 +274,9 @@ service.interceptors.response.use(
   async (error: AxiosError<ApiResponse>) => {
     const { response, config } = error;
     const originalConfig = config as RetryableConfig | undefined;
+
+    // 请求已失败返回，先归还它占用的进度（401 重放会在请求拦截器里重新计入）
+    finishCountedProgress(originalConfig);
 
     // 无响应（网络异常 / 超时）
     if (!response) {

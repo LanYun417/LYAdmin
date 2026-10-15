@@ -23,7 +23,7 @@ const APP_LOADING_FADE_MS = 300;
  * 隐藏并移除首屏加载动画（节点定义见 index.html 的 `#app-loading`）。
  *
  * 只在「刷新页面」的初始化流程中被调用一次；节点随后被移除，因此后续页面间路由切换
- * 不会再出现该动画（那类切换由路由守卫中的 NProgress 承担）。
+ * 不会再出现该动画（那类切换由 axios 请求驱动的 NProgress 承担，见 api/request.ts）。
  */
 function hideAppLoading(): void {
   const el = document.getElementById('app-loading');
