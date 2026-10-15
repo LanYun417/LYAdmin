@@ -18,6 +18,19 @@ export interface GenTable {
   createTime: string;
 }
 
+/** 代码生成：字段控件类型（普通输入框 / 字典下拉 / 树形父级选择） */
+export type GenHtmlType = 'input' | 'select' | 'treeSelect';
+
+/** 代码生成：单个字段的生成选项（提交给后端，按列名合并到表结构上） */
+export interface GenColumnOption {
+  /** 列名（下划线形式） */
+  columnName: string;
+  /** 控件类型 */
+  htmlType: GenHtmlType;
+  /** 字典类型编码（htmlType=select 时必填） */
+  dictType?: string;
+}
+
 /** 代码生成：表字段 */
 export interface GenColumn {
   /** 列名（下划线形式，如 user_name） */
@@ -36,6 +49,10 @@ export interface GenColumn {
   isPk: boolean;
   /** 是否可为空（true 表示非必填） */
   isNullable: boolean;
+  /** 控件类型（后端给出的推荐值，可修改） */
+  htmlType: GenHtmlType;
+  /** 绑定的字典类型编码（仅 htmlType=select 时有意义） */
+  dictType: string;
 }
 
 /** 代码生成：表详情（含字段列表） */
@@ -69,6 +86,12 @@ export interface GenConfig {
   businessName: string;
   /** 作者，可留空 */
   author?: string;
+  /** 是否树形表：列表返回整棵树、父级用树形选择、不生成分页 */
+  isTree?: boolean;
+  /** 树形表的父级字段名（如 parentId） */
+  treeParentField?: string;
+  /** 各字段的控件类型 / 字典绑定 */
+  columnOptions?: GenColumnOption[];
 }
 
 /* ------------------------------- 接口封装 ------------------------------- */

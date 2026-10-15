@@ -1646,12 +1646,33 @@ export const MODULES: ModuleDoc[] = [
             description: '业务名，字母开头，仅字母数字（如 user）',
           },
           { name: 'author', type: 'string', required: false, description: '作者（可留空）' },
+          {
+            name: 'isTree',
+            type: 'boolean',
+            required: false,
+            description: '是否树形表：列表返回整棵树、父级字段用树形选择、不生成分页',
+          },
+          {
+            name: 'treeParentField',
+            type: 'string',
+            required: false,
+            description: '树形表的父级字段名（驼峰，默认 parentId）',
+          },
+          {
+            name: 'columnOptions',
+            type: 'Array<{ columnName, htmlType, dictType }>',
+            required: false,
+            description:
+              '各字段的控件类型（input 输入框 / select 字典下拉 / treeSelect 树形父级）与字典绑定，按 columnName 合并到表结构上',
+          },
         ],
         requestExample: [
           'curl -X POST "http://localhost:3000/api/gen/preview" \\',
           '  -H "Authorization: Bearer <accessToken>" \\',
           '  -H "Content-Type: application/json" \\',
-          '  -d \'{"tableName":"sys_user","moduleName":"system","businessName":"user"}\'',
+          '  -d \'{"tableName":"demo_category","moduleName":"demo","businessName":"category",',
+          '       "isTree":true,"treeParentField":"parentId",',
+          '       "columnOptions":[{"columnName":"status","htmlType":"select","dictType":"sys_common_status"}]}\'',
         ].join('\n'),
         responseExample: [
           '{',
@@ -1684,6 +1705,25 @@ export const MODULES: ModuleDoc[] = [
             description: '业务名，字母开头，仅字母数字（如 user）',
           },
           { name: 'author', type: 'string', required: false, description: '作者（可留空）' },
+          {
+            name: 'isTree',
+            type: 'boolean',
+            required: false,
+            description: '是否树形表：列表返回整棵树、父级字段用树形选择、不生成分页',
+          },
+          {
+            name: 'treeParentField',
+            type: 'string',
+            required: false,
+            description: '树形表的父级字段名（驼峰，默认 parentId）',
+          },
+          {
+            name: 'columnOptions',
+            type: 'Array<{ columnName, htmlType, dictType }>',
+            required: false,
+            description:
+              '各字段的控件类型（input 输入框 / select 字典下拉 / treeSelect 树形父级）与字典绑定，按 columnName 合并到表结构上',
+          },
         ],
         requestExample: [
           'curl -X POST "http://localhost:3000/api/gen/download" \\',
@@ -1719,6 +1759,25 @@ export const MODULES: ModuleDoc[] = [
             description: '业务名，字母开头，仅字母数字（如 user）',
           },
           { name: 'author', type: 'string', required: false, description: '作者（可留空）' },
+          {
+            name: 'isTree',
+            type: 'boolean',
+            required: false,
+            description: '是否树形表：列表返回整棵树、父级字段用树形选择、不生成分页',
+          },
+          {
+            name: 'treeParentField',
+            type: 'string',
+            required: false,
+            description: '树形表的父级字段名（驼峰，默认 parentId）',
+          },
+          {
+            name: 'columnOptions',
+            type: 'Array<{ columnName, htmlType, dictType }>',
+            required: false,
+            description:
+              '各字段的控件类型（input 输入框 / select 字典下拉 / treeSelect 树形父级）与字典绑定，按 columnName 合并到表结构上',
+          },
           { name: 'overwrite', type: 'boolean', required: false, description: '是否覆盖已存在文件，默认 false' },
         ],
         requestExample: [

@@ -15,10 +15,17 @@ import {
 } from '@/api/gen';
 import { formatDateTime } from '@/utils/format';
 import { downloadBlob } from '@/utils/download';
-import type { GenColumn, GenConfig, GenCreateResult, GenFile, GenTable } from '@/api/gen';
+import type { GenColumn, GenConfig, GenCreateResult, GenFile, GenHtmlType, GenTable } from '@/api/gen';
 import SearchForm from '@/components/SearchForm/index.vue';
 
 defineOptions({ name: 'ToolGen' });
+
+/** 可选的控件类型（与后端 GenHtmlType 一一对应） */
+const htmlTypeOptions: Array<{ label: string; value: GenHtmlType }> = [
+  { label: '输入框', value: 'input' },
+  { label: '字典下拉', value: 'select' },
+  { label: '树形父级', value: 'treeSelect' },
+];
 
 /** 窄屏（< 1024px）：左右两栏改为上下堆叠，避免右侧内容被挤压 */
 const isNarrowScreen = useMediaQuery('(max-width: 1023px)');
@@ -60,6 +67,7 @@ const config = reactive<GenConfig>({
   moduleName: '',
   businessName: '',
   author: '',
+  isTree: false,
 });
 
 /** 预览弹窗 */
@@ -137,15 +145,38 @@ async function handleCurrentChange(row: GenTable | null): Promise<void> {
   }
   currentTable.value = row;
   config.tableName = row.tableName;
+  config.isTree = false;
   fillConfigByTableName(row.tableName);
   columnLoading.value = true;
   try {
     const detail = await getGenTableDetailApi(row.tableName);
     columns.value = detail?.columns ?? [];
+    // 后端会把 parent_id 之类推荐为「树形父级」；二者必须同时成立，故自动勾上「树形表」开关
+    config.isTree = columns.value.some((item) => item.htmlType === 'treeSelect');
   } catch {
     columns.value = [];
   } finally {
     columnLoading.value = false;
+  }
+}
+
+/**
+ * 切换某字段的控件类型后的联动处理。
+ * - 选「树形父级」：自动打开「树形表」开关（后端会校验二者同时成立）
+ * - 选「字典下拉」：未填字典类型时给一个 `${业务名}_${字段名}` 的默认建议
+ * - 切回「输入框」：清掉字典绑定，避免生成出无用的 useDict 调用
+ * @param row 当前字段
+ */
+function handleHtmlTypeChange(row: GenColumn): void {
+  if (row.htmlType === 'treeSelect') {
+    config.isTree = true;
+  }
+  if (row.htmlType !== 'select') {
+    row.dictType = '';
+    return;
+  }
+  if (!row.dictType) {
+    row.dictType = `${config.businessName.trim() || 'demo'}_${row.fieldName}`;
   }
 }
 
@@ -160,6 +191,19 @@ function buildGenConfig(): GenConfig {
   if (author) {
     payload.author = author;
   }
+  if (config.isTree) {
+    payload.isTree = true;
+    const treeColumn = columns.value.find((item) => item.htmlType === 'treeSelect');
+    if (treeColumn) {
+      payload.treeParentField = treeColumn.fieldName;
+    }
+  }
+  // 字段控件选项全量回传：后端按 columnName 合并到表结构探测结果上
+  payload.columnOptions = columns.value.map((item) => ({
+    columnName: item.columnName,
+    htmlType: item.htmlType,
+    dictType: item.dictType,
+  }));
   return payload;
 }
 
@@ -173,6 +217,17 @@ function validateConfig(): string {
   }
   if (!config.businessName.trim()) {
     return '请填写业务名';
+  }
+  const treeColumns = columns.value.filter((item) => item.htmlType === 'treeSelect');
+  if (config.isTree && treeColumns.length === 0) {
+    return '已勾选「树形表」，但没有字段被设为「树形父级」';
+  }
+  if (!config.isTree && treeColumns.length > 0) {
+    return '有字段被设为「树形父级」，请同时勾选「树形表」';
+  }
+  const missingDict = columns.value.find((item) => !item.isPk && item.htmlType === 'select' && !item.dictType.trim());
+  if (missingDict) {
+    return `字段「${missingDict.columnComment || missingDict.columnName}」选了「字典下拉」，请填写字典类型`;
   }
   return '';
 }
@@ -411,6 +466,10 @@ onMounted(() => {
               :disabled="!currentTable"
             />
           </el-form-item>
+          <el-form-item label="树形表">
+            <el-switch v-model="config.isTree" :disabled="!currentTable" />
+            <span class="ml-2 text-[13px] text-muted">列表返回整棵树、父级用树形选择、不生成分页</span>
+          </el-form-item>
         </el-form>
 
         <el-alert
@@ -423,14 +482,36 @@ onMounted(() => {
 
         <el-table v-loading="columnLoading" :data="columns" :height="columnHeight">
           <el-table-column prop="columnName" label="列名" min-width="140" show-overflow-tooltip />
-          <el-table-column prop="fieldName" label="字段名" min-width="140" show-overflow-tooltip />
-          <el-table-column prop="columnType" label="列类型" min-width="130" show-overflow-tooltip />
-          <el-table-column label="TS 类型" width="110" align="center">
+          <el-table-column prop="fieldName" label="字段名" min-width="130" show-overflow-tooltip />
+          <el-table-column prop="columnType" label="列类型" min-width="120" show-overflow-tooltip />
+          <el-table-column label="TS 类型" width="100" align="center">
             <template #default="{ row }">
               <el-tag :type="tsTypeTag(row.tsType)" size="small">{{ row.tsType }}</el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="columnComment" label="注释" min-width="150" show-overflow-tooltip />
+          <el-table-column label="控件" width="130">
+            <template #default="{ row }">
+              <el-select
+                v-model="row.htmlType"
+                size="small"
+                :disabled="row.isPk"
+                @change="handleHtmlTypeChange(row as GenColumn)"
+              >
+                <el-option v-for="item in htmlTypeOptions" :key="item.value" :label="item.label" :value="item.value" />
+              </el-select>
+            </template>
+          </el-table-column>
+          <el-table-column label="字典类型" min-width="170">
+            <template #default="{ row }">
+              <el-input
+                v-model="row.dictType"
+                size="small"
+                placeholder="如 sys_common_status"
+                :disabled="row.htmlType !== 'select'"
+              />
+            </template>
+          </el-table-column>
+          <el-table-column prop="columnComment" label="注释" min-width="140" show-overflow-tooltip />
           <el-table-column label="主键" width="80" align="center">
             <template #default="{ row }">
               <el-tag v-if="row.isPk" type="danger" size="small">主键</el-tag>
