@@ -73,7 +73,7 @@ ESM 标准写法，避免 `__dirname`（ESM 中不存在）。该别名必须与
 
 `/api`、`/static` 代理到后端（默认 `http://localhost:3000`，以 `vite.config.ts` 中 `proxy.target` 为准）。与 `src/api/request.ts` 的 `baseURL: import.meta.env.VITE_API_BASE_URL || '/api'` 对应；生产环境通过 `VITE_API_BASE_URL` 环境变量覆盖。
 
-> `strictPort: true`：端口被占用会直接报错，而非自动切到 +1 端口。改端口需同步 `api/.env` 的 `PORT` 与 `VITE_PORT`。
+> `strictPort: true`：端口被占用会直接报错，而非自动切到 +1 端口。改端口需同步 `ly-admin-api/.env` 的 `PORT` 与 `VITE_PORT`。
 
 ### 4. 自动导入 d.ts 落点
 

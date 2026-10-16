@@ -11,7 +11,7 @@
 关键配置集中在 `src/styles/index.css`（v4 采用 CSS 优先配置，**不再有** `tailwind.config.js` / `postcss.config.js`）：
 
 ```js
-// admin/vite.config.ts
+// ly-admin-web/vite.config.ts
 import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
@@ -20,7 +20,7 @@ export default defineConfig({
 ```
 
 ```css
-/* admin/src/styles/index.css —— 拆分导入，故意省略 preflight.css */
+/* ly-admin-web/src/styles/index.css —— 拆分导入，故意省略 preflight.css */
 @layer theme, base, components, utilities;
 @import url('tailwindcss/theme.css') layer(theme);
 @import url('tailwindcss/utilities.css') layer(utilities);

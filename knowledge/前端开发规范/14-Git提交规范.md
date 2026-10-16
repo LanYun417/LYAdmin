@@ -42,7 +42,7 @@
 
 团队统一词表（可扩展）：`user` `router` `store` `api` `ui` `config` `deps` `style` `build` 等，表示改动影响的模块；影响面很广时可省略。scope 用英文小写。
 
-> 提交可针对 `admin/`（前端）或 `api/`（后端），scope 通常与模块对应，例如 `feat(user):`、`fix(api):`。
+> 提交可针对 `ly-admin-web/`（前端）或 `ly-admin-api/`（后端），scope 通常与模块对应，例如 `feat(user):`、`fix(api):`。
 
 ## 4. subject 写法
 

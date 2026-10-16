@@ -1,6 +1,6 @@
 # 05 - TypeScript 配置
 
-前端 `admin/` 采用两份 tsconfig 分工，与通用模板的"解决方案式三文件"不同（本项目为**单一应用配置 + Node 侧配置**，无 `tsconfig.app.json`）：
+前端 `ly-admin-web/` 采用两份 tsconfig 分工，与通用模板的"解决方案式三文件"不同（本项目为**单一应用配置 + Node 侧配置**，无 `tsconfig.app.json`）：
 
 ```
 tsconfig.json        → 浏览器端（src/**、auto-imports.d.ts、components.d.ts）
@@ -64,7 +64,7 @@ tsconfig.node.json   → Node 侧（vite.config.ts）
 ## 类型检查命令
 
 - 前端：`npm run type-check`（`vue-tsc --noEmit`）或 `npm run build`（`vue-tsc --noEmit && vite build`）。
-- 后端：`cd api && npm run typecheck`（`tsc --noEmit`）。
+- 后端：`cd ly-admin-api && npm run typecheck`（`tsc --noEmit`）。
 
 > **注意**：Vue 文件必须用 `vue-tsc` 检查，不能用 `tsc`（不识别 SFC）。
 

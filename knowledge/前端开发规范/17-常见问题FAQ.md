@@ -9,7 +9,7 @@ Node 版本低于 `engines` 要求的 `>=24.0.0`（即 24+）。`node -v` 核对
 确认根 `.npmrc` 指向 npmmirror 镜像（`registry=https://registry.npmmirror.com`）；公司网络按需在 `.npmrc` 追加配置。
 
 **Q3：提交时 husky 钩子不执行？**
-在**根目录**执行 `npm install`（会触发 `prepare` → `husky`）。只在 `admin/` 或 `api/` 装依赖不会装配根钩子。确认 `.husky/` 下存在 `pre-commit` / `commit-msg` / `pre-push`。
+在**根目录**执行 `npm install`（会触发 `prepare` → `husky`）。只在 `ly-admin-web/` 或 `ly-admin-api/` 装依赖不会装配根钩子。确认 `.husky/` 下存在 `pre-commit` / `commit-msg` / `pre-push`。
 
 **Q4：push 被 pre-push 拦截（deps-guard）？**
 运行时依赖偏离基线（见 16）。确需变更走 `npm run guard:deps -- --update` 更新基线并在评审说明。
@@ -34,7 +34,7 @@ Node 版本低于 `engines` 要求的 `>=24.0.0`（即 24+）。`node -v` 核对
 Tailwind preflight 已关闭（v4 采用拆分导入并**省略 `preflight.css`**，不使用 `@import "tailwindcss"`）。若 border 类不可见或渲染黑线，确认 `src/styles/index.css` 的 `@layer base` 中 border 重置未被删除。
 
 **Q10：Tailwind 工具类不生效？**
-本项目用 Tailwind v4，类名自动探测且随文件变更热更新。若工具类整体失效，检查 `admin/src/styles/index.css` 是否含 `@import url('tailwindcss/utilities.css')`、是否在 `main.ts` 末尾引入。改动 `@theme` 令牌后建议重启一次 dev server 确保产物刷新。
+本项目用 Tailwind v4，类名自动探测且随文件变更热更新。若工具类整体失效，检查 `ly-admin-web/src/styles/index.css` 是否含 `@import url('tailwindcss/utilities.css')`、是否在 `main.ts` 末尾引入。改动 `@theme` 令牌后建议重启一次 dev server 确保产物刷新。
 
 **Q11：用了 `shadow-[var(--el-...)]` 阴影不显示？**
 Tailwind 会把 `var()` 当阴影颜色，导致 box-shadow 不生成。改用 `@theme` 里定义的 `--shadow-el-light`（见 10）。
@@ -53,10 +53,10 @@ Tailwind 会把 `var()` 当阴影颜色，导致 box-shadow 不生成。改用 `
 vite alias 与 tsconfig paths 不一致，双端对齐 `@` → `./src`。
 
 **Q15：生产环境刷新 404？**
-history 模式需服务端回退。同源部署由后端托管 `api/web` 并回退 `index.html`；分离部署 Nginx `try_files $uri $uri/ /index.html;`。
+history 模式需服务端回退。同源部署由后端托管 `ly-admin-api/web` 并回退 `index.html`；分离部署 Nginx `try_files $uri $uri/ /index.html;`。
 
 **Q16：登录成功但菜单为空？**
-菜单由后端按角色下发。空说明种子未写入，`cd api && npm run seed`（幂等）；普通角色在「角色管理 → 菜单授权」勾选。
+菜单由后端按角色下发。空说明种子未写入，`cd ly-admin-api && npm run seed`（幂等）；普通角色在「角色管理 → 菜单授权」勾选。
 
 **Q17：端口被占用（3000 / 5173）？**
-`vite.config.ts` 为 `strictPort: true`，端口占用直接报错。后端改 `api/.env` 的 `PORT`，前端改 `VITE_PORT` 并同步 `vite.config.ts` 的 proxy `target`。
+`vite.config.ts` 为 `strictPort: true`，端口占用直接报错。后端改 `ly-admin-api/.env` 的 `PORT`，前端改 `VITE_PORT` 并同步 `vite.config.ts` 的 proxy `target`。

@@ -1,6 +1,6 @@
 # 13 - ESLint 与 Stylelint 与 Prettier
 
-质量门禁由三件套构成：**ESLint（JS/TS/Vue 逻辑）** + **Stylelint（CSS/SCSS/Vue 样式）** + **Prettier（格式）**。三者配置均在**仓库根目录**，统一覆盖 `admin/` 与 `api/`。
+质量门禁由三件套构成：**ESLint（JS/TS/Vue 逻辑）** + **Stylelint（CSS/SCSS/Vue 样式）** + **Prettier（格式）**。三者配置均在**仓库根目录**，统一覆盖 `ly-admin-web/` 与 `ly-admin-api/`。
 
 ## 分工铁律
 
@@ -20,7 +20,14 @@ import vueParser from 'vue-eslint-parser';
 import prettierRecommended from 'eslint-plugin-prettier/recommended';
 
 export default [
-  { ignores: ['**/node_modules/**', '**/dist/**', 'admin/auto-imports.d.ts', 'admin/components.d.ts' /* ... */] },
+  {
+    ignores: [
+      '**/node_modules/**',
+      '**/dist/**',
+      'ly-admin-web/auto-imports.d.ts',
+      'ly-admin-web/components.d.ts' /* ... */,
+    ],
+  },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   ...pluginVue.configs['flat/recommended'],
