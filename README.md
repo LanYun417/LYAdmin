@@ -221,9 +221,15 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 ```bash
 cd ly-admin-api
-npm run prisma:push   # 建表 / 同步表结构（首次必执行；Prisma 7 启动时不自动建表）
-npm run seed          # 写入默认数据（可选：服务启动时也会自动幂等执行）
+npm run prisma:push       # 建表 / 同步表结构（首次必执行；Prisma 7 启动时不自动建表）
+npm run prisma:comments   # 把 schema 里的 /// 文档注释同步为表/字段 COMMENT（幂等）
+npm run seed              # 写入默认数据（可选：服务启动时也会自动幂等执行）
 ```
+
+> Prisma 不会把 schema 的 `///` 注释写进数据库（`db push` 不写、`db pull` 也读不回），
+> 表/字段 COMMENT 由 `npm run prisma:comments` 负责落库——它从 `schema.prisma` 的 `///` 生成 DDL，
+> 幂等可重复执行，改完注释或同步完表结构跑一次即可。用 `npm run prisma:comments:check` 可检查
+> 库内注释是否漂移（有差异时退出码 1，可用于 CI）。这些注释是运维与代码生成器的数据源。
 
 ### 5. 启动
 
