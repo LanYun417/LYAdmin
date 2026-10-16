@@ -1,15 +1,13 @@
 node_modules
 dist
 build
-# 前端构建产物映射目录（由 ly-admin-web 构建输出，非源码）
-api/web
+# 前端构建产物映射目录（由 ly-admin-web 构建输出、同源部署时后端托管，非源码）
+ly-admin-api/web
 coverage
 pnpm-lock.yaml
 package-lock.json
 *.min.js
 *.min.css
-api/uploads
-api/logs
 
 # 自动生成的类型声明（由 unplugin-auto-import / unplugin-vue-components 生成，格式由插件决定）
 ly-admin-web/auto-imports.d.ts

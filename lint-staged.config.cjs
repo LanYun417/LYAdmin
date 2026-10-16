@@ -31,8 +31,6 @@ const IGNORED_PATTERNS = [
   // Prisma 生成客户端（构建产物）
   '**/ly-admin-api/src/generated/**',
   // 运行时数据目录
-  '**/api/uploads/**',
-  '**/api/logs/**',
   '**/ly-admin-api/uploads/**',
   '**/ly-admin-api/logs/**',
   '**/ly-admin-api/cache/**',

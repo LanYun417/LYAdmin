@@ -4,11 +4,11 @@ dist-ssr
 # 构建验证用临时输出目录（如 vite build --outDir dist-csscheck）
 dist-*/
 build
-# 前端构建产物映射目录（由 ly-admin-web 构建输出，非源码）
-api/web
+# 前端构建产物映射目录（由 ly-admin-web 构建输出、同源部署时后端托管，非源码）
+ly-admin-api/web
 coverage
-api/uploads
-api/logs
+ly-admin-api/uploads
+ly-admin-api/logs
 **/*.min.css
 # Vditor 自托管供应商静态资源，保持上游原样，不做样式修复
 ly-admin-web/public/vditor/

@@ -1,26 +1,46 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
+import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { App } from 'supertest/types.js';
 import { AppModule } from './../src/app.module.js';
 
-describe('AppController (e2e)', () => {
+/**
+ * 应用装配冒烟（e2e）。
+ *
+ * 覆盖全局约定：路由前缀 /api、统一响应信封、鉴权守卫与异常过滤器的状态码。
+ * 注意：AppModule 初始化时会连接 MySQL 与 Redis，因此运行本测试需要本地环境可用。
+ */
+describe('应用装配冒烟 (e2e)', () => {
   let app: INestApplication<App>;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    // 与 main.ts 保持一致：业务路由统一挂在 /api 下
+    app.setGlobalPrefix('api');
     await app.init();
   });
 
-  it('/ (GET)', () => {
-    return request(app.getHttpServer()).get('/').expect(200).expect('Hello World!');
+  afterAll(async () => {
+    await app.close();
   });
 
-  afterEach(async () => {
-    await app.close();
+  it('GET /api 健康检查返回统一响应信封', async () => {
+    const res = await request(app.getHttpServer()).get('/api').expect(200);
+    expect(res.body).toMatchObject({ code: 200, message: 'success' });
+    expect(res.body.data).toMatchObject({ name: 'ly-admin-api', status: 'ok' });
+  });
+
+  it('未携带令牌访问受保护接口返回 401', async () => {
+    const res = await request(app.getHttpServer()).get('/api/users').expect(401);
+    expect(res.body.code).toBe(401);
+  });
+
+  it('未知路由返回 404，且同样走统一错误信封', async () => {
+    const res = await request(app.getHttpServer()).get('/api/not-exist-xyz').expect(404);
+    expect(res.body.code).toBe(404);
   });
 });
