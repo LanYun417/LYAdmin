@@ -651,18 +651,45 @@ export type $DeptPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     roleDepts: Prisma.$RoleDeptPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
+    /**
+     * 主键
+     */
     id: bigint
     /**
      * 父级 id（0 表示顶级，故不建外键、也不声明 Prisma 自关联）
      */
     parentId: bigint
+    /**
+     * 部门名称
+     */
     deptName: string
+    /**
+     * 排序
+     */
     sort: number
+    /**
+     * 1 启用 / 0 禁用
+     */
     status: number
+    /**
+     * 部门负责人
+     */
     leader: string | null
+    /**
+     * 联系电话
+     */
     phone: string | null
+    /**
+     * 邮箱
+     */
     email: string | null
+    /**
+     * 创建时间
+     */
     createdAt: Date
+    /**
+     * 更新时间
+     */
     updatedAt: Date
   }, ExtArgs["result"]["dept"]>
   composites: {}

@@ -803,32 +803,65 @@ export type $MenuPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     roleMenus: Prisma.$RoleMenuPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
+    /**
+     * 主键
+     */
     id: bigint
     /**
      * 父级 id（0 表示根节点，故不建外键、也不声明 Prisma 自关联）
      */
     parentId: bigint
+    /**
+     * 菜单名称
+     */
     menuName: string
     /**
      * M 目录 / C 菜单 / F 按钮
      */
     menuType: string
+    /**
+     * 路由路径
+     */
     path: string | null
+    /**
+     * 组件路径
+     */
     component: string | null
+    /**
+     * 图标
+     */
     icon: string | null
+    /**
+     * 权限标识
+     */
     permission: string | null
+    /**
+     * 排序
+     */
     sort: number
     /**
      * 1 显示 / 0 隐藏
      */
     visible: number
+    /**
+     * 1 启用 / 0 禁用
+     */
     status: number
+    /**
+     * 重定向
+     */
     redirect: string | null
     /**
      * 1 缓存 / 0 不缓存
      */
     keepAlive: number
+    /**
+     * 创建时间
+     */
     createdAt: Date
+    /**
+     * 更新时间
+     */
     updatedAt: Date
   }, ExtArgs["result"]["menu"]>
   composites: {}

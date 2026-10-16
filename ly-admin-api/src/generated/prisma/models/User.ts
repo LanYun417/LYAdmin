@@ -824,26 +824,65 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     userRoles: Prisma.$UserRolePayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
+    /**
+     * 主键
+     */
     id: bigint
+    /**
+     * 登录账号
+     */
     username: string
+    /**
+     * bcrypt 哈希
+     */
     password: string
+    /**
+     * 昵称
+     */
     nickname: string
+    /**
+     * 头像 URL
+     */
     avatar: string | null
+    /**
+     * 邮箱
+     */
     email: string | null
+    /**
+     * 手机号
+     */
     phone: string | null
     /**
      * 性别（字典 sys_user_sex），字符串存储以便字典值扩展
      */
     gender: string | null
+    /**
+     * 1 启用 / 0 禁用
+     */
     status: number
+    /**
+     * 最后登录时间
+     */
     lastLoginAt: Date | null
+    /**
+     * 密码最后修改时间
+     */
     passwordChangedAt: Date | null
+    /**
+     * 备注
+     */
     remark: string | null
     /**
      * 部门 id（0 表示未分配，故不建外键、也不声明 Prisma 关系）
      */
     deptId: bigint
+    /**
+     * 创建时间
+     */
     createdAt: Date
+    /**
+     * 更新时间
+     */
     updatedAt: Date
   }, ExtArgs["result"]["user"]>
   composites: {}

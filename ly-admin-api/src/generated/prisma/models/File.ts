@@ -522,18 +522,45 @@ export type $FilePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   name: "File"
   objects: {}
   scalars: runtime.Types.Extensions.GetPayloadResult<{
+    /**
+     * 主键
+     */
     id: bigint
+    /**
+     * 原始文件名
+     */
     originName: string
+    /**
+     * 存储文件名
+     */
     fileName: string
+    /**
+     * 磁盘相对路径
+     */
     filePath: string
+    /**
+     * 访问 URL
+     */
     fileUrl: string
+    /**
+     * MIME
+     */
     mimeType: string
+    /**
+     * 字节
+     */
     size: number
     /**
      * SHA-256 内容哈希（秒传/去重依据）
      */
     hash: string | null
+    /**
+     * 上传人 id
+     */
     uploaderId: bigint | null
+    /**
+     * 创建时间
+     */
     createdAt: Date
   }, ExtArgs["result"]["file"]>
   composites: {}

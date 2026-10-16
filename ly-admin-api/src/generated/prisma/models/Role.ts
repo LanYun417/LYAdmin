@@ -844,17 +844,41 @@ export type $RolePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     roleDepts: Prisma.$RoleDeptPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
+    /**
+     * 主键
+     */
     id: bigint
+    /**
+     * 角色名称
+     */
     roleName: string
+    /**
+     * 角色编码
+     */
     roleCode: string
+    /**
+     * 排序
+     */
     sort: number
+    /**
+     * 1 启用 / 0 禁用
+     */
     status: number
     /**
      * 数据权限范围：1 全部 / 2 自定义部门 / 3 本部门及以下 / 4 仅本人
      */
     dataScope: number
+    /**
+     * 备注
+     */
     remark: string | null
+    /**
+     * 创建时间
+     */
     createdAt: Date
+    /**
+     * 更新时间
+     */
     updatedAt: Date
   }, ExtArgs["result"]["role"]>
   composites: {}

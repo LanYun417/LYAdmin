@@ -573,8 +573,17 @@ export type $UserRolePayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     role: Prisma.$RolePayload<ExtArgs>
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
+    /**
+     * 主键
+     */
     id: bigint
+    /**
+     * 用户 id
+     */
     userId: bigint
+    /**
+     * 角色 id
+     */
     roleId: bigint
   }, ExtArgs["result"]["userRole"]>
   composites: {}

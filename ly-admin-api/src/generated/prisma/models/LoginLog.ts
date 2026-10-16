@@ -436,15 +436,33 @@ export type $LoginLogPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
   name: "LoginLog"
   objects: {}
   scalars: runtime.Types.Extensions.GetPayloadResult<{
+    /**
+     * 主键
+     */
     id: bigint
+    /**
+     * 登录账号
+     */
     username: string
+    /**
+     * 客户端 IP
+     */
     ip: string | null
+    /**
+     * User-Agent
+     */
     userAgent: string | null
     /**
      * 1 成功 / 0 失败
      */
     status: number
+    /**
+     * 结果描述
+     */
     message: string | null
+    /**
+     * 登录时间
+     */
     loginAt: Date
   }, ExtArgs["result"]["loginLog"]>
   composites: {}

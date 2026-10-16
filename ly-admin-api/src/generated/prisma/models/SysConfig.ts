@@ -460,19 +460,37 @@ export type $SysConfigPayload<ExtArgs extends runtime.Types.Extensions.InternalA
   name: "SysConfig"
   objects: {}
   scalars: runtime.Types.Extensions.GetPayloadResult<{
+    /**
+     * 主键
+     */
     id: bigint
+    /**
+     * 参数名称（展示用）
+     */
     configName: string
     /**
      * 参数键名（业务引用键，创建后不可修改）
      */
     configKey: string
+    /**
+     * 参数键值
+     */
     configValue: string
     /**
      * 是否内置：1 内置 / 0 自定义
      */
     systemFlag: number
+    /**
+     * 备注
+     */
     remark: string | null
+    /**
+     * 创建时间
+     */
     createdAt: Date
+    /**
+     * 更新时间
+     */
     updatedAt: Date
   }, ExtArgs["result"]["sysConfig"]>
   composites: {}

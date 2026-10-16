@@ -573,8 +573,17 @@ export type $RoleDeptPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     dept: Prisma.$DeptPayload<ExtArgs>
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
+    /**
+     * 主键
+     */
     id: bigint
+    /**
+     * 角色 id
+     */
     roleId: bigint
+    /**
+     * 部门 id
+     */
     deptId: bigint
   }, ExtArgs["result"]["roleDept"]>
   composites: {}

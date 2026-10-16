@@ -640,26 +640,65 @@ export type $HttpLogPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
   name: "HttpLog"
   objects: {}
   scalars: runtime.Types.Extensions.GetPayloadResult<{
+    /**
+     * 主键
+     */
     id: bigint
+    /**
+     * 请求完成时间（本地时区 +08:00）
+     */
     time: Date
+    /**
+     * HTTP 方法
+     */
     method: string
+    /**
+     * 请求 URL（含 query）
+     */
     url: string
+    /**
+     * HTTP 状态码
+     */
     statusCode: number
+    /**
+     * 耗时 ms
+     */
     duration: number
+    /**
+     * 客户端 IP
+     */
     ip: string | null
+    /**
+     * User-Agent
+     */
     userAgent: string | null
     /**
      * 操作用户 id（0 为匿名/未登录）
      */
     userId: bigint
+    /**
+     * 操作账号（快照）
+     */
     username: string | null
     /**
      * 所属部门 id 快照（0 为无）
      */
     deptId: bigint
+    /**
+     * 所属部门名称（快照）
+     */
     deptName: string | null
+    /**
+     * 查询参数（已脱敏）
+     */
     query: runtime.JsonValue | null
+    /**
+     * 请求体（已脱敏、截断 2KB）
+     */
     reqBody: string | null
+    /**
+     * 响应内容（截断 2KB；二进制为占位）
+     */
     resBody: string | null
   }, ExtArgs["result"]["httpLog"]>
   composites: {}

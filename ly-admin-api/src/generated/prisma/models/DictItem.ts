@@ -657,14 +657,41 @@ export type $DictItemPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     dictTypeInfo: Prisma.$DictTypePayload<ExtArgs>
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
+    /**
+     * 主键
+     */
     id: bigint
+    /**
+     * 所属字典类型编码
+     */
     dictType: string
+    /**
+     * 字典标签（展示文案）
+     */
     dictLabel: string
+    /**
+     * 字典值（业务存储值）
+     */
     dictValue: string
+    /**
+     * 排序（升序）
+     */
     sort: number
+    /**
+     * 1 启用 / 0 禁用
+     */
     status: number
+    /**
+     * 备注
+     */
     remark: string | null
+    /**
+     * 创建时间
+     */
     createdAt: Date
+    /**
+     * 更新时间
+     */
     updatedAt: Date
   }, ExtArgs["result"]["dictItem"]>
   composites: {}

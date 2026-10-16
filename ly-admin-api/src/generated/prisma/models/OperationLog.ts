@@ -592,13 +592,37 @@ export type $OperationLogPayload<ExtArgs extends runtime.Types.Extensions.Intern
   name: "OperationLog"
   objects: {}
   scalars: runtime.Types.Extensions.GetPayloadResult<{
+    /**
+     * 主键
+     */
     id: bigint
+    /**
+     * 操作人 id
+     */
     userId: bigint | null
+    /**
+     * 操作人账号
+     */
     username: string | null
+    /**
+     * 模块
+     */
     module: string
+    /**
+     * 动作
+     */
     action: string
+    /**
+     * HTTP 方法
+     */
     method: string
+    /**
+     * 请求 URL
+     */
     url: string
+    /**
+     * 请求参数（密码脱敏）
+     */
     params: string | null
     /**
      * 耗时 ms
@@ -608,8 +632,17 @@ export type $OperationLogPayload<ExtArgs extends runtime.Types.Extensions.Intern
      * 1 成功 / 0 失败
      */
     result: number
+    /**
+     * 失败信息
+     */
     errorMessage: string | null
+    /**
+     * 客户端 IP
+     */
     ip: string | null
+    /**
+     * 创建时间
+     */
     createdAt: Date
   }, ExtArgs["result"]["operationLog"]>
   composites: {}

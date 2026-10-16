@@ -555,15 +555,33 @@ export type $DictTypePayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     items: Prisma.$DictItemPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
+    /**
+     * 主键
+     */
     id: bigint
+    /**
+     * 字典名称（展示用）
+     */
     dictName: string
     /**
      * 字典类型编码（业务引用键，创建后不可修改）
      */
     dictType: string
+    /**
+     * 1 启用 / 0 禁用
+     */
     status: number
+    /**
+     * 备注
+     */
     remark: string | null
+    /**
+     * 创建时间
+     */
     createdAt: Date
+    /**
+     * 更新时间
+     */
     updatedAt: Date
   }, ExtArgs["result"]["dictType"]>
   composites: {}

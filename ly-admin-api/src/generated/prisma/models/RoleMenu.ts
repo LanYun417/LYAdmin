@@ -573,8 +573,17 @@ export type $RoleMenuPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     menu: Prisma.$MenuPayload<ExtArgs>
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
+    /**
+     * 主键
+     */
     id: bigint
+    /**
+     * 角色 id
+     */
     roleId: bigint
+    /**
+     * 菜单 id
+     */
     menuId: bigint
   }, ExtArgs["result"]["roleMenu"]>
   composites: {}
