@@ -12,7 +12,8 @@ build/
 
 # 例外：Vditor 自托管静态资源必须入库 —— 否则他人 clone 后构建产物中缺少该目录，
 # 编辑器将无法离线渲染（emoji / 内容主题 / 代码高亮 / KaTeX / mermaid）。
-!admin/public/vditor/dist/
+# 前端目录已于 2026-10-16 由 admin/ 更名为 ly-admin-web/，白名单路径需同步。
+!ly-admin-web/public/vditor/dist/
 
 # Logs
 logs/
@@ -28,8 +29,14 @@ pnpm-debug.log*
 .env.*.local
 
 # Uploads (keep directory, ignore content)
+# 旧 Express 后端 api/ 删除后，其 uploads 规则一并移除；新 NestJS 后端 ly-admin-api/
 api/uploads/*
 !api/uploads/.gitkeep
+ly-admin-api/uploads/*
+!ly-admin-api/uploads/.gitkeep
+
+# 新后端图片处理缓存（缩略图等运行时产物，不入库）
+ly-admin-api/cache/
 
 # Editor / OS
 .vscode/*

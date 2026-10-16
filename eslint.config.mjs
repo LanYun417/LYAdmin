@@ -6,7 +6,7 @@ import prettierRecommended from 'eslint-plugin-prettier/recommended';
 
 /**
  * LYAdmin 根目录 ESLint 扁平配置（flat config）。
- * 统一覆盖后端 api 与前端 admin 的 TypeScript / Vue 源码。
+ * 统一覆盖旧后端 api、新后端 ly-admin-api 与前端 ly-admin-web 的 TypeScript / Vue 源码。
  * 注意：注释内不可出现连续星号加斜杠的 glob 写法，否则会提前闭合块注释。
  */
 export default [
@@ -19,13 +19,21 @@ export default [
       '**/dist-*/**',
       '**/build/**',
       '**/coverage/**',
-      // 前端构建产物映射目录（由 admin 构建输出，非源码）
+      // 前端构建产物映射目录（由 ly-admin-web 构建输出，非源码）
       'api/web/**',
       '**/*.min.js',
       'api/uploads/**',
       'api/logs/**',
-      'admin/auto-imports.d.ts',
-      'admin/components.d.ts',
+      // 前端自动生成的类型声明（unplugin-auto-import / unplugin-vue-components，格式由插件决定）
+      'ly-admin-web/auto-imports.d.ts',
+      'ly-admin-web/components.d.ts',
+      // Vditor 自托管供应商静态资源，保持上游原样，不 lint 不格式化
+      'ly-admin-web/public/vditor/**',
+      // 新后端：Prisma 生成客户端（构建产物）与运行时数据目录
+      'ly-admin-api/src/generated/**',
+      'ly-admin-api/uploads/**',
+      'ly-admin-api/logs/**',
+      'ly-admin-api/cache/**',
     ],
   },
 
@@ -67,7 +75,7 @@ export default [
 
   // 前端浏览器环境
   {
-    files: ['admin/**/*.{ts,vue,js,mjs}'],
+    files: ['ly-admin-web/**/*.{ts,vue,js,mjs}'],
     languageOptions: {
       globals: {
         window: 'readonly',
@@ -99,7 +107,7 @@ export default [
     },
   },
 
-  // 后端 Node 环境
+  // 旧后端 Node 环境（CommonJS，api/ 待 Phase 5 验证完成后删除）
   {
     files: ['api/**/*.ts'],
     languageOptions: {
@@ -121,6 +129,23 @@ export default [
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-require-imports': 'off',
+    },
+  },
+
+  // 新后端 Node 环境（纯 ESM，ly-admin-api/，无 __dirname/module/require）
+  {
+    files: ['ly-admin-api/**/*.ts'],
+    languageOptions: {
+      globals: {
+        process: 'readonly',
+        console: 'readonly',
+        Buffer: 'readonly',
+        URL: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly',
+      },
     },
   },
 

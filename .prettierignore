@@ -1,7 +1,7 @@
 node_modules
 dist
 build
-# 前端构建产物映射目录（由 admin 构建输出，非源码）
+# 前端构建产物映射目录（由 ly-admin-web 构建输出，非源码）
 api/web
 coverage
 pnpm-lock.yaml
@@ -12,7 +12,16 @@ api/uploads
 api/logs
 
 # 自动生成的类型声明（由 unplugin-auto-import / unplugin-vue-components 生成，格式由插件决定）
-admin/auto-imports.d.ts
-admin/components.d.ts
+ly-admin-web/auto-imports.d.ts
+ly-admin-web/components.d.ts
+
+# Vditor 自托管供应商静态资源，保持上游原样，不格式化
+ly-admin-web/public/vditor/
+
+# 新后端：Prisma 生成客户端与运行时数据目录
+ly-admin-api/src/generated/
+ly-admin-api/uploads
+ly-admin-api/logs
+ly-admin-api/cache
 
 .agents/

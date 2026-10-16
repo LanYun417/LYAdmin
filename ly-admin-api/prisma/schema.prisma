@@ -1,0 +1,301 @@
+// LYAdmin 后端数据模型（NestJS + Prisma）
+//
+// 迁移自原 Sequelize 模型，逐表 1:1 对齐：
+// - 主键沿用 BIGINT UNSIGNED → Prisma BigInt（@db.BigInt），JS 侧统一 Number() 转换
+// - 树形自关联（sys_menu.parent_id / sys_dept.parent_id）刻意不建数据库外键，
+//   以保留「parentId=0 表示根节点」的约定（0 不在表中，建外键会被约束拒绝）
+// - 字典项通过 dict_type 字符串关联字典类型编码，外键级联由 DB 保证
+// - 中间表（user_role / role_menu / role_dept）保留独立自增主键 + 唯一索引
+
+// Prisma 7 起，连接串不再写在 schema 的 datasource.url 中：
+// - Migrate/Studio 的连接串改由 prisma.config.ts 提供（见该文件）
+// - 运行期连接由 PrismaService 通过 driver adapter 注入（见 src/prisma/prisma.service.ts）
+//
+// 与原 Sequelize 模型的差异说明：
+// - 原 `INT UNSIGNED` / `SMALLINT UNSIGNED` 列（File.size、HttpLog.statusCode、HttpLog.duration）
+//   在 Prisma 的 MySQL connector 中不支持 unsigned 原生类型，改用有符号 Int。
+//   三者均为非负语义（文件字节数、HTTP 状态码、耗时毫秒），且应用层已做上界校验，行为等价。
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+  // 生成 ESM 兼容代码（带 .js 扩展名导入），以便在 Node ESM 运行时直接使用
+  runtime  = "nodejs"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+/// 用户表
+model User {
+  id                BigInt    @id @default(autoincrement()) @db.BigInt
+  username          String    @unique @db.VarChar(50)
+  password          String    @db.VarChar(100)
+  nickname          String    @default("") @db.VarChar(50)
+  avatar            String?   @db.VarChar(255)
+  email             String?   @db.VarChar(100)
+  phone             String?   @db.VarChar(20)
+  /// 性别（字典 sys_user_sex），字符串存储以便字典值扩展
+  gender            String?   @db.VarChar(20)
+  status            Int       @default(1) @db.TinyInt
+  lastLoginAt       DateTime? @db.Date
+  passwordChangedAt DateTime? @db.Date
+  remark            String?   @db.VarChar(255)
+  /// 部门 id（0 表示未分配，故不建外键）
+  deptId            BigInt    @default(0) @db.BigInt
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  dept    Dept?      @relation("UserDept", fields: [deptId], references: [id])
+  /// 经中间表 UserRole 的直接角色关联（对齐原 Sequelize 的 `user.roles`）
+  roles     Role[]    @relation("UserRoles")
+  /// 中间表原始记录（用于清理与统计）
+  userRoles UserRole[]
+
+  @@index([deptId])
+  @@map("sys_user")
+}
+
+/// 角色表
+model Role {
+  id       BigInt  @id @default(autoincrement()) @db.BigInt
+  roleName String  @db.VarChar(50)
+  roleCode String  @unique @db.VarChar(50)
+  sort     Int     @default(0)
+  status   Int     @default(1) @db.TinyInt
+  /// 数据权限范围：1 全部 / 2 自定义部门 / 3 本部门及以下 / 4 仅本人
+  dataScope Int    @default(1) @db.TinyInt
+  remark   String? @db.VarChar(255)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users     User[]     @relation("UserRoles")
+  userRoles UserRole[]
+  roleMenus RoleMenu[]
+  roleDepts RoleDept[]
+
+  @@map("sys_role")
+}
+
+/// 菜单权限表
+model Menu {
+  id       BigInt  @id @default(autoincrement()) @db.BigInt
+  parentId BigInt  @default(0) @db.BigInt
+  menuName String  @db.VarChar(50)
+  /// M 目录 / C 菜单 / F 按钮
+  menuType String  @db.Char(1)
+  path      String? @db.VarChar(200)
+  component String? @db.VarChar(255)
+  icon      String? @db.VarChar(100)
+  permission String? @db.VarChar(100)
+  sort      Int     @default(0)
+  /// 1 显示 / 0 隐藏
+  visible  Int     @default(1) @db.TinyInt
+  status   Int     @default(1) @db.TinyInt
+  redirect String? @db.VarChar(255)
+  /// 1 缓存 / 0 不缓存
+  keepAlive Int    @default(0) @db.TinyInt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  roleMenus RoleMenu[]
+
+  @@index([parentId])
+  @@map("sys_menu")
+}
+
+/// 部门表
+model Dept {
+  id       BigInt  @id @default(autoincrement()) @db.BigInt
+  parentId BigInt  @default(0) @db.BigInt
+  deptName String  @db.VarChar(50)
+  sort     Int     @default(0)
+  status   Int     @default(1) @db.TinyInt
+  leader   String? @db.VarChar(20)
+  phone    String? @db.VarChar(20)
+  email    String? @db.VarChar(100)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users     User[]     @relation("UserDept")
+  roleDepts RoleDept[]
+
+  @@index([parentId])
+  @@map("sys_dept")
+}
+
+/// 用户角色关联表
+model UserRole {
+  id     BigInt @id @default(autoincrement()) @db.BigInt
+  userId BigInt @db.BigInt
+  roleId BigInt @db.BigInt
+
+  user User @relation(fields: [userId], references: [id])
+  role Role @relation(fields: [roleId], references: [id])
+
+  @@unique([userId, roleId])
+  @@index([roleId])
+  @@map("sys_user_role")
+}
+
+/// 角色菜单关联表
+model RoleMenu {
+  id     BigInt @id @default(autoincrement()) @db.BigInt
+  roleId BigInt @db.BigInt
+  menuId BigInt @db.BigInt
+
+  role Role @relation(fields: [roleId], references: [id])
+  menu Menu @relation(fields: [menuId], references: [id])
+
+  @@unique([roleId, menuId])
+  @@index([menuId])
+  @@map("sys_role_menu")
+}
+
+/// 角色数据权限部门关联表（承载 data_scope=2 的自定义部门集合）
+model RoleDept {
+  id     BigInt @id @default(autoincrement()) @db.BigInt
+  roleId BigInt @db.BigInt
+  deptId BigInt @db.BigInt
+
+  role Role @relation(fields: [roleId], references: [id])
+  dept Dept @relation(fields: [deptId], references: [id])
+
+  @@unique([roleId, deptId])
+  @@index([deptId])
+  @@map("sys_role_dept")
+}
+
+/// 字典类型表
+model DictType {
+  id       BigInt   @id @default(autoincrement()) @db.BigInt
+  dictName String   @db.VarChar(100)
+  /// 字典类型编码（业务引用键，创建后不可修改）
+  dictType String   @unique @db.VarChar(100)
+  status   Int      @default(1) @db.TinyInt
+  remark   String?  @db.VarChar(255)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items DictItem[]
+
+  @@map("sys_dict_type")
+}
+
+/// 字典项表（通过 dict_type 字符串关联类型编码，删除类型时级联）
+model DictItem {
+  id        BigInt   @id @default(autoincrement()) @db.BigInt
+  dictType  String   @db.VarChar(100)
+  dictLabel String   @db.VarChar(100)
+  dictValue String   @db.VarChar(100)
+  sort      Int      @default(0)
+  status    Int      @default(1) @db.TinyInt
+  remark    String?  @db.VarChar(255)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  dictTypeInfo DictType @relation(fields: [dictType], references: [dictType], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([dictType])
+  @@map("sys_dict_item")
+}
+
+/// 系统参数表
+model SysConfig {
+  id          BigInt   @id @default(autoincrement()) @db.BigInt
+  configName  String   @db.VarChar(100)
+  /// 参数键名（业务引用键，创建后不可修改）
+  configKey   String   @unique @db.VarChar(100)
+  configValue String   @default("") @db.VarChar(500)
+  /// 是否内置：1 内置 / 0 自定义
+  systemFlag  Int      @default(0) @db.TinyInt
+  remark      String?  @db.VarChar(255)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("sys_config")
+}
+
+/// 文件表
+model File {
+  id         BigInt   @id @default(autoincrement()) @db.BigInt
+  originName String   @db.VarChar(255)
+  fileName   String   @db.VarChar(255)
+  filePath   String   @db.VarChar(500)
+  fileUrl    String   @db.VarChar(500)
+  mimeType   String   @db.VarChar(100)
+  size       Int      @default(0) @db.Int
+  /// SHA-256 内容哈希（秒传/去重依据）
+  hash       String?  @db.VarChar(64)
+  uploaderId BigInt?  @db.BigInt
+  createdAt  DateTime @default(now())
+
+  @@index([hash])
+  @@map("sys_file")
+}
+
+/// 登录日志表
+model LoginLog {
+  id        BigInt   @id @default(autoincrement()) @db.BigInt
+  username  String   @db.VarChar(50)
+  ip        String?  @db.VarChar(50)
+  userAgent String?  @db.VarChar(500)
+  /// 1 成功 / 0 失败
+  status    Int      @db.TinyInt
+  message   String?  @db.VarChar(255)
+  loginAt   DateTime @default(now())
+
+  @@index([loginAt])
+  @@map("sys_login_log")
+}
+
+/// 操作日志表
+model OperationLog {
+  id       BigInt  @id @default(autoincrement()) @db.BigInt
+  userId   BigInt? @db.BigInt
+  username String? @db.VarChar(50)
+  module   String  @db.VarChar(50)
+  action   String  @db.VarChar(50)
+  method   String  @db.VarChar(10)
+  url      String  @db.VarChar(255)
+  params   String? @db.Text
+  /// 耗时 ms
+  duration Int     @default(0)
+  /// 1 成功 / 0 失败
+  result   Int     @db.TinyInt
+  errorMessage String? @db.VarChar(500)
+  ip       String? @db.VarChar(50)
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@map("sys_operation_log")
+}
+
+/// HTTP 访问日志表（页面查询用；操作者为写入时快照，不与 sys_user 建外键）
+model HttpLog {
+  id         BigInt   @id @default(autoincrement()) @db.BigInt
+  time       DateTime @db.DateTime(3)
+  method     String   @db.VarChar(10)
+  url        String   @db.VarChar(1024)
+  statusCode Int      @db.SmallInt
+  duration   Int      @default(0) @db.Int
+  ip         String?  @db.VarChar(64)
+  userAgent  String?  @db.VarChar(500)
+  /// 操作用户 id（0 为匿名/未登录）
+  userId     BigInt   @default(0) @db.BigInt
+  username   String?  @db.VarChar(50)
+  /// 所属部门 id 快照（0 为无）
+  deptId     BigInt   @default(0) @db.BigInt
+  deptName   String?  @db.VarChar(50)
+  query      Json?
+  reqBody    String?  @db.Text
+  resBody    String?  @db.Text
+
+  @@index([time])
+  @@index([method])
+  @@index([statusCode])
+  @@index([method, time])
+  @@map("sys_http_log")
+}

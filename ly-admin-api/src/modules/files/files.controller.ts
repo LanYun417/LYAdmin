@@ -1,0 +1,90 @@
+/**
+ * 文件控制器。
+ * 模块职责：解析文件模块请求参数、调用服务、组装统一响应（含上传/删除的自定义提示语）。
+ * 迁移自原 Express 版的 file.controller.ts，端点与权限码 1:1。
+ */
+import { UseInterceptors } from '@nestjs/common';
+import { Controller, Delete, Get, Param, Post, Query, Res, UploadedFiles } from '@nestjs/common';
+import { AnyFilesInterceptor } from '@nestjs/platform-express';
+import type { Response } from 'express';
+import { RequirePermissions } from '../../common/permission.guard.js';
+import { CurrentUser } from '../../common/auth.guard.js';
+import { AppException } from '../../common/app.exception.js';
+import type { AuthUserContext } from '../../common/types.js';
+import type { ResponseEnvelope } from '../../common/response.interceptor.js';
+import { RawResponse } from '../../common/response.interceptor.js';
+import { UPLOAD_MULTER_OPTIONS } from '../../common/upload.config.js';
+import { FilesService } from './files.service.js';
+import { CheckQueryDto, IdParamDto } from './dto/files.dto.js';
+
+@Controller('files')
+export class FilesController {
+  constructor(private readonly filesService: FilesService) {}
+
+  /** 上传（单/多文件，兼容任意字段名）。 */
+  @Post('upload')
+  @UseInterceptors(AnyFilesInterceptor(UPLOAD_MULTER_OPTIONS))
+  @RequirePermissions('file:upload')
+  async upload(
+    @UploadedFiles() files: Express.Multer.File[],
+    @CurrentUser() user: AuthUserContext,
+  ): Promise<ResponseEnvelope<{ id: number; originName: string; fileUrl: string }[]>> {
+    const result = await this.filesService.saveFiles(files ?? [], user.userId);
+    return { __raw: true, data: result, message: '上传成功' };
+  }
+
+  /** 秒传预检：按内容哈希查询库内是否已存在相同文件。 */
+  @Get('check')
+  @RequirePermissions('file:upload')
+  async check(@Query() query: CheckQueryDto): Promise<{ exists: boolean; file: unknown | null }> {
+    const hash = (query.hash ?? '').toLowerCase();
+    if (!hash) {
+      throw AppException.badRequest('hash 非法，应为 SHA-256 十六进制（64 位）');
+    }
+    const file = await this.filesService.checkFileByHash(hash);
+    return { exists: file !== null, file };
+  }
+
+  /** 文件列表。 */
+  @Get()
+  @RequirePermissions('file:list')
+  list(@Query() query: Record<string, unknown>): Promise<unknown> {
+    return this.filesService.listFiles(query);
+  }
+
+  /** 文件类型选项（对库内已有文件去重，供筛选下拉使用）。 */
+  @Get('types')
+  @RequirePermissions('file:list')
+  listTypes(): Promise<string[]> {
+    return this.filesService.listFileTypes();
+  }
+
+  /** 上传人选项（对库内已有上传人去重并关联用户表）。 */
+  @Get('uploaders')
+  @RequirePermissions('file:list')
+  listUploaders(): Promise<unknown> {
+    return this.filesService.listFileUploaders();
+  }
+
+  /**
+   * 下载文件：强制附件语义（Content-Disposition: attachment）。
+   * 中文文件名由 Express 自动编码；CR/LF/引号已去除避免响应头注入。
+   */
+  @Get(':id/download')
+  @RequirePermissions('file:download')
+  @RawResponse()
+  async download(@Param() params: IdParamDto, @Res() res: Response): Promise<void> {
+    const file = await this.filesService.getFileForDownload(params.id);
+    const safeName = file.originName.replace(/[\r\n"]/g, '').trim() || `file-${params.id}`;
+    res.setHeader('Content-Type', file.mimeType || 'application/octet-stream');
+    res.download(file.absolutePath, safeName);
+  }
+
+  /** 删除文件。 */
+  @Delete(':id')
+  @RequirePermissions('file:remove')
+  async remove(@Param() params: IdParamDto): Promise<ResponseEnvelope<null>> {
+    await this.filesService.deleteFile(params.id);
+    return { __raw: true, data: null, message: '删除成功' };
+  }
+}
