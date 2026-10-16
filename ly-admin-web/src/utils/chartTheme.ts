@@ -1,6 +1,6 @@
 /**
  * 图表主题工具。
- * 模块职责：为 ECharts 图表提供统一的亮/暗主题配色、色板与渐变工厂。
+ * 模块职责：为 ECharts 图表提供统一的亮/暗主题配色、色板、渐变工厂与坐标系布局约束。
  * 背景：canvas 无法读取 CSS 变量，必须按主题（暗黑 / 亮色）在 JS 侧取色，
  * 使图表与 Element Plus 暗黑模式、主题色自动适配。
  */
@@ -55,6 +55,23 @@ export const CHART_COLORS = [
   '#008685',
   '#F08BB4',
 ] as const;
+
+/**
+ * 直角坐标系网格的「轴标签不溢出」约束，用展开方式并入 `grid`：
+ * `grid: { left: 8, right: 16, top: 32, bottom: 8, ...GRID_AXIS_LABEL_FIT }`
+ *
+ * 背景：ECharts 6 已废弃 `containLabel`（类型定义标注
+ * `@deprecated Use grid.outerBounds instead`），缺省时会打印告警提示改用新写法或注册
+ * `LegacyGridContainLabel`。官方给出的等价关系为：
+ * `containLabel: true` ≡ `{ outerBoundsMode: 'same', outerBoundsContain: 'axisLabel' }`，
+ * 并注明新写法比旧行为更精确（旧实现按样本标签估算尺寸，个别情况仍会溢出）。
+ *
+ * 故此处采用等价新写法，而非注册兼容垫片——不保留废弃代码路径。
+ */
+export const GRID_AXIS_LABEL_FIT = {
+  outerBoundsMode: 'same',
+  outerBoundsContain: 'axisLabel',
+} as const;
 
 /**
  * 依据暗黑模式返回图表配色。

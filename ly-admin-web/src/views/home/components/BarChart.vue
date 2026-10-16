@@ -4,7 +4,7 @@
 import { throttle } from 'lodash-es';
 
 import echarts from '@/utils/echarts';
-import { getChartPalette, hexToRgba, verticalGradient } from '@/utils/chartTheme';
+import { GRID_AXIS_LABEL_FIT, getChartPalette, hexToRgba, verticalGradient } from '@/utils/chartTheme';
 import { useAppStore } from '@/store/modules/app';
 import type { RoleUserCount } from '@/types/api';
 
@@ -48,7 +48,7 @@ function render(): void {
       textStyle: { color: palette.tooltipText },
       axisPointer: { type: 'shadow', shadowStyle: { color: hexToRgba(primary, 0.06) } },
     },
-    grid: { left: 8, right: 16, top: 32, bottom: 8, containLabel: true },
+    grid: { left: 8, right: 16, top: 32, bottom: 8, ...GRID_AXIS_LABEL_FIT },
     xAxis: {
       type: 'category',
       data: props.data.names,
