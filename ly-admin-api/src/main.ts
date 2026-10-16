@@ -9,9 +9,11 @@ import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module.js';
 import { config } from './common/config.js';
+import { LegacyExpressAdapter } from './common/legacy-express.adapter.js';
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  // 传入自定义适配器：成功响应恒回 HTTP 200（对齐原 Express 版的 ok()，POST 不再回 201）
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, new LegacyExpressAdapter());
   const logger = new Logger('Bootstrap');
 
   // 反向代理信任跳数：仅在显式配置时信任 X-Forwarded-For（默认不信任，防伪造 IP 绕过限流）

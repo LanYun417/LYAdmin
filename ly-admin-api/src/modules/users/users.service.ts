@@ -8,6 +8,7 @@ import { AppException } from '../../common/app.exception.js';
 import { AuthCacheService } from '../../common/auth-cache.service.js';
 import { DataScopeService } from '../../common/data-scope.service.js';
 import { Status, SUPER_ADMIN_ROLE } from '../../common/constants.js';
+import { lookupDeptName, lookupDeptNames } from '../../common/dept-lookup.js';
 import { buildPageResult, hashPassword, parsePagination, readNumber, readString } from '../../common/utils.js';
 import type { AuthUserContext, PageResult, UserDetail } from '../../common/types.js';
 import type { Prisma } from '../../generated/prisma/client.js';
@@ -89,15 +90,19 @@ export class UsersService {
     };
   }
 
-  /** 按 id 查询用户（含角色与部门）。 */
+  /** 按 id 查询用户（含角色；部门名按 deptId 显式补查，sys_user.dept_id 无外键与 Prisma 关系）。 */
   private async findUserWithRoles(id: number): Promise<UserWithRelations | null> {
-    return (await this.prisma.user.findUnique({
+    const user = await this.prisma.user.findUnique({
       where: { id: BigInt(id) },
       include: {
-        dept: { select: { deptName: true } },
         roles: { select: { id: true, roleName: true, roleCode: true } },
       },
-    })) as unknown as UserWithRelations | null;
+    });
+    if (!user) {
+      return null;
+    }
+    const deptName = await lookupDeptName(this.prisma, user.deptId);
+    return { ...user, dept: deptName === null ? null : { deptName } } as unknown as UserWithRelations;
   }
 
   /** 同步用户角色（先清后建，去重）。 */
@@ -153,7 +158,6 @@ export class UsersService {
       this.prisma.user.findMany({
         where,
         include: {
-          dept: { select: { deptName: true } },
           roles: { select: { id: true, roleName: true, roleCode: true } },
         },
         orderBy: { id: 'desc' },
@@ -163,8 +167,19 @@ export class UsersService {
       this.prisma.user.count({ where }),
     ]);
 
+    // 部门名批量补查（sys_user.dept_id 无外键与 Prisma 关系，避免逐行查询造成 N+1）
+    const list = rows as unknown as UserWithRelations[];
+    const deptNames = await lookupDeptNames(
+      this.prisma,
+      list.map((row) => row.deptId),
+    );
+    const listWithDept = list.map((row) => {
+      const deptName = deptNames.get(String(row.deptId));
+      return { ...row, dept: deptName === undefined ? null : { deptName } };
+    });
+
     return buildPageResult(
-      (rows as unknown as UserWithRelations[]).map((row) => this.toUserDetail(row)),
+      listWithDept.map((row) => this.toUserDetail(row)),
       total,
       page,
       pageSize,

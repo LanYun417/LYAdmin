@@ -7,10 +7,15 @@
  * - 控制器直接返回业务数据本体，message 默认 `success`；
  * - 需要自定义提示语时，控制器可返回 `{ __raw: true, data, message }` 标记对象。
  * - 二进制响应（文件流/图片缩放等）通过 `@RawResponse()` 标记跳过包装。
+ *
+ * 实现要点（勿改回「手动 res.json」写法）：
+ * 本拦截器**只负责把返回值改写成响应体**，由 Nest 的适配器负责写出。早期版本在这里
+ * 直接调用 `res.status(200).json(...)` 再返回 payload，会导致框架随后重复写出响应，
+ * 每个成功请求都抛 `ERR_HTTP_HEADERS_SENT: Cannot set headers after they are sent`。
+ * HTTP 状态码统一为 200 的职责改由 LegacyExpressAdapter.reply 承担（见该文件）。
  */
 import { type CallHandler, type ExecutionContext, Injectable, NestInterceptor, SetMetadata } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import type { Response } from 'express';
 import { Readable } from 'node:stream';
 import { map, type Observable } from 'rxjs';
 import { ERROR_CODE, ERROR_MESSAGE } from './constants.js';
@@ -48,8 +53,6 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, unknown> {
       return next.handle();
     }
 
-    const res = context.switchToHttp().getResponse<Response>();
-
     return next.handle().pipe(
       map((payload: unknown) => {
         // 文件流等原始 Buffer/Stream 不参与包装
@@ -59,16 +62,14 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, unknown> {
 
         // 已是完整信封（如控制器用 respond() 显式构造）：仅补齐缺失字段
         if (isResponseEnvelope(payload)) {
-          res.status(200).json({
+          return {
             code: ERROR_CODE.SUCCESS,
             message: payload.message ?? ERROR_MESSAGE.SUCCESS,
             data: payload.data ?? null,
-          });
-          return payload.data ?? null;
+          };
         }
 
-        res.status(200).json({ code: ERROR_CODE.SUCCESS, message: ERROR_MESSAGE.SUCCESS, data: payload ?? null });
-        return payload;
+        return { code: ERROR_CODE.SUCCESS, message: ERROR_MESSAGE.SUCCESS, data: payload ?? null };
       }),
     );
   }

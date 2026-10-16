@@ -804,6 +804,9 @@ export type $MenuPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: bigint
+    /**
+     * 父级 id（0 表示根节点，故不建外键、也不声明 Prisma 自关联）
+     */
     parentId: bigint
     menuName: string
     /**

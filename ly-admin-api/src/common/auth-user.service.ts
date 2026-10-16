@@ -7,6 +7,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { AuthCacheService } from './auth-cache.service.js';
 import { Status, SUPER_ADMIN_ROLE } from './constants.js';
+import { lookupDeptName } from './dept-lookup.js';
 import type { AuthContext } from './types.js';
 
 @Injectable()
@@ -58,17 +59,18 @@ export class AuthUserService {
       return cached;
     }
 
-    // 顺带加载部门：供个人中心展示与 HTTP 访问日志的部门快照使用
+    // 顺带加载部门名：供个人中心展示与 HTTP 访问日志的部门快照使用
+    // （sys_user.dept_id 不建外键、schema 中无 Prisma 关系，故按 deptId 显式补查）
     const user = await this.prisma.user.findUnique({
       where: { id: BigInt(userId) },
       include: {
         roles: { select: { id: true, roleCode: true } },
-        dept: { select: { id: true, deptName: true } },
       },
     });
     if (!user) {
       return null;
     }
+    const deptName = await lookupDeptName(this.prisma, user.deptId);
 
     const roles = user.roles ?? [];
     const roleCodes = roles.map((role) => role.roleCode);
@@ -82,7 +84,7 @@ export class AuthUserService {
       permissions,
       status: Number(user.status),
       deptId: Number(user.deptId ?? 0),
-      deptName: user.dept?.deptName ?? null,
+      deptName,
       passwordChangedAt: user.passwordChangedAt,
       avatar: user.avatar,
       nickname: user.nickname,

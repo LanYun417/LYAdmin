@@ -1,15 +1,25 @@
+// use prisma-next
+// ↑ 首行必须保留（且必须是「 // use prisma-next 」独占一行）：
+//   VS Code 的 Prisma 扩展用正则 /^\s*\/\/ *use +prisma-(?:next|8) *(?!\S)/ 判定本文件是否
+//   属于 Prisma 7——只有匹配上才会启用 Prisma 7 语言服务。缺失时扩展会回落到 Prisma 6
+//   语言服务，后者按 v6 语义要求 datasource 必须带 url，从而误报
+//   `Argument "url" is missing in data source block "db"`（而 Prisma 7 早已禁止 schema 里写 url）。
+//
 // LYAdmin 后端数据模型（NestJS + Prisma）
 //
 // 迁移自原 Sequelize 模型，逐表 1:1 对齐：
-// - 主键沿用 BIGINT UNSIGNED → Prisma BigInt（@db.BigInt），JS 侧统一 Number() 转换
-// - 树形自关联（sys_menu.parent_id / sys_dept.parent_id）刻意不建数据库外键，
-//   以保留「parentId=0 表示根节点」的约定（0 不在表中，建外键会被约束拒绝）
-// - 字典项通过 dict_type 字符串关联字典类型编码，外键级联由 DB 保证
-// - 中间表（user_role / role_menu / role_dept）保留独立自增主键 + 唯一索引
-
-// Prisma 7 起，连接串不再写在 schema 的 datasource.url 中：
-// - Migrate/Studio 的连接串改由 prisma.config.ts 提供（见该文件）
-// - 运行期连接由 PrismaService 通过 driver adapter 注入（见 src/prisma/prisma.service.ts）
+// - 主键沿用 BIGINT → Prisma BigInt（@db.BigInt），JS 侧统一 Number() 转换
+// - **列名一律 @map 成 snake_case**：原 Sequelize 模型统一 `underscored: true`（另有 4 处显式
+//   field 覆盖：last_login_at / password_changed_at / login_at / keep_alive，取值同为 snake_case），
+//   所以库内列名是 dept_id / created_at 这种形式。Prisma 默认拿字段名（camelCase）当列名，
+//   不 @map 就会造出 deptId / createdAt 列——既与既有库不符，也会让仍在运行的旧 Express
+//   后端（api/）直接报 Unknown column。此处 Prisma 字段名保持 camelCase（业务代码零改动），
+//   仅用 @map 落到 snake_case 列。
+// - 哨兵值约定（0 不在表内，建外键会被约束拒绝），对应原模型的 `constraints: false`：
+//   · sys_menu.parent_id / sys_dept.parent_id（0 = 根节点/顶级）→ 不声明 Prisma 自关联
+//   · sys_user.dept_id（0 = 未分配）→ 不声明 Prisma 关系，部门名由业务层按 deptId 显式查询
+// - 其余关联保留数据库外键，与原 Sequelize 关联默认行为一致：
+//   中间表（sys_user_role / sys_role_menu / sys_role_dept）与 dict_item → dict_type（含级联删除）。
 //
 // 与原 Sequelize 模型的差异说明：
 // - 原 `INT UNSIGNED` / `SMALLINT UNSIGNED` 列（File.size、HttpLog.statusCode、HttpLog.duration）
@@ -17,13 +27,22 @@
 //   三者均为非负语义（文件字节数、HTTP 状态码、耗时毫秒），且应用层已做上界校验，行为等价。
 
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
   // 生成 ESM 兼容代码（带 .js 扩展名导入），以便在 Node ESM 运行时直接使用
-  runtime  = "nodejs"
+  runtime      = "nodejs"
   moduleFormat = "esm"
 }
 
+// 连接串来源（Prisma 7 硬性约定）：
+// - Prisma 7 已**彻底移除** schema 里的 `datasource.url`，写了会直接报
+//   `The datasource property `url` is no longer supported in schema files`（P1012）。
+//   CLI（db push / migrate / introspect）的连接串只来自 prisma.config.ts；
+//   运行期连接由 PrismaService 通过 driver adapter 注入（见 src/prisma/prisma.service.ts）。
+// - IDE 侧注意点：VS Code 的 Prisma 扩展若被钉在 Prisma 6 语义
+//   （.vscode/settings.json 的 prisma.pinToPrisma6=true），会按 v6 规则要求 datasource 带 url，
+//   从而误报 `Argument "url" is missing in data source block "db"`。本项目为 Prisma 7，
+//   已显式关闭该 pin（并在本文件首行声明 // use prisma-next）以启用 Prisma 7 语言服务。
 datasource db {
   provider = "mysql"
 }
@@ -40,17 +59,16 @@ model User {
   /// 性别（字典 sys_user_sex），字符串存储以便字典值扩展
   gender            String?   @db.VarChar(20)
   status            Int       @default(1) @db.TinyInt
-  lastLoginAt       DateTime? @db.Date
-  passwordChangedAt DateTime? @db.Date
+  lastLoginAt       DateTime? @map("last_login_at")
+  passwordChangedAt DateTime? @map("password_changed_at")
   remark            String?   @db.VarChar(255)
-  /// 部门 id（0 表示未分配，故不建外键）
-  deptId            BigInt    @default(0) @db.BigInt
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  /// 部门 id（0 表示未分配，故不建外键、也不声明 Prisma 关系）
+  deptId            BigInt    @default(0) @map("dept_id") @db.BigInt
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
 
-  dept    Dept?      @relation("UserDept", fields: [deptId], references: [id])
   /// 经中间表 UserRole 的直接角色关联（对齐原 Sequelize 的 `user.roles`）
-  roles     Role[]    @relation("UserRoles")
+  roles     Role[]     @relation("UserRoles")
   /// 中间表原始记录（用于清理与统计）
   userRoles UserRole[]
 
@@ -60,16 +78,16 @@ model User {
 
 /// 角色表
 model Role {
-  id       BigInt  @id @default(autoincrement()) @db.BigInt
-  roleName String  @db.VarChar(50)
-  roleCode String  @unique @db.VarChar(50)
-  sort     Int     @default(0)
-  status   Int     @default(1) @db.TinyInt
+  id        BigInt   @id @default(autoincrement()) @db.BigInt
+  roleName  String   @map("role_name") @db.VarChar(50)
+  roleCode  String   @unique @map("role_code") @db.VarChar(50)
+  sort      Int      @default(0)
+  status    Int      @default(1) @db.TinyInt
   /// 数据权限范围：1 全部 / 2 自定义部门 / 3 本部门及以下 / 4 仅本人
-  dataScope Int    @default(1) @db.TinyInt
-  remark   String? @db.VarChar(255)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  dataScope Int      @default(1) @map("data_scope") @db.TinyInt
+  remark    String?  @db.VarChar(255)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   users     User[]     @relation("UserRoles")
   userRoles UserRole[]
@@ -81,24 +99,25 @@ model Role {
 
 /// 菜单权限表
 model Menu {
-  id       BigInt  @id @default(autoincrement()) @db.BigInt
-  parentId BigInt  @default(0) @db.BigInt
-  menuName String  @db.VarChar(50)
+  id         BigInt   @id @default(autoincrement()) @db.BigInt
+  /// 父级 id（0 表示根节点，故不建外键、也不声明 Prisma 自关联）
+  parentId   BigInt   @default(0) @map("parent_id") @db.BigInt
+  menuName   String   @map("menu_name") @db.VarChar(50)
   /// M 目录 / C 菜单 / F 按钮
-  menuType String  @db.Char(1)
-  path      String? @db.VarChar(200)
-  component String? @db.VarChar(255)
-  icon      String? @db.VarChar(100)
-  permission String? @db.VarChar(100)
-  sort      Int     @default(0)
+  menuType   String   @map("menu_type") @db.Char(1)
+  path       String?  @db.VarChar(200)
+  component  String?  @db.VarChar(255)
+  icon       String?  @db.VarChar(100)
+  permission String?  @db.VarChar(100)
+  sort       Int      @default(0)
   /// 1 显示 / 0 隐藏
-  visible  Int     @default(1) @db.TinyInt
-  status   Int     @default(1) @db.TinyInt
-  redirect String? @db.VarChar(255)
+  visible    Int      @default(1) @db.TinyInt
+  status     Int      @default(1) @db.TinyInt
+  redirect   String?  @db.VarChar(255)
   /// 1 缓存 / 0 不缓存
-  keepAlive Int    @default(0) @db.TinyInt
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  keepAlive  Int      @default(0) @map("keep_alive") @db.TinyInt
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
 
   roleMenus RoleMenu[]
 
@@ -108,18 +127,18 @@ model Menu {
 
 /// 部门表
 model Dept {
-  id       BigInt  @id @default(autoincrement()) @db.BigInt
-  parentId BigInt  @default(0) @db.BigInt
-  deptName String  @db.VarChar(50)
-  sort     Int     @default(0)
-  status   Int     @default(1) @db.TinyInt
-  leader   String? @db.VarChar(20)
-  phone    String? @db.VarChar(20)
-  email    String? @db.VarChar(100)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id        BigInt   @id @default(autoincrement()) @db.BigInt
+  /// 父级 id（0 表示顶级，故不建外键、也不声明 Prisma 自关联）
+  parentId  BigInt   @default(0) @map("parent_id") @db.BigInt
+  deptName  String   @map("dept_name") @db.VarChar(50)
+  sort      Int      @default(0)
+  status    Int      @default(1) @db.TinyInt
+  leader    String?  @db.VarChar(20)
+  phone     String?  @db.VarChar(20)
+  email     String?  @db.VarChar(100)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  users     User[]     @relation("UserDept")
   roleDepts RoleDept[]
 
   @@index([parentId])
@@ -129,8 +148,8 @@ model Dept {
 /// 用户角色关联表
 model UserRole {
   id     BigInt @id @default(autoincrement()) @db.BigInt
-  userId BigInt @db.BigInt
-  roleId BigInt @db.BigInt
+  userId BigInt @map("user_id") @db.BigInt
+  roleId BigInt @map("role_id") @db.BigInt
 
   user User @relation(fields: [userId], references: [id])
   role Role @relation(fields: [roleId], references: [id])
@@ -143,8 +162,8 @@ model UserRole {
 /// 角色菜单关联表
 model RoleMenu {
   id     BigInt @id @default(autoincrement()) @db.BigInt
-  roleId BigInt @db.BigInt
-  menuId BigInt @db.BigInt
+  roleId BigInt @map("role_id") @db.BigInt
+  menuId BigInt @map("menu_id") @db.BigInt
 
   role Role @relation(fields: [roleId], references: [id])
   menu Menu @relation(fields: [menuId], references: [id])
@@ -157,8 +176,8 @@ model RoleMenu {
 /// 角色数据权限部门关联表（承载 data_scope=2 的自定义部门集合）
 model RoleDept {
   id     BigInt @id @default(autoincrement()) @db.BigInt
-  roleId BigInt @db.BigInt
-  deptId BigInt @db.BigInt
+  roleId BigInt @map("role_id") @db.BigInt
+  deptId BigInt @map("dept_id") @db.BigInt
 
   role Role @relation(fields: [roleId], references: [id])
   dept Dept @relation(fields: [deptId], references: [id])
@@ -170,14 +189,14 @@ model RoleDept {
 
 /// 字典类型表
 model DictType {
-  id       BigInt   @id @default(autoincrement()) @db.BigInt
-  dictName String   @db.VarChar(100)
+  id        BigInt   @id @default(autoincrement()) @db.BigInt
+  dictName  String   @map("dict_name") @db.VarChar(100)
   /// 字典类型编码（业务引用键，创建后不可修改）
-  dictType String   @unique @db.VarChar(100)
-  status   Int      @default(1) @db.TinyInt
-  remark   String?  @db.VarChar(255)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  dictType  String   @unique @map("dict_type") @db.VarChar(100)
+  status    Int      @default(1) @db.TinyInt
+  remark    String?  @db.VarChar(255)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   items DictItem[]
 
@@ -187,14 +206,14 @@ model DictType {
 /// 字典项表（通过 dict_type 字符串关联类型编码，删除类型时级联）
 model DictItem {
   id        BigInt   @id @default(autoincrement()) @db.BigInt
-  dictType  String   @db.VarChar(100)
-  dictLabel String   @db.VarChar(100)
-  dictValue String   @db.VarChar(100)
+  dictType  String   @map("dict_type") @db.VarChar(100)
+  dictLabel String   @map("dict_label") @db.VarChar(100)
+  dictValue String   @map("dict_value") @db.VarChar(100)
   sort      Int      @default(0)
   status    Int      @default(1) @db.TinyInt
   remark    String?  @db.VarChar(255)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   dictTypeInfo DictType @relation(fields: [dictType], references: [dictType], onDelete: Cascade, onUpdate: Cascade)
 
@@ -205,15 +224,15 @@ model DictItem {
 /// 系统参数表
 model SysConfig {
   id          BigInt   @id @default(autoincrement()) @db.BigInt
-  configName  String   @db.VarChar(100)
+  configName  String   @map("config_name") @db.VarChar(100)
   /// 参数键名（业务引用键，创建后不可修改）
-  configKey   String   @unique @db.VarChar(100)
-  configValue String   @default("") @db.VarChar(500)
+  configKey   String   @unique @map("config_key") @db.VarChar(100)
+  configValue String   @default("") @map("config_value") @db.VarChar(500)
   /// 是否内置：1 内置 / 0 自定义
-  systemFlag  Int      @default(0) @db.TinyInt
+  systemFlag  Int      @default(0) @map("system_flag") @db.TinyInt
   remark      String?  @db.VarChar(255)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
   @@map("sys_config")
 }
@@ -221,16 +240,16 @@ model SysConfig {
 /// 文件表
 model File {
   id         BigInt   @id @default(autoincrement()) @db.BigInt
-  originName String   @db.VarChar(255)
-  fileName   String   @db.VarChar(255)
-  filePath   String   @db.VarChar(500)
-  fileUrl    String   @db.VarChar(500)
-  mimeType   String   @db.VarChar(100)
+  originName String   @map("origin_name") @db.VarChar(255)
+  fileName   String   @map("file_name") @db.VarChar(255)
+  filePath   String   @map("file_path") @db.VarChar(500)
+  fileUrl    String   @map("file_url") @db.VarChar(500)
+  mimeType   String   @map("mime_type") @db.VarChar(100)
   size       Int      @default(0) @db.Int
   /// SHA-256 内容哈希（秒传/去重依据）
   hash       String?  @db.VarChar(64)
-  uploaderId BigInt?  @db.BigInt
-  createdAt  DateTime @default(now())
+  uploaderId BigInt?  @map("uploader_id") @db.BigInt
+  createdAt  DateTime @default(now()) @map("created_at")
 
   @@index([hash])
   @@map("sys_file")
@@ -241,11 +260,11 @@ model LoginLog {
   id        BigInt   @id @default(autoincrement()) @db.BigInt
   username  String   @db.VarChar(50)
   ip        String?  @db.VarChar(50)
-  userAgent String?  @db.VarChar(500)
+  userAgent String?  @map("user_agent") @db.VarChar(500)
   /// 1 成功 / 0 失败
   status    Int      @db.TinyInt
   message   String?  @db.VarChar(255)
-  loginAt   DateTime @default(now())
+  loginAt   DateTime @default(now()) @map("login_at")
 
   @@index([loginAt])
   @@map("sys_login_log")
@@ -253,21 +272,21 @@ model LoginLog {
 
 /// 操作日志表
 model OperationLog {
-  id       BigInt  @id @default(autoincrement()) @db.BigInt
-  userId   BigInt? @db.BigInt
-  username String? @db.VarChar(50)
-  module   String  @db.VarChar(50)
-  action   String  @db.VarChar(50)
-  method   String  @db.VarChar(10)
-  url      String  @db.VarChar(255)
-  params   String? @db.Text
+  id           BigInt   @id @default(autoincrement()) @db.BigInt
+  userId       BigInt?  @map("user_id") @db.BigInt
+  username     String?  @db.VarChar(50)
+  module       String   @db.VarChar(50)
+  action       String   @db.VarChar(50)
+  method       String   @db.VarChar(10)
+  url          String   @db.VarChar(255)
+  params       String?  @db.Text
   /// 耗时 ms
-  duration Int     @default(0)
+  duration     Int      @default(0)
   /// 1 成功 / 0 失败
-  result   Int     @db.TinyInt
-  errorMessage String? @db.VarChar(500)
-  ip       String? @db.VarChar(50)
-  createdAt DateTime @default(now())
+  result       Int      @db.TinyInt
+  errorMessage String?  @map("error_message") @db.VarChar(500)
+  ip           String?  @db.VarChar(50)
+  createdAt    DateTime @default(now()) @map("created_at")
 
   @@index([createdAt])
   @@map("sys_operation_log")
@@ -279,19 +298,19 @@ model HttpLog {
   time       DateTime @db.DateTime(3)
   method     String   @db.VarChar(10)
   url        String   @db.VarChar(1024)
-  statusCode Int      @db.SmallInt
+  statusCode Int      @map("status_code") @db.SmallInt
   duration   Int      @default(0) @db.Int
   ip         String?  @db.VarChar(64)
-  userAgent  String?  @db.VarChar(500)
+  userAgent  String?  @map("user_agent") @db.VarChar(500)
   /// 操作用户 id（0 为匿名/未登录）
-  userId     BigInt   @default(0) @db.BigInt
+  userId     BigInt   @default(0) @map("user_id") @db.BigInt
   username   String?  @db.VarChar(50)
   /// 所属部门 id 快照（0 为无）
-  deptId     BigInt   @default(0) @db.BigInt
-  deptName   String?  @db.VarChar(50)
+  deptId     BigInt   @default(0) @map("dept_id") @db.BigInt
+  deptName   String?  @map("dept_name") @db.VarChar(50)
   query      Json?
-  reqBody    String?  @db.Text
-  resBody    String?  @db.Text
+  reqBody    String?  @map("req_body") @db.Text
+  resBody    String?  @map("res_body") @db.Text
 
   @@index([time])
   @@index([method])

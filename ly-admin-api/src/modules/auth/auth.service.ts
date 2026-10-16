@@ -8,6 +8,7 @@ import { AppException } from '../../common/app.exception.js';
 import { AuthCacheService } from '../../common/auth-cache.service.js';
 import { CaptchaService } from '../../common/captcha.service.js';
 import { ERROR_MESSAGE, LogResult, Status } from '../../common/constants.js';
+import { lookupDeptName } from '../../common/dept-lookup.js';
 import { JwtService } from '../../common/jwt.service.js';
 import { TokenBlacklistService } from '../../common/token-blacklist.service.js';
 import { comparePassword } from '../../common/utils.js';
@@ -74,6 +75,15 @@ export class AuthService {
     };
   }
 
+  /**
+   * 组装 toUserBrief 所需的部门片段。
+   * sys_user.dept_id 不建外键（0 = 未分配），schema 中无 Prisma 关系，故按 deptId 显式补查。
+   */
+  private async deptRef(deptId: bigint): Promise<{ deptName: string } | null> {
+    const deptName = await lookupDeptName(this.prisma, deptId);
+    return deptName === null ? null : { deptName };
+  }
+
   /** 写入登录日志（失败不阻断）。 */
   private async writeLoginLog(
     username: string,
@@ -114,10 +124,7 @@ export class AuthService {
       throw AppException.badRequest('验证码错误或已过期');
     }
 
-    const user = await this.prisma.user.findUnique({
-      where: { username },
-      include: { dept: { select: { deptName: true } } },
-    });
+    const user = await this.prisma.user.findUnique({ where: { username } });
     if (!user) {
       await this.writeLoginLog(username, ip, userAgent, LogResult.FAIL, ERROR_MESSAGE.LOGIN_FAILED);
       throw AppException.unauthorized(ERROR_MESSAGE.LOGIN_FAILED);
@@ -143,7 +150,7 @@ export class AuthService {
     return {
       accessToken: await this.jwtService.signAccessToken(payload),
       refreshToken: await this.jwtService.signRefreshToken(payload),
-      user: this.toUserBrief(user),
+      user: this.toUserBrief({ ...user, dept: await this.deptRef(user.deptId) }),
     };
   }
 
@@ -191,15 +198,12 @@ export class AuthService {
     if (!ctx) {
       throw AppException.notFound('用户不存在');
     }
-    const user = await this.prisma.user.findUnique({
-      where: { id: BigInt(userId) },
-      include: { dept: { select: { deptName: true } } },
-    });
+    const user = await this.prisma.user.findUnique({ where: { id: BigInt(userId) } });
     if (!user) {
       throw AppException.notFound('用户不存在');
     }
     return {
-      user: this.toUserBrief(user),
+      user: this.toUserBrief({ ...user, dept: await this.deptRef(user.deptId) }),
       roles: ctx.roleCodes,
       permissions: ctx.permissions,
     };

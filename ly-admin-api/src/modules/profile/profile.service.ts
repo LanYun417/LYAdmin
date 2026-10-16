@@ -5,6 +5,7 @@
  */
 import { Injectable } from '@nestjs/common';
 import { AppException } from '../../common/app.exception.js';
+import { lookupDeptName } from '../../common/dept-lookup.js';
 import { comparePassword, hashPassword } from '../../common/utils.js';
 import type { UserBrief } from '../../common/types.js';
 import { AuthCacheService } from '../../common/auth-cache.service.js';
@@ -67,12 +68,18 @@ export class ProfileService {
     };
   }
 
+  /**
+   * 组装 toUserBrief 所需的部门片段。
+   * sys_user.dept_id 不建外键（0 = 未分配），schema 中无 Prisma 关系，故按 deptId 显式补查。
+   */
+  private async deptRef(deptId: bigint): Promise<{ deptName: string | null } | null> {
+    const deptName = await lookupDeptName(this.prisma, deptId);
+    return deptName === null ? null : { deptName };
+  }
+
   /** 修改个人资料。 */
   async updateProfile(userId: number, input: UpdateProfileInput): Promise<UserBrief> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: BigInt(userId) },
-      include: { dept: { select: { deptName: true } } },
-    });
+    const user = await this.prisma.user.findUnique({ where: { id: BigInt(userId) } });
     if (!user) {
       throw AppException.notFound('用户不存在');
     }
@@ -87,7 +94,12 @@ export class ProfileService {
       },
     });
     this.authCache.invalidate(userId);
-    return this.toUserBrief({ ...user, ...input, avatar: input.avatar || user.avatar });
+    return this.toUserBrief({
+      ...user,
+      ...input,
+      avatar: input.avatar || user.avatar,
+      dept: await this.deptRef(user.deptId),
+    });
   }
 
   /** 修改密码：校验原密码，写入新哈希并更新 passwordChangedAt（旧 Token 失效）。 */

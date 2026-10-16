@@ -268,7 +268,6 @@ export type DeptWhereInput = {
   email?: Prisma.StringNullableFilter<"Dept"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Dept"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Dept"> | Date | string
-  users?: Prisma.UserListRelationFilter
   roleDepts?: Prisma.RoleDeptListRelationFilter
 }
 
@@ -283,7 +282,6 @@ export type DeptOrderByWithRelationInput = {
   email?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
-  users?: Prisma.UserOrderByRelationAggregateInput
   roleDepts?: Prisma.RoleDeptOrderByRelationAggregateInput
   _relevance?: Prisma.DeptOrderByRelevanceInput
 }
@@ -302,7 +300,6 @@ export type DeptWhereUniqueInput = Prisma.AtLeast<{
   email?: Prisma.StringNullableFilter<"Dept"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Dept"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Dept"> | Date | string
-  users?: Prisma.UserListRelationFilter
   roleDepts?: Prisma.RoleDeptListRelationFilter
 }, "id">
 
@@ -351,7 +348,6 @@ export type DeptCreateInput = {
   email?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  users?: Prisma.UserCreateNestedManyWithoutDeptInput
   roleDepts?: Prisma.RoleDeptCreateNestedManyWithoutDeptInput
 }
 
@@ -366,7 +362,6 @@ export type DeptUncheckedCreateInput = {
   email?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  users?: Prisma.UserUncheckedCreateNestedManyWithoutDeptInput
   roleDepts?: Prisma.RoleDeptUncheckedCreateNestedManyWithoutDeptInput
 }
 
@@ -381,7 +376,6 @@ export type DeptUpdateInput = {
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  users?: Prisma.UserUpdateManyWithoutDeptNestedInput
   roleDepts?: Prisma.RoleDeptUpdateManyWithoutDeptNestedInput
 }
 
@@ -396,7 +390,6 @@ export type DeptUncheckedUpdateInput = {
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  users?: Prisma.UserUncheckedUpdateManyWithoutDeptNestedInput
   roleDepts?: Prisma.RoleDeptUncheckedUpdateManyWithoutDeptNestedInput
 }
 
@@ -437,11 +430,6 @@ export type DeptUncheckedUpdateManyInput = {
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-}
-
-export type DeptNullableScalarRelationFilter = {
-  is?: Prisma.DeptWhereInput | null
-  isNot?: Prisma.DeptWhereInput | null
 }
 
 export type DeptOrderByRelevanceInput = {
@@ -508,22 +496,6 @@ export type DeptScalarRelationFilter = {
   isNot?: Prisma.DeptWhereInput
 }
 
-export type DeptCreateNestedOneWithoutUsersInput = {
-  create?: Prisma.XOR<Prisma.DeptCreateWithoutUsersInput, Prisma.DeptUncheckedCreateWithoutUsersInput>
-  connectOrCreate?: Prisma.DeptCreateOrConnectWithoutUsersInput
-  connect?: Prisma.DeptWhereUniqueInput
-}
-
-export type DeptUpdateOneWithoutUsersNestedInput = {
-  create?: Prisma.XOR<Prisma.DeptCreateWithoutUsersInput, Prisma.DeptUncheckedCreateWithoutUsersInput>
-  connectOrCreate?: Prisma.DeptCreateOrConnectWithoutUsersInput
-  upsert?: Prisma.DeptUpsertWithoutUsersInput
-  disconnect?: Prisma.DeptWhereInput | boolean
-  delete?: Prisma.DeptWhereInput | boolean
-  connect?: Prisma.DeptWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.DeptUpdateToOneWithWhereWithoutUsersInput, Prisma.DeptUpdateWithoutUsersInput>, Prisma.DeptUncheckedUpdateWithoutUsersInput>
-}
-
 export type DeptCreateNestedOneWithoutRoleDeptsInput = {
   create?: Prisma.XOR<Prisma.DeptCreateWithoutRoleDeptsInput, Prisma.DeptUncheckedCreateWithoutRoleDeptsInput>
   connectOrCreate?: Prisma.DeptCreateOrConnectWithoutRoleDeptsInput
@@ -538,78 +510,6 @@ export type DeptUpdateOneRequiredWithoutRoleDeptsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.DeptUpdateToOneWithWhereWithoutRoleDeptsInput, Prisma.DeptUpdateWithoutRoleDeptsInput>, Prisma.DeptUncheckedUpdateWithoutRoleDeptsInput>
 }
 
-export type DeptCreateWithoutUsersInput = {
-  id?: bigint | number
-  parentId?: bigint | number
-  deptName: string
-  sort?: number
-  status?: number
-  leader?: string | null
-  phone?: string | null
-  email?: string | null
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  roleDepts?: Prisma.RoleDeptCreateNestedManyWithoutDeptInput
-}
-
-export type DeptUncheckedCreateWithoutUsersInput = {
-  id?: bigint | number
-  parentId?: bigint | number
-  deptName: string
-  sort?: number
-  status?: number
-  leader?: string | null
-  phone?: string | null
-  email?: string | null
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  roleDepts?: Prisma.RoleDeptUncheckedCreateNestedManyWithoutDeptInput
-}
-
-export type DeptCreateOrConnectWithoutUsersInput = {
-  where: Prisma.DeptWhereUniqueInput
-  create: Prisma.XOR<Prisma.DeptCreateWithoutUsersInput, Prisma.DeptUncheckedCreateWithoutUsersInput>
-}
-
-export type DeptUpsertWithoutUsersInput = {
-  update: Prisma.XOR<Prisma.DeptUpdateWithoutUsersInput, Prisma.DeptUncheckedUpdateWithoutUsersInput>
-  create: Prisma.XOR<Prisma.DeptCreateWithoutUsersInput, Prisma.DeptUncheckedCreateWithoutUsersInput>
-  where?: Prisma.DeptWhereInput
-}
-
-export type DeptUpdateToOneWithWhereWithoutUsersInput = {
-  where?: Prisma.DeptWhereInput
-  data: Prisma.XOR<Prisma.DeptUpdateWithoutUsersInput, Prisma.DeptUncheckedUpdateWithoutUsersInput>
-}
-
-export type DeptUpdateWithoutUsersInput = {
-  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  parentId?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  deptName?: Prisma.StringFieldUpdateOperationsInput | string
-  sort?: Prisma.IntFieldUpdateOperationsInput | number
-  status?: Prisma.IntFieldUpdateOperationsInput | number
-  leader?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  roleDepts?: Prisma.RoleDeptUpdateManyWithoutDeptNestedInput
-}
-
-export type DeptUncheckedUpdateWithoutUsersInput = {
-  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  parentId?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
-  deptName?: Prisma.StringFieldUpdateOperationsInput | string
-  sort?: Prisma.IntFieldUpdateOperationsInput | number
-  status?: Prisma.IntFieldUpdateOperationsInput | number
-  leader?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  roleDepts?: Prisma.RoleDeptUncheckedUpdateManyWithoutDeptNestedInput
-}
-
 export type DeptCreateWithoutRoleDeptsInput = {
   id?: bigint | number
   parentId?: bigint | number
@@ -621,7 +521,6 @@ export type DeptCreateWithoutRoleDeptsInput = {
   email?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  users?: Prisma.UserCreateNestedManyWithoutDeptInput
 }
 
 export type DeptUncheckedCreateWithoutRoleDeptsInput = {
@@ -635,7 +534,6 @@ export type DeptUncheckedCreateWithoutRoleDeptsInput = {
   email?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  users?: Prisma.UserUncheckedCreateNestedManyWithoutDeptInput
 }
 
 export type DeptCreateOrConnectWithoutRoleDeptsInput = {
@@ -665,7 +563,6 @@ export type DeptUpdateWithoutRoleDeptsInput = {
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  users?: Prisma.UserUpdateManyWithoutDeptNestedInput
 }
 
 export type DeptUncheckedUpdateWithoutRoleDeptsInput = {
@@ -679,7 +576,6 @@ export type DeptUncheckedUpdateWithoutRoleDeptsInput = {
   email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  users?: Prisma.UserUncheckedUpdateManyWithoutDeptNestedInput
 }
 
 
@@ -688,12 +584,10 @@ export type DeptUncheckedUpdateWithoutRoleDeptsInput = {
  */
 
 export type DeptCountOutputType = {
-  users: number
   roleDepts: number
 }
 
 export type DeptCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  users?: boolean | DeptCountOutputTypeCountUsersArgs
   roleDepts?: boolean | DeptCountOutputTypeCountRoleDeptsArgs
 }
 
@@ -705,13 +599,6 @@ export type DeptCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensi
    * Select specific fields to fetch from the DeptCountOutputType
    */
   select?: Prisma.DeptCountOutputTypeSelect<ExtArgs> | null
-}
-
-/**
- * DeptCountOutputType without action
- */
-export type DeptCountOutputTypeCountUsersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.UserWhereInput
 }
 
 /**
@@ -733,7 +620,6 @@ export type DeptSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   email?: boolean
   createdAt?: boolean
   updatedAt?: boolean
-  users?: boolean | Prisma.Dept$usersArgs<ExtArgs>
   roleDepts?: boolean | Prisma.Dept$roleDeptsArgs<ExtArgs>
   _count?: boolean | Prisma.DeptCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["dept"]>
@@ -755,7 +641,6 @@ export type DeptSelectScalar = {
 
 export type DeptOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "parentId" | "deptName" | "sort" | "status" | "leader" | "phone" | "email" | "createdAt" | "updatedAt", ExtArgs["result"]["dept"]>
 export type DeptInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  users?: boolean | Prisma.Dept$usersArgs<ExtArgs>
   roleDepts?: boolean | Prisma.Dept$roleDeptsArgs<ExtArgs>
   _count?: boolean | Prisma.DeptCountOutputTypeDefaultArgs<ExtArgs>
 }
@@ -763,11 +648,13 @@ export type DeptInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
 export type $DeptPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Dept"
   objects: {
-    users: Prisma.$UserPayload<ExtArgs>[]
     roleDepts: Prisma.$RoleDeptPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: bigint
+    /**
+     * 父级 id（0 表示顶级，故不建外键、也不声明 Prisma 自关联）
+     */
     parentId: bigint
     deptName: string
     sort: number
@@ -1117,7 +1004,6 @@ readonly fields: DeptFieldRefs;
  */
 export interface Prisma__DeptClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
-  users<T extends Prisma.Dept$usersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Dept$usersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   roleDepts<T extends Prisma.Dept$roleDeptsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Dept$roleDeptsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RoleDeptPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -1503,30 +1389,6 @@ export type DeptDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Internal
    * Limit how many Depts to delete.
    */
   limit?: number
-}
-
-/**
- * Dept.users
- */
-export type Dept$usersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the User
-   */
-  select?: Prisma.UserSelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the User
-   */
-  omit?: Prisma.UserOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.UserInclude<ExtArgs> | null
-  where?: Prisma.UserWhereInput
-  orderBy?: Prisma.UserOrderByWithRelationInput | Prisma.UserOrderByWithRelationInput[]
-  cursor?: Prisma.UserWhereUniqueInput
-  take?: number
-  skip?: number
-  distinct?: Prisma.UserScalarFieldEnum | Prisma.UserScalarFieldEnum[]
 }
 
 /**
