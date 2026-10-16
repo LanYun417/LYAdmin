@@ -11,7 +11,12 @@
  */
 const picomatch = require('picomatch');
 
-/** 不参与 lint / format 的供应商资源与生成产物。 */
+/** 不参与 lint / format 的供应商资源与生成产物。
+ *
+ * ⚠️ 模式必须以通配目录前缀（两个星号 + 斜杠）开头：lint-staged 传给任务函数的是
+ * 绝对路径（如 C:/Users/x/ly-admin/ly-admin-api/src/generated/prisma/models/User.ts），
+ * 若按仓库相对路径书写（ly-admin-api/src/generated 这种形式）将永远匹配不上、静默失效。
+ */
 const IGNORED_PATTERNS = [
   '**/node_modules/**',
   '**/dist/**',
@@ -19,18 +24,18 @@ const IGNORED_PATTERNS = [
   '**/build/**',
   '**/coverage/**',
   // Vditor 自托管供应商静态资源（保持上游原样）
-  'ly-admin-web/public/vditor/**',
+  '**/ly-admin-web/public/vditor/**',
   // 前端自动生成的类型声明（格式由 unplugin 插件决定）
-  'ly-admin-web/auto-imports.d.ts',
-  'ly-admin-web/components.d.ts',
+  '**/ly-admin-web/auto-imports.d.ts',
+  '**/ly-admin-web/components.d.ts',
   // Prisma 生成客户端（构建产物）
-  'ly-admin-api/src/generated/**',
+  '**/ly-admin-api/src/generated/**',
   // 运行时数据目录
-  'api/uploads/**',
-  'api/logs/**',
-  'ly-admin-api/uploads/**',
-  'ly-admin-api/logs/**',
-  'ly-admin-api/cache/**',
+  '**/api/uploads/**',
+  '**/api/logs/**',
+  '**/ly-admin-api/uploads/**',
+  '**/ly-admin-api/logs/**',
+  '**/ly-admin-api/cache/**',
 ];
 
 /** 单批最大文件数（经验值：40 条路径 × 最长约 120 字符 ≈ 5KB，远低于 32KB 上限）。 */
