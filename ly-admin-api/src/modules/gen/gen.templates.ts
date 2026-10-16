@@ -212,6 +212,35 @@ function maxLengthOf(col: GenColumn): number {
   return firstLength(col.columnType, 255);
 }
 
+/** 该列在 Prisma 侧是否为二进制（Bytes）。 */
+function isBinaryColumn(col: GenColumn): boolean {
+  return toPrismaType(col).scalar === 'Bytes';
+}
+
+/** 该列在 Prisma 侧是否为 Json。 */
+function isJsonColumn(col: GenColumn): boolean {
+  return toPrismaType(col).scalar === 'Json';
+}
+
+/**
+ * Decimal 列能否安全转成 JS number。
+ *
+ * IEEE 754 双精度最多精确表示 15~16 位有效十进制位，故声明精度超过 15 位的列转 number 会**静默丢精度**
+ * （如 `decimal(20,4)`）。这类列对外一律用字符串承载 —— Prisma 的 Decimal 入参本身就接受 string，
+ * 写入方向无需任何转换。
+ */
+const DECIMAL_SAFE_PRECISION = 15;
+
+/** 见 {@link DECIMAL_SAFE_PRECISION}。 */
+function decimalIsSafeNumber(col: GenColumn): boolean {
+  if (toPrismaType(col).scalar !== 'Decimal') {
+    return true;
+  }
+  // decimalArgs 形如 '10, 2'，取逗号前的精度部分
+  const precision = Number(decimalArgs(col.columnType).split(',')[0]);
+  return !Number.isFinite(precision) || precision <= DECIMAL_SAFE_PRECISION;
+}
+
 /* ------------------------------ 字段筛选工具 ------------------------------ */
 
 /** 参与新增/编辑的字段（排除主键、时间戳与二进制列——二进制走文件上传，不适合通用表单）。 */
@@ -228,7 +257,14 @@ function editableColumns(columns: GenColumn[]): GenColumn[] {
  */
 function queryColumns(columns: GenColumn[], exclude: string[] = []): GenColumn[] {
   return editableColumns(columns)
-    .filter((c) => (c.tsType === 'string' || c.tsType === 'number') && !exclude.includes(c.fieldName))
+    .filter(
+      (c) =>
+        (c.tsType === 'string' || c.tsType === 'number') &&
+        // Json 列必须排除：字符串模糊查询生成的是 `{ contains }`，而 Prisma 的 JsonFilter 没有
+        // contains（会直接编译不过）。需要按 JSON 内容筛选时人工改用 Prisma 的 json 过滤语法。
+        !isJsonColumn(c) &&
+        !exclude.includes(c.fieldName),
+    )
     .slice(0, 4);
 }
 
@@ -395,13 +431,20 @@ const VALIDATOR_NAMES = [
   'IsInt',
   'IsNotEmpty',
   'IsNumber',
+  'IsNumberString',
   'IsOptional',
   'IsString',
   'MaxLength',
   'Min',
 ];
 
-/** 对外 DTO 字段类型（BigInt / Decimal → number；Date → Date）。 */
+/**
+ * 对外 DTO 字段类型（BigInt / Decimal → number；Date → Date）。
+ *
+ * 两处例外：
+ * - 超过 {@link DECIMAL_SAFE_PRECISION} 位的 Decimal 用 string 承载（number 会丢精度）；
+ * - Json 列统一按 **JSON 字符串** 对外（见 `briefValueOf`），故类型为 string。
+ */
 function briefTypeOf(col: GenColumn, forceNumber: boolean): string {
   if (forceNumber) {
     return 'number';
@@ -412,8 +455,10 @@ function briefTypeOf(col: GenColumn, forceNumber: boolean): string {
     case 'BigInt':
     case 'Int':
     case 'Float':
-    case 'Decimal':
       base = 'number';
+      break;
+    case 'Decimal':
+      base = decimalIsSafeNumber(col) ? 'number' : 'string';
       break;
     case 'Boolean':
       base = 'boolean';
@@ -425,7 +470,7 @@ function briefTypeOf(col: GenColumn, forceNumber: boolean): string {
       base = 'Uint8Array';
       break;
     case 'Json':
-      base = 'unknown';
+      base = 'string';
       break;
     default:
       base = 'string';
@@ -466,29 +511,47 @@ function rowTypeOf(col: GenColumn): string {
   return col.isNullable && base !== 'unknown' ? `${base} | null` : base;
 }
 
-/** toBrief 取值表达式（BigInt / Decimal 转 number，避免 JSON 序列化失败）。 */
+/**
+ * toBrief 取值表达式。
+ *
+ * - BigInt：转 number（避免 JSON 序列化失败；主键为自增，不会超出安全整数范围）；
+ * - Decimal：安全精度内转 number，否则 `String()` 保留全部有效位；
+ * - Json：统一压平为 JSON 字符串（库里已是对象时 `JSON.stringify`，避免前端显示成 `[object Object]`）。
+ */
 function briefValueOf(col: GenColumn, forceNumber: boolean): string {
   const scalar = toPrismaType(col).scalar;
   if (forceNumber) {
     return `Number(row.${col.fieldName} ?? 0)`;
   }
-  if (scalar === 'BigInt' || scalar === 'Decimal') {
-    return col.isNullable
-      ? `row.${col.fieldName} === null ? null : Number(row.${col.fieldName})`
-      : `Number(row.${col.fieldName})`;
+  const nullSafe = (expr: string): string => (col.isNullable ? `row.${col.fieldName} === null ? null : ${expr}` : expr);
+
+  if (scalar === 'BigInt') {
+    return nullSafe(`Number(row.${col.fieldName})`);
+  }
+  if (scalar === 'Decimal') {
+    return decimalIsSafeNumber(col)
+      ? nullSafe(`Number(row.${col.fieldName})`)
+      : nullSafe(`String(row.${col.fieldName})`);
+  }
+  if (scalar === 'Json') {
+    return nullSafe(
+      `typeof row.${col.fieldName} === 'string' ? row.${col.fieldName} : JSON.stringify(row.${col.fieldName})`,
+    );
   }
   return `row.${col.fieldName}`;
 }
 
-/** DTO 字段的 TS 类型。 */
+/** DTO 字段的 TS 类型（须与 {@link briefTypeOf} 保持一致，否则同一字段读写类型不一致）。 */
 function dtoTypeOf(col: GenColumn): string {
   const scalar = toPrismaType(col).scalar;
   switch (scalar) {
     case 'BigInt':
     case 'Int':
     case 'Float':
-    case 'Decimal':
       return 'number';
+    case 'Decimal':
+      // 与对外类型一致：安全精度内为 number，超出则用字符串承载（避免往返丢精度）
+      return decimalIsSafeNumber(col) ? 'number' : 'string';
     case 'Boolean':
       return 'boolean';
     default:
@@ -521,8 +584,15 @@ function renderDtoField(col: GenColumn, mode: 'create' | 'update' | 'query', isP
         decorators.push('@IsInt({ message: MSG.isInt })');
         break;
       case 'Float':
-      case 'Decimal':
         decorators.push("@IsNumber({}, { message: '必须为数字' })");
+        break;
+      case 'Decimal':
+        // 高精度小数以字符串传输（见 decimalIsSafeNumber），故校验的是「数字字符串」
+        decorators.push(
+          decimalIsSafeNumber(col)
+            ? "@IsNumber({}, { message: '必须为数字' })"
+            : "@IsNumberString({}, { message: '必须为数字' })",
+        );
         break;
       case 'Boolean':
         decorators.push('@IsBoolean({ message: MSG.isBoolean })');
@@ -531,6 +601,9 @@ function renderDtoField(col: GenColumn, mode: 'create' | 'update' | 'query', isP
         decorators.push("@IsDateString({ message: '日期格式不正确' })");
         break;
       case 'Json':
+        // Json 列按 JSON 字符串存取（与 briefTypeOf 的 string 一致）：非字符串直接拒绝，
+        // 避免 body 里传对象时被隐式转换成 `[object Object]` 再入库
+        decorators.push('@IsString({ message: MSG.isString })');
         break;
       default: {
         decorators.push('@IsString({ message: MSG.isString })', '@Transform(trim)');
@@ -678,6 +751,16 @@ function renderNestService(config: GenConfig, columns: GenColumn[], cnName: stri
   const parentField = parent?.fieldName ?? '';
   const parentBigInt = parent ? isBigIntColumn(parent) : false;
   const parentArg = (expr: string): string => (parentBigInt ? `BigInt(${expr})` : expr);
+
+  /**
+   * 二进制列（Bytes）不进响应体，也不参与通用表单：
+   * Prisma 的 Bytes 会被 JSON 序列化成 `{"0":137,"1":80,...}` 的字节下标对象（既没用又会撑爆响应），
+   * 而且查询时不排除的话会把整个 blob 读进内存。内容一律走文件上传（见 sys_file）。
+   */
+  const binaryColumns = columns.filter((col) => isBinaryColumn(col));
+  /** 参与 toBrief / 查询的列（排除二进制列）。 */
+  const briefColumns = columns.filter((col) => !isBinaryColumn(col));
+
   const query = queryColumns(columns, parentField ? [parentField] : []);
   const editable = editableColumns(columns);
   const parentKey = 'parentId';
@@ -685,7 +768,7 @@ function renderNestService(config: GenConfig, columns: GenColumn[], cnName: stri
 
   // brief 字段（树形表补充 buildTree 所需的 parentId）
   const briefFields = [
-    ...columns.map((col) => ({
+    ...briefColumns.map((col) => ({
       field: col.fieldName,
       type: briefTypeOf(col, parentField !== '' && col.fieldName === parentField),
       value: briefValueOf(col, parentField !== '' && col.fieldName === parentField),
@@ -697,7 +780,7 @@ function renderNestService(config: GenConfig, columns: GenColumn[], cnName: stri
 
   const rowShape = [
     '  private toBrief(row: {',
-    ...columns.map((col) => `    ${col.fieldName}: ${rowTypeOf(col)};`),
+    ...briefColumns.map((col) => `    ${col.fieldName}: ${rowTypeOf(col)};`),
     '  }): ' + `${cls}Brief {`,
   ];
 
@@ -733,6 +816,18 @@ function renderNestService(config: GenConfig, columns: GenColumn[], cnName: stri
   );
   const whereBlock = query.length > 0 ? [`    const where = {`, ...whereEntries, `    };`] : [`    const where = {};`];
 
+  /** 有二进制列时：类外声明 omit 常量（Prisma 的 omit 让这些列不出现在查询结果里）。 */
+  const omitBlock =
+    binaryColumns.length > 0
+      ? [
+          `/** 二进制列不参与查询：避免把 blob 读进内存，也不会出现在响应体里（Prisma omit）。 */`,
+          `const OMIT_BINARY = { ${binaryColumns.map((col) => `${col.fieldName}: true`).join(', ')} } as const;`,
+          ``,
+        ]
+      : [];
+  /** 查询参数里的 omit 片段（无二进制列时为空数组，保证无 blob 的表生成物不变）。 */
+  const omitArg = binaryColumns.length > 0 ? [`      omit: OMIT_BINARY,`] : [];
+
   const listBlock = parent
     ? [
         `  /**`,
@@ -743,7 +838,15 @@ function renderNestService(config: GenConfig, columns: GenColumn[], cnName: stri
         ...(query.length > 0 ? [`    const params: Record<string, unknown> = { ...query };`] : []),
         ...whereLines,
         ...whereBlock,
-        `    const rows = await this.prisma.${accessor}.findMany({ where, orderBy: { ${pkField}: 'asc' } });`,
+        ...(omitArg.length > 0
+          ? [
+              `    const rows = await this.prisma.${accessor}.findMany({`,
+              `      where,`,
+              `      orderBy: { ${pkField}: 'asc' },`,
+              ...omitArg,
+              `    });`,
+            ]
+          : [`    const rows = await this.prisma.${accessor}.findMany({ where, orderBy: { ${pkField}: 'asc' } });`]),
         `    return buildTree(rows.map((row) => this.toBrief(row)));`,
         `  }`,
       ]
@@ -762,6 +865,7 @@ function renderNestService(config: GenConfig, columns: GenColumn[], cnName: stri
         `      orderBy: { ${pkField}: 'desc' },`,
         `      skip: offset,`,
         `      take: limit,`,
+        ...omitArg,
         `    });`,
         `    const count = await this.prisma.${accessor}.count({ where });`,
         `    return buildPageResult(`,
@@ -838,6 +942,7 @@ function renderNestService(config: GenConfig, columns: GenColumn[], cnName: stri
     ``,
     ...briefBlock,
     ``,
+    ...omitBlock,
     `@Injectable()`,
     `export class ${cls}Service {`,
     `  constructor(private readonly prisma: PrismaService) {}`,
@@ -851,7 +956,14 @@ function renderNestService(config: GenConfig, columns: GenColumn[], cnName: stri
     `   * @param id 主键`,
     `   */`,
     `  async detail(id: number): Promise<${cls}Brief> {`,
-    `    const row = await this.prisma.${accessor}.findUnique({ where: { ${pkField}: ${idArg} } });`,
+    ...(omitArg.length > 0
+      ? [
+          `    const row = await this.prisma.${accessor}.findUnique({`,
+          `      where: { ${pkField}: ${idArg} },`,
+          ...omitArg,
+          `    });`,
+        ]
+      : [`    const row = await this.prisma.${accessor}.findUnique({ where: { ${pkField}: ${idArg} } });`]),
     `    if (!row) {`,
     `      throw AppException.notFound('记录不存在');`,
     `    }`,
@@ -868,6 +980,7 @@ function renderNestService(config: GenConfig, columns: GenColumn[], cnName: stri
     `      data: {`,
     ...editable.map((c) => `        ${c.fieldName}: ${createDataExpr(c, c.fieldName === parentField)},`),
     `      },`,
+    ...omitArg,
     `    });`,
     `    return this.toBrief(row);`,
     `  }`,
@@ -888,6 +1001,7 @@ function renderNestService(config: GenConfig, columns: GenColumn[], cnName: stri
     `      data: {`,
     ...editable.map((c) => `        ${c.fieldName}: ${updateDataExpr(c)},`),
     `      },`,
+    ...omitArg,
     `    });`,
     `    return this.toBrief(row);`,
     `  }`,
@@ -1416,6 +1530,14 @@ function renderReadme(config: GenConfig, columns: GenColumn[], tableComment: str
   const dictTypes = usedDictTypes(columns);
   const customDictTypes = dictTypes.filter((t) => t !== BUILTIN_STATUS_DICT);
   const unknownTypes = unknownTypeNames(columns);
+  /** 二进制列：已从响应体与通用表单排除，需人工走文件上传。 */
+  const binaryCols = columns.filter((col) => isBinaryColumn(col));
+  /** 超出安全精度的小数列：对外按字符串传输。 */
+  const highPrecisionDecimals = columns.filter(
+    (col) => toPrismaType(col).scalar === 'Decimal' && !decimalIsSafeNumber(col),
+  );
+  /** Json 列：按 JSON 字符串存取。 */
+  const jsonCols = columns.filter((col) => isJsonColumn(col));
   /** 控件类型的中文名，用于字段清单 */
   const htmlTypeLabel: Record<GenColumn['htmlType'], string> = {
     input: '输入框',
@@ -1450,6 +1572,29 @@ function renderReadme(config: GenConfig, columns: GenColumn[], tableComment: str
     stepBodies.push(
       `**⚠️ 类型核对**：以下列的 MySQL 类型无法可靠映射为 Prisma 类型，已兜底为 \`String @db.VarChar(255)\`，` +
         `请人工确认并修正：${unknownTypes.join('、')}`,
+    );
+  }
+  if (binaryCols.length > 0) {
+    stepBodies.push(
+      `**⚠️ 二进制列已排除**：${binaryCols.map((col) => col.columnName).join('、')} 为 blob / binary 类型，` +
+        `已从列表与详情响应、通用表单中排除（查询走 Prisma \`omit\`，不会把内容读进内存）——` +
+        `否则会被 JSON 序列化成 \`{"0":137,"1":80,…}\` 的字节下标对象。` +
+        `如需在页面展示或上传，请参考文件管理（sys_file）用独立的上传/下载接口；` +
+        `若该列是 NOT NULL 且无默认值，新增前需人工补默认值或改由上传流程写入`,
+    );
+  }
+  if (highPrecisionDecimals.length > 0) {
+    stepBodies.push(
+      `**高精度小数按字符串传输**：${highPrecisionDecimals.map((col) => col.columnName).join('、')} 的声明精度超过 15 位，` +
+        `对外统一用字符串承载（JS number 只能精确表示约 15~16 位有效数字，直接转会静默丢精度）；` +
+        `写入方向 Prisma 的 Decimal 入参本身接受字符串，无需转换`,
+    );
+  }
+  if (jsonCols.length > 0) {
+    stepBodies.push(
+      `**Json 列按 JSON 字符串存取**：${jsonCols.map((col) => col.columnName).join('、')} 在通用表单里是普通输入框，` +
+        `库中存储的是 JSON 字符串（读出来同样是字符串，往返一致）。` +
+        `如需结构化编辑或格式校验，请自行替换为 JSON 编辑器控件并在提交前校验合法性`,
     );
   }
   stepBodies.push(
