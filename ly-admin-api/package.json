@@ -21,6 +21,8 @@
     "test:e2e": "vitest run --config ./vitest.config.e2e.ts",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
+    "prisma:comments": "tsx scripts/prisma-comments.ts",
+    "prisma:comments:check": "tsx scripts/prisma-comments.ts --check",
     "prisma:studio": "prisma studio",
     "seed": "tsx prisma/seed.ts"
   },

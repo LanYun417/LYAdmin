@@ -25,6 +25,16 @@
 // - 原 `INT UNSIGNED` / `SMALLINT UNSIGNED` 列（File.size、HttpLog.statusCode、HttpLog.duration）
 //   在 Prisma 的 MySQL connector 中不支持 unsigned 原生类型，改用有符号 Int。
 //   三者均为非负语义（文件字节数、HTTP 状态码、耗时毫秒），且应用层已做上界校验，行为等价。
+//
+// 文档注释（`///`）与数据库 COMMENT 的关系（重要）：
+// - `///` 是 Prisma 的 schema 级文档注释，只进 DMMF 与 Prisma Client 的 JSDoc，**不会写进数据库**：
+//   `prisma db push` 不带注释、`prisma db pull` 也读不回（已实测）。
+// - 表/字段的数据库 COMMENT 由 `npm run prisma:comments`（scripts/prisma-comments.ts）从本文件的
+//   `///` 生成 DDL 同步到库，幂等、可重复执行；`npm run prisma:comments:check` 检查是否漂移（CI 友好）。
+// - 因此**改表/字段说明请改本文件的 `///`**，改完执行同步命令。`db push --force-reset` 会重建表
+//   并清空注释，重建后重新执行 `npm run prisma:comments` 即可恢复。
+// - 这些注释并非装饰：代码生成器（tool:gen）从 information_schema 读 TABLE_COMMENT / COLUMN_COMMENT
+//   作为业务名与表单字段标签，缺失时生成物会退化为英文列名。
 
 generator client {
   provider     = "prisma-client"
@@ -49,22 +59,35 @@ datasource db {
 
 /// 用户表
 model User {
+  /// 主键
   id                BigInt    @id @default(autoincrement()) @db.BigInt
+  /// 登录账号
   username          String    @unique @db.VarChar(50)
+  /// bcrypt 哈希
   password          String    @db.VarChar(100)
+  /// 昵称
   nickname          String    @default("") @db.VarChar(50)
+  /// 头像 URL
   avatar            String?   @db.VarChar(255)
+  /// 邮箱
   email             String?   @db.VarChar(100)
+  /// 手机号
   phone             String?   @db.VarChar(20)
   /// 性别（字典 sys_user_sex），字符串存储以便字典值扩展
   gender            String?   @db.VarChar(20)
+  /// 1 启用 / 0 禁用
   status            Int       @default(1) @db.TinyInt
+  /// 最后登录时间
   lastLoginAt       DateTime? @map("last_login_at")
+  /// 密码最后修改时间
   passwordChangedAt DateTime? @map("password_changed_at")
+  /// 备注
   remark            String?   @db.VarChar(255)
   /// 部门 id（0 表示未分配，故不建外键、也不声明 Prisma 关系）
   deptId            BigInt    @default(0) @map("dept_id") @db.BigInt
+  /// 创建时间
   createdAt         DateTime  @default(now()) @map("created_at")
+  /// 更新时间
   updatedAt         DateTime  @updatedAt @map("updated_at")
 
   /// 经中间表 UserRole 的直接角色关联。
@@ -80,15 +103,23 @@ model User {
 
 /// 角色表
 model Role {
+  /// 主键
   id        BigInt   @id @default(autoincrement()) @db.BigInt
+  /// 角色名称
   roleName  String   @map("role_name") @db.VarChar(50)
+  /// 角色编码
   roleCode  String   @unique @map("role_code") @db.VarChar(50)
+  /// 排序
   sort      Int      @default(0)
+  /// 1 启用 / 0 禁用
   status    Int      @default(1) @db.TinyInt
   /// 数据权限范围：1 全部 / 2 自定义部门 / 3 本部门及以下 / 4 仅本人
   dataScope Int      @default(1) @map("data_scope") @db.TinyInt
+  /// 备注
   remark    String?  @db.VarChar(255)
+  /// 创建时间
   createdAt DateTime @default(now()) @map("created_at")
+  /// 更新时间
   updatedAt DateTime @updatedAt @map("updated_at")
 
   /// 同样只走显式中间表（见 User 模型上的说明，勿改回隐式多对多）
@@ -101,24 +132,35 @@ model Role {
 
 /// 菜单权限表
 model Menu {
+  /// 主键
   id         BigInt   @id @default(autoincrement()) @db.BigInt
   /// 父级 id（0 表示根节点，故不建外键、也不声明 Prisma 自关联）
   parentId   BigInt   @default(0) @map("parent_id") @db.BigInt
+  /// 菜单名称
   menuName   String   @map("menu_name") @db.VarChar(50)
   /// M 目录 / C 菜单 / F 按钮
   menuType   String   @map("menu_type") @db.Char(1)
+  /// 路由路径
   path       String?  @db.VarChar(200)
+  /// 组件路径
   component  String?  @db.VarChar(255)
+  /// 图标
   icon       String?  @db.VarChar(100)
+  /// 权限标识
   permission String?  @db.VarChar(100)
+  /// 排序
   sort       Int      @default(0)
   /// 1 显示 / 0 隐藏
   visible    Int      @default(1) @db.TinyInt
+  /// 1 启用 / 0 禁用
   status     Int      @default(1) @db.TinyInt
+  /// 重定向
   redirect   String?  @db.VarChar(255)
   /// 1 缓存 / 0 不缓存
   keepAlive  Int      @default(0) @map("keep_alive") @db.TinyInt
+  /// 创建时间
   createdAt  DateTime @default(now()) @map("created_at")
+  /// 更新时间
   updatedAt  DateTime @updatedAt @map("updated_at")
 
   roleMenus RoleMenu[]
@@ -129,16 +171,25 @@ model Menu {
 
 /// 部门表
 model Dept {
+  /// 主键
   id        BigInt   @id @default(autoincrement()) @db.BigInt
   /// 父级 id（0 表示顶级，故不建外键、也不声明 Prisma 自关联）
   parentId  BigInt   @default(0) @map("parent_id") @db.BigInt
+  /// 部门名称
   deptName  String   @map("dept_name") @db.VarChar(50)
+  /// 排序
   sort      Int      @default(0)
+  /// 1 启用 / 0 禁用
   status    Int      @default(1) @db.TinyInt
+  /// 部门负责人
   leader    String?  @db.VarChar(20)
+  /// 联系电话
   phone     String?  @db.VarChar(20)
+  /// 邮箱
   email     String?  @db.VarChar(100)
+  /// 创建时间
   createdAt DateTime @default(now()) @map("created_at")
+  /// 更新时间
   updatedAt DateTime @updatedAt @map("updated_at")
 
   roleDepts RoleDept[]
@@ -149,8 +200,11 @@ model Dept {
 
 /// 用户角色关联表
 model UserRole {
+  /// 主键
   id     BigInt @id @default(autoincrement()) @db.BigInt
+  /// 用户 id
   userId BigInt @map("user_id") @db.BigInt
+  /// 角色 id
   roleId BigInt @map("role_id") @db.BigInt
 
   user User @relation(fields: [userId], references: [id])
@@ -163,8 +217,11 @@ model UserRole {
 
 /// 角色菜单关联表
 model RoleMenu {
+  /// 主键
   id     BigInt @id @default(autoincrement()) @db.BigInt
+  /// 角色 id
   roleId BigInt @map("role_id") @db.BigInt
+  /// 菜单 id
   menuId BigInt @map("menu_id") @db.BigInt
 
   role Role @relation(fields: [roleId], references: [id])
@@ -177,8 +234,11 @@ model RoleMenu {
 
 /// 角色数据权限部门关联表（承载 data_scope=2 的自定义部门集合）
 model RoleDept {
+  /// 主键
   id     BigInt @id @default(autoincrement()) @db.BigInt
+  /// 角色 id
   roleId BigInt @map("role_id") @db.BigInt
+  /// 部门 id
   deptId BigInt @map("dept_id") @db.BigInt
 
   role Role @relation(fields: [roleId], references: [id])
@@ -191,13 +251,19 @@ model RoleDept {
 
 /// 字典类型表
 model DictType {
+  /// 主键
   id        BigInt   @id @default(autoincrement()) @db.BigInt
+  /// 字典名称（展示用）
   dictName  String   @map("dict_name") @db.VarChar(100)
   /// 字典类型编码（业务引用键，创建后不可修改）
   dictType  String   @unique @map("dict_type") @db.VarChar(100)
+  /// 1 启用 / 0 禁用
   status    Int      @default(1) @db.TinyInt
+  /// 备注
   remark    String?  @db.VarChar(255)
+  /// 创建时间
   createdAt DateTime @default(now()) @map("created_at")
+  /// 更新时间
   updatedAt DateTime @updatedAt @map("updated_at")
 
   items DictItem[]
@@ -207,14 +273,23 @@ model DictType {
 
 /// 字典项表（通过 dict_type 字符串关联类型编码，删除类型时级联）
 model DictItem {
+  /// 主键
   id        BigInt   @id @default(autoincrement()) @db.BigInt
+  /// 所属字典类型编码
   dictType  String   @map("dict_type") @db.VarChar(100)
+  /// 字典标签（展示文案）
   dictLabel String   @map("dict_label") @db.VarChar(100)
+  /// 字典值（业务存储值）
   dictValue String   @map("dict_value") @db.VarChar(100)
+  /// 排序（升序）
   sort      Int      @default(0)
+  /// 1 启用 / 0 禁用
   status    Int      @default(1) @db.TinyInt
+  /// 备注
   remark    String?  @db.VarChar(255)
+  /// 创建时间
   createdAt DateTime @default(now()) @map("created_at")
+  /// 更新时间
   updatedAt DateTime @updatedAt @map("updated_at")
 
   dictTypeInfo DictType @relation(fields: [dictType], references: [dictType], onDelete: Cascade, onUpdate: Cascade)
@@ -225,15 +300,21 @@ model DictItem {
 
 /// 系统参数表
 model SysConfig {
+  /// 主键
   id          BigInt   @id @default(autoincrement()) @db.BigInt
+  /// 参数名称（展示用）
   configName  String   @map("config_name") @db.VarChar(100)
   /// 参数键名（业务引用键，创建后不可修改）
   configKey   String   @unique @map("config_key") @db.VarChar(100)
+  /// 参数键值
   configValue String   @default("") @map("config_value") @db.VarChar(500)
   /// 是否内置：1 内置 / 0 自定义
   systemFlag  Int      @default(0) @map("system_flag") @db.TinyInt
+  /// 备注
   remark      String?  @db.VarChar(255)
+  /// 创建时间
   createdAt   DateTime @default(now()) @map("created_at")
+  /// 更新时间
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   @@map("sys_config")
@@ -241,16 +322,25 @@ model SysConfig {
 
 /// 文件表
 model File {
+  /// 主键
   id         BigInt   @id @default(autoincrement()) @db.BigInt
+  /// 原始文件名
   originName String   @map("origin_name") @db.VarChar(255)
+  /// 存储文件名
   fileName   String   @map("file_name") @db.VarChar(255)
+  /// 磁盘相对路径
   filePath   String   @map("file_path") @db.VarChar(500)
+  /// 访问 URL
   fileUrl    String   @map("file_url") @db.VarChar(500)
+  /// MIME
   mimeType   String   @map("mime_type") @db.VarChar(100)
+  /// 字节
   size       Int      @default(0) @db.Int
   /// SHA-256 内容哈希（秒传/去重依据）
   hash       String?  @db.VarChar(64)
+  /// 上传人 id
   uploaderId BigInt?  @map("uploader_id") @db.BigInt
+  /// 创建时间
   createdAt  DateTime @default(now()) @map("created_at")
 
   @@index([hash])
@@ -259,13 +349,19 @@ model File {
 
 /// 登录日志表
 model LoginLog {
+  /// 主键
   id        BigInt   @id @default(autoincrement()) @db.BigInt
+  /// 登录账号
   username  String   @db.VarChar(50)
+  /// 客户端 IP
   ip        String?  @db.VarChar(50)
+  /// User-Agent
   userAgent String?  @map("user_agent") @db.VarChar(500)
   /// 1 成功 / 0 失败
   status    Int      @db.TinyInt
+  /// 结果描述
   message   String?  @db.VarChar(255)
+  /// 登录时间
   loginAt   DateTime @default(now()) @map("login_at")
 
   @@index([loginAt])
@@ -274,20 +370,31 @@ model LoginLog {
 
 /// 操作日志表
 model OperationLog {
+  /// 主键
   id           BigInt   @id @default(autoincrement()) @db.BigInt
+  /// 操作人 id
   userId       BigInt?  @map("user_id") @db.BigInt
+  /// 操作人账号
   username     String?  @db.VarChar(50)
+  /// 模块
   module       String   @db.VarChar(50)
+  /// 动作
   action       String   @db.VarChar(50)
+  /// HTTP 方法
   method       String   @db.VarChar(10)
+  /// 请求 URL
   url          String   @db.VarChar(255)
+  /// 请求参数（密码脱敏）
   params       String?  @db.Text
   /// 耗时 ms
   duration     Int      @default(0)
   /// 1 成功 / 0 失败
   result       Int      @db.TinyInt
+  /// 失败信息
   errorMessage String?  @map("error_message") @db.VarChar(500)
+  /// 客户端 IP
   ip           String?  @db.VarChar(50)
+  /// 创建时间
   createdAt    DateTime @default(now()) @map("created_at")
 
   @@index([createdAt])
@@ -296,22 +403,35 @@ model OperationLog {
 
 /// HTTP 访问日志表（页面查询用；操作者为写入时快照，不与 sys_user 建外键）
 model HttpLog {
+  /// 主键
   id         BigInt   @id @default(autoincrement()) @db.BigInt
+  /// 请求完成时间（本地时区 +08:00）
   time       DateTime @db.DateTime(3)
+  /// HTTP 方法
   method     String   @db.VarChar(10)
+  /// 请求 URL（含 query）
   url        String   @db.VarChar(1024)
+  /// HTTP 状态码
   statusCode Int      @map("status_code") @db.SmallInt
+  /// 耗时 ms
   duration   Int      @default(0) @db.Int
+  /// 客户端 IP
   ip         String?  @db.VarChar(64)
+  /// User-Agent
   userAgent  String?  @map("user_agent") @db.VarChar(500)
   /// 操作用户 id（0 为匿名/未登录）
   userId     BigInt   @default(0) @map("user_id") @db.BigInt
+  /// 操作账号（快照）
   username   String?  @db.VarChar(50)
   /// 所属部门 id 快照（0 为无）
   deptId     BigInt   @default(0) @map("dept_id") @db.BigInt
+  /// 所属部门名称（快照）
   deptName   String?  @map("dept_name") @db.VarChar(50)
+  /// 查询参数（已脱敏）
   query      Json?
+  /// 请求体（已脱敏、截断 2KB）
   reqBody    String?  @map("req_body") @db.Text
+  /// 响应内容（截断 2KB；二进制为占位）
   resBody    String?  @map("res_body") @db.Text
 
   @@index([time])
