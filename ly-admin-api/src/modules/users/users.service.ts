@@ -92,17 +92,23 @@ export class UsersService {
 
   /** 按 id 查询用户（含角色；部门名按 deptId 显式补查，sys_user.dept_id 无外键与 Prisma 关系）。 */
   private async findUserWithRoles(id: number): Promise<UserWithRelations | null> {
+    // 角色经显式中间表 sys_user_role 读取（userRoles → role）；
+    // 不要用隐式多对多 `roles`（Prisma 会另建 _userroles 表，与业务写入的表不通，读出来恒为空）
     const user = await this.prisma.user.findUnique({
       where: { id: BigInt(id) },
       include: {
-        roles: { select: { id: true, roleName: true, roleCode: true } },
+        userRoles: { include: { role: { select: { id: true, roleName: true, roleCode: true } } } },
       },
     });
     if (!user) {
       return null;
     }
     const deptName = await lookupDeptName(this.prisma, user.deptId);
-    return { ...user, dept: deptName === null ? null : { deptName } } as unknown as UserWithRelations;
+    return {
+      ...user,
+      roles: user.userRoles.map((link) => link.role),
+      dept: deptName === null ? null : { deptName },
+    } as unknown as UserWithRelations;
   }
 
   /** 同步用户角色（先清后建，去重）。 */
@@ -158,7 +164,7 @@ export class UsersService {
       this.prisma.user.findMany({
         where,
         include: {
-          roles: { select: { id: true, roleName: true, roleCode: true } },
+          userRoles: { include: { role: { select: { id: true, roleName: true, roleCode: true } } } },
         },
         orderBy: { id: 'desc' },
         skip: offset,
@@ -167,8 +173,12 @@ export class UsersService {
       this.prisma.user.count({ where }),
     ]);
 
-    // 部门名批量补查（sys_user.dept_id 无外键与 Prisma 关系，避免逐行查询造成 N+1）
-    const list = rows as unknown as UserWithRelations[];
+    // 组装：角色来自显式中间表（userRoles → role），部门名批量补查
+    // （sys_user.dept_id 无外键与 Prisma 关系，批量查避免逐行 N+1）
+    const list = rows.map((row) => ({
+      ...row,
+      roles: row.userRoles.map((link) => link.role),
+    })) as unknown as UserWithRelations[];
     const deptNames = await lookupDeptNames(
       this.prisma,
       list.map((row) => row.deptId),

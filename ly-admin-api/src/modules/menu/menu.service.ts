@@ -72,7 +72,9 @@ export class MenuService {
         status: Status.ENABLED,
         menuType: { in: [MenuType.DIRECTORY, MenuType.MENU] },
         // 超管不加此条件（看全部启用菜单）
-        ...(isSuperAdmin ? {} : { roles: { some: { id: { in: roleIds } } } }),
+        // 角色过滤走显式中间表 sys_role_menu（Menu 上不存在 roles 关系，
+        // 写成 roles: { some } 类型检查不报错、运行期会抛 Unknown argument）
+        ...(isSuperAdmin ? {} : { roleMenus: { some: { roleId: { in: roleIds.map((roleId) => BigInt(roleId)) } } } }),
       },
       orderBy: [{ sort: 'asc' }, { id: 'asc' }],
     });

@@ -29,10 +29,12 @@ export class AuthUserService {
       return [];
     }
     // 只取启用菜单的 permission；不限 menuType（含 F 按钮节点）
+    // 角色过滤走显式中间表 sys_role_menu（role_menu.role_id）—— Menu 上不存在 roles 关系，
+    // 若写成 `roles: { some: ... }` 类型检查不会报错，但运行期 Prisma 会抛「Unknown argument」
     const menus = await this.prisma.menu.findMany({
       where: {
         status: Status.ENABLED,
-        roles: { some: { id: { in: roleIds } } },
+        roleMenus: { some: { roleId: { in: roleIds.map((roleId) => BigInt(roleId)) } } },
       },
       select: { permission: true },
     });
@@ -59,12 +61,12 @@ export class AuthUserService {
       return cached;
     }
 
-    // 顺带加载部门名：供个人中心展示与 HTTP 访问日志的部门快照使用
-    // （sys_user.dept_id 不建外键、schema 中无 Prisma 关系，故按 deptId 显式补查）
+    // 角色经显式中间表 sys_user_role 读取（userRoles → role）；
+    // 不要用隐式多对多 `roles`：它读的是 Prisma 自建的 _userroles 表，与业务写入的表不通
     const user = await this.prisma.user.findUnique({
       where: { id: BigInt(userId) },
       include: {
-        roles: { select: { id: true, roleCode: true } },
+        userRoles: { include: { role: { select: { id: true, roleCode: true } } } },
       },
     });
     if (!user) {
@@ -72,7 +74,7 @@ export class AuthUserService {
     }
     const deptName = await lookupDeptName(this.prisma, user.deptId);
 
-    const roles = user.roles ?? [];
+    const roles = user.userRoles.map((link) => link.role);
     const roleCodes = roles.map((role) => role.roleCode);
     const roleIds = roles.map((role) => Number(role.id));
     const permissions = await this.collectPermissions(roleCodes, roleIds);

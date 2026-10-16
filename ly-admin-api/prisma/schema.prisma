@@ -67,9 +67,11 @@ model User {
   createdAt         DateTime  @default(now()) @map("created_at")
   updatedAt         DateTime  @updatedAt @map("updated_at")
 
-  /// 经中间表 UserRole 的直接角色关联（对齐原 Sequelize 的 `user.roles`）
-  roles     Role[]     @relation("UserRoles")
-  /// 中间表原始记录（用于清理与统计）
+  /// 经中间表 UserRole 的直接角色关联。
+  /// ⚠️ 必须走显式中间表 `sys_user_role`（`userRoles.role`），**不要**改回隐式多对多：
+  ///    隐式 `Role[]` 关系会让 Prisma 另建一张 `_userroles` 表，而业务与旧后端读写的是
+  ///    `sys_user_role`，两者不通——表现为角色恒为空、权限码为空、所有带权限码的接口 403、
+  ///    前端菜单树为空（2026-10-16 实际踩过）。
   userRoles UserRole[]
 
   @@index([deptId])
@@ -89,7 +91,7 @@ model Role {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  users     User[]     @relation("UserRoles")
+  /// 同样只走显式中间表（见 User 模型上的说明，勿改回隐式多对多）
   userRoles UserRole[]
   roleMenus RoleMenu[]
   roleDepts RoleDept[]
