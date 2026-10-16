@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="admin/src/assets/logo.svg" alt="LYAdmin 蓝云后台管理系统" width="480">
+  <img src="ly-admin-web/src/assets/logo.svg" alt="LYAdmin 蓝云后台管理系统" width="480">
 </p>
 
 <p align="center"><em>开箱即用的通用后台管理基座</em></p>
@@ -186,22 +186,23 @@ CREATE DATABASE IF NOT EXISTS `ly_admin`
   DEFAULT COLLATE utf8mb4_general_ci;
 ```
 
-> 表结构由后端首次启动时 `sequelize.sync()` **自动创建**，无需手工建表；既有库的字段演进由种子里的幂等迁移自动补齐。
+> 表结构**不再由后端启动时自动创建**（Prisma 7 不提供运行时 DDL），首次需执行一次 `npm run prisma:push` 建表；
+> 种子数据则在每次服务启动时**幂等**执行（对齐原版 `server.ts` 的 `await runSeed()`），也可用 `npm run seed` 手动执行。
 
 ### 2. 安装依赖
 
 根依赖（工程规范工具 + husky 钩子）**务必先装**：
 
 ```bash
-npm install            # 根目录
-cd api && npm install  # 后端
-cd ../admin && npm install  # 前端
+npm install                        # 根目录
+cd ly-admin-api && npm install     # 后端（NestJS 12 + Prisma 7）
+cd ../ly-admin-web && npm install  # 前端（Vue 3 + Vite）
 ```
 
 ### 3. 配置环境变量
 
 ```bash
-cd api
+cd ly-admin-api
 cp .env.example .env
 ```
 
@@ -216,24 +217,32 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 完整变量清单见 [环境变量](#环境变量)。
 
-### 4. 启动
+### 4. 同步表结构并写入种子数据
 
 ```bash
-# 根目录：并行启动前后端（api :3000，admin :5173）
+cd ly-admin-api
+npm run prisma:push   # 建表 / 同步表结构（首次必执行；Prisma 7 启动时不自动建表）
+npm run seed          # 写入默认数据（可选：服务启动时也会自动幂等执行）
+```
+
+### 5. 启动
+
+```bash
+# 根目录：并行启动前后端（后端 :3000，前端 :5173）
 npm run dev
 ```
 
 或分别启动：
 
 ```bash
-cd api && npm run dev      # http://localhost:3000
-cd admin && npm run dev    # http://localhost:5173
+npm run dev:api    # 后端 http://localhost:3000（等价 cd ly-admin-api && npm run start:dev）
+npm run dev:admin  # 前端 http://localhost:5173（等价 cd ly-admin-web && npm run dev）
 ```
 
 启动后可访问：
 
 - 前端页面：<http://localhost:5173>
-- 接口文档：<http://localhost:3000/api-docs>（零依赖自建文档页）
+- 接口文档：<http://localhost:3000/api-docs>（零依赖自建文档页，当前由旧后端 `api/` 提供）
 - 健康检查：`GET http://localhost:3000/api`
 
 > 前端 dev server 通过 Vite 代理把 `/api`、`/static` 转发到 `http://localhost:3000`，开发期同源、无跨域。
