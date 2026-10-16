@@ -5,6 +5,7 @@
  */
 import { IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 import { Transform } from 'class-transformer';
+import { MSG } from '../../../common/validation-messages.js';
 
 /** 去除首尾空白（对字符串入参统一处理）。 */
 const trim = ({ value }: { value: unknown }): unknown => (typeof value === 'string' ? value.trim() : value);
@@ -25,12 +26,12 @@ export class LoginDto {
 
   /** 验证码 id（验证码启用时必填，由前端从 /auth/captcha 获取） */
   @IsOptional()
-  @IsString()
+  @IsString({ message: MSG.isString })
   captchaId?: string;
 
   /** 用户输入的验证码 */
   @IsOptional()
-  @IsString()
+  @IsString({ message: MSG.isString })
   captchaCode?: string;
 }
 

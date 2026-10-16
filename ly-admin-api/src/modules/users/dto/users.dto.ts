@@ -18,6 +18,7 @@ import {
   Max,
 } from 'class-validator';
 import { REGEX } from '../../../common/constants.js';
+import { MSG } from '../../../common/validation-messages.js';
 
 /** 去除首尾空白（对字符串入参统一处理）。 */
 const trim = ({ value }: { value: unknown }): unknown => (typeof value === 'string' ? value.trim() : value);
@@ -41,7 +42,7 @@ export class CreateUserDto {
   @Transform(trim)
   @IsNotEmpty({ message: '账号不能为空' })
   @Matches(REGEX.USERNAME, { message: '账号为 3~20 位字母、数字或下划线' })
-  @MaxLength(20)
+  @MaxLength(20, { message: MSG.maxLength(20) })
   username!: string;
 
   /** 明文密码：6~20 位 */
@@ -84,8 +85,8 @@ export class CreateUserDto {
   @IsOptional()
   @Transform(({ value }) => (value === undefined ? 1 : Number(value)))
   @IsInt({ message: '状态值不合法' })
-  @Min(0)
-  @Max(1)
+  @Min(0, { message: MSG.min(0) })
+  @Max(1, { message: MSG.max(1) })
   status?: number;
 
   /** 角色 id 列表，默认空 */
@@ -98,12 +99,12 @@ export class CreateUserDto {
   @IsOptional()
   @Transform(({ value }) => (value === undefined ? 0 : Number(value)))
   @IsInt({ message: '部门 ID 不合法' })
-  @Min(0)
+  @Min(0, { message: MSG.min(0) })
   deptId?: number;
 
   /** 备注（可空） */
   @IsOptional()
-  @IsString()
+  @IsString({ message: MSG.isString })
   @MaxLength(255, { message: '备注过长' })
   remark?: string;
 }
@@ -142,8 +143,8 @@ export class UpdateUserDto {
   @IsOptional()
   @Transform(({ value }) => (value === undefined ? 1 : Number(value)))
   @IsInt({ message: '状态值不合法' })
-  @Min(0)
-  @Max(1)
+  @Min(0, { message: MSG.min(0) })
+  @Max(1, { message: MSG.max(1) })
   status?: number;
 
   /** 角色 id 列表，默认空 */
@@ -156,12 +157,12 @@ export class UpdateUserDto {
   @IsOptional()
   @Transform(({ value }) => (value === undefined ? 0 : Number(value)))
   @IsInt({ message: '部门 ID 不合法' })
-  @Min(0)
+  @Min(0, { message: MSG.min(0) })
   deptId?: number;
 
   /** 备注（可空） */
   @IsOptional()
-  @IsString()
+  @IsString({ message: MSG.isString })
   @MaxLength(255, { message: '备注过长' })
   remark?: string;
 }
@@ -170,8 +171,8 @@ export class UpdateUserDto {
 export class StatusDto {
   @Transform(({ value }) => Number(value))
   @IsInt({ message: '状态值不合法' })
-  @Min(0)
-  @Max(1)
+  @Min(0, { message: MSG.min(0) })
+  @Max(1, { message: MSG.max(1) })
   status!: number;
 }
 

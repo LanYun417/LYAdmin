@@ -82,10 +82,11 @@ export class UsersService {
       updatedAt: user.updatedAt,
       remark: user.remark,
       isSuperAdmin: this.isSuperAdmin(user.username, roles),
+      // 只输出 id + roleName：与旧后端 1:1（roleCode 仍参与超管判定，但不对外暴露——
+      // 前端 UserDetail 类型也只声明这两个字段）
       roles: roles.map((role) => ({
         id: Number(role.id),
         roleName: role.roleName,
-        roleCode: role.roleCode,
       })),
     };
   }

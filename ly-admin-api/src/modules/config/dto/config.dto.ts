@@ -9,6 +9,7 @@
  */
 import { IsNotEmpty, IsOptional, IsString, Matches, MaxLength } from 'class-validator';
 import { Transform } from 'class-transformer';
+import { MSG } from '../../../common/validation-messages.js';
 
 /** 去除首尾空白（对字符串入参统一处理）。 */
 const trim = ({ value }: { value: unknown }): unknown => (typeof value === 'string' ? value.trim() : value);
@@ -33,14 +34,14 @@ export class CreateConfigDto {
 
   /** 参数值 */
   @IsOptional()
-  @IsString()
+  @IsString({ message: MSG.isString })
   @MaxLength(500, { message: '参数值过长' })
   @Transform(({ value }) => value ?? '')
   configValue?: string;
 
   /** 备注 */
   @IsOptional()
-  @IsString()
+  @IsString({ message: MSG.isString })
   @Transform(trim)
   @MaxLength(255, { message: '备注过长' })
   remark?: string;
@@ -57,14 +58,14 @@ export class UpdateConfigDto {
 
   /** 参数值 */
   @IsOptional()
-  @IsString()
+  @IsString({ message: MSG.isString })
   @MaxLength(500, { message: '参数值过长' })
   @Transform(({ value }) => value ?? '')
   configValue?: string;
 
   /** 备注 */
   @IsOptional()
-  @IsString()
+  @IsString({ message: MSG.isString })
   @Transform(trim)
   @MaxLength(255, { message: '备注过长' })
   remark?: string;

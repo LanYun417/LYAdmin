@@ -9,6 +9,7 @@
  */
 import { IsInt, IsNotEmpty, IsOptional, IsString, Max, MaxLength, Min, Matches } from 'class-validator';
 import { Transform } from 'class-transformer';
+import { MSG } from '../../../common/validation-messages.js';
 
 /** 去除首尾空白（对字符串入参统一处理）。 */
 const trim = ({ value }: { value: unknown }): unknown => (typeof value === 'string' ? value.trim() : value);
@@ -34,14 +35,14 @@ export class CreateDictTypeDto {
   /** 状态：1 启用 / 0 禁用 */
   @IsOptional()
   @IsInt({ message: '状态必须为整数' })
-  @Min(0)
-  @Max(1)
+  @Min(0, { message: MSG.min(0) })
+  @Max(1, { message: MSG.max(1) })
   @Transform(({ value }) => value ?? 1)
   status?: number;
 
   /** 备注 */
   @IsOptional()
-  @IsString()
+  @IsString({ message: MSG.isString })
   @Transform(trim)
   @MaxLength(255, { message: '备注过长' })
   remark?: string;
@@ -59,14 +60,14 @@ export class UpdateDictTypeDto {
   /** 状态：1 启用 / 0 禁用 */
   @IsOptional()
   @IsInt({ message: '状态必须为整数' })
-  @Min(0)
-  @Max(1)
+  @Min(0, { message: MSG.min(0) })
+  @Max(1, { message: MSG.max(1) })
   @Transform(({ value }) => value ?? 1)
   status?: number;
 
   /** 备注 */
   @IsOptional()
-  @IsString()
+  @IsString({ message: MSG.isString })
   @Transform(trim)
   @MaxLength(255, { message: '备注过长' })
   remark?: string;
@@ -97,22 +98,22 @@ export class CreateDictItemDto {
   /** 排序 */
   @IsOptional()
   @IsInt({ message: '排序必须为整数' })
-  @Min(0)
-  @Max(9999)
+  @Min(0, { message: MSG.min(0) })
+  @Max(9999, { message: MSG.max(9999) })
   @Transform(({ value }) => value ?? 0)
   sort?: number;
 
   /** 状态：1 启用 / 0 禁用 */
   @IsOptional()
   @IsInt({ message: '状态必须为整数' })
-  @Min(0)
-  @Max(1)
+  @Min(0, { message: MSG.min(0) })
+  @Max(1, { message: MSG.max(1) })
   @Transform(({ value }) => value ?? 1)
   status?: number;
 
   /** 备注 */
   @IsOptional()
-  @IsString()
+  @IsString({ message: MSG.isString })
   @Transform(trim)
   @MaxLength(255, { message: '备注过长' })
   remark?: string;
@@ -137,22 +138,22 @@ export class UpdateDictItemDto {
   /** 排序 */
   @IsOptional()
   @IsInt({ message: '排序必须为整数' })
-  @Min(0)
-  @Max(9999)
+  @Min(0, { message: MSG.min(0) })
+  @Max(9999, { message: MSG.max(9999) })
   @Transform(({ value }) => value ?? 0)
   sort?: number;
 
   /** 状态：1 启用 / 0 禁用 */
   @IsOptional()
   @IsInt({ message: '状态必须为整数' })
-  @Min(0)
-  @Max(1)
+  @Min(0, { message: MSG.min(0) })
+  @Max(1, { message: MSG.max(1) })
   @Transform(({ value }) => value ?? 1)
   status?: number;
 
   /** 备注 */
   @IsOptional()
-  @IsString()
+  @IsString({ message: MSG.isString })
   @Transform(trim)
   @MaxLength(255, { message: '备注过长' })
   remark?: string;
@@ -162,7 +163,7 @@ export class UpdateDictItemDto {
 export class SetStatusDto {
   /** 目标状态：1 启用 / 0 禁用 */
   @IsInt({ message: '状态必须为整数' })
-  @Min(0)
-  @Max(1)
+  @Min(0, { message: MSG.min(0) })
+  @Max(1, { message: MSG.max(1) })
   status!: number;
 }

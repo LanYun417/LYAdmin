@@ -6,6 +6,7 @@
 import { Transform, Type } from 'class-transformer';
 import { IsNotEmpty, IsOptional, IsString, MaxLength, Matches, MinLength } from 'class-validator';
 import { REGEX } from '../../../common/constants.js';
+import { MSG } from '../../../common/validation-messages.js';
 
 /** 去除首尾空白。 */
 const trim = ({ value }: { value: unknown }): unknown => (typeof value === 'string' ? value.trim() : value);
@@ -21,25 +22,25 @@ export class UpdateProfileDto {
 
   /** 邮箱：空串或合法邮箱（空串表示清空）。 */
   @IsOptional()
-  @IsString()
+  @IsString({ message: MSG.isString })
   @Matches(new RegExp(`^$|${REGEX.EMAIL.source}`), { message: '邮箱格式不正确' })
   email?: string;
 
   /** 手机号：空串或合法手机号。 */
   @IsOptional()
-  @IsString()
+  @IsString({ message: MSG.isString })
   @Matches(new RegExp(`^$|${REGEX.PHONE.source}`), { message: '手机号格式不正确' })
   phone?: string;
 
   /** 性别：空串或最多 20 字符。 */
   @IsOptional()
-  @IsString()
+  @IsString({ message: MSG.isString })
   @MaxLength(20, { message: '性别值过长' })
   gender?: string;
 
   /** 头像地址：最多 255 字符。 */
   @IsOptional()
-  @IsString()
+  @IsString({ message: MSG.isString })
   @MaxLength(255, { message: '头像地址过长' })
   avatar?: string;
 }
