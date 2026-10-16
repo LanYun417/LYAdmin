@@ -139,24 +139,27 @@ export function sha256(buffer: Buffer): string {
 
 /* --------------------------------- 时间 --------------------------------- */
 
+/** 默认时区偏移（分钟）：北京时间 +08:00，对应 getTimezoneOffset() = -480，与既有数据约定一致。 */
+const DEFAULT_OFFSET_MINUTES = -480;
+
 /**
  * 按客户端时区偏移格式化时间。
  *
- * `offsetMinutes` 取浏览器 `Date.getTimezoneOffset()` 的值
- * （东八区为 -480，表示需在本地时间上减 8 小时得到 UTC）。
+ * `offsetMinutes` 取浏览器 `Date.getTimezoneOffset()` 的值：**东八区为 -480**。
+ * 该值的符号与「UTC 偏移」相反（getTimezoneOffset = UTC - 本地），因此内部需**取负**后
+ * 再交给 `dayjs.utcOffset()` —— 直接传会让时间往反方向偏 2 倍差值（东八区实际差 16 小时）。
+ * 缺省或传入非法值时按 +08:00 处理（对齐迁移前的默认值约定）。
  */
-export function formatDateTimeInZone(value: Date | string | null | undefined, offsetMinutes?: number): string {
-  if (!value) {
+export function formatDateTimeInZone(value: Date | string | number | null | undefined, offsetMinutes?: number): string {
+  if (value === null || value === undefined || value === '') {
     return '';
   }
   const date = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(date.getTime())) {
     return '';
   }
-  if (offsetMinutes === undefined || !Number.isFinite(offsetMinutes)) {
-    return dayjs(date).format('YYYY-MM-DD HH:mm:ss');
-  }
-  return dayjs(date).utcOffset(offsetMinutes).format('YYYY-MM-DD HH:mm:ss');
+  const offset = Number.isFinite(offsetMinutes) ? (offsetMinutes as number) : DEFAULT_OFFSET_MINUTES;
+  return dayjs(date).utcOffset(-offset).format('YYYY-MM-DD HH:mm:ss');
 }
 
 /* --------------------------------- CSV --------------------------------- */

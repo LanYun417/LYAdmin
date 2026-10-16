@@ -6,8 +6,9 @@
 # TypeScript build cache
 *.tsbuildinfo
 
-# Logs
-logs
+# Logs（用 /logs 精确匹配本目录的运行时日志目录：写成 `logs` 会连
+# src/modules/logs/ 源码目录一起忽略，导致 ripgrep / 编辑器全局搜索跳过整个日志模块）
+/logs
 *.log
 npm-debug.log*
 pnpm-debug.log*
