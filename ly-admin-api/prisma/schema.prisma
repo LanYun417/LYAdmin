@@ -324,3 +324,5 @@ model HttpLog {
   @@index([deptId])
   @@map("sys_http_log")
 }
+
+// [GEN-ANCHOR] 代码生成器自动插入位置，请勿删除（gen.writer 会在本行之前插入新模型的 Prisma model 片段）

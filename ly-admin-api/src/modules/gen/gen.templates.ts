@@ -1,13 +1,23 @@
 /**
- * 代码生成模板。
- * 模块职责：根据表结构渲染出前后端 CRUD 代码文本，风格对齐项目现有模块（user / role / menu）。
+ * 代码生成模板（NestJS 12 + Prisma 7 + Vue3）。
+ * 模块职责：根据表结构渲染出前后端 CRUD 代码文本，后端风格对齐 `modules/dict`，
+ * 前端风格对齐 `ly-admin-web/src/api` 与 `views/system/dict`。
  *
- * 说明：生成物是「可直接落地的骨架」，生成器不追求覆盖全部业务细节，
- * 生成的 README 会写明接线步骤（注册模型、挂载路由、补菜单与权限码）。
+ * 生成物是「可直接落地的骨架」，不追求覆盖全部业务细节：
+ * - 后端：Prisma model 片段 + NestJS module/controller/service + class-validator DTO；
+ * - 前端：API 封装 + 列表页；
+ * - 生成的 README 写明接线步骤（同步表结构、注册模块、菜单与权限码）。
+ *
+ * 约定（与项目现有代码保持一致，勿自创）：
+ * - 相对导入带 `.js` 后缀（纯 ESM）；DI 类用值导入；
+ * - 自定义提示语返回 `ResponseEnvelope`（`{ __raw: true, data, message }`）；
+ * - 分页复用 `common/utils` 的 parsePagination / buildPageResult / readString / readNumber；
+ * - 错误用 `AppException.badRequest / notFound / conflict`；权限码 `@RequirePermissions`；
+ *   操作日志 `@OperationLog`；通用校验文案复用 `common/validation-messages` 的 MSG。
  */
 import type { GenColumn, GenConfig, GenFile } from './gen.service.js';
 
-/** 时间戳类字段：不参与新增/编辑表单。 */
+/** 时间戳类字段：不参与新增/编辑表单（由数据库 / Prisma 默认值维护）。 */
 const TIMESTAMP_FIELDS = ['created_at', 'updated_at', 'deleted_at', 'create_time', 'update_time'];
 
 /**
@@ -15,6 +25,8 @@ const TIMESTAMP_FIELDS = ['created_at', 'updated_at', 'deleted_at', 'create_time
  * 与 `gen.service.ts` 的推荐逻辑保持一致（那边是生成期建议值，这边用于决定生成哪种取字典方式）。
  */
 const BUILTIN_STATUS_DICT = 'sys_common_status';
+
+/* ------------------------------ 命名工具 ------------------------------ */
 
 /** 首字母大写（PascalCase）。 */
 export function toPascal(name: string): string {
@@ -46,105 +58,167 @@ export function toTsType(dataType: string): GenColumn['tsType'] {
   return 'string';
 }
 
-/** SQL 字段 → Sequelize DataType 表达式。 */
-function toSequelizeType(col: GenColumn): string {
+/* ------------------------------ Prisma 类型映射 ------------------------------ */
+
+/** Prisma 标量类型 + MySQL 原生类型注解。 */
+interface PrismaFieldType {
+  /** Prisma 标量类型（BigInt / Int / String / DateTime / Decimal / Json / Boolean / Float / Bytes） */
+  scalar: string;
+  /** 原生类型注解（如 `@db.VarChar(50)`）；无需注解时为空串 */
+  native: string;
+}
+
+/** 可识别的 MySQL DATA_TYPE 集合（超出该集合的类型会兜底为 String 并提示人工确认）。 */
+const KNOWN_DATA_TYPES = new Set([
+  'bigint',
+  'int',
+  'integer',
+  'mediumint',
+  'smallint',
+  'tinyint',
+  'float',
+  'double',
+  'real',
+  'decimal',
+  'numeric',
+  'char',
+  'varchar',
+  'tinytext',
+  'text',
+  'mediumtext',
+  'longtext',
+  'date',
+  'datetime',
+  'timestamp',
+  'time',
+  'year',
+  'json',
+  'bit',
+  'bool',
+  'boolean',
+  'binary',
+  'varbinary',
+  'blob',
+  'tinyblob',
+  'mediumblob',
+  'longblob',
+  'enum',
+]);
+
+/** 从 COLUMN_TYPE 中取第一个括号内的数字（如 `varchar(50)` → 50，`datetime(3)` → 3）。 */
+function firstLength(columnType: string, fallback: number): number {
+  const match = columnType.match(/\((\d+)/);
+  return match ? Number(match[1]) : fallback;
+}
+
+/** 取 decimal 的精度与标度（如 `decimal(10,2)` → `10, 2`；缺省 `10, 2`）。 */
+function decimalArgs(columnType: string): string {
+  const match = columnType.match(/\((\d+)\s*,\s*(\d+)\)/);
+  return match ? `${match[1]}, ${match[2]}` : '10, 2';
+}
+
+/**
+ * MySQL 字段 → Prisma 标量类型与原生注解。
+ * 未知类型兜底为 `String @db.VarChar(255)`（README 与 manualSteps 会提示人工确认）。
+ * @param col 字段
+ */
+function toPrismaType(col: GenColumn): PrismaFieldType {
   const t = col.dataType.toLowerCase();
-  if (t === 'bigint') {
-    return 'DataType.BIGINT.UNSIGNED';
-  }
-  if (['int', 'integer', 'mediumint'].includes(t)) {
-    return 'DataType.INTEGER';
-  }
-  if (['smallint'].includes(t)) {
-    return 'DataType.SMALLINT';
-  }
-  if (['tinyint'].includes(t)) {
-    return 'DataType.TINYINT';
-  }
-  if (['decimal', 'numeric'].includes(t)) {
-    return 'DataType.DECIMAL(10, 2)';
-  }
-  if (['float'].includes(t)) {
-    return 'DataType.FLOAT';
-  }
-  if (['double'].includes(t)) {
-    return 'DataType.DOUBLE';
-  }
-  if (['date', 'datetime', 'timestamp'].includes(t)) {
-    return 'DataType.DATE';
-  }
-  if (['time'].includes(t)) {
-    return 'DataType.TIME';
-  }
-  if (['year'].includes(t)) {
-    return 'DataType.INTEGER';
-  }
-  if (['text', 'longtext', 'mediumtext', 'tinytext'].includes(t)) {
-    return 'DataType.TEXT';
-  }
-  if (['json'].includes(t)) {
-    return 'DataType.JSON';
-  }
-  // 字符类：带上长度
-  const len = col.columnType.match(/\((\d+)\)/);
-  return len ? `DataType.STRING(${len[1]})` : 'DataType.STRING(255)';
-}
-
-/**
- * SQL 字段 → zod 校验表达式。
- * 注意链序：zod 必须先接校验器再接 .optional()，ZodOptional 上没有 min/int 等方法。
- * @param col 字段
- * @param forceOptional 强制可选（编辑表单/查询参数统一可选）
- */
-function toZod(col: GenColumn, forceOptional = false): string {
-  const max = col.columnType.match(/\((\d+)\)/);
-  const maxLen = max ? Number(max[1]) : 255;
-  let base: string;
-  switch (col.tsType) {
-    case 'number':
-      base =
-        col.dataType === 'decimal' || col.dataType === 'float' || col.dataType === 'double'
-          ? 'z.coerce.number()'
-          : 'z.coerce.number().int()';
-      break;
+  switch (t) {
+    case 'bigint':
+      return { scalar: 'BigInt', native: '@db.BigInt' };
+    case 'int':
+    case 'integer':
+    case 'mediumint':
+      return { scalar: 'Int', native: '@db.Int' };
+    case 'smallint':
+      return { scalar: 'Int', native: '@db.SmallInt' };
+    case 'tinyint':
+      return { scalar: 'Int', native: '@db.TinyInt' };
+    case 'float':
+      return { scalar: 'Float', native: '@db.Float' };
+    case 'double':
+    case 'real':
+      return { scalar: 'Float', native: '@db.Double' };
+    case 'decimal':
+    case 'numeric':
+      return { scalar: 'Decimal', native: `@db.Decimal(${decimalArgs(col.columnType)})` };
+    case 'char':
+      return { scalar: 'String', native: `@db.Char(${firstLength(col.columnType, 1)})` };
+    case 'varchar':
+      return { scalar: 'String', native: `@db.VarChar(${firstLength(col.columnType, 255)})` };
+    case 'tinytext':
+      return { scalar: 'String', native: '@db.TinyText' };
+    case 'text':
+      return { scalar: 'String', native: '@db.Text' };
+    case 'mediumtext':
+      return { scalar: 'String', native: '@db.MediumText' };
+    case 'longtext':
+      return { scalar: 'String', native: '@db.LongText' };
+    case 'date':
+      return { scalar: 'DateTime', native: '@db.Date' };
+    case 'datetime':
+      return { scalar: 'DateTime', native: `@db.DateTime(${firstLength(col.columnType, 0)})` };
+    case 'timestamp':
+      return { scalar: 'DateTime', native: `@db.Timestamp(${firstLength(col.columnType, 0)})` };
+    case 'time':
+      return { scalar: 'DateTime', native: `@db.Time(${firstLength(col.columnType, 0)})` };
+    case 'year':
+      return { scalar: 'Int', native: '@db.Year' };
+    case 'json':
+      return { scalar: 'Json', native: '' };
+    case 'bit':
+    case 'bool':
     case 'boolean':
-      base = 'z.coerce.number().int().min(0).max(1)';
-      break;
-    case 'Date':
-      base = 'z.coerce.date()';
-      break;
+      return { scalar: 'Boolean', native: '' };
+    case 'binary':
+    case 'varbinary':
+    case 'blob':
+    case 'tinyblob':
+    case 'mediumblob':
+    case 'longblob':
+      return { scalar: 'Bytes', native: '' };
+    case 'enum':
+      return { scalar: 'String', native: `@db.VarChar(${firstLength(col.columnType, 255)})` };
     default:
-      base = `z.string().trim().max(${maxLen}, '长度不能超过 ${maxLen}')`;
-      break;
+      return { scalar: 'String', native: `@db.VarChar(${firstLength(col.columnType, 255)})` };
   }
-  // 可空字段或强制可选：校验链收尾后统一 .optional()
-  if (forceOptional || col.isNullable) {
-    return `${base}.optional()`;
-  }
-  return col.tsType === 'string' ? `${base}.min(1, '${col.columnComment || col.columnName}不能为空')` : base;
 }
 
 /**
- * 查询条件用的 zod 规则。
- *
- * 数值型额外允许空串：筛选框被清空时前端送出的是 `''`，而 `z.coerce.number()` 会把
- * `''` 变成 `0`，导致「清空筛选」反而变成「按 0 过滤」。保留空串后由 service 的
- * `!== ''` 判断跳过该条件。
- * @param col 字段
+ * 表中无法可靠映射为 Prisma 类型的列名（供 README / manualSteps 提示人工确认）。
+ * @param columns 字段列表
  */
-function toQueryZod(col: GenColumn): string {
-  if (col.tsType === 'number') {
-    const numeric = ['decimal', 'float', 'double'].includes(col.dataType)
-      ? 'z.coerce.number()'
-      : 'z.coerce.number().int()';
-    return `z.union([z.literal(''), ${numeric}]).optional()`;
-  }
-  return toZod(col, true);
+export function unknownTypeNames(columns: GenColumn[]): string[] {
+  return columns.filter((c) => !KNOWN_DATA_TYPES.has(c.dataType.toLowerCase())).map((c) => c.columnName);
 }
 
-/** 参与新增/编辑的字段（排除主键与时间戳）。 */
+/** 该列在 Prisma 侧是否为 BigInt（JS 需转换后才能 JSON 序列化）。 */
+function isBigIntColumn(col: GenColumn): boolean {
+  return toPrismaType(col).scalar === 'BigInt';
+}
+
+/** 数值型标量（用于决定查询走 readNumber 还是 readString）。 */
+function isNumericScalar(col: GenColumn): boolean {
+  return ['BigInt', 'Int', 'Float', 'Decimal'].includes(toPrismaType(col).scalar);
+}
+
+/** 该列可用的字符串长度上限（仅 varchar / char；其它返回 0 表示不生成 MaxLength）。 */
+function maxLengthOf(col: GenColumn): number {
+  const t = col.dataType.toLowerCase();
+  if (t !== 'varchar' && t !== 'char') {
+    return 0;
+  }
+  return firstLength(col.columnType, 255);
+}
+
+/* ------------------------------ 字段筛选工具 ------------------------------ */
+
+/** 参与新增/编辑的字段（排除主键、时间戳与二进制列——二进制走文件上传，不适合通用表单）。 */
 function editableColumns(columns: GenColumn[]): GenColumn[] {
-  return columns.filter((c) => !c.isPk && !TIMESTAMP_FIELDS.includes(c.columnName));
+  return columns.filter(
+    (c) => !c.isPk && !TIMESTAMP_FIELDS.includes(c.columnName) && toPrismaType(c).scalar !== 'Bytes',
+  );
 }
 
 /**
@@ -177,19 +251,19 @@ function usedDictTypes(columns: GenColumn[]): string[] {
   return [...new Set(dictColumns(columns).map((c) => c.dictType))];
 }
 
+/* ------------------------------ 文本排版工具 ------------------------------ */
+
 /**
  * 项目 prettier 的 `printWidth`（见根目录 `.prettierrc.json`）。
  *
- * 生成 `<el-option>` 时用它决定写单行还是多行：属性总长随字典变量名变化，
- * 写死任何一种都会有一半情况与 prettier 的换行策略不符，导致生成物
- * 通不过 `prettier --check`、用户还得手工格式化一遍。
+ * 生成 `<el-option>` / 具名导入时用它决定写单行还是多行：属性总长随变量名变化，
+ * 写死任何一种都会有一半情况与 prettier 的换行策略不符，导致生成物通不过 `prettier --check`。
  */
 const PRINT_WIDTH = 120;
 
 /**
  * 计算字符串的显示宽度（中日韩字符按 2 列计）。
- * prettier 格式化 Markdown 表格时按**显示宽度**对齐，生成物必须与之保持一致，
- * 否则表格会被重排、产物过不了 `prettier --check`。
+ * prettier 格式化 Markdown 表格时按**显示宽度**对齐，生成物必须与之保持一致。
  * @param text 文本
  */
 function displayWidth(text: string): number {
@@ -229,19 +303,6 @@ function renderNamedImport(names: string[], from: string, indent = ''): string {
 }
 
 /**
- * 渲染路由注册：放得下写单行，超出 `printWidth` 则每个参数独占一行并保留尾逗号。
- * @param verb HTTP 方法（小写，如 `get`）
- * @param args 调用参数
- */
-function renderRoute(verb: string, args: string[]): string {
-  const oneLine = `router.${verb}(${args.join(', ')});`;
-  if (oneLine.length <= PRINT_WIDTH) {
-    return oneLine;
-  }
-  return [`router.${verb}(`, ...args.map((arg) => `  ${arg},`), `);`].join('\n');
-}
-
-/**
  * 渲染 `<el-option>`：放得下写单行，超出 `printWidth` 则每个属性独占一行（与 prettier 策略一致）。
  * @param optionsVar 选项变量名
  * @param indent 该元素的缩进
@@ -263,184 +324,504 @@ function renderOption(optionsVar: string, indent: string): string {
   ].join('\n');
 }
 
-/** 渲染 Sequelize 模型。 */
-function renderModel(config: GenConfig, columns: GenColumn[], tableComment: string): string {
-  const cls = toPascal(config.businessName);
-  const parent = treeParentColumn(config, columns);
-  // 树形表补上父子自关联（与 Dept / Menu 同一模式）
-  const associations = parent
-    ? [
-        ``,
-        `  // 树形自关联：显式指定外键并关闭数据库级约束（与 Dept / Menu 同一模式）。`,
-        `  // 不用 @ForeignKey 建真实外键，避免根节点的 ${parent.fieldName}=0 不在本表中而被约束拒绝。`,
-        `  @BelongsTo(() => ${cls}, { foreignKey: '${parent.fieldName}', constraints: false })`,
-        `  declare parent: ${cls} | null;`,
-      ].join('\n')
-    : '';
-  const fields = columns
-    .filter((c) => !TIMESTAMP_FIELDS.includes(c.columnName))
-    .map((c) => {
-      if (c.isPk) {
-        return [
-          '  @PrimaryKey',
-          '  @AutoIncrement',
-          `  @Column({ type: DataType.BIGINT.UNSIGNED, comment: '${c.columnComment || '主键'}' })`,
-          `  declare id: number;`,
-        ].join('\n');
-      }
-      const nullSuffix = c.tsType === 'Date' ? ' | null' : c.isNullable ? ' | null' : '';
-      return [
-        `  @Column({ type: ${toSequelizeType(c)}, allowNull: ${c.isNullable}, comment: '${c.columnComment || c.columnName}' })`,
-        `  declare ${c.fieldName}: ${c.tsType}${nullSuffix};`,
-      ].join('\n');
-    })
-    .join('\n\n');
+/* ------------------------------ 后端模板：Prisma model ------------------------------ */
 
+/** 渲染单个 Prisma 字段（含 `///` 注释、`@map` 与原生命名）。 */
+function renderPrismaField(col: GenColumn): string[] {
+  const { scalar, native } = toPrismaType(col);
+  const field = col.fieldName;
+  const comment = col.columnComment ? [`  /// ${col.columnComment}`] : [];
+
+  if (col.isPk) {
+    const attrs = [
+      '@id',
+      '@default(autoincrement())',
+      field === col.columnName ? '' : `@map("${col.columnName}")`,
+      native,
+    ].filter(Boolean);
+    return [...comment, `  ${field} ${scalar} ${attrs.join(' ')}`.trimEnd()];
+  }
+
+  const attrs: string[] = [];
+  if (field !== col.columnName) {
+    // 多词字段必须 @map 回 Snake_Case：库里列名全是 snake_case，不映射会造出 camelCase 列
+    attrs.push(`@map("${col.columnName}")`);
+  }
+  if (native) {
+    attrs.push(native);
+  }
+  // 时间戳字段补默认值 / 自动更新，与项目既有模型一致
+  const lower = col.columnName.toLowerCase();
+  if (scalar === 'DateTime' && !col.isNullable) {
+    if (lower === 'created_at' || lower === 'create_time') {
+      attrs.push('@default(now())');
+    } else if (lower === 'updated_at' || lower === 'update_time') {
+      attrs.push('@updatedAt');
+    }
+  }
+  const optional = col.isNullable ? '?' : '';
+  return [...comment, `  ${field} ${scalar}${optional} ${attrs.join(' ')}`.trimEnd()];
+}
+
+/**
+ * 渲染 Prisma model 片段（供追加进 `ly-admin-api/prisma/schema.prisma`）。
+ *
+ * - 主键：`BigInt @id @default(autoincrement()) @db.BigInt`；
+ * - 表名 → PascalCase model 名 + `@@map("原表名")`；
+ * - 列名 → camelCase 字段名 + `@map("原列名")`（多词字段必须映射）。
+ * @param config 生成配置
+ * @param columns 字段列表
+ * @param tableComment 表注释
+ */
+function renderPrismaModel(config: GenConfig, columns: GenColumn[], tableComment: string): string {
+  const modelName = toPascal(config.tableName);
   return [
-    `/**`,
-    ` * ${tableComment || config.tableName} 模型 \`${config.tableName}\`。`,
-    ` * 模块职责：映射数据表字段（由代码生成器生成，请按需补充关联与约束）。`,
-    ` */`,
-    renderNamedImport(
-      ['AutoIncrement', ...(parent ? ['BelongsTo'] : []), 'Column', 'DataType', 'Model', 'PrimaryKey', 'Table'],
-      'sequelize-typescript',
-    ),
+    `/// ${tableComment || config.tableName}`,
+    `model ${modelName} {`,
+    ...columns.flatMap((col) => renderPrismaField(col)),
     ``,
-    `@Table({`,
-    `  tableName: '${config.tableName}',`,
-    `  underscored: true,`,
-    `  timestamps: true,`,
-    `  comment: '${tableComment || config.tableName}',`,
-    `})`,
-    `export class ${cls} extends Model {`,
-    fields,
-    // 非树形表不插入（插入空串会多出一个空行，导致产物过不了 prettier --check）
-    ...(associations ? [associations] : []),
+    `  @@map("${config.tableName}")`,
     `}`,
     ``,
   ].join('\n');
 }
 
-/** 渲染 zod 校验器。 */
-function renderValidator(config: GenConfig, columns: GenColumn[]): string {
-  const name = toCamel(config.businessName);
-  const pascal = toPascal(config.businessName);
+/* ------------------------------ 后端模板：DTO ------------------------------ */
+
+/** class-validator 导入顺序（字母序，便于稳定输出）。 */
+const VALIDATOR_NAMES = [
+  'IsBoolean',
+  'IsDateString',
+  'IsInt',
+  'IsNotEmpty',
+  'IsNumber',
+  'IsOptional',
+  'IsString',
+  'MaxLength',
+  'Min',
+];
+
+/** 对外 DTO 字段类型（BigInt / Decimal → number；Date → Date）。 */
+function briefTypeOf(col: GenColumn, forceNumber: boolean): string {
+  if (forceNumber) {
+    return 'number';
+  }
+  const scalar = toPrismaType(col).scalar;
+  let base: string;
+  switch (scalar) {
+    case 'BigInt':
+    case 'Int':
+    case 'Float':
+    case 'Decimal':
+      base = 'number';
+      break;
+    case 'Boolean':
+      base = 'boolean';
+      break;
+    case 'DateTime':
+      base = 'Date';
+      break;
+    case 'Bytes':
+      base = 'Uint8Array';
+      break;
+    case 'Json':
+      base = 'unknown';
+      break;
+    default:
+      base = 'string';
+  }
+  // `unknown` 无需（也不该）再拼 `| null`
+  return col.isNullable && base !== 'unknown' ? `${base} | null` : base;
+}
+
+/** toBrief 入参（Prisma 记录）的字段类型。 */
+function rowTypeOf(col: GenColumn): string {
+  const scalar = toPrismaType(col).scalar;
+  let base: string;
+  switch (scalar) {
+    case 'BigInt':
+      base = 'bigint';
+      break;
+    case 'Int':
+    case 'Float':
+      base = 'number';
+      break;
+    case 'Boolean':
+      base = 'boolean';
+      break;
+    case 'DateTime':
+      base = 'Date';
+      break;
+    case 'Bytes':
+      base = 'Uint8Array';
+      break;
+    case 'Json':
+    case 'Decimal':
+      base = 'unknown';
+      break;
+    default:
+      base = 'string';
+  }
+  // `unknown` 无需（也不该）再拼 `| null`
+  return col.isNullable && base !== 'unknown' ? `${base} | null` : base;
+}
+
+/** toBrief 取值表达式（BigInt / Decimal 转 number，避免 JSON 序列化失败）。 */
+function briefValueOf(col: GenColumn, forceNumber: boolean): string {
+  const scalar = toPrismaType(col).scalar;
+  if (forceNumber) {
+    return `Number(row.${col.fieldName} ?? 0)`;
+  }
+  if (scalar === 'BigInt' || scalar === 'Decimal') {
+    return col.isNullable
+      ? `row.${col.fieldName} === null ? null : Number(row.${col.fieldName})`
+      : `Number(row.${col.fieldName})`;
+  }
+  return `row.${col.fieldName}`;
+}
+
+/** DTO 字段的 TS 类型。 */
+function dtoTypeOf(col: GenColumn): string {
+  const scalar = toPrismaType(col).scalar;
+  switch (scalar) {
+    case 'BigInt':
+    case 'Int':
+    case 'Float':
+    case 'Decimal':
+      return 'number';
+    case 'Boolean':
+      return 'boolean';
+    default:
+      // DateTime 用 ISO 字符串（Prisma 直接接受）；String / Json 用 string
+      return 'string';
+  }
+}
+
+/**
+ * 渲染单个 DTO 字段（含校验装饰器）。
+ * @param col 字段
+ * @param mode create 必填按列可空性判定；update / query 一律可选
+ * @param isParent 是否为树形父级字段（给 0 默认值语义）
+ */
+function renderDtoField(col: GenColumn, mode: 'create' | 'update' | 'query', isParent: boolean): string {
+  const scalar = toPrismaType(col).scalar;
+  const required = mode === 'create' && !col.isNullable && !isParent;
+  const comment = col.columnComment || col.fieldName;
+  const decorators: string[] = [];
+  if (!required) {
+    decorators.push('@IsOptional()');
+  }
+
+  if (isParent) {
+    decorators.push('@IsInt({ message: MSG.isInt })', '@Min(0, { message: MSG.min(0) })');
+  } else {
+    switch (scalar) {
+      case 'BigInt':
+      case 'Int':
+        decorators.push('@IsInt({ message: MSG.isInt })');
+        break;
+      case 'Float':
+      case 'Decimal':
+        decorators.push("@IsNumber({}, { message: '必须为数字' })");
+        break;
+      case 'Boolean':
+        decorators.push('@IsBoolean({ message: MSG.isBoolean })');
+        break;
+      case 'DateTime':
+        decorators.push("@IsDateString({ message: '日期格式不正确' })");
+        break;
+      case 'Json':
+        break;
+      default: {
+        decorators.push('@IsString({ message: MSG.isString })', '@Transform(trim)');
+        if (required) {
+          decorators.push(`@IsNotEmpty({ message: '${comment}不能为空' })`);
+        }
+        const maxLength = maxLengthOf(col);
+        if (maxLength > 0) {
+          decorators.push(`@MaxLength(${maxLength}, { message: MSG.maxLength(${maxLength}) })`);
+        }
+        break;
+      }
+    }
+  }
+
+  return [
+    `  /** ${comment} */`,
+    ...decorators.map((item) => `  ${item}`),
+    `  ${col.fieldName}${required ? '!' : '?'}: ${dtoTypeOf(col)};`,
+  ].join('\n');
+}
+
+/** 渲染分页参数 DTO 字段。 */
+function renderPaginationField(field: 'page' | 'pageSize'): string {
+  const comment = field === 'page' ? '页码' : '每页条数';
+  return [
+    `  /** ${comment} */`,
+    '  @IsOptional()',
+    '  @IsInt({ message: MSG.isInt })',
+    '  @Min(1, { message: MSG.min(1) })',
+    `  ${field}?: number;`,
+  ].join('\n');
+}
+
+/**
+ * 渲染 class-validator DTO（Create / Update / Query / IdParam）。
+ * @param config 生成配置
+ * @param columns 字段列表
+ */
+function renderNestDto(config: GenConfig, columns: GenColumn[]): string {
+  const cls = toPascal(config.businessName);
+  const parent = treeParentColumn(config, columns);
+  const parentField = parent?.fieldName ?? '';
   const editable = editableColumns(columns);
-  const parentField = treeParentColumn(config, columns)?.fieldName;
   const query = queryColumns(columns, parentField ? [parentField] : []);
+  const isParentCol = (c: GenColumn): boolean => c.fieldName === parentField;
 
-  // 树形表返回整棵树，不做分页，故不生成分页参数
-  const paginationFields = config.isTree
-    ? []
-    : [
-        '  page: z.coerce.number().int().positive().optional(),',
-        '  pageSize: z.coerce.number().int().positive().optional(),',
-      ];
+  const createBody = editable.map((c) => renderDtoField(c, 'create', isParentCol(c))).join('\n\n');
+  const updateBody = editable.map((c) => renderDtoField(c, 'update', isParentCol(c))).join('\n\n');
+  const queryBody = [
+    ...(config.isTree ? [] : [renderPaginationField('page'), renderPaginationField('pageSize')]),
+    ...query.map((c) => renderDtoField(c, 'query', false)),
+  ].join('\n\n');
+  const idParamBody = [
+    '  /** 主键 */',
+    '  @IsInt({ message: MSG.isInt })',
+    '  @Min(1, { message: MSG.min(1) })',
+    '  id!: number;',
+  ].join('\n');
 
-  const queryFields = [...paginationFields, ...query.map((c) => `  ${c.fieldName}: ${toQueryZod(c)},`)].join('\n');
-
-  // 父级字段给默认值 0（根节点），与「部门」模块一致：不填即顶级
-  const writeFields = (withRequired: boolean): string =>
-    editable
-      .map((c) =>
-        c.fieldName === parentField
-          ? `  ${c.fieldName}: z.coerce.number().int().min(0).default(0),`
-          : `  ${c.fieldName}: ${toZod(c, !withRequired)},`,
-      )
-      .join('\n');
+  // 按实际用到的装饰器收敛 import，避免生成物出现未使用导入
+  const allText = [createBody, updateBody, queryBody, idParamBody].join('\n');
+  const validators = VALIDATOR_NAMES.filter((name) => allText.includes(`${name}(`));
+  const usesTransform = allText.includes('Transform(');
 
   return [
     `/**`,
-    ` * ${config.businessName} 模块校验 schema。`,
-    ` * 模块职责：列表查询、新增、编辑的 zod 规则（由代码生成器生成）。`,
+    ` * ${config.businessName} 模块 DTO（class-validator）。`,
+    ` * 模块职责：${config.businessName}的新增、编辑、查询与主键参数校验（由代码生成器生成）。`,
+    ` * 说明：查询参数走独立 DTO；通用文案复用 common/validation-messages 的 MSG。`,
     ` */`,
-    `import { z } from 'zod';`,
+    renderNamedImport(validators, 'class-validator'),
+    ...(usesTransform ? [`import { Transform } from 'class-transformer';`] : []),
+    `import { MSG } from '../../../common/validation-messages.js';`,
     ``,
-    `/** 列表查询。 */`,
-    `export const ${name}ListQuerySchema = z.object({`,
-    queryFields,
-    `});`,
+    `/** 去除首尾空白（对字符串入参统一处理）。 */`,
+    `const trim = ({ value }: { value: unknown }): unknown => (typeof value === 'string' ? value.trim() : value);`,
     ``,
     `/** 新增。 */`,
-    `export const create${pascal}Schema = z.object({`,
-    writeFields(true),
-    `});`,
+    `export class Create${cls}Dto {`,
+    createBody || `  // 无可用字段`,
+    `}`,
     ``,
     `/** 编辑。 */`,
-    `export const update${pascal}Schema = z.object({`,
-    writeFields(false),
-    `});`,
+    `export class Update${cls}Dto {`,
+    updateBody || `  // 无可用字段`,
+    `}`,
     ``,
-    `export type Create${pascal}Input = z.infer<typeof create${pascal}Schema>;`,
-    `export type Update${pascal}Input = z.infer<typeof update${pascal}Schema>;`,
+    `/** 查询。 */`,
+    `export class Query${cls}Dto {`,
+    queryBody || `  // 无可用查询字段`,
+    `}`,
+    ``,
+    `/** 主键参数。 */`,
+    `export class IdParamDto {`,
+    idParamBody,
+    `}`,
     ``,
   ].join('\n');
 }
 
-/** 渲染 service。 */
-function renderService(config: GenConfig, columns: GenColumn[]): string {
+/* ------------------------------ 后端模板：Service ------------------------------ */
+
+/** 新增时的 Prisma data 取值表达式。 */
+function createDataExpr(col: GenColumn, isParent: boolean): string {
+  const scalar = toPrismaType(col).scalar;
+  if (isParent) {
+    return scalar === 'BigInt' ? `BigInt(dto.${col.fieldName} ?? 0)` : `dto.${col.fieldName} ?? 0`;
+  }
+  if (scalar === 'BigInt') {
+    return col.isNullable
+      ? `dto.${col.fieldName} == null ? null : BigInt(dto.${col.fieldName})`
+      : `BigInt(dto.${col.fieldName})`;
+  }
+  // Json 列：可空时用 undefined 缺省（Prisma 可空 Json 不接受裸 null，需 DbNull/JsonNull）
+  if (scalar === 'Json') {
+    return `dto.${col.fieldName}`;
+  }
+  return col.isNullable ? `dto.${col.fieldName} ?? null` : `dto.${col.fieldName}`;
+}
+
+/** 编辑时的 Prisma data 取值表达式（undefined 表示跳过该字段）。 */
+function updateDataExpr(col: GenColumn): string {
+  const scalar = toPrismaType(col).scalar;
+  if (scalar === 'BigInt') {
+    return `dto.${col.fieldName} === undefined ? undefined : BigInt(dto.${col.fieldName})`;
+  }
+  return `dto.${col.fieldName}`;
+}
+
+/**
+ * 渲染 NestJS service（Prisma CRUD + 分页 / 树形查询）。
+ * @param config 生成配置
+ * @param columns 字段列表
+ * @param cnName 中文模块名（取表注释，缺失时回退模块名）
+ */
+function renderNestService(config: GenConfig, columns: GenColumn[], cnName: string): string {
   const cls = toPascal(config.businessName);
   const name = toCamel(config.businessName);
+  const accessor = toCamel(config.tableName);
+  const pk = columns.find((c) => c.isPk);
+  const pkField = pk?.fieldName ?? 'id';
+  const idArg = pk && isBigIntColumn(pk) ? 'BigInt(id)' : 'id';
   const parent = treeParentColumn(config, columns);
   const parentField = parent?.fieldName ?? '';
+  const parentBigInt = parent ? isBigIntColumn(parent) : false;
+  const parentArg = (expr: string): string => (parentBigInt ? `BigInt(${expr})` : expr);
   const query = queryColumns(columns, parentField ? [parentField] : []);
-  const whereLines = query
-    .map((c) => {
-      if (c.tsType === 'string') {
-        return [
-          `  const ${c.fieldName} = typeof query.${c.fieldName} === 'string' ? String(query.${c.fieldName}).trim() : '';`,
-          `  if (${c.fieldName}) {`,
-          `    where.${c.fieldName} = { [Op.like]: \`%\${${c.fieldName}}%\` };`,
-          `  }`,
-        ].join('\n');
-      }
-      return [
-        `  if (query.${c.fieldName} !== undefined && query.${c.fieldName} !== '') {`,
-        `    where.${c.fieldName} = Number(query.${c.fieldName});`,
-        `  }`,
-      ].join('\n');
-    })
-    .join('\n\n');
+  const editable = editableColumns(columns);
+  const parentKey = 'parentId';
+  const needsSyntheticParent = parent !== null && parentField !== parentKey;
 
-  // 树形表返回整棵树（不分页）；普通表返回分页结果
+  // brief 字段（树形表补充 buildTree 所需的 parentId）
+  const briefFields = [
+    ...columns.map((col) => ({
+      field: col.fieldName,
+      type: briefTypeOf(col, parentField !== '' && col.fieldName === parentField),
+      value: briefValueOf(col, parentField !== '' && col.fieldName === parentField),
+    })),
+    ...(needsSyntheticParent
+      ? [{ field: parentKey, type: 'number', value: briefValueOf(parent as GenColumn, true) }]
+      : []),
+  ];
+
+  const rowShape = [
+    '  private toBrief(row: {',
+    ...columns.map((col) => `    ${col.fieldName}: ${rowTypeOf(col)};`),
+    '  }): ' + `${cls}Brief {`,
+  ];
+
+  const briefBlock = [
+    `/** 对外 DTO（BigInt / Decimal 转 number，便于 JSON 序列化）。 */`,
+    `export interface ${cls}Brief {`,
+    ...briefFields.map((item) => `  ${item.field}: ${item.type};`),
+    `}`,
+  ];
+
+  const toBriefBlock = [
+    `  /** Prisma 记录 → 对外 DTO（BigInt / Decimal 转 number）。 */`,
+    ...rowShape,
+    `    return {`,
+    ...briefFields.map((item) => `      ${item.field}: ${item.value},`),
+    `    };`,
+    `  }`,
+  ];
+
+  // 查询条件（按字段类型生成 where 片段）
+  const usesReadString = query.some((c) => !isNumericScalar(c));
+  const usesReadNumber = query.some((c) => isNumericScalar(c));
+  const whereLines = query.flatMap((c) => {
+    if (isNumericScalar(c)) {
+      return [`    const ${c.fieldName} = readNumber(params.${c.fieldName});`];
+    }
+    return [`    const ${c.fieldName} = readString(params.${c.fieldName});`];
+  });
+  const whereEntries = query.map((c) =>
+    isNumericScalar(c)
+      ? `      ...(${c.fieldName} !== undefined ? { ${c.fieldName} } : {}),`
+      : `      ...(${c.fieldName} ? { ${c.fieldName}: { contains: ${c.fieldName} } } : {}),`,
+  );
+  const whereBlock = query.length > 0 ? [`    const where = {`, ...whereEntries, `    };`] : [`    const where = {};`];
+
   const listBlock = parent
     ? [
-        `/**`,
-        ` * 查询${config.businessName}（返回整棵树，不做分页）。`,
-        ` * @param query 查询参数`,
-        ` */`,
-        `export async function list${cls}s(query: Record<string, unknown>): Promise<${cls}TreeNode[]> {`,
-        `  const where: WhereOptions = {};`,
-        ``,
-        whereLines || '  // 无可用查询条件，可按业务补充',
-        ``,
-        `  const rows = await ${cls}.findAll({ where, order: [['id', 'ASC']] });`,
-        `  // buildTree 依赖 id / parentId，且内部会浅拷贝节点；直接传 Sequelize 实例会因`,
-        `  // 列值挂在原型上而丢掉数据，必须先转成普通对象。`,
-        `  const nodes = rows.map((row) => row.get({ plain: true }) as unknown as TreeNode);`,
-        `  return buildTree(nodes) as unknown as ${cls}TreeNode[];`,
-        `}`,
+        `  /**`,
+        `   * 查询${cnName}（返回整棵树，不做分页）。`,
+        `   * @param query 查询参数`,
+        `   */`,
+        `  async list(query: Query${cls}Dto): Promise<WithChildren<${cls}Brief>[]> {`,
+        ...(query.length > 0 ? [`    const params: Record<string, unknown> = { ...query };`] : []),
+        ...whereLines,
+        ...whereBlock,
+        `    const rows = await this.prisma.${accessor}.findMany({ where, orderBy: { ${pkField}: 'asc' } });`,
+        `    return buildTree(rows.map((row) => this.toBrief(row)));`,
+        `  }`,
       ]
     : [
-        `/**`,
-        ` * 分页查询${config.businessName}。`,
-        ` * @param query 查询参数`,
-        ` */`,
-        `export async function list${cls}s(query: Record<string, unknown>): Promise<PageResult<${cls}>> {`,
-        `  const { page, pageSize, offset, limit } = parsePagination(query);`,
-        `  const where: WhereOptions = {};`,
+        `  /**`,
+        `   * 分页查询${cnName}。`,
+        `   * @param query 查询参数`,
+        `   */`,
+        `  async list(query: Query${cls}Dto): Promise<PageResult<${cls}Brief>> {`,
+        `    const params: Record<string, unknown> = { ...query };`,
+        `    const { page, pageSize, offset, limit } = parsePagination(params);`,
+        ...whereLines,
+        ...whereBlock,
+        `    const rows = await this.prisma.${accessor}.findMany({`,
+        `      where,`,
+        `      orderBy: { ${pkField}: 'desc' },`,
+        `      skip: offset,`,
+        `      take: limit,`,
+        `    });`,
+        `    const count = await this.prisma.${accessor}.count({ where });`,
+        `    return buildPageResult(`,
+        `      rows.map((row) => this.toBrief(row)),`,
+        `      count,`,
+        `      page,`,
+        `      pageSize,`,
+        `    );`,
+        `  }`,
+      ];
+
+  const treeHelpers = parent
+    ? [
         ``,
-        whereLines || '  // 无可用查询条件，可按业务补充',
+        `  /** 收集指定节点的全部后代 id（防止把上级挂到自己的子树下）。 */`,
+        `  private async collectDescendantIds(id: number): Promise<number[]> {`,
+        `    const result: number[] = [];`,
+        `    let level = [${parentArg('id')}];`,
+        `    while (level.length > 0) {`,
+        `      const children = await this.prisma.${accessor}.findMany({`,
+        `        where: { ${parentField}: { in: level } },`,
+        `        select: { ${pkField}: true },`,
+        `      });`,
+        `      const next = children.map((child) => Number(child.${pkField}));`,
+        `      if (next.length === 0) {`,
+        `        break;`,
+        `      }`,
+        `      result.push(...next);`,
+        `      level = next.map((childId) => ${parentArg('childId')});`,
+        `    }`,
+        `    return result;`,
+        `  }`,
         ``,
-        `  const { rows, count } = await ${cls}.findAndCountAll({`,
-        `    where,`,
-        `    order: [['id', 'DESC']],`,
-        `    offset,`,
-        `    limit,`,
-        `  });`,
-        ``,
-        `  return buildPageResult(rows, count, page, pageSize);`,
-        `}`,
+        `  /**`,
+        `   * 校验父级合法性：不能选自己，也不能选自己的后代，否则树会成环。`,
+        `   * @param parentId 待设置的父级 id（0 表示根节点）`,
+        `   * @param selfId 当前节点 id（新增时不传）`,
+        `   */`,
+        `  private async assertParentValid(parentId: number, selfId?: number): Promise<void> {`,
+        `    if (parentId === 0 || selfId === undefined) {`,
+        `      return;`,
+        `    }`,
+        `    if (parentId === selfId) {`,
+        `      throw AppException.badRequest('上级不能是自己');`,
+        `    }`,
+        `    const descendants = await this.collectDescendantIds(selfId);`,
+        `    if (descendants.includes(parentId)) {`,
+        `      throw AppException.badRequest('上级不能是自己的下级');`,
+        `    }`,
+        `  }`,
+      ]
+    : [];
+
+  const utilsNames = parent
+    ? ['buildTree', ...(usesReadNumber ? ['readNumber'] : []), ...(usesReadString ? ['readString'] : [])]
+    : [
+        'buildPageResult',
+        'parsePagination',
+        ...(usesReadNumber ? ['readNumber'] : []),
+        ...(usesReadString ? ['readString'] : []),
       ];
 
   return [
@@ -448,245 +829,197 @@ function renderService(config: GenConfig, columns: GenColumn[]): string {
     ` * ${config.businessName} 服务。`,
     ` * 模块职责：${parent ? '树形查询' : '分页查询'}与 CRUD（由代码生成器生成）。`,
     ` */`,
-    `import { Op, type WhereOptions } from 'sequelize';`,
-    `import { ${cls} } from '@/models';`,
-    ...(parent
-      ? [`import { AppError } from '@/utils/response';`, `import { buildTree, type WithChildren } from '@/utils/tree';`]
-      : [
-          `import type { PageResult } from '@/types';`,
-          `import { buildPageResult, parsePagination } from '@/utils/pagination';`,
-          `import { AppError } from '@/utils/response';`,
-        ]),
+    `import { Injectable } from '@nestjs/common';`,
+    `import { AppException } from '../../common/app.exception.js';`,
+    renderNamedImport(utilsNames, '../../common/utils.js'),
+    `import { PrismaService } from '../../prisma/prisma.service.js';`,
+    `import type { ${parent ? 'WithChildren' : 'PageResult'} } from '../../common/types.js';`,
+    `import type { Create${cls}Dto, Query${cls}Dto, Update${cls}Dto } from './dto/${name}.dto.js';`,
     ``,
-    ...(parent
-      ? [
-          `/** 树节点类型（记录字段 + children）。 */`,
-          `export type ${cls}TreeNode = WithChildren<Record<string, unknown>>;`,
-          ``,
-          `/** buildTree 所需的最小节点结构。 */`,
-          `interface TreeNode {`,
-          `  id: number;`,
-          `  parentId: number;`,
-          `  sort?: number;`,
-          `}`,
-          ``,
-        ]
-      : []),
+    ...briefBlock,
+    ``,
+    `@Injectable()`,
+    `export class ${cls}Service {`,
+    `  constructor(private readonly prisma: PrismaService) {}`,
+    ``,
+    ...toBriefBlock,
+    ``,
     ...listBlock,
     ``,
-    `/**`,
-    ` * 查询详情。`,
-    ` * @param id 主键`,
-    ` */`,
-    `export async function get${cls}Detail(id: number): Promise<${cls}> {`,
-    `  const record = await ${cls}.findByPk(id);`,
-    `  if (!record) {`,
-    `    throw AppError.notFound('记录不存在');`,
+    `  /**`,
+    `   * 查询${cnName}详情。`,
+    `   * @param id 主键`,
+    `   */`,
+    `  async detail(id: number): Promise<${cls}Brief> {`,
+    `    const row = await this.prisma.${accessor}.findUnique({ where: { ${pkField}: ${idArg} } });`,
+    `    if (!row) {`,
+    `      throw AppException.notFound('记录不存在');`,
+    `    }`,
+    `    return this.toBrief(row);`,
     `  }`,
-    `  return record;`,
-    `}`,
     ``,
-    `/**`,
-    ` * 新增。`,
-    ` * @param input 新增参数`,
-    ` */`,
-    `export async function create${cls}(input: Record<string, unknown>): Promise<${cls}> {`,
-    ...(parent ? [`  await assertParentValid(Number(input.${parentField} ?? 0));`] : []),
-    `  return ${cls}.create(input as never);`,
-    `}`,
+    `  /**`,
+    `   * 新增${cnName}。`,
+    `   * @param dto 新增参数`,
+    `   */`,
+    `  async create(dto: Create${cls}Dto): Promise<${cls}Brief> {`,
+    ...(parent ? [`    await this.assertParentValid(dto.${parentField} ?? 0);`] : []),
+    `    const row = await this.prisma.${accessor}.create({`,
+    `      data: {`,
+    ...editable.map((c) => `        ${c.fieldName}: ${createDataExpr(c, c.fieldName === parentField)},`),
+    `      },`,
+    `    });`,
+    `    return this.toBrief(row);`,
+    `  }`,
     ``,
-    `/**`,
-    ` * 编辑。`,
-    ` * @param id 主键`,
-    ` * @param input 编辑参数`,
-    ` */`,
-    `export async function update${cls}(id: number, input: Record<string, unknown>): Promise<${cls}> {`,
-    `  const record = await get${cls}Detail(id);`,
-    ...(parent ? [`  await assertParentValid(Number(input.${parentField} ?? 0), id);`] : []),
-    `  await record.update(input as never);`,
-    `  return record;`,
-    `}`,
+    `  /**`,
+    `   * 编辑${cnName}。`,
+    `   * @param id 主键`,
+    `   * @param dto 编辑参数`,
+    `   */`,
+    `  async update(id: number, dto: Update${cls}Dto): Promise<${cls}Brief> {`,
+    `    const existing = await this.prisma.${accessor}.findUnique({ where: { ${pkField}: ${idArg} } });`,
+    `    if (!existing) {`,
+    `      throw AppException.notFound('记录不存在');`,
+    `    }`,
+    ...(parent ? [`    await this.assertParentValid(dto.${parentField} ?? 0, id);`] : []),
+    `    const row = await this.prisma.${accessor}.update({`,
+    `      where: { ${pkField}: ${idArg} },`,
+    `      data: {`,
+    ...editable.map((c) => `        ${c.fieldName}: ${updateDataExpr(c)},`),
+    `      },`,
+    `    });`,
+    `    return this.toBrief(row);`,
+    `  }`,
     ``,
-    `/**`,
-    ` * 删除。`,
-    ` * @param id 主键`,
-    ` */`,
-    `export async function remove${cls}(id: number): Promise<void> {`,
-    `  const record = await get${cls}Detail(id);`,
+    `  /**`,
+    `   * 删除${cnName}。`,
+    `   * @param id 主键`,
+    `   */`,
+    `  async remove(id: number): Promise<void> {`,
+    `    const existing = await this.prisma.${accessor}.findUnique({ where: { ${pkField}: ${idArg} } });`,
+    `    if (!existing) {`,
+    `      throw AppException.notFound('记录不存在');`,
+    `    }`,
     ...(parent
       ? [
-          `  const childCount = await ${cls}.count({ where: { ${parentField}: id } });`,
-          `  if (childCount > 0) {`,
-          `    throw AppError.conflict('存在下级节点，请先删除下级');`,
-          `  }`,
-        ]
-      : []),
-    `  await record.destroy();`,
-    `}`,
-    ``,
-    ...(parent
-      ? [
-          `/** 收集指定节点的全部后代 id。 */`,
-          `async function collectDescendantIds(id: number): Promise<number[]> {`,
-          `  const result: number[] = [];`,
-          `  let currentLevel: number[] = [id];`,
-          ``,
-          `  while (currentLevel.length > 0) {`,
-          `    const children = await ${cls}.findAll({`,
-          `      where: { ${parentField}: { [Op.in]: currentLevel } },`,
-          `      attributes: ['id'],`,
-          `    });`,
-          `    const childIds = children.map((child) => Number(child.id));`,
-          `    if (childIds.length === 0) {`,
-          `      break;`,
+          `    const childCount = await this.prisma.${accessor}.count({ where: { ${parentField}: ${parentArg('id')} } });`,
+          `    if (childCount > 0) {`,
+          `      throw AppException.conflict('存在下级节点，请先删除下级');`,
           `    }`,
-          `    result.push(...childIds);`,
-          `    currentLevel = childIds;`,
-          `  }`,
-          ``,
-          `  return result;`,
-          `}`,
-          ``,
-          `/**`,
-          ` * 校验父级合法性：不能选自己，也不能选自己的后代，否则树会成环。`,
-          ` * @param parentId 待设置的父级 id（0 表示根节点）`,
-          ` * @param selfId 当前节点 id（新增时不传）`,
-          ` */`,
-          `async function assertParentValid(parentId: number, selfId?: number): Promise<void> {`,
-          `  if (parentId === 0 || selfId === undefined) {`,
-          `    return;`,
-          `  }`,
-          `  if (parentId === selfId) {`,
-          `    throw AppError.badRequest('上级不能是自己');`,
-          `  }`,
-          `  const descendants = await collectDescendantIds(selfId);`,
-          `  if (descendants.includes(parentId)) {`,
-          `    throw AppError.badRequest('上级不能是自己的下级');`,
-          `  }`,
-          `}`,
-          ``,
         ]
       : []),
-    `/** 供 controller 复用的导出别名（保持命名一致）。 */`,
-    `export const ${name}Service = {`,
-    `  list: list${toPascal(config.businessName)}s,`,
-    `  detail: get${cls}Detail,`,
-    `  create: create${cls},`,
-    `  update: update${cls},`,
-    `  remove: remove${cls},`,
-    `};`,
+    `    await this.prisma.${accessor}.delete({ where: { ${pkField}: ${idArg} } });`,
+    `  }`,
+    ...treeHelpers,
+    `}`,
     ``,
   ].join('\n');
 }
 
-/** 渲染 controller。 */
-function renderController(config: GenConfig): string {
+/* ------------------------------ 后端模板：Controller ------------------------------ */
+
+/**
+ * 渲染 NestJS controller（路由 + 权限码 + 操作日志）。
+ * @param config 生成配置
+ * @param columns 字段列表
+ * @param cnName 中文模块名（取表注释，缺失时回退模块名）
+ */
+function renderNestController(config: GenConfig, columns: GenColumn[], cnName: string): string {
   const cls = toPascal(config.businessName);
-  const plural = `${toPascal(config.businessName)}s`;
+  const name = toCamel(config.businessName);
+  const perm = `${config.moduleName}:${name}`;
+  const isTree = treeParentColumn(config, columns) !== null;
+
   return [
     `/**`,
     ` * ${config.businessName} 控制器。`,
-    ` * 模块职责：接收请求参数、调用 service、返回统一响应（由代码生成器生成）。`,
+    ` * 模块职责：解析请求参数、调用服务、组装统一响应（由代码生成器生成）。`,
     ` */`,
-    `import type { Request, Response } from 'express';`,
-    `import * as ${toCamel(config.businessName)}Service from '@/services/${toCamel(config.businessName)}.service';`,
-    `import { ok } from '@/utils/response';`,
+    `import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';`,
+    `import { OperationLog } from '../../common/operation-log.decorator.js';`,
+    `import { RequirePermissions } from '../../common/permission.guard.js';`,
+    `import type { ResponseEnvelope } from '../../common/response.interceptor.js';`,
+    `import { ${cls}Service } from './${name}.service.js';`,
+    `import { Create${cls}Dto, IdParamDto, Query${cls}Dto, Update${cls}Dto } from './dto/${name}.dto.js';`,
     ``,
-    `/** 分页列表。 */`,
-    `export async function list${plural}(req: Request, res: Response): Promise<void> {`,
-    `  const result = await ${toCamel(config.businessName)}Service.list${plural}(req.query as Record<string, unknown>);`,
-    `  ok(res, result);`,
-    `}`,
+    `@Controller('${name}')`,
+    `export class ${cls}Controller {`,
+    `  constructor(private readonly ${name}Service: ${cls}Service) {}`,
     ``,
-    `/** 详情。 */`,
-    `export async function get${cls}(req: Request, res: Response): Promise<void> {`,
-    `  const record = await ${toCamel(config.businessName)}Service.get${cls}Detail(Number(req.params.id));`,
-    `  ok(res, record);`,
-    `}`,
+    `  /** ${isTree ? '查询整棵树（不分页）。' : '分页查询。'} */`,
+    `  @Get()`,
+    `  @RequirePermissions('${perm}:list')`,
+    `  list(@Query() query: Query${cls}Dto): Promise<unknown> {`,
+    `    return this.${name}Service.list(query);`,
+    `  }`,
     ``,
-    `/** 新增。 */`,
-    `export async function create${cls}(req: Request, res: Response): Promise<void> {`,
-    `  const record = await ${toCamel(config.businessName)}Service.create${cls}(req.body as Record<string, unknown>);`,
-    `  ok(res, record, '新增成功');`,
-    `}`,
+    `  /** 详情。 */`,
+    `  @Get(':id')`,
+    `  @RequirePermissions('${perm}:query')`,
+    `  detail(@Param() params: IdParamDto): Promise<unknown> {`,
+    `    return this.${name}Service.detail(params.id);`,
+    `  }`,
     ``,
-    `/** 编辑。 */`,
-    `export async function update${cls}(req: Request, res: Response): Promise<void> {`,
-    `  const record = await ${toCamel(config.businessName)}Service.update${cls}(Number(req.params.id), req.body as Record<string, unknown>);`,
-    `  ok(res, record, '修改成功');`,
-    `}`,
+    `  /** 新增。 */`,
+    `  @Post()`,
+    `  @RequirePermissions('${perm}:add')`,
+    `  @OperationLog('${cnName}', '新增')`,
+    `  async create(@Body() dto: Create${cls}Dto): Promise<ResponseEnvelope<unknown>> {`,
+    `    const data = await this.${name}Service.create(dto);`,
+    `    return { __raw: true, data, message: '新增成功' };`,
+    `  }`,
     ``,
-    `/** 删除。 */`,
-    `export async function remove${cls}(req: Request, res: Response): Promise<void> {`,
-    `  await ${toCamel(config.businessName)}Service.remove${cls}(Number(req.params.id));`,
-    `  ok(res, null, '删除成功');`,
+    `  /** 编辑。 */`,
+    `  @Put(':id')`,
+    `  @RequirePermissions('${perm}:edit')`,
+    `  @OperationLog('${cnName}', '编辑')`,
+    `  async update(@Param() params: IdParamDto, @Body() dto: Update${cls}Dto): Promise<ResponseEnvelope<unknown>> {`,
+    `    const data = await this.${name}Service.update(params.id, dto);`,
+    `    return { __raw: true, data, message: '修改成功' };`,
+    `  }`,
+    ``,
+    `  /** 删除。 */`,
+    `  @Delete(':id')`,
+    `  @RequirePermissions('${perm}:remove')`,
+    `  @OperationLog('${cnName}', '删除')`,
+    `  async remove(@Param() params: IdParamDto): Promise<ResponseEnvelope<unknown>> {`,
+    `    await this.${name}Service.remove(params.id);`,
+    `    return { __raw: true, data: null, message: '删除成功' };`,
+    `  }`,
     `}`,
     ``,
   ].join('\n');
 }
 
-/** 渲染路由（含独立权限码）。 */
-function renderRoutes(config: GenConfig): string {
+/* ------------------------------ 后端模板：Module ------------------------------ */
+
+/**
+ * 渲染 NestJS module。
+ * @param config 生成配置
+ */
+function renderNestModule(config: GenConfig): string {
   const cls = toPascal(config.businessName);
-  const plural = `${cls}s`;
-  const perm = `${config.moduleName}:${toCamel(config.businessName)}`;
+  const name = toCamel(config.businessName);
   return [
     `/**`,
-    ` * ${config.businessName} 路由 \`/api/${toCamel(config.businessName)}\`。`,
-    ` * 模块职责：挂载 CRUD 接口并施加鉴权与权限码（由代码生成器生成）。`,
+    ` * ${config.businessName} 模块。`,
+    ` * 模块职责：装配${config.businessName}的控制器与服务（PrismaService 由全局 PrismaModule 提供）。`,
     ` */`,
-    `import { Router } from 'express';`,
-    `import * as ${toCamel(config.businessName)}Controller from '@/controllers/${toCamel(config.businessName)}.controller';`,
-    `import { authenticate } from '@/middlewares/auth';`,
-    `import { requirePermission } from '@/middlewares/permission';`,
-    `import { validate } from '@/middlewares/validate';`,
-    `import { asyncHandler } from '@/utils/asyncHandler';`,
-    renderNamedImport(
-      [`create${cls}Schema`, `update${cls}Schema`, `${toCamel(config.businessName)}ListQuerySchema`],
-      `@/validators/${toCamel(config.businessName)}.validator`,
-    ),
+    `import { Module } from '@nestjs/common';`,
+    `import { ${cls}Controller } from './${name}.controller.js';`,
+    `import { ${cls}Service } from './${name}.service.js';`,
     ``,
-    `const router = Router();`,
-    ``,
-    `router.use(authenticate);`,
-    ``,
-    renderRoute('get', [
-      `'/'`,
-      `validate({ query: ${toCamel(config.businessName)}ListQuerySchema })`,
-      `requirePermission('${perm}:list')`,
-      `asyncHandler(${toCamel(config.businessName)}Controller.list${plural})`,
-    ]),
-    ``,
-    renderRoute('get', [
-      `'/:id'`,
-      `requirePermission('${perm}:query')`,
-      `asyncHandler(${toCamel(config.businessName)}Controller.get${cls})`,
-    ]),
-    ``,
-    renderRoute('post', [
-      `'/'`,
-      `validate({ body: create${cls}Schema })`,
-      `requirePermission('${perm}:add')`,
-      `asyncHandler(${toCamel(config.businessName)}Controller.create${cls})`,
-    ]),
-    ``,
-    renderRoute('put', [
-      `'/:id'`,
-      `validate({ body: update${cls}Schema })`,
-      `requirePermission('${perm}:edit')`,
-      `asyncHandler(${toCamel(config.businessName)}Controller.update${cls})`,
-    ]),
-    ``,
-    renderRoute('delete', [
-      `'/:id'`,
-      `requirePermission('${perm}:remove')`,
-      `asyncHandler(${toCamel(config.businessName)}Controller.remove${cls})`,
-    ]),
-    ``,
-    `export default router;`,
+    `@Module({`,
+    `  controllers: [${cls}Controller],`,
+    `  providers: [${cls}Service],`,
+    `})`,
+    `export class ${cls}Module {}`,
     ``,
   ].join('\n');
 }
+
+/* ------------------------------ 前端模板：API ------------------------------ */
 
 /** 渲染前端 api。 */
 function renderFrontendApi(config: GenConfig, columns: GenColumn[]): string {
@@ -750,6 +1083,8 @@ function renderFrontendApi(config: GenConfig, columns: GenColumn[]): string {
     ``,
   ].join('\n');
 }
+
+/* ------------------------------ 前端模板：页面 ------------------------------ */
 
 /** 渲染前端页面。 */
 function renderFrontendView(config: GenConfig, columns: GenColumn[]): string {
@@ -818,7 +1153,7 @@ function renderFrontendView(config: GenConfig, columns: GenColumn[]): string {
         `        <el-form-item label="${commentOf(c)}" prop="${c.fieldName}">`,
         `          <el-input v-model="form.${c.fieldName}" placeholder="请输入${commentOf(c)}" />`,
         `        </el-form-item>`,
-      ];
+      ].join('\n');
     })
     .join('\n');
 
@@ -837,7 +1172,7 @@ function renderFrontendView(config: GenConfig, columns: GenColumn[]): string {
         `        <el-form-item label="${commentOf(c)}">`,
         `          <el-input v-model="query.${c.fieldName}" placeholder="请输入${commentOf(c)}" clearable />`,
         `        </el-form-item>`,
-      ];
+      ].join('\n');
     })
     .join('\n');
 
@@ -1019,12 +1354,14 @@ function renderFrontendView(config: GenConfig, columns: GenColumn[]): string {
   ].join('\n');
 }
 
+/* ------------------------------ 字典种子片段 ------------------------------ */
+
 /**
  * 渲染「字典种子」片段，仅在用到**自定义**字典时生成。
  *
  * 状态类字段用的是内置 `sys_common_status`，无需新建字典；只有用户指定了别的
- * 字典类型时才需要准备。片段供粘贴进 `api/src/seed/dict.seed.ts` 的 `DICT_SEEDS`，
- * 字典项是**占位示例**，需按实际业务替换。
+ * 字典类型时才需要准备。片段供合并进 `ly-admin-api/prisma/seed.ts`（或 `src/prisma/seed.service.ts`）
+ * 的字典种子数组，字典项是**占位示例**，需按实际业务替换。
  * @returns 片段文本；无需新建字典时返回 null
  */
 function renderDictSeedSnippet(config: GenConfig, columns: GenColumn[]): string | null {
@@ -1042,7 +1379,7 @@ function renderDictSeedSnippet(config: GenConfig, columns: GenColumn[]): string 
     `/**`,
     ` * 字典种子片段（由代码生成器生成）。`,
     ` *`,
-    ` * 用法：把下面数组里的各项合并进 \`api/src/seed/dict.seed.ts\` 的 \`DICT_SEEDS\`，再重启服务`,
+    ` * 用法：把下面数组里的各项合并进 \`ly-admin-api/prisma/seed.ts\` 的字典种子（DICT_SEEDS），再重启服务`,
     ` *（种子幂等：已存在的类型/项会跳过，不会覆盖界面上改过的内容）。`,
     ` *`,
     ` * ⚠️ 字典项内容是**占位示例**，请按实际业务改成真实的选项与取值。`,
@@ -1064,14 +1401,21 @@ function renderDictSeedSnippet(config: GenConfig, columns: GenColumn[]): string 
   ].join('\n');
 }
 
-/** 渲染接线说明。 */
+/* ------------------------------ 接线说明 ------------------------------ */
+
+/**
+ * 渲染接线说明（README，不落盘）。
+ * @param config 生成配置
+ * @param columns 字段列表
+ * @param tableComment 表注释
+ */
 function renderReadme(config: GenConfig, columns: GenColumn[], tableComment: string): string {
-  const cls = toPascal(config.businessName);
   const name = toCamel(config.businessName);
   const perm = `${config.moduleName}:${name}`;
   const parent = treeParentColumn(config, columns);
   const dictTypes = usedDictTypes(columns);
   const customDictTypes = dictTypes.filter((t) => t !== BUILTIN_STATUS_DICT);
+  const unknownTypes = unknownTypeNames(columns);
   /** 控件类型的中文名，用于字段清单 */
   const htmlTypeLabel: Record<GenColumn['htmlType'], string> = {
     input: '输入框',
@@ -1079,18 +1423,19 @@ function renderReadme(config: GenConfig, columns: GenColumn[], tableComment: str
     treeSelect: '树形父级',
   };
 
-  // 接线步骤：前 5 步固定，字典与树形按实际情况追加，末尾补一条控件核对
+  // 接线步骤：前 3 步固定，字典 / 树形 / 未知类型按实际情况追加，末尾补一条控件核对
   const stepBodies: string[] = [
-    `**注册模型**：\`api/src/models/index.ts\`（自动：import / export / models 数组）`,
-    `**挂载路由**：\`api/src/routes/index.ts\`（自动：\`router.use('/${name}', ${name}Routes);\`）`,
-    `**菜单与权限码**：\`api/src/seed/menu.seed.ts\`（自动：目录 / MENU 与 4 个按钮节点，权限码依次为 ${perm}:list、:query、:add、:edit、:remove）`,
-    `**接口文档 / 操作日志**：\`api/src/docs/catalog.ts\`、\`api/src/middlewares/operationLog.ts\`（自动接线）`,
+    `**同步表结构**：把 \`backend/prisma/${config.tableName}.model.prisma\` 的 model 追加进 \`ly-admin-api/prisma/schema.prisma\` ` +
+      `（用「生成到项目」时已自动插入 \`[GEN-ANCHOR]\` 锚点之前），然后执行 \`npm run prisma:push\``,
+    `**注册模块**：\`ly-admin-api/src/app.module.ts\`（自动：import 与 \`imports\` 数组加入 \`${toPascal(config.businessName)}Module\`）`,
+    `**菜单与权限码**：\`ly-admin-api/src/prisma/seed.service.ts\`（自动：目录 / MENU 与 4 个按钮节点，权限码依次为 ${perm}:list、:query、:add、:edit、:remove）；重启服务即自动幂等种子`,
     `**角色授权**：超管（menuKeys: 'ALL'）自动可见；其它角色请在「系统管理-角色管理-菜单授权」中勾选`,
+    `**前端路由**：无需手改（路由由菜单动态生成，页面已落到 \`frontend/views/${config.moduleName}/${name}/index.vue\`）`,
   ];
   if (customDictTypes.length > 0) {
     stepBodies.push(
       `**字典准备**：本次用到了自定义字典（${customDictTypes.join('、')}），请把 \`backend/seed/dict.seed.snippet.ts\` ` +
-        `合并进 \`api/src/seed/dict.seed.ts\` 的 \`DICT_SEEDS\` 后重启服务（种子幂等，已存在的会跳过）`,
+        `合并进 \`ly-admin-api/prisma/seed.ts\` 的字典种子后重启服务（种子幂等，已存在的会跳过）`,
     );
   } else if (dictTypes.length > 0) {
     stepBodies.push(`**字典准备**：字典字段用的是内置 \`${BUILTIN_STATUS_DICT}\`，库中已有，无需新建`);
@@ -1099,6 +1444,12 @@ function renderReadme(config: GenConfig, columns: GenColumn[], tableComment: str
     stepBodies.push(
       `**树形表已生成**：列表返回整棵树（不分页，前端无需分页组件）；父级用树形下拉；` +
         `新增/编辑会校验「上级不能是自己或自己的下级」；删除前会校验是否存在下级`,
+    );
+  }
+  if (unknownTypes.length > 0) {
+    stepBodies.push(
+      `**⚠️ 类型核对**：以下列的 MySQL 类型无法可靠映射为 Prisma 类型，已兜底为 \`String @db.VarChar(255)\`，` +
+        `请人工确认并修正：${unknownTypes.join('、')}`,
     );
   }
   stepBodies.push(
@@ -1117,19 +1468,19 @@ function renderReadme(config: GenConfig, columns: GenColumn[], tableComment: str
     `## 目录说明`,
     ``,
     `\`\`\``,
-    `backend/models/${cls}.ts              Sequelize 模型`,
-    `backend/validators/${name}.validator.ts   zod 校验`,
-    `backend/services/${name}.service.ts       业务逻辑`,
-    `backend/controllers/${name}.controller.ts 接口层`,
-    `backend/routes/${name}.routes.ts          路由（含权限码）`,
-    `frontend/api/${name}.ts                   前端接口封装`,
+    `backend/modules/${name}/${name}.module.ts        NestJS 模块`,
+    `backend/modules/${name}/${name}.controller.ts    控制器（路由 + 权限码 + 操作日志）`,
+    `backend/modules/${name}/${name}.service.ts       服务（Prisma CRUD + 分页）`,
+    `backend/modules/${name}/dto/${name}.dto.ts       class-validator DTO`,
+    `backend/prisma/${config.tableName}.model.prisma  Prisma model 片段（需同步进 schema.prisma）`,
+    `frontend/api/${name}.ts                          前端接口封装`,
     `frontend/views/${config.moduleName}/${name}/index.vue  前端列表页`,
-    ...(customDictTypes.length > 0 ? [`backend/seed/dict.seed.snippet.ts        字典种子片段（需手动合并）`] : []),
+    ...(customDictTypes.length > 0 ? [`backend/seed/dict.seed.snippet.ts             字典种子片段（需手动合并）`] : []),
     `\`\`\``,
     ``,
     `## 接线步骤（连接线状态）`,
     ``,
-    `> 通过「生成到项目」接口（POST /api/gen/create）生成时，以下 1~4 步已由代码生成器**自动完成**；`,
+    `> 通过「生成到项目」接口（POST /api/gen/create）生成时，步骤 1~3 已由代码生成器**自动完成**；`,
     `> 若通过下载 ZIP 手动落地，请按下列步骤自行接线。`,
     ``,
     ...stepLines,
@@ -1153,6 +1504,8 @@ function renderReadme(config: GenConfig, columns: GenColumn[], tableComment: str
   ].join('\n');
 }
 
+/* ------------------------------ 产物清单 ------------------------------ */
+
 /**
  * 生成全部文件。
  * @param config 生成配置
@@ -1161,15 +1514,18 @@ function renderReadme(config: GenConfig, columns: GenColumn[], tableComment: str
  * @returns 文件列表
  */
 export function generateFiles(config: GenConfig, columns: GenColumn[], tableComment: string): GenFile[] {
-  const cls = toPascal(config.businessName);
   const name = toCamel(config.businessName);
+  const cnName = (tableComment || '').trim() || config.moduleName;
   const dictSnippet = renderDictSeedSnippet(config, columns);
   return [
-    { path: `backend/models/${cls}.ts`, content: renderModel(config, columns, tableComment) },
-    { path: `backend/validators/${name}.validator.ts`, content: renderValidator(config, columns) },
-    { path: `backend/services/${name}.service.ts`, content: renderService(config, columns) },
-    { path: `backend/controllers/${name}.controller.ts`, content: renderController(config) },
-    { path: `backend/routes/${name}.routes.ts`, content: renderRoutes(config) },
+    { path: `backend/modules/${name}/${name}.module.ts`, content: renderNestModule(config) },
+    { path: `backend/modules/${name}/${name}.controller.ts`, content: renderNestController(config, columns, cnName) },
+    { path: `backend/modules/${name}/${name}.service.ts`, content: renderNestService(config, columns, cnName) },
+    { path: `backend/modules/${name}/dto/${name}.dto.ts`, content: renderNestDto(config, columns) },
+    {
+      path: `backend/prisma/${config.tableName}.model.prisma`,
+      content: renderPrismaModel(config, columns, tableComment),
+    },
     { path: `frontend/api/${name}.ts`, content: renderFrontendApi(config, columns) },
     { path: `frontend/views/${config.moduleName}/${name}/index.vue`, content: renderFrontendView(config, columns) },
     // 仅在用到自定义字典时附带种子片段（状态类字段用内置字典，无需新建）

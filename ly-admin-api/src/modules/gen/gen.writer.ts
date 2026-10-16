@@ -1,26 +1,24 @@
 /**
  * 代码生成落盘服务。
- * 模块职责：把生成的源码文件按固定映射写入真实项目目录（api/src 与 admin/src），
- * 并自动完成「模型注册」「路由挂载」「菜单节点」「接口文档」「操作日志」五处接线；
- * 同名文件默认拒绝覆盖（409）。
+ * 模块职责：把生成的源码文件按固定映射写入真实项目目录（ly-admin-api/src 与 ly-admin-web/src），
+ * 并自动完成「Nest 模块注册」「Prisma 模型」「菜单节点」三处接线；同名文件默认拒绝覆盖（409）。
  *
  * 接线实现（重要）：
- * - 模型/路由：沿用行模式锚点（import/export/models 数组、router.use）。
- * - 菜单/接口文档/操作日志：这三个文件结构复杂（嵌套树 / 常量数组），靠语法匹配易错，
- *   故在各文件末尾放置显式锚点注释 `// [GEN-ANCHOR] …`，生成器只在该锚点**之前**插入新内容；
+ * - Nest 模块：向 `ly-admin-api/src/app.module.ts` 插入 import 行并把类加进 `imports: [...]`。
+ * - Prisma 模型 / 菜单节点：这两个文件结构复杂（DSL / 嵌套树），靠语法匹配易错，故在各文件
+ *   放置显式锚点注释 `// [GEN-ANCHOR] …`，生成器只在该锚点**之前**插入新内容；
  *   锚点缺失时**跳过该文件并不做半截修改**（交由人工处理，并在 manualSteps 中提示）。
  *
  * 安全约束：
  * - 目标路径一律由服务端依据 moduleName/businessName 派生，不接受客户端传入路径；
  * - moduleName/businessName 已在 gen.service 通过 NAME_PATTERN 校验（字母开头仅字母数字），
  *   此处再做 resolve 后前缀校验，双重防御路径穿越与任意写。
- *
- * 迁移自原 Express 版本的 services/gen.writer.ts（对外函数改为 @Injectable 类方法）。
  */
 import { Injectable } from '@nestjs/common';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { isAbsolute, join, resolve, sep } from 'path';
 import { AppException } from '../../common/app.exception.js';
+import { toCamel, toPascal, unknownTypeNames } from './gen.templates.js';
 import { GenService } from './gen.service.js';
 import type { GenConfig, GenFile } from './gen.service.js';
 
@@ -35,7 +33,7 @@ export interface GenCreateResult {
 }
 
 /**
- * 锚点注释标识。各接线目标文件末尾放置一行含此标识的注释，
+ * 锚点注释标识。各接线目标文件末尾（或数据区末尾）放置一行含此标识的注释，
  * 生成器只在该行**之前**插入新内容；修改时务必保持与源码注释一致。
  */
 const GEN_ANCHOR = '[GEN-ANCHOR]';
@@ -47,7 +45,7 @@ type InjectionResult = 'injected' | 'exists' | 'no-anchor';
 let cachedProjectRoot: string | null = null;
 
 /**
- * 解析项目根目录（同时包含 api/src 与 admin/src 的目录）。
+ * 解析项目根目录（同时包含 ly-admin-web/src 与 ly-admin-api/src 的目录）。
  * @returns 项目根绝对路径
  */
 function resolveProjectRoot(): string {
@@ -56,7 +54,7 @@ function resolveProjectRoot(): string {
   }
   let dir = process.cwd();
   for (let depth = 0; depth < 5; depth += 1) {
-    if (existsSync(join(dir, 'api', 'src')) && existsSync(join(dir, 'admin', 'src'))) {
+    if (existsSync(join(dir, 'ly-admin-web', 'src')) && existsSync(join(dir, 'ly-admin-api', 'src'))) {
       cachedProjectRoot = dir;
       return dir;
     }
@@ -66,7 +64,7 @@ function resolveProjectRoot(): string {
     }
     dir = parent;
   }
-  throw new AppException('无法定位项目根目录（需同时存在 api/src 与 admin/src）', 500, 500);
+  throw new AppException('无法定位项目根目录（需同时存在 ly-admin-web/src 与 ly-admin-api/src）', 500, 500);
 }
 
 /**
@@ -79,18 +77,29 @@ function mapGenPath(relPath: string): { absolute: string; display: string } | nu
   const normalized = relPath.replace(/\\/g, '/');
   let targetDir: string;
   let rest: string;
-  if (normalized.startsWith('backend/')) {
-    targetDir = join(root, 'api', 'src');
+  if (normalized.startsWith('backend/prisma/')) {
+    // Prisma model 片段：**仅供预览 / ZIP 下载**，不单独落盘 ——
+    // 实际内容由 injectPrismaModel 追加进 ly-admin-api/prisma/schema.prisma（避免同一份定义两处存放）
+    return null;
+  }
+  if (normalized.startsWith('backend/seed/')) {
+    // 字典种子片段：落到 prisma/ 目录、紧挨 seed.ts（该目录不参与 tsc 编译，需人工合并进 DICT_SEEDS）
+    targetDir = join(root, 'ly-admin-api', 'prisma');
+    rest = normalized.slice('backend/seed/'.length);
+  } else if (normalized.startsWith('backend/')) {
+    // 新后端 NestJS + Prisma 源码目录
+    targetDir = join(root, 'ly-admin-api', 'src');
     rest = normalized.slice('backend/'.length);
   } else if (normalized.startsWith('frontend/')) {
-    targetDir = join(root, 'admin', 'src');
+    // 前端 Vue3 源码目录（原 admin/ 已更名为 ly-admin-web/）
+    targetDir = join(root, 'ly-admin-web', 'src');
     rest = normalized.slice('frontend/'.length);
   } else {
     // README 等说明文件不落盘
     return null;
   }
   const absolute = resolve(join(targetDir, rest));
-  // 双重防御：目标必须位于 api/src 或 admin/src 之内
+  // 双重防御：目标必须位于 ly-admin-api/src 或 ly-admin-web/src 之内
   if (!absolute.startsWith(targetDir + sep)) {
     throw new AppException(`生成目标路径非法：${relPath}`, 400, 400);
   }
@@ -121,69 +130,39 @@ function insertAfterLastMatch(lines: string[], pattern: RegExp, insertLine: stri
 }
 
 /**
- * 自动接线：把新模型注册进 api/src/models/index.ts（import / export / models 数组）。
- * @param cls 模型类名（PascalCase）
- * @returns 是否完成注入
+ * 自动接线：把新模块注册进 `ly-admin-api/src/app.module.ts`（import 行 + imports 数组）。
+ * @param className 模块类名（PascalCase + Module，如 `ArticleModule`）
+ * @param importPath 相对 app.module.ts 的导入路径（含 `.js`，如 `./modules/article/article.module.js`）
+ * @returns 插入结果
  */
-function injectModel(cls: string): boolean {
-  const file = join(resolveProjectRoot(), 'api', 'src', 'models', 'index.ts');
+function injectNestModule(className: string, importPath: string): InjectionResult {
+  const file = join(resolveProjectRoot(), 'ly-admin-api', 'src', 'app.module.ts');
   if (!existsSync(file)) {
-    return false;
+    return 'no-anchor';
   }
   const content = readFileSync(file, 'utf8');
   // 幂等：已注册则跳过
-  if (content.includes(`from './${cls}'`)) {
-    return false;
+  if (content.includes(importPath)) {
+    return 'exists';
+  }
+  if (!/imports:\s*\[/.test(content)) {
+    return 'no-anchor';
   }
   const lines = content.split('\n');
+  // import 行插在最后一个 import 之后
   const okImport = insertAfterLastMatch(
     lines,
-    /^import \{[^}]*\} from '\.\/.+';$/,
-    `import { ${cls} } from './${cls}';`,
+    /^import .+ from '.+';$/,
+    `import { ${className} } from '${importPath}';`,
   );
-  const okExport = insertAfterLastMatch(
-    lines,
-    /^export \{[^}]*\} from '\.\/.+';$/,
-    `export { ${cls} } from './${cls}';`,
-  );
-  const arrayPattern = /export const models = \[([\s\S]*?)\];/;
-  const okArray = arrayPattern.test(content);
-  if (!okImport || !okExport || !okArray) {
+  // 类名插在 imports 数组最后一个 *Module 项之后
+  const okArray = insertAfterLastMatch(lines, /^ {4}[A-Za-z]\w*Module,$/, `    ${className},`);
+  if (!okImport || !okArray) {
     // 锚点缺失时不做半截修改，交由人工接线
-    return false;
-  }
-  const next = lines.join('\n').replace(arrayPattern, `export const models = [$1, ${cls}];`);
-  writeFileSync(file, next, 'utf8');
-  return true;
-}
-
-/**
- * 自动接线：把新路由挂载进 api/src/routes/index.ts（import + router.use）。
- * @param name 业务名（camelCase，与生成文件名一致）
- * @returns 是否完成注入
- */
-function injectRoutes(name: string): boolean {
-  const file = join(resolveProjectRoot(), 'api', 'src', 'routes', 'index.ts');
-  if (!existsSync(file)) {
-    return false;
-  }
-  const content = readFileSync(file, 'utf8');
-  // 幂等：已挂载则跳过
-  if (content.includes(`./${name}.routes`) || content.includes(`router.use('/${name}'`)) {
-    return false;
-  }
-  const lines = content.split('\n');
-  const okImport = insertAfterLastMatch(
-    lines,
-    /^import \w+ from '\.\/.+';$/,
-    `import ${name}Routes from './${name}.routes';`,
-  );
-  const okMount = insertAfterLastMatch(lines, /^router\.use\(.+\);$/, `router.use('/${name}', ${name}Routes);`);
-  if (!okImport || !okMount) {
-    return false;
+    return 'no-anchor';
   }
   writeFileSync(file, lines.join('\n'), 'utf8');
-  return true;
+  return 'injected';
 }
 
 /**
@@ -193,8 +172,8 @@ function injectRoutes(name: string): boolean {
  * - 幂等：目标内容已包含 `idempotencyToken` 时视为已接入，返回 `exists`，不重复插入；
  * - 锚点缺失：返回 `no-anchor`，**不做任何修改**（沿用「不半截改」约定，交由人工处理）。
  *
- * @param relPath 目标文件相对项目根的路径（如 `api/src/seed/menu.seed.ts`）
- * @param block 待插入源码（多行；缩进/引号需符合 prettier）
+ * @param relPath 目标文件相对项目根的路径（如 `ly-admin-api/prisma/schema.prisma`）
+ * @param block 待插入源码（多行；缩进/引号需符合 prettier / Prisma 格式）
  * @param idempotencyToken 幂等令牌（目标文件已含有该子串即视为已插入）
  * @returns 插入结果
  */
@@ -223,7 +202,7 @@ function injectBeforeAnchor(relPath: string, block: string, idempotencyToken: st
  * @returns 顶层最大 sort；读取失败时返回 0
  */
 function readMaxTopLevelMenuSort(): number {
-  const file = join(resolveProjectRoot(), 'api', 'src', 'seed', 'menu.seed.ts');
+  const file = join(resolveProjectRoot(), 'ly-admin-api', 'src', 'prisma', 'seed.service.ts');
   if (!existsSync(file)) {
     return 0;
   }
@@ -247,12 +226,12 @@ const GEN_BUTTON_DEFS: Array<{ code: string; label: string }> = [
 ];
 
 /**
- * 构建菜单种子节点源码（DIRECTORY → MENU → 4 个 BUTTON），风格对齐 tool/gen 模块。
+ * 构建菜单种子节点源码（DIRECTORY → MENU → 4 个 BUTTON），风格对齐 seed.service.ts 的 MENU_TREE。
  * @param moduleName 模块名
  * @param businessName 业务名
  * @param cnName 中文模块名（取表注释，缺失时回退 moduleName）
  * @param sort 目录节点排序值
- * @returns 可直接插入 menu.seed.ts 的源码块
+ * @returns 可直接插入 seed.service.ts 的源码块
  */
 function buildMenuSeedBlock(moduleName: string, businessName: string, cnName: string, sort: number): string {
   const base = `${moduleName}:${businessName}`;
@@ -294,142 +273,6 @@ function buildMenuSeedBlock(moduleName: string, businessName: string, cnName: st
   return lines.join('\n');
 }
 
-/**
- * 渲染 responseExample 多行数组源码（内容较长、prettier 会保持分行）。
- * @param jsonLines JSON 行内容（每行作为单引号字符串字面量）
- * @returns 源码行数组
- */
-function renderResponseExampleMultiLine(jsonLines: string[]): string[] {
-  return ['        responseExample: [', ...jsonLines.map((line) => `          '${line}',`), "        ].join('\\n'),"];
-}
-
-/**
- * 渲染 responseExample 单行数组源码（内容短，prettier 保持单行）。
- * @param jsonLines JSON 行内容（每行作为单引号字符串字面量）
- * @returns 单行源码
- */
-function renderResponseExampleInline(jsonLines: string[]): string {
-  const items = jsonLines.map((line) => `'${line}'`).join(', ');
-  return `        responseExample: [${items}].join('\\n'),`;
-}
-
-/**
- * 构建接口文档模块源码（5 个 endpoint，路由与实际生成路由一一对应）。
- * @param moduleName 模块名
- * @param businessName 业务名
- * @param cnName 中文模块名（取表注释，缺失时回退 moduleName）
- * @returns 可直接插入 catalog.ts 的源码块
- */
-function buildCatalogBlock(moduleName: string, businessName: string, cnName: string): string {
-  const permBase = `${moduleName}:${businessName}`;
-  const basePath = `/api/${businessName}`;
-  const listExample = [
-    '{',
-    '  "code": 200,',
-    '  "message": "success",',
-    '  "data": { "list": [], "total": 0, "page": 1, "pageSize": 10 }',
-    '}',
-  ];
-  const detailExample = [
-    '{',
-    '  "code": 200,',
-    '  "message": "success",',
-    '  "data": { "id": 1, "name": "demo" }',
-    '}',
-  ];
-  const createExample = [
-    '{',
-    '  "code": 200,',
-    '  "message": "新增成功",',
-    '  "data": { "id": 1, "name": "demo" }',
-    '}',
-  ];
-  const updateExample = [
-    '{',
-    '  "code": 200,',
-    '  "message": "修改成功",',
-    '  "data": { "id": 1, "name": "demo" }',
-    '}',
-  ];
-  const removeExample = ['{', '  "code": 200,', '  "message": "删除成功",', '  "data": null', '}'];
-
-  return [
-    '  {',
-    `    key: '${moduleName}',`,
-    `    name: '${cnName}',`,
-    `    basePath: '${basePath}',`,
-    `    description: '${cnName}相关接口（由代码生成器自动生成）。',`,
-    '    endpoints: [',
-    '      {',
-    "        method: 'GET',",
-    `        path: '${basePath}',`,
-    `        summary: '分页查询${cnName}',`,
-    `        description: '分页查询${cnName}列表（由代码生成器自动生成）。',`,
-    '        auth: true,',
-    `        permission: '${permBase}:list',`,
-    "        contentType: 'application/json',",
-    ...renderResponseExampleMultiLine(listExample),
-    '      },',
-    '      {',
-    "        method: 'GET',",
-    `        path: '${basePath}/:id',`,
-    `        summary: '${cnName}详情',`,
-    `        description: '查询单条${cnName}详情（由代码生成器自动生成）。',`,
-    '        auth: true,',
-    `        permission: '${permBase}:query',`,
-    "        contentType: 'application/json',",
-    ...renderResponseExampleMultiLine(detailExample),
-    '      },',
-    '      {',
-    "        method: 'POST',",
-    `        path: '${basePath}',`,
-    `        summary: '新增${cnName}',`,
-    `        description: '新增一条${cnName}记录（由代码生成器自动生成）。',`,
-    '        auth: true,',
-    `        permission: '${permBase}:add',`,
-    "        contentType: 'application/json',",
-    ...renderResponseExampleMultiLine(createExample),
-    '      },',
-    '      {',
-    "        method: 'PUT',",
-    `        path: '${basePath}/:id',`,
-    `        summary: '编辑${cnName}',`,
-    `        description: '按主键编辑${cnName}记录（由代码生成器自动生成）。',`,
-    '        auth: true,',
-    `        permission: '${permBase}:edit',`,
-    "        contentType: 'application/json',",
-    ...renderResponseExampleMultiLine(updateExample),
-    '      },',
-    '      {',
-    "        method: 'DELETE',",
-    `        path: '${basePath}/:id',`,
-    `        summary: '删除${cnName}',`,
-    `        description: '按主键删除${cnName}记录（由代码生成器自动生成）。',`,
-    '        auth: true,',
-    `        permission: '${permBase}:remove',`,
-    "        contentType: 'application/json',",
-    renderResponseExampleInline(removeExample),
-    '      },',
-    '    ],',
-    '  },',
-  ].join('\n');
-}
-
-/**
- * 构建操作日志规则源码（2 条：`/:id` 写操作 + 集合 POST 新增）。
- * 注意：正则中的业务名是**运行期字面量**（插入到静态配置数组的合法源码），非字符串拼接。
- * @param businessName 业务名（即实际挂载的路由段 `/api/<businessName>`）
- * @param cnName 中文模块名（取表注释，缺失时回退 moduleName）
- * @returns 可直接插入 operationLog.ts 的源码块
- */
-function buildOperationLogBlock(businessName: string, cnName: string): string {
-  return [
-    `  // ${cnName}：以下两条规则覆盖该模块的写操作；action 为空时按请求方法推断（DELETE→删除 / POST→新增 / 其他→编辑）`,
-    `  { pattern: /^\\/api\\/${businessName}\\/\\d+$/, module: '${cnName}', action: '' },`,
-    `  { pattern: /^\\/api\\/${businessName}$/, module: '${cnName}', action: '新增' },`,
-  ].join('\n');
-}
-
 @Injectable()
 export class GenWriter {
   constructor(private readonly genService: GenService) {}
@@ -463,48 +306,40 @@ export class GenWriter {
       written.push(item.target.display);
     }
 
-    // 自动接线（模型注册 + 路由挂载）
-    const injected: string[] = [];
     const businessName = config.businessName;
-    const cls = businessName.charAt(0).toUpperCase() + businessName.slice(1);
-    if (injectModel(cls)) {
-      injected.push('api/src/models/index.ts');
-    }
-    if (injectRoutes(businessName)) {
-      injected.push('api/src/routes/index.ts');
-    }
+    const name = toCamel(businessName);
+    const cls = toPascal(businessName);
+    const modelName = toPascal(config.tableName);
+    // Prisma 模型片段直接取预览产物，保证「落盘文件」与「自动插入内容」完全一致
+    const modelFile = files.find((file) => file.path === `backend/prisma/${config.tableName}.model.prisma`);
 
     // 中文模块名：优先取表注释，缺失时回退模块名（菜单与操作日志均需要中文名）
     const detail = await this.genService.getGenTableDetail(config.tableName);
     const cnName = (detail.tableComment || '').trim() || config.moduleName;
 
-    // 三处接线（菜单 / 接口文档 / 操作日志），均基于显式锚点，锚点缺失则跳过并提示人工处理
+    // 三处接线：Nest 模块 / Prisma 模型 / 菜单节点
     const wiring: Array<{ path: string; result: InjectionResult }> = [
       {
-        path: 'api/src/seed/menu.seed.ts',
+        path: 'ly-admin-api/src/app.module.ts',
+        result: injectNestModule(`${cls}Module`, `./modules/${name}/${name}.module.js`),
+      },
+      {
+        path: 'ly-admin-api/prisma/schema.prisma',
+        result: modelFile
+          ? injectBeforeAnchor('ly-admin-api/prisma/schema.prisma', modelFile.content, `model ${modelName} {`)
+          : 'no-anchor',
+      },
+      {
+        path: 'ly-admin-api/src/prisma/seed.service.ts',
         result: injectBeforeAnchor(
-          'api/src/seed/menu.seed.ts',
+          'ly-admin-api/src/prisma/seed.service.ts',
           buildMenuSeedBlock(config.moduleName, businessName, cnName, readMaxTopLevelMenuSort() + 1),
           `key: '${config.moduleName}:${businessName}',`,
         ),
       },
-      {
-        path: 'api/src/docs/catalog.ts',
-        result: injectBeforeAnchor(
-          'api/src/docs/catalog.ts',
-          buildCatalogBlock(config.moduleName, businessName, cnName),
-          `basePath: '/api/${businessName}',`,
-        ),
-      },
-      {
-        path: 'api/src/middlewares/operationLog.ts',
-        result: injectBeforeAnchor(
-          'api/src/middlewares/operationLog.ts',
-          buildOperationLogBlock(businessName, cnName),
-          `pattern: /^\\/api\\/${businessName}\\/`,
-        ),
-      },
     ];
+
+    const injected: string[] = [];
     wiring.forEach((item) => {
       if (item.result === 'injected') {
         injected.push(item.path);
@@ -512,7 +347,7 @@ export class GenWriter {
     });
 
     const manualSteps = [
-      '后端已自动完成「模型注册 / 路由挂载 / 菜单节点 / 接口文档 / 操作日志」接线，重启后端（npm run dev）后生效；',
+      '后端已自动完成「Nest 模块注册 / Prisma 模型 / 菜单节点」接线；执行 npm run prisma:push 同步表结构后重启服务（启动即自动幂等种子）即生效；',
       '如需授予其它角色，请在「系统管理-角色管理-菜单授权」中勾选。',
     ];
     // 锚点缺失导致未能自动接线的文件，逐条提示人工处理（沿用「不半截改」约定）
@@ -521,6 +356,13 @@ export class GenWriter {
         manualSteps.push(`未找到 [GEN-ANCHOR] 锚点，未能自动接线 ${item.path}，请人工补充。`);
       }
     });
+    // 未知列类型：生成物已兜底为 String，提示人工确认
+    const unknownTypes = unknownTypeNames(detail.columns);
+    if (unknownTypes.length > 0) {
+      manualSteps.push(
+        `以下列的 MySQL 类型无法可靠映射为 Prisma 类型，已兜底为 String @db.VarChar(255)，请人工确认：${unknownTypes.join('、')}；`,
+      );
+    }
 
     return { written, injected, manualSteps };
   }
