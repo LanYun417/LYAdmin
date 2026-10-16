@@ -16,9 +16,9 @@
     "guard:deps": "node scripts/deps-guard.mjs",
     "guard:deps:update": "node scripts/deps-guard.mjs --update",
     "commit": "cz",
-    "dev:api": "npm --prefix api run dev",
-    "dev:admin": "npm --prefix admin run dev",
-    "dev": "concurrently -n api,admin -c blue,green \"npm run dev:api\" \"npm run dev:admin\""
+    "dev:api": "npm --prefix ly-admin-api run start:dev",
+    "dev:admin": "npm --prefix ly-admin-web run dev",
+    "dev": "concurrently -n api,web -c blue,green \"npm run dev:api\" \"npm run dev:admin\""
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.3",

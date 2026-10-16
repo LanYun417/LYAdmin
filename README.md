@@ -339,15 +339,15 @@ cd admin && npm run dev    # http://localhost:5173
 前端产物直接构建进后端目录，由后端一并托管：
 
 ```bash
-cd admin
-npm run build:only -- --outDir ../api/web   # 产物输出到 api/web
+cd ly-admin-web
+npm run build:only -- --outDir ../web   # 产物输出到根目录 web/，由后端一并托管
 
-cd ../api
+cd ../ly-admin-api
 npm run build
-NODE_ENV=production node dist/server.js
+NODE_ENV=production node dist/main.js
 ```
 
-- 后端启动时若 `api/web` 存在，会自动托管该目录，并对前端 history 路由做 `index.html` 回退。
+- 后端启动时若 `web/` 存在，会自动托管该目录，并对前端 history 路由做 `index.html` 回退。
 - 产物目录可用 `WEB_DIST_DIR` 覆盖（相对 `api/`）。
 - 同源部署下静态资源的防盗链「同源放行」天然成立，无需配置 `UPLOAD_ALLOWED_REFERERS`。
 
@@ -413,13 +413,13 @@ NODE_ENV=production node dist/server.js
 在**根目录**执行 `npm install`（会触发 `prepare` → `husky`），确认 `.husky/` 下存在 `pre-commit` 与 `commit-msg`。只在 `admin/` 或 `api/` 装依赖不会装配钩子。
 
 **Q7：登录成功但菜单为空？**
-菜单由后端按当前用户角色下发。`super_admin` 仍为空说明种子未写入，执行 `cd api && npm run seed`（幂等）；普通角色请在「角色管理 → 菜单授权」中勾选。
+菜单由后端按当前用户角色下发。`super_admin` 仍为空说明种子未写入，执行 `cd ly-admin-api && npm run seed`（幂等）；普通角色请在「角色管理 → 菜单授权」中勾选。
 
 **Q8：上传文件后访问 404？**
-确认 `api/uploads/` 存在且可写；确保后端已启动、前端代理已转发 `/static`。分离部署时还需把前端 origin 配进 `UPLOAD_ALLOWED_REFERERS`。
+确认 `ly-admin-api/uploads/` 存在且可写；确保后端已启动、前端代理已转发 `/static`。分离部署时还需把前端 origin 配进 `UPLOAD_ALLOWED_REFERERS`。
 
 **Q9：接口 401 且反复跳登录？**
-accessToken 过期会由前端自动刷新（`admin/src/api/request.ts`）；refreshToken 也失效则登出。检查 `JWT_*` 配置一致性与服务器时间是否准确。
+accessToken 过期会由前端自动刷新（`ly-admin-web/src/api/request.ts`）；refreshToken 也失效则登出。检查 `JWT_*` 配置一致性与服务器时间是否准确。
 
 ## 许可
 

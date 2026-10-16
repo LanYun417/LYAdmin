@@ -64,11 +64,11 @@ export default defineConfig(({ mode }) => {
       open: true,
       proxy: {
         '/api': {
-          target: 'http://localhost:5090',
+          target: 'http://localhost:3000',
           changeOrigin: true,
         },
         '/static': {
-          target: 'http://localhost:5090',
+          target: 'http://localhost:3000',
           changeOrigin: true,
         },
       },
