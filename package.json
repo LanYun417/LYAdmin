@@ -15,6 +15,7 @@
     "stylelint:fix": "stylelint \"**/*.{css,scss,vue}\" --fix",
     "guard:deps": "node scripts/deps-guard.mjs",
     "guard:deps:update": "node scripts/deps-guard.mjs --update",
+    "guard:imports": "node scripts/check-tracked-imports.mjs",
     "commit": "cz",
     "dev:api": "npm --prefix ly-admin-api run start:dev",
     "dev:admin": "npm --prefix ly-admin-web run dev",
