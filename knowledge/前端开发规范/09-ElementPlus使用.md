@@ -91,7 +91,7 @@ import zhCn from 'element-plus/es/locale/lang/zh-cn';
 
 1. 表格 Header 背景色等视觉规范通过 CSS 变量 / 命名空间类统一，不在每个页面写内联样式。
 2. `ElMessage` 文案统一中文、句尾不加标点（与 commitlint subject 风格一致的约定）。
-3. 弹窗类组件优先用 `v-model` 控制显隐；固定尺寸弹层必须走响应式封装（`useResponsiveSize` / `BasicDialog`，见 18）。
+3. 弹窗类组件优先用 `v-model` 控制显隐；固定尺寸弹层必须走响应式封装（`useResponsiveSize` / `BasicDialog`，见 17）。
 
 ## 常见错误
 

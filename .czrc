@@ -28,7 +28,7 @@
     { "value": "revert", "name": "revert:   回退提交", "emoji": "⏪" }
   ],
   "useEmoji": false,
-  "scopes": ["root", "api", "admin", "docs", "config", "deps", "release"],
+  "scopes": ["root", "api", "web", "gen", "docs", "config", "deps", "tooling", "release"],
   "enableMultipleScopes": true,
   "scopeEnumSeparator": ",",
   "allowCustomScopes": true,

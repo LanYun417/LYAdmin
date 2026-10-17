@@ -100,9 +100,9 @@ LYAdmin 面向企业内部运营 / 管理场景，提供一套可直接二次开
 | 后端数据层     | Prisma 7 + `@prisma/adapter-mariadb`（driver adapter 提供运行期连接；CLI 连接串见 `prisma.config.ts`）                                                          |
 | 后端能力       | jose（JWT）+ bcryptjs（口令）+ class-validator / class-transformer（校验）+ multer（上传）+ sharp（图片处理）+ redis（官方 node-redis：验证码 / 黑名单 / 限流） |
 | 数据库 / 缓存  | MySQL 8.x（库 `ly_admin`，utf8mb4）；Redis（可选，留空 `REDIS_HOST` 即降级：验证码跨实例共享、黑名单、限流失效）                                                |
-| 工程规范       | ESLint 10 + Prettier 3.9 + Stylelint 17 + husky 9 + lint-staged 17 + commitlint 21 + cz-git + concurrently                                                      |
+| 工程规范       | ESLint 10 + oxlint 1.88（后端）+ Prettier 3.9 + Stylelint 17 + husky 9 + lint-staged 17 + commitlint 21 + cz-git + concurrently                                 |
 
-> 代码规范由 ESLint / Prettier / Stylelint 统一约束，提交信息由 commitlint 校验，均由 husky 钩子在提交前自动拦截。
+> 代码规范由 ESLint / oxlint / Prettier / Stylelint 统一约束，提交信息由 commitlint 校验，均由 husky 钩子在提交前自动拦截。
 
 ## 目录结构
 
@@ -196,8 +196,8 @@ CREATE DATABASE IF NOT EXISTS `ly_admin`
   DEFAULT COLLATE utf8mb4_general_ci;
 ```
 
-> 表结构**不再由后端启动时自动创建**（Prisma 7 不提供运行时 DDL），首次需执行一次 `npm run prisma:push` 建表；
-> 种子数据则在每次服务启动时**幂等**执行（对齐原版 `server.ts` 的 `await runSeed()`），也可用 `npm run seed` 手动执行。
+> 表结构由 Prisma 管理：Prisma 7 不提供运行时 DDL，首次需执行一次 `npm run prisma:push` 建表；
+> 种子数据在每次服务启动时**幂等**执行，也可用 `npm run seed` 手动执行。
 
 ### 2. 安装依赖
 
@@ -276,20 +276,21 @@ npm run dev:admin  # 前端 http://localhost:5173（等价 cd ly-admin-web && np
 
 ### 根目录
 
-| 命令                    | 说明                                           |
-| ----------------------- | ---------------------------------------------- |
-| `npm run dev`           | 并行启动前后端                                 |
-| `npm run dev:api`       | 仅启动后端                                     |
-| `npm run dev:admin`     | 仅启动前端                                     |
-| `npm run lint`          | 全仓 ESLint 检查（`--max-warnings 0`）         |
-| `npm run lint:fix`      | 全仓 ESLint 自动修复                           |
-| `npm run format`        | 全仓 Prettier 格式化                           |
-| `npm run format:check`  | 全仓 Prettier 格式校验（不写文件）             |
-| `npm run stylelint`     | 全仓 Stylelint 检查                            |
-| `npm run stylelint:fix` | 全仓 Stylelint 自动修复                        |
-| `npm run guard:deps`    | 校验三处 `package.json` 的运行时依赖与基线一致 |
-| `npm run commit`        | cz-git 交互式生成规范提交                      |
-| `npm run prepare`       | 装配 husky 钩子（`npm install` 后自动执行）    |
+| 命令                    | 说明                                             |
+| ----------------------- | ------------------------------------------------ |
+| `npm run dev`           | 并行启动前后端                                   |
+| `npm run dev:api`       | 仅启动后端                                       |
+| `npm run dev:admin`     | 仅启动前端                                       |
+| `npm run lint`          | 全仓 ESLint 检查（`--max-warnings 0`）           |
+| `npm run lint:fix`      | 全仓 ESLint 自动修复                             |
+| `npm run format`        | 全仓 Prettier 格式化                             |
+| `npm run format:check`  | 全仓 Prettier 格式校验（不写文件）               |
+| `npm run stylelint`     | 全仓 Stylelint 检查                              |
+| `npm run stylelint:fix` | 全仓 Stylelint 自动修复                          |
+| `npm run guard:deps`    | 校验三处 `package.json` 的运行时依赖与基线一致   |
+| `npm run guard:imports` | 校验已入库文件的相对导入可解析（干净克隆可构建） |
+| `npm run commit`        | cz-git 交互式生成规范提交                        |
+| `npm run prepare`       | 装配 husky 钩子（`npm install` 后自动执行）      |
 
 ### 前端 `ly-admin-web/`
 
@@ -411,7 +412,7 @@ NODE_ENV=production node dist/main.js
 
 1. **环境**：按[快速开始](#快速开始)拉起项目；根目录 `npm install` 以装配 husky 钩子。
 2. **分支**：从 `master` 切出特性分支（命名 `feature/*` / `fix/*` / `hotfix/*`）。
-3. **编码**：遵循 ESLint / Prettier / Stylelint 规范（见根目录工程配置）；提交信息使用 Conventional Commits（`npm run commit` 可交互生成）。
+3. **编码**：遵循 [前端开发规范](./knowledge/前端开发规范/00-导读.md)、[后端开发规范](./knowledge/后端开发规范/00-导读.md) 与 [Git 提交规范](./knowledge/Git提交规范/00-导读.md)；提交信息使用 Conventional Commits（`npm run commit` 可交互生成）。
 4. **提交前自检**（务必全绿）：
 
    ```bash
@@ -419,7 +420,7 @@ NODE_ENV=production node dist/main.js
    npm run lint              # ESLint（--max-warnings 0）
    npm run stylelint         # Stylelint
    npm run guard:deps        # 依赖基线
-   (cd ly-admin-api && npm run typecheck)
+   (cd ly-admin-api && npm run typecheck && npm run lint && npm run test)
    (cd ly-admin-web && npm run type-check)
    ```
 

@@ -112,7 +112,7 @@ npm run stylelint      # stylelint "**/*.{css,scss,vue}"
 npm run stylelint:fix  # stylelint ... --fix
 ```
 
-提交时 lint-staged 会自动对暂存文件执行三者（见 15）。
+提交时 lint-staged 会自动对暂存文件执行三者（见 14）。
 
 ## 常见错误
 
