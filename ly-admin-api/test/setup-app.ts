@@ -10,17 +10,18 @@
 import { Test } from '@nestjs/testing';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from '../src/app.module.js';
-import { configureApp } from '../src/app.setup.js';
+import { configureApp, type AppSetupOptions } from '../src/app.setup.js';
 import { OkExpressAdapter } from '../src/common/ok-express.adapter.js';
 
 /**
  * 创建与生产口径一致的测试实例（需本地 MySQL 与 Redis 可用）。
+ * @param options 装配选项（默认不挂静态资源；静态回退用例可传 `serveStatic: true` + 临时目录）
  * @returns 已 init 的 Nest 应用（把 `app.getHttpServer()` 交给 supertest）
  */
-export async function createTestApp(): Promise<NestExpressApplication> {
+export async function createTestApp(options: AppSetupOptions = {}): Promise<NestExpressApplication> {
   const moduleFixture = await Test.createTestingModule({ imports: [AppModule] }).compile();
   const app = moduleFixture.createNestApplication<NestExpressApplication>(new OkExpressAdapter());
-  configureApp(app);
+  configureApp(app, options);
   await app.init();
   return app;
 }

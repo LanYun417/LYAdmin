@@ -13,12 +13,15 @@
 import { existsSync } from 'node:fs';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import type { NestExpressApplication } from '@nestjs/platform-express';
+import type { NextFunction, Request, Response } from 'express';
 import { config } from './common/config.js';
 
 /** 装配选项。 */
 export interface AppSetupOptions {
   /** 是否挂载上传资源与前端构建产物（含 history 回退）。仅生产入口需要。 */
   serveStatic?: boolean;
+  /** 前端产物目录（默认取 `config.web.distDir`，测试可用临时目录覆盖）。 */
+  webDistDir?: string;
 }
 
 /**
@@ -74,23 +77,26 @@ export function configureApp(app: NestExpressApplication, options: AppSetupOptio
   }
 
   // 前端构建产物（同源部署）：存在时由后端一并托管，含 history 回退
-  if (existsSync(config.web.distDir)) {
-    app.useStaticAssets(config.web.distDir);
-    // history 回退：非 /api 的页面请求回退 index.html（刷新子路由不 404）
-    // 用通配路由 + 运行时判断（Express 5 的 path-to-regexp 需具名通配符 `{*path}`）
-    app.getHttpAdapter().get('/{*path}', (req: unknown, res: unknown) => {
-      const request = req as { path?: string; url?: string };
-      const response = res as {
-        status: (code: number) => { json: (body: unknown) => void };
-        sendFile: (file: string, opts: { root: string }) => void;
-      };
-      const path: string = request.path ?? request.url ?? '';
-      if (path.startsWith('/api') || path.startsWith(`/${config.upload.route}`)) {
-        response.status(404).json({ code: 404, message: '资源不存在', data: null });
+  const webDistDir = options.webDistDir ?? config.web.distDir;
+  if (existsSync(webDistDir)) {
+    app.useStaticAssets(webDistDir);
+    // history 回退：非 /api 的页面导航回退 index.html（刷新子路由不 404）。
+    //
+    // ⚠️ 该中间件注册在 Nest 控制器路由**之前**（listen/init 时才挂载路由），因此 /api 与静态前缀
+    // 必须 `next()` 交还给后续路由，不能自行返回 404——否则同源部署下所有接口都会被这里吞掉。
+    app.use((req: Request, res: Response, next: NextFunction) => {
+      // 只接管浏览器页面导航：GET/HEAD 且显式接受 HTML；资源 / XHR 请求继续走后续路由
+      if ((req.method !== 'GET' && req.method !== 'HEAD') || !req.headers.accept?.includes('text/html')) {
+        next();
         return;
       }
-      response.sendFile('index.html', { root: config.web.distDir });
+      const path = req.path;
+      if (path.startsWith('/api') || path.startsWith(`/${config.upload.route}`)) {
+        next();
+        return;
+      }
+      res.sendFile('index.html', { root: webDistDir });
     });
-    logger.log(`前端产物已托管: ${config.web.distDir}`);
+    logger.log(`前端产物已托管: ${webDistDir}`);
   }
 }
