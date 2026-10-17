@@ -38,6 +38,15 @@ export interface GenCreateResult {
  */
 const GEN_ANCHOR = '[GEN-ANCHOR]';
 
+/**
+ * 代码生成器写入 Prisma 模型的**目标文件**（相对项目根）。
+ *
+ * schema 是目录式的（划分见 `ly-admin-api/prisma/schema/00-base.prisma` 的「文件划分」一节），
+ * 生成物统一落在 `90-generated.prisma`：这样自动插入的 diff 不会混进业务模型文件，
+ * 接手方 review「自己改的模型」时也不会被生成块干扰。
+ */
+const PRISMA_GENERATED_SCHEMA = 'ly-admin-api/prisma/schema/90-generated.prisma';
+
 /** 自动插入结果。 */
 type InjectionResult = 'injected' | 'exists' | 'no-anchor';
 
@@ -79,7 +88,7 @@ function mapGenPath(relPath: string): { absolute: string; display: string } | nu
   let rest: string;
   if (normalized.startsWith('backend/prisma/')) {
     // Prisma model 片段：**仅供预览 / ZIP 下载**，不单独落盘 ——
-    // 实际内容由 injectPrismaModel 追加进 ly-admin-api/prisma/schema.prisma（避免同一份定义两处存放）
+    // 实际内容由 injectBeforeAnchor 追加进 prisma/schema/90-generated.prisma（避免同一份定义两处存放）
     return null;
   }
   if (normalized.startsWith('backend/seed/')) {
@@ -172,7 +181,7 @@ function injectNestModule(className: string, importPath: string): InjectionResul
  * - 幂等：目标内容已包含 `idempotencyToken` 时视为已接入，返回 `exists`，不重复插入；
  * - 锚点缺失：返回 `no-anchor`，**不做任何修改**（沿用「不半截改」约定，交由人工处理）。
  *
- * @param relPath 目标文件相对项目根的路径（如 `ly-admin-api/prisma/schema.prisma`）
+ * @param relPath 目标文件相对项目根的路径（如 `ly-admin-api/prisma/schema/90-generated.prisma`）
  * @param block 待插入源码（多行；缩进/引号需符合 prettier / Prisma 格式）
  * @param idempotencyToken 幂等令牌（目标文件已含有该子串即视为已插入）
  * @returns 插入结果
@@ -187,7 +196,8 @@ function injectBeforeAnchor(relPath: string, block: string, idempotencyToken: st
     return 'exists';
   }
   const lines = content.split('\n');
-  const index = lines.findIndex((line) => line.includes(GEN_ANCHOR));
+  // 只认「以 // [GEN-ANCHOR] 开头的行」：说明性注释里也可能提到该标记（曾因此把模型插到了说明文字之上）
+  const index = lines.findIndex((line) => line.trim().startsWith(`// ${GEN_ANCHOR}`));
   if (index < 0) {
     return 'no-anchor';
   }
@@ -324,9 +334,9 @@ export class GenWriter {
         result: injectNestModule(`${cls}Module`, `./modules/${name}/${name}.module.js`),
       },
       {
-        path: 'ly-admin-api/prisma/schema.prisma',
+        path: PRISMA_GENERATED_SCHEMA,
         result: modelFile
-          ? injectBeforeAnchor('ly-admin-api/prisma/schema.prisma', modelFile.content, `model ${modelName} {`)
+          ? injectBeforeAnchor(PRISMA_GENERATED_SCHEMA, modelFile.content, `model ${modelName} {`)
           : 'no-anchor',
       },
       {

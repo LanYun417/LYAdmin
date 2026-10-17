@@ -152,7 +152,13 @@ ly-admin-web/src/
 ```
 ly-admin-api/
 ├─ prisma/
-│  ├─ schema.prisma           # 数据模型（含 /// 表/字段说明，是库内 COMMENT 的唯一来源）
+│  ├─ schema/                 # 数据模型（目录式 schema，按域拆分；/// 是库内 COMMENT 的唯一来源）
+│  │  ├─ 00-base.prisma       #   公共约定 + generator + datasource
+│  │  ├─ 10-system.prisma     #   用户 / 角色 / 菜单 / 部门 + 三张关联表
+│  │  ├─ 20-dict-config.prisma #  字典类型 / 字典项 / 系统参数
+│  │  ├─ 25-file.prisma       #   文件管理
+│  │  ├─ 30-log.prisma        #   登录 / 操作 / HTTP 访问日志
+│  │  └─ 90-generated.prisma  #   代码生成器注入区（[GEN-ANCHOR]，勿手工放业务模型）
 │  └─ seed.ts                 # CLI 种子（npm run seed）
 ├─ scripts/
 │  └─ prisma-comments.ts      # 把 schema 的 /// 同步为数据库表/字段 COMMENT
@@ -231,7 +237,7 @@ npm run seed              # 写入默认数据（可选：服务启动时也会�
 ```
 
 > Prisma 不会把 schema 的 `///` 注释写进数据库（`db push` 不写、`db pull` 也读不回），
-> 表/字段 COMMENT 由 `npm run prisma:comments` 负责落库——它从 `schema.prisma` 的 `///` 生成 DDL，
+> 表/字段 COMMENT 由 `npm run prisma:comments` 负责落库——它从 `prisma/schema/` 下各文件的 `///` 生成 DDL，
 > 幂等可重复执行，改完注释或同步完表结构跑一次即可。用 `npm run prisma:comments:check` 可检查
 > 库内注释是否漂移（有差异时退出码 1，可用于 CI）。这些注释是运维与代码生成器的数据源。
 
@@ -420,8 +426,8 @@ NODE_ENV=production node dist/main.js
 5. **PR**：说明背景与改动点，关联相关 Issue，并确保上述检查通过。
 
 > 新增后端业务模块请遵循 NestJS 分层（module → controller → service → dto），数据访问统一走 `PrismaService`；
-> 表结构变更改 `prisma/schema.prisma` 后，依次执行 `npm run prisma:push` 与 `npm run prisma:comments`
-> （后者把 schema 的 `///` 同步为库内表/字段 COMMENT）。
+> 表结构变更改 `prisma/schema/` 下对应的模型文件（按域分文件，见 00-base.prisma 的「文件划分」）后，
+> 依次执行 `npm run prisma:push` 与 `npm run prisma:comments`（后者把 `///` 同步为库内表/字段 COMMENT）。
 
 ## 常见问题
 

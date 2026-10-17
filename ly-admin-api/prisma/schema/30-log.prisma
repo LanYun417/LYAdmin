@@ -1,0 +1,103 @@
+// use prisma-next
+// ↑ 首行不可删：VS Code 的 Prisma 扩展**按文件**判定是否启用 Prisma 7 语言服务，
+//   缺失会回落到 v6 语义并误报 `Argument "url" is missing in data source block "db"`。
+//
+// 日志：登录 / 操作 / HTTP 访问
+// 公共约定（snake_case 映射 / 哨兵值 / 注释落库）见 00-base.prisma。
+/// 登录日志表
+model LoginLog {
+  /// 主键
+  id        BigInt   @id @default(autoincrement()) @db.BigInt
+  /// 登录账号
+  username  String   @db.VarChar(50)
+  /// 客户端 IP
+  ip        String?  @db.VarChar(50)
+  /// User-Agent
+  userAgent String?  @map("user_agent") @db.VarChar(500)
+  /// 1 成功 / 0 失败
+  status    Int      @db.TinyInt
+  /// 结果描述
+  message   String?  @db.VarChar(255)
+  /// 登录时间
+  loginAt   DateTime @default(now()) @map("login_at")
+
+  @@index([loginAt])
+  @@map("sys_login_log")
+}
+
+/// 操作日志表
+model OperationLog {
+  /// 主键
+  id           BigInt   @id @default(autoincrement()) @db.BigInt
+  /// 操作人 id
+  userId       BigInt?  @map("user_id") @db.BigInt
+  /// 操作人账号
+  username     String?  @db.VarChar(50)
+  /// 模块
+  module       String   @db.VarChar(50)
+  /// 动作
+  action       String   @db.VarChar(50)
+  /// HTTP 方法
+  method       String   @db.VarChar(10)
+  /// 请求 URL
+  url          String   @db.VarChar(255)
+  /// 请求参数（密码脱敏）
+  params       String?  @db.Text
+  /// 耗时 ms
+  duration     Int      @default(0)
+  /// 1 成功 / 0 失败
+  result       Int      @db.TinyInt
+  /// 失败信息
+  errorMessage String?  @map("error_message") @db.VarChar(500)
+  /// 客户端 IP
+  ip           String?  @db.VarChar(50)
+  /// 创建时间
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([createdAt])
+  @@map("sys_operation_log")
+}
+
+/// HTTP 访问日志表（页面查询用；操作者为写入时快照，不与 sys_user 建外键）
+model HttpLog {
+  /// 主键
+  id         BigInt   @id @default(autoincrement()) @db.BigInt
+  /// 请求完成时间（本地时区 +08:00）
+  time       DateTime @db.DateTime(3)
+  /// HTTP 方法
+  method     String   @db.VarChar(10)
+  /// 请求 URL（含 query）
+  url        String   @db.VarChar(1024)
+  /// HTTP 状态码
+  statusCode Int      @map("status_code") @db.SmallInt
+  /// 耗时 ms
+  duration   Int      @default(0) @db.Int
+  /// 客户端 IP
+  ip         String?  @db.VarChar(64)
+  /// User-Agent
+  userAgent  String?  @map("user_agent") @db.VarChar(500)
+  /// 操作用户 id（0 为匿名/未登录）
+  userId     BigInt   @default(0) @map("user_id") @db.BigInt
+  /// 操作账号（快照）
+  username   String?  @db.VarChar(50)
+  /// 所属部门 id 快照（0 为无）
+  deptId     BigInt   @default(0) @map("dept_id") @db.BigInt
+  /// 所属部门名称（快照）
+  deptName   String?  @map("dept_name") @db.VarChar(50)
+  /// 查询参数（已脱敏）
+  query      Json?
+  /// 请求体（已脱敏、截断 2KB）
+  reqBody    String?  @map("req_body") @db.Text
+  /// 响应内容（截断 2KB；二进制为占位）
+  resBody    String?  @map("res_body") @db.Text
+
+  @@index([time])
+  @@index([method])
+  @@index([statusCode])
+  @@index([method, time])
+  // 操作者筛选索引：原旧后端由种子里的幂等迁移补建（idx_user_id / idx_dept_id），
+  // 这里显式声明，保证「旧后端删除后」的全新部署同样有这两个索引
+  @@index([userId])
+  @@index([deptId])
+  @@map("sys_http_log")
+}

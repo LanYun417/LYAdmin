@@ -1,0 +1,70 @@
+// use prisma-next
+// ↑ 首行必须保留（且必须是「 // use prisma-next 」独占一行）：
+//   VS Code 的 Prisma 扩展用正则 /^\s*\/\/ *use +prisma-(?:next|8) *(?!\S)/ 判定本文件是否
+//   属于 Prisma 7——只有匹配上才会启用 Prisma 7 语言服务。缺失时扩展会回落到 Prisma 6
+//   语言服务，后者按 v6 语义要求 datasource 必须带 url，从而误报
+//   `Argument "url" is missing in data source block "db"`（而 Prisma 7 早已禁止 schema 里写 url）。
+//
+// LYAdmin 后端数据模型（NestJS + Prisma）
+//
+// 迁移自原 Sequelize 模型，逐表 1:1 对齐：
+// - 主键沿用 BIGINT → Prisma BigInt（@db.BigInt），JS 侧统一 Number() 转换
+// - **列名一律 @map 成 snake_case**：原 Sequelize 模型统一 `underscored: true`（另有 4 处显式
+//   field 覆盖：last_login_at / password_changed_at / login_at / keep_alive，取值同为 snake_case），
+//   所以库内列名是 dept_id / created_at 这种形式。Prisma 默认拿字段名（camelCase）当列名，
+//   不 @map 就会造出 deptId / createdAt 列——既与既有库不符，也会让仍在运行的旧 Express
+//   后端（api/）直接报 Unknown column。此处 Prisma 字段名保持 camelCase（业务代码零改动），
+//   仅用 @map 落到 snake_case 列。
+// - 哨兵值约定（0 不在表内，建外键会被约束拒绝），对应原模型的 `constraints: false`：
+//   · sys_menu.parent_id / sys_dept.parent_id（0 = 根节点/顶级）→ 不声明 Prisma 自关联
+//   · sys_user.dept_id（0 = 未分配）→ 不声明 Prisma 关系，部门名由业务层按 deptId 显式查询
+// - 其余关联保留数据库外键，与原 Sequelize 关联默认行为一致：
+//   中间表（sys_user_role / sys_role_menu / sys_role_dept）与 dict_item → dict_type（含级联删除）。
+//
+// 与原 Sequelize 模型的差异说明：
+// - 原 `INT UNSIGNED` / `SMALLINT UNSIGNED` 列（File.size、HttpLog.statusCode、HttpLog.duration）
+//   在 Prisma 的 MySQL connector 中不支持 unsigned 原生类型，改用有符号 Int。
+//   三者均为非负语义（文件字节数、HTTP 状态码、耗时毫秒），且应用层已做上界校验，行为等价。
+//
+// 文档注释（`///`）与数据库 COMMENT 的关系（重要）：
+// - `///` 是 Prisma 的 schema 级文档注释，只进 DMMF 与 Prisma Client 的 JSDoc，**不会写进数据库**：
+//   `prisma db push` 不带注释、`prisma db pull` 也读不回（已实测）。
+// - 表/字段的数据库 COMMENT 由 `npm run prisma:comments`（scripts/prisma-comments.ts）从本目录
+//   各文件的 `///` 生成 DDL 同步到库，幂等、可重复执行；`npm run prisma:comments:check` 检查是否漂移（CI 友好）。
+// - 因此**改表/字段说明请改对应模型文件里的 `///`**，改完执行同步命令。`db push --force-reset` 会重建表
+//   并清空注释，重建后重新执行 `npm run prisma:comments` 即可恢复。
+// - 这些注释并非装饰：代码生成器（tool:gen）从 information_schema 读 TABLE_COMMENT / COLUMN_COMMENT
+//   作为业务名与表单字段标签，缺失时生成物会退化为英文列名。
+
+// 文件划分（按域拆分；新增业务表时优先放进对应文件，或新建 NN-<域>.prisma）：
+//   00-base.prisma        公共约定（本文件）+ generator + datasource
+//   10-system.prisma      用户 / 角色 / 菜单 / 部门 + 三张关联表
+//   20-dict-config.prisma 字典类型 / 字典项 / 系统参数
+//   25-file.prisma        文件管理
+//   30-log.prisma         登录日志 / 操作日志 / HTTP 访问日志
+//   90-generated.prisma   代码生成器注入区（[GEN-ANCHOR]），勿手工在此放业务模型
+//
+// 为什么拆：这是开源基础工程，接手方通常会继续加自己的业务表；单文件会随模型数量线性膨胀，
+// 而按域拆分能让改动 diff 聚焦在对应文件、也减少多人并行改 schema 的冲突。
+// 注意：Prisma 的目录式 schema 要求各文件内容合并后唯一（模型名不可重复），文件内顺序不敏感。
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../../src/generated/prisma"
+  // 生成 ESM 兼容代码（带 .js 扩展名导入），以便在 Node ESM 运行时直接使用
+  runtime      = "nodejs"
+  moduleFormat = "esm"
+}
+
+// 连接串来源（Prisma 7 硬性约定）：
+// - Prisma 7 已**彻底移除** schema 里的 `datasource.url`，写了会直接报
+//   `The datasource property `url` is no longer supported in schema files`（P1012）。
+//   CLI（db push / migrate / introspect）的连接串只来自 prisma.config.ts；
+//   运行期连接由 PrismaService 通过 driver adapter 注入（见 src/prisma/prisma.service.ts）。
+// - IDE 侧注意点：VS Code 的 Prisma 扩展若被钉在 Prisma 6 语义
+//   （.vscode/settings.json 的 prisma.pinToPrisma6=true），会按 v6 规则要求 datasource 带 url，
+//   从而误报 `Argument "url" is missing in data source block "db"`。本项目为 Prisma 7，
+//   已显式关闭该 pin（并在本文件首行声明 // use prisma-next）以启用 Prisma 7 语言服务。
+datasource db {
+  provider = "mysql"
+}

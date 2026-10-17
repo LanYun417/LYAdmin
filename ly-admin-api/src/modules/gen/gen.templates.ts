@@ -400,7 +400,7 @@ function renderPrismaField(col: GenColumn): string[] {
 }
 
 /**
- * 渲染 Prisma model 片段（供追加进 `ly-admin-api/prisma/schema.prisma`）。
+ * 渲染 Prisma model 片段（供追加进 `ly-admin-api/prisma/schema/90-generated.prisma`）。
  *
  * - 主键：`BigInt @id @default(autoincrement()) @db.BigInt`；
  * - 表名 → PascalCase model 名 + `@@map("原表名")`；
@@ -1547,7 +1547,7 @@ function renderReadme(config: GenConfig, columns: GenColumn[], tableComment: str
 
   // 接线步骤：前 3 步固定，字典 / 树形 / 未知类型按实际情况追加，末尾补一条控件核对
   const stepBodies: string[] = [
-    `**同步表结构**：把 \`backend/prisma/${config.tableName}.model.prisma\` 的 model 追加进 \`ly-admin-api/prisma/schema.prisma\` ` +
+    `**同步表结构**：把 \`backend/prisma/${config.tableName}.model.prisma\` 的 model 追加进 \`ly-admin-api/prisma/schema/90-generated.prisma\` ` +
       `（用「生成到项目」时已自动插入 \`[GEN-ANCHOR]\` 锚点之前），然后执行 \`npm run prisma:push\``,
     `**注册模块**：\`ly-admin-api/src/app.module.ts\`（自动：import 与 \`imports\` 数组加入 \`${toPascal(config.businessName)}Module\`）`,
     `**菜单与权限码**：\`ly-admin-api/src/prisma/seed.service.ts\`（自动：目录 / MENU 与 4 个按钮节点，权限码依次为 ${perm}:list、:query、:add、:edit、:remove）；重启服务即自动幂等种子`,
@@ -1617,7 +1617,7 @@ function renderReadme(config: GenConfig, columns: GenColumn[], tableComment: str
     `backend/modules/${name}/${name}.controller.ts    控制器（路由 + 权限码 + 操作日志）`,
     `backend/modules/${name}/${name}.service.ts       服务（Prisma CRUD + 分页）`,
     `backend/modules/${name}/dto/${name}.dto.ts       class-validator DTO`,
-    `backend/prisma/${config.tableName}.model.prisma  Prisma model 片段（需同步进 schema.prisma）`,
+    `backend/prisma/${config.tableName}.model.prisma  Prisma model 片段（需同步进 schema/90-generated.prisma）`,
     `frontend/api/${name}.ts                          前端接口封装`,
     `frontend/views/${config.moduleName}/${name}/index.vue  前端列表页`,
     ...(customDictTypes.length > 0 ? [`backend/seed/dict.seed.snippet.ts             字典种子片段（需手动合并）`] : []),

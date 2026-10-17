@@ -6,7 +6,7 @@
  * 迁移自原 Express 版 `api/src/seed/*`（index + menu / role / user / dict / config），数据 1:1。
  * 与原版的差异：
  * - 原版负责的**列级迁移**（sys_user.dept_id、sys_role.data_scope、sys_http_log 操作者列及索引）
- *   改由 `prisma db push` 按 schema 统一完成（列定义见 prisma/schema.prisma），本文件不再重复实现；
+ *   改由 `prisma db push` 按 schema 统一完成（列定义见 prisma/schema/ 各文件），本文件不再重复实现；
  * - 原版 `syncDatabase()` 的建表职责同样交给 `prisma db push`。
  *
  * 执行时机（对齐原版 server.ts 的 `await runSeed()`）：

@@ -1,0 +1,76 @@
+// use prisma-next
+// ↑ 首行不可删：VS Code 的 Prisma 扩展**按文件**判定是否启用 Prisma 7 语言服务，
+//   缺失会回落到 v6 语义并误报 `Argument "url" is missing in data source block "db"`。
+//
+// 字典与系统参数
+// 公共约定（snake_case 映射 / 哨兵值 / 注释落库）见 00-base.prisma。
+/// 字典类型表
+model DictType {
+  /// 主键
+  id        BigInt   @id @default(autoincrement()) @db.BigInt
+  /// 字典名称（展示用）
+  dictName  String   @map("dict_name") @db.VarChar(100)
+  /// 字典类型编码（业务引用键，创建后不可修改）
+  dictType  String   @unique @map("dict_type") @db.VarChar(100)
+  /// 1 启用 / 0 禁用
+  status    Int      @default(1) @db.TinyInt
+  /// 备注
+  remark    String?  @db.VarChar(255)
+  /// 创建时间
+  createdAt DateTime @default(now()) @map("created_at")
+  /// 更新时间
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  items DictItem[]
+
+  @@map("sys_dict_type")
+}
+
+/// 字典项表（通过 dict_type 字符串关联类型编码，删除类型时级联）
+model DictItem {
+  /// 主键
+  id        BigInt   @id @default(autoincrement()) @db.BigInt
+  /// 所属字典类型编码
+  dictType  String   @map("dict_type") @db.VarChar(100)
+  /// 字典标签（展示文案）
+  dictLabel String   @map("dict_label") @db.VarChar(100)
+  /// 字典值（业务存储值）
+  dictValue String   @map("dict_value") @db.VarChar(100)
+  /// 排序（升序）
+  sort      Int      @default(0)
+  /// 1 启用 / 0 禁用
+  status    Int      @default(1) @db.TinyInt
+  /// 备注
+  remark    String?  @db.VarChar(255)
+  /// 创建时间
+  createdAt DateTime @default(now()) @map("created_at")
+  /// 更新时间
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  dictTypeInfo DictType @relation(fields: [dictType], references: [dictType], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([dictType])
+  @@map("sys_dict_item")
+}
+
+/// 系统参数表
+model SysConfig {
+  /// 主键
+  id          BigInt   @id @default(autoincrement()) @db.BigInt
+  /// 参数名称（展示用）
+  configName  String   @map("config_name") @db.VarChar(100)
+  /// 参数键名（业务引用键，创建后不可修改）
+  configKey   String   @unique @map("config_key") @db.VarChar(100)
+  /// 参数键值
+  configValue String   @default("") @map("config_value") @db.VarChar(500)
+  /// 是否内置：1 内置 / 0 自定义
+  systemFlag  Int      @default(0) @map("system_flag") @db.TinyInt
+  /// 备注
+  remark      String?  @db.VarChar(255)
+  /// 创建时间
+  createdAt   DateTime @default(now()) @map("created_at")
+  /// 更新时间
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("sys_config")
+}

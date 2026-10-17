@@ -1,0 +1,197 @@
+// use prisma-next
+// ↑ 首行不可删：VS Code 的 Prisma 扩展**按文件**判定是否启用 Prisma 7 语言服务，
+//   缺失会回落到 v6 语义并误报 `Argument "url" is missing in data source block "db"`。
+//
+// 系统与权限：用户 / 角色 / 菜单 / 部门，以及三张关联表
+// 公共约定（snake_case 映射 / 哨兵值 / 注释落库）见 00-base.prisma。
+/// 用户表
+model User {
+  /// 主键
+  id                BigInt    @id @default(autoincrement()) @db.BigInt
+  /// 登录账号
+  username          String    @unique @db.VarChar(50)
+  /// bcrypt 哈希
+  password          String    @db.VarChar(100)
+  /// 昵称
+  nickname          String    @default("") @db.VarChar(50)
+  /// 头像 URL
+  avatar            String?   @db.VarChar(255)
+  /// 邮箱
+  email             String?   @db.VarChar(100)
+  /// 手机号
+  phone             String?   @db.VarChar(20)
+  /// 性别（字典 sys_user_sex），字符串存储以便字典值扩展
+  gender            String?   @db.VarChar(20)
+  /// 1 启用 / 0 禁用
+  status            Int       @default(1) @db.TinyInt
+  /// 最后登录时间
+  lastLoginAt       DateTime? @map("last_login_at")
+  /// 密码最后修改时间
+  passwordChangedAt DateTime? @map("password_changed_at")
+  /// 备注
+  remark            String?   @db.VarChar(255)
+  /// 部门 id（0 表示未分配，故不建外键、也不声明 Prisma 关系）
+  deptId            BigInt    @default(0) @map("dept_id") @db.BigInt
+  /// 创建时间
+  createdAt         DateTime  @default(now()) @map("created_at")
+  /// 更新时间
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  /// 经中间表 UserRole 的直接角色关联。
+  /// ⚠️ 必须走显式中间表 `sys_user_role`（`userRoles.role`），**不要**改回隐式多对多：
+  ///    隐式 `Role[]` 关系会让 Prisma 另建一张 `_userroles` 表，而业务与旧后端读写的是
+  ///    `sys_user_role`，两者不通——表现为角色恒为空、权限码为空、所有带权限码的接口 403、
+  ///    前端菜单树为空（2026-10-16 实际踩过）。
+  userRoles UserRole[]
+
+  @@index([deptId])
+  @@map("sys_user")
+}
+
+/// 角色表
+model Role {
+  /// 主键
+  id        BigInt   @id @default(autoincrement()) @db.BigInt
+  /// 角色名称
+  roleName  String   @map("role_name") @db.VarChar(50)
+  /// 角色编码
+  roleCode  String   @unique @map("role_code") @db.VarChar(50)
+  /// 排序
+  sort      Int      @default(0)
+  /// 1 启用 / 0 禁用
+  status    Int      @default(1) @db.TinyInt
+  /// 数据权限范围：1 全部 / 2 自定义部门 / 3 本部门及以下 / 4 仅本人
+  dataScope Int      @default(1) @map("data_scope") @db.TinyInt
+  /// 备注
+  remark    String?  @db.VarChar(255)
+  /// 创建时间
+  createdAt DateTime @default(now()) @map("created_at")
+  /// 更新时间
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  /// 同样只走显式中间表（见 User 模型上的说明，勿改回隐式多对多）
+  userRoles UserRole[]
+  roleMenus RoleMenu[]
+  roleDepts RoleDept[]
+
+  @@map("sys_role")
+}
+
+/// 菜单权限表
+model Menu {
+  /// 主键
+  id         BigInt   @id @default(autoincrement()) @db.BigInt
+  /// 父级 id（0 表示根节点，故不建外键、也不声明 Prisma 自关联）
+  parentId   BigInt   @default(0) @map("parent_id") @db.BigInt
+  /// 菜单名称
+  menuName   String   @map("menu_name") @db.VarChar(50)
+  /// M 目录 / C 菜单 / F 按钮
+  menuType   String   @map("menu_type") @db.Char(1)
+  /// 路由路径
+  path       String?  @db.VarChar(200)
+  /// 组件路径
+  component  String?  @db.VarChar(255)
+  /// 图标
+  icon       String?  @db.VarChar(100)
+  /// 权限标识
+  permission String?  @db.VarChar(100)
+  /// 排序
+  sort       Int      @default(0)
+  /// 1 显示 / 0 隐藏
+  visible    Int      @default(1) @db.TinyInt
+  /// 1 启用 / 0 禁用
+  status     Int      @default(1) @db.TinyInt
+  /// 重定向
+  redirect   String?  @db.VarChar(255)
+  /// 1 缓存 / 0 不缓存
+  keepAlive  Int      @default(0) @map("keep_alive") @db.TinyInt
+  /// 创建时间
+  createdAt  DateTime @default(now()) @map("created_at")
+  /// 更新时间
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  roleMenus RoleMenu[]
+
+  @@index([parentId])
+  @@map("sys_menu")
+}
+
+/// 部门表
+model Dept {
+  /// 主键
+  id        BigInt   @id @default(autoincrement()) @db.BigInt
+  /// 父级 id（0 表示顶级，故不建外键、也不声明 Prisma 自关联）
+  parentId  BigInt   @default(0) @map("parent_id") @db.BigInt
+  /// 部门名称
+  deptName  String   @map("dept_name") @db.VarChar(50)
+  /// 排序
+  sort      Int      @default(0)
+  /// 1 启用 / 0 禁用
+  status    Int      @default(1) @db.TinyInt
+  /// 部门负责人
+  leader    String?  @db.VarChar(20)
+  /// 联系电话
+  phone     String?  @db.VarChar(20)
+  /// 邮箱
+  email     String?  @db.VarChar(100)
+  /// 创建时间
+  createdAt DateTime @default(now()) @map("created_at")
+  /// 更新时间
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  roleDepts RoleDept[]
+
+  @@index([parentId])
+  @@map("sys_dept")
+}
+
+/// 用户角色关联表
+model UserRole {
+  /// 主键
+  id     BigInt @id @default(autoincrement()) @db.BigInt
+  /// 用户 id
+  userId BigInt @map("user_id") @db.BigInt
+  /// 角色 id
+  roleId BigInt @map("role_id") @db.BigInt
+
+  user User @relation(fields: [userId], references: [id])
+  role Role @relation(fields: [roleId], references: [id])
+
+  @@unique([userId, roleId])
+  @@index([roleId])
+  @@map("sys_user_role")
+}
+
+/// 角色菜单关联表
+model RoleMenu {
+  /// 主键
+  id     BigInt @id @default(autoincrement()) @db.BigInt
+  /// 角色 id
+  roleId BigInt @map("role_id") @db.BigInt
+  /// 菜单 id
+  menuId BigInt @map("menu_id") @db.BigInt
+
+  role Role @relation(fields: [roleId], references: [id])
+  menu Menu @relation(fields: [menuId], references: [id])
+
+  @@unique([roleId, menuId])
+  @@index([menuId])
+  @@map("sys_role_menu")
+}
+
+/// 角色数据权限部门关联表（承载 data_scope=2 的自定义部门集合）
+model RoleDept {
+  /// 主键
+  id     BigInt @id @default(autoincrement()) @db.BigInt
+  /// 角色 id
+  roleId BigInt @map("role_id") @db.BigInt
+  /// 部门 id
+  deptId BigInt @map("dept_id") @db.BigInt
+
+  role Role @relation(fields: [roleId], references: [id])
+  dept Dept @relation(fields: [deptId], references: [id])
+
+  @@unique([roleId, deptId])
+  @@index([deptId])
+  @@map("sys_role_dept")
+}

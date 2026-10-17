@@ -1,7 +1,7 @@
 /**
  * Prisma CLI 配置文件（Prisma 7 约定）。
  *
- * Prisma 7 起，`datasource.url` 不再写在 schema.prisma 中：
+ * Prisma 7 起，`datasource.url` 不再写在 schema 文件里：
  * - Migrate / Studio / db push 等 CLI 命令的连接串由本文件提供；
  * - 应用运行期的连接则通过 driver adapter（@prisma/adapter-mysql）在 PrismaService 中注入。
  *
@@ -26,7 +26,9 @@ function dbUrl(): string {
 }
 
 export default defineConfig({
-  schema: path.join('prisma', 'schema.prisma'),
+  // 目录式 schema（Prisma 支持把模型按域拆到同目录的多个 .prisma 文件）
+  // 注意：文件内 generator 的 output 是**相对 schema 目录**解析的，故为 ../../src/generated/prisma
+  schema: path.join('prisma', 'schema'),
   migrations: {
     /** 使用 db push 而非 migrate（贴近原 sequelize.sync() 的自动建表体验） */
     seed: 'tsx prisma/seed.ts',

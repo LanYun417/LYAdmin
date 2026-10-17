@@ -1,5 +1,5 @@
 /**
- * 把 prisma/schema.prisma 里的文档注释（`///`）同步为 MySQL 的表注释与字段注释。
+ * 把 prisma/schema/ 目录下各 `.prisma` 文件里的文档注释（`///`）同步为 MySQL 的表注释与字段注释。
  *
  * 为什么需要它：Prisma 至今（7.x）不支持在 schema 里声明数据库 COMMENT——
  * `///` 只进 DMMF 与 Prisma Client 的 JSDoc，`prisma db push` 不会写库，
@@ -22,10 +22,17 @@
  */
 import { PrismaMariaDb } from '@prisma/adapter-mariadb';
 import fs from 'node:fs';
+import path from 'node:path';
 import { PrismaClient } from '../src/generated/prisma/client.js';
 import { config } from '../src/common/config.js';
 
-const SCHEMA_PATH = 'prisma/schema.prisma';
+/**
+ * schema 目录（目录式 schema：模型按域拆在同目录的多个 `.prisma` 文件里）。
+ *
+ * 解析前按文件名排序拼接成一个字符串即可 —— 解析器是逐行状态机，每个 model 块自洽，
+ * 各文件开头的 `//` 注释行在 model 之外会被丢弃，不会把上一个文件的 `///` 误挂到下一个文件。
+ */
+const SCHEMA_DIR = 'prisma/schema';
 const SCALARS = new Set(['BigInt', 'String', 'Int', 'Boolean', 'DateTime', 'Decimal', 'Json', 'Bytes', 'Float']);
 
 const mode = process.argv.includes('--check') ? 'check' : process.argv.includes('--dry-run') ? 'dry' : 'apply';
@@ -43,7 +50,25 @@ interface ColumnState {
   comment: string;
 }
 
-/** 解析 schema.prisma：仅取标量字段（关系字段没有对应数据库列）。 */
+/**
+ * 读取 schema 目录下的全部 `.prisma` 文件，按文件名排序后拼接成一个字符串。
+ * @throws Error 目录不存在或其中没有任何 .prisma 文件
+ */
+function readSchemaDir(): string {
+  if (!fs.existsSync(SCHEMA_DIR)) {
+    throw new Error(`未找到 schema 目录: ${SCHEMA_DIR}`);
+  }
+  const files = fs
+    .readdirSync(SCHEMA_DIR)
+    .filter((name) => name.endsWith('.prisma'))
+    .sort();
+  if (files.length === 0) {
+    throw new Error(`schema 目录下没有 .prisma 文件: ${SCHEMA_DIR}`);
+  }
+  return files.map((name) => fs.readFileSync(path.join(SCHEMA_DIR, name), 'utf-8')).join('\n');
+}
+
+/** 解析 schema：仅取标量字段（关系字段没有对应数据库列）。 */
 function parseSchemaTargets(src: string): TableTarget[] {
   const tables: TableTarget[] = [];
   let cur: TableTarget | null = null;
@@ -185,7 +210,7 @@ async function main(): Promise<void> {
     }),
   });
 
-  const targets = parseSchemaTargets(fs.readFileSync(SCHEMA_PATH, 'utf-8'));
+  const targets = parseSchemaTargets(readSchemaDir());
   const existing = await prisma.$queryRawUnsafe<Array<Record<string, string>>>(
     `SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = ?`,
     config.db.name,
