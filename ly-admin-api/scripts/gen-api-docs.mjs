@@ -133,6 +133,15 @@ function leadingJsDoc(source, node) {
     .trim();
 }
 
+/**
+ * 去掉说明末尾的句号。
+ * 说明取自 JSDoc，源码里通常以「。」结尾；文档页展示（及任何消费方）都不需要结尾句号，
+ * 这里统一裁掉**末尾一个**，句中句号保留（如「登录。 挂载频率限制：…」只去最后那个）。
+ */
+function stripTrailingPeriod(text) {
+  return text.replace(/。\s*$/, '');
+}
+
 /** 拼接完整路径（自动补全局前缀、去除多余斜杠）。 */
 function joinPath(controllerPath, methodPath) {
   const parts = [GLOBAL_PREFIX, controllerPath, methodPath]
@@ -190,7 +199,7 @@ function parseControllerFile(file) {
       endpoints.push({
         method,
         path: joinPath(controllerPath, methodPath),
-        summary: SUMMARY_OVERRIDES[`${className}.${methodName}`] ?? leadingJsDoc(source, member),
+        summary: stripTrailingPeriod(SUMMARY_OVERRIDES[`${className}.${methodName}`] ?? leadingJsDoc(source, member)),
         permission,
         isPublic,
         action,
