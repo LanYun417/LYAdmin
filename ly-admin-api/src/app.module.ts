@@ -70,7 +70,10 @@ export class HealthController {
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
     // 全局：HTTP 访问日志
-    consumer.apply(HttpAccessLoggerMiddleware).forRoutes('*');
+    // 用 `{*path}` 而非 `*`：后者是 path-to-regexp v8 之前的写法，加了全局前缀后 Nest 会将它
+    // 视作 `/api/*` 并每次启动打一条 LegacyRouteConverter 告警（自动转成 `/api/{*path}`）。
+    // 显式写等价形式即可消警，实际覆盖范围不变（仅 /api 下的请求；静态资源不计入访问日志）。
+    consumer.apply(HttpAccessLoggerMiddleware).forRoutes('{*path}');
 
     // 静态资源链：鉴权 → 防盗链 → 图片缩放 → 静态出图
     // 顺序与原 Express 版一致：未通过鉴权即短路，连文件都不必读
