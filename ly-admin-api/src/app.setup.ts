@@ -11,10 +11,76 @@
  * 对 uploads / 前端产物目录的文件系统依赖）。
  */
 import { existsSync } from 'node:fs';
+import { extname, join, resolve, sep } from 'node:path';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import type { NestExpressApplication } from '@nestjs/platform-express';
+import compression from 'compression';
 import type { NextFunction, Request, Response } from 'express';
 import { config } from './common/config.js';
+
+/** 构建期预压缩副本可覆盖的文本类型（扩展名 → Content-Type）。 */
+const PRECOMPRESSED_TYPES: Record<string, string> = {
+  '.js': 'text/javascript; charset=utf-8',
+  '.mjs': 'text/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.svg': 'image/svg+xml',
+};
+
+/** 带内容哈希的构建产物可长期缓存。 */
+const IMMUTABLE_CACHE = 'public, max-age=31536000, immutable';
+
+/**
+ * 预压缩资源中间件：优先返回构建期生成的 `.br` / `.gz`。
+ *
+ * 构建已产出压缩副本（vite-plugin-compression2），但 `express.static` 不会做内容协商，
+ * 默认仍发送原文件。这里按 `Accept-Encoding` 直接命中同目录压缩副本，既省带宽也避免
+ * 每次请求做运行时压缩。
+ * @param app Nest 应用
+ * @param root 静态根目录
+ */
+function mountPrecompressed(app: NestExpressApplication, root: string): void {
+  const rootDir = resolve(root);
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+      next();
+      return;
+    }
+    const type = PRECOMPRESSED_TYPES[extname(req.path).toLowerCase()];
+    if (!type) {
+      next();
+      return;
+    }
+    let relPath: string;
+    try {
+      relPath = decodeURIComponent(req.path).replace(/^\/+/, '');
+    } catch {
+      next();
+      return;
+    }
+    // 防目录穿越：解析后的绝对路径必须仍在静态根目录内
+    if (!resolve(rootDir, relPath).startsWith(`${rootDir}${sep}`)) {
+      next();
+      return;
+    }
+    const accept = String(req.headers['accept-encoding'] ?? '');
+    const encoding = accept.includes('br') ? 'br' : accept.includes('gzip') ? 'gzip' : null;
+    if (!encoding) {
+      next();
+      return;
+    }
+    const file = `${relPath}.${encoding}`;
+    if (!existsSync(join(rootDir, file))) {
+      next();
+      return;
+    }
+    res.setHeader('Content-Type', type);
+    res.setHeader('Content-Encoding', encoding);
+    res.setHeader('Vary', 'Accept-Encoding');
+    res.setHeader('Cache-Control', IMMUTABLE_CACHE);
+    res.sendFile(file, { root: rootDir, dotfiles: 'deny' });
+  });
+}
 
 /** 装配选项。 */
 export interface AppSetupOptions {
@@ -50,6 +116,9 @@ export function configureApp(app: NestExpressApplication, options: AppSetupOptio
     credentials: true,
   });
 
+  // 响应压缩：>1KB 的可压缩响应（JSON / JS / CSS / SVG）按 Accept-Encoding 协商 br / gzip
+  app.use(compression({ threshold: 1024 }));
+
   // 请求体上限 2mb
   app.useBodyParser('json', { limit: '2mb' });
   app.useBodyParser('urlencoded', { limit: '2mb', extended: true });
@@ -70,7 +139,12 @@ export function configureApp(app: NestExpressApplication, options: AppSetupOptio
 
   // 上传静态资源：鉴权 / 防盗链 / 图片缩放中间件在 AppModule.configure 中挂载
   if (existsSync(config.upload.dir)) {
-    app.useStaticAssets(config.upload.dir, { prefix: `/${config.upload.route}/` });
+    app.useStaticAssets(config.upload.dir, {
+      prefix: `/${config.upload.route}/`,
+      // 文件名由服务端生成且唯一，内容不会原地变更，可长期缓存
+      maxAge: '30d',
+      immutable: true,
+    });
     logger.log(`静态资源目录: ${config.upload.dir} → /${config.upload.route}/`);
   } else {
     logger.warn(`上传目录不存在（${config.upload.dir}），/static 将 404；上传时会自动创建`);
@@ -79,7 +153,20 @@ export function configureApp(app: NestExpressApplication, options: AppSetupOptio
   // 前端构建产物（同源部署）：存在时由后端一并托管，含 history 回退
   const webDistDir = options.webDistDir ?? config.web.distDir;
   if (existsSync(webDistDir)) {
-    app.useStaticAssets(webDistDir);
+    // 优先命中预压缩副本（.br / .gz），未命中再回落到原文件
+    mountPrecompressed(app, webDistDir);
+    app.useStaticAssets(webDistDir, {
+      // Vite 产物名带内容哈希，可长期缓存；index.html 必须每次校验
+      maxAge: '1y',
+      immutable: true,
+      setHeaders: (res, filePath) => {
+        if (filePath.endsWith('index.html')) {
+          res.setHeader('Cache-Control', 'no-cache');
+          return;
+        }
+        res.setHeader('Vary', 'Accept-Encoding');
+      },
+    });
     // history 回退：非 /api 的页面导航回退 index.html（刷新子路由不 404）。
     //
     // ⚠️ 该中间件注册在 Nest 控制器路由**之前**（listen/init 时才挂载路由），因此 /api 与静态前缀

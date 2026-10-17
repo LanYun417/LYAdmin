@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { NestExpressApplication } from '@nestjs/platform-express';
@@ -78,5 +78,16 @@ describe('同源部署静态托管 (e2e)', () => {
       .set('Accept', 'text/html,application/xhtml+xml')
       .expect(200);
     expect(res.text).toContain('static-fallback');
+  });
+
+  it('构建产物下发长期缓存头，index.html 保持不缓存', async () => {
+    mkdirSync(join(webDistDir, 'assets'), { recursive: true });
+    writeFileSync(join(webDistDir, 'assets', 'app.js'), 'console.log(1);');
+
+    const asset = await request(app.getHttpServer()).get('/assets/app.js').expect(200);
+    expect(asset.headers['cache-control']).toContain('immutable');
+
+    const index = await request(app.getHttpServer()).get('/').expect(200);
+    expect(index.headers['cache-control']).toContain('no-cache');
   });
 });

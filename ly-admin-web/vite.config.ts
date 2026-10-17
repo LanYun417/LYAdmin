@@ -40,10 +40,9 @@ export default defineConfig(({ mode }) => {
       }),
       // 构建期预压缩：同时产出 .gz（gzip）与 .br（brotli）副本，零运行时开销。
       // 原文件一并保留（deleteOriginalAssets=false），兼容未配置预压缩的静态服务器。
-      // 部署侧需开启预压缩读取才能真正受益：
-      //   Nginx：http { gzip_static on; brotli_static on; }（需 ngx_brotli 模块）
-      //   或直接用 Nginx 实时压缩：gzip on; gzip_types text/javascript application/javascript application/json text/css;
-      // 若当前「后端托管 dist」的 Express 直接静态托管，需额外加预压缩静态处理器才能命中 .gz/.br。
+      // 部署侧两种方式都能受益：
+      //   - 由后端托管（默认）：`app.setup.ts` 会按 Accept-Encoding 优先返回 .br/.gz；
+      //   - 由 Nginx 托管：http { gzip_static on; brotli_static on; }（需 ngx_brotli 模块）。
       compression({
         algorithms: ['gzip', 'brotliCompress'],
         include: /\.(js|mjs|json|css|html|svg)$/i,

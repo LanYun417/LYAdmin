@@ -386,6 +386,7 @@ NODE_ENV=production node dist/main.js
 - 后端启动时若 `web/` 存在，会自动托管该目录，并对前端 history 路由做 `index.html` 回退。
 - 产物目录可用 `WEB_DIST_DIR` 覆盖（相对 `ly-admin-api/`）。
 - 同源部署下静态资源的防盗链「同源放行」天然成立，无需配置 `UPLOAD_ALLOWED_REFERERS`。
+- 后端已内置响应压缩与静态缓存：构建产物优先返回 `.br` / `.gz`（1 年 immutable），上传文件缓存 30 天，`index.html` 每次校验；无需再为预压缩单独配置 Nginx。
 
 ### 方式二：前后端分离部署
 

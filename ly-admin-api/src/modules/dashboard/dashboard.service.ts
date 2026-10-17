@@ -53,19 +53,32 @@ export class DashboardService {
   /** 近 N 日登录趋势（默认 7，最大 30）。 */
   async getLoginTrend(days = 7): Promise<LoginTrend> {
     const safeDays = Number.isFinite(days) && days > 0 ? Math.min(Math.floor(days), 30) : 7;
+    const start = dayjs()
+      .subtract(safeDays - 1, 'day')
+      .startOf('day');
+    const end = dayjs().endOf('day');
+    // 数据库存的是 UTC 时刻，按「服务器本地日」分组需加回时区偏移（东八区 = +480 分钟）
+    const offsetMinutes = -new Date().getTimezoneOffset();
+
+    // 一条 SQL 完成按日聚合：Prisma 的 groupBy 无法按「日期截断」分组，
+    // 逐日 count 会退化为 N 次扫描（默认 7 次、最大 30 次）。
+    const rows = await this.prisma.$queryRaw<Array<{ day: string; total: bigint }>>`
+      SELECT DATE_FORMAT(TIMESTAMPADD(MINUTE, ${offsetMinutes}, login_at), '%Y-%m-%d') AS day,
+             COUNT(*) AS total
+      FROM sys_login_log
+      WHERE status = ${LogResult.SUCCESS}
+        AND login_at >= ${start.toDate()}
+        AND login_at <= ${end.toDate()}
+      GROUP BY day
+    `;
+
+    const countByDay = new Map(rows.map((row) => [row.day, Number(row.total)]));
     const dates: string[] = [];
     const counts: number[] = [];
-
-    for (let i = safeDays - 1; i >= 0; i -= 1) {
-      const day = dayjs().subtract(i, 'day');
-      const count = await this.prisma.loginLog.count({
-        where: {
-          loginAt: { gte: day.startOf('day').toDate(), lte: day.endOf('day').toDate() },
-          status: LogResult.SUCCESS,
-        },
-      });
+    for (let i = 0; i < safeDays; i += 1) {
+      const day = start.add(i, 'day');
       dates.push(day.format('MM-DD'));
-      counts.push(count);
+      counts.push(countByDay.get(day.format('YYYY-MM-DD')) ?? 0);
     }
 
     return { dates, counts };
