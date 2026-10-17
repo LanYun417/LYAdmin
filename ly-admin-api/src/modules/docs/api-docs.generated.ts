@@ -16,7 +16,13 @@ export const API_DOCS: ApiDocGroup[] = [
         "summary": "登录趋势",
         "permission": [],
         "isPublic": false,
-        "action": ""
+        "action": "",
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/dashboard/login-trend?days=7\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "days": 7
+          }
+        }
       },
       {
         "method": "GET",
@@ -24,7 +30,14 @@ export const API_DOCS: ApiDocGroup[] = [
         "summary": "操作类型分布",
         "permission": [],
         "isPublic": false,
-        "action": ""
+        "action": "",
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/dashboard/operation-distribution?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "page": 1,
+            "pageSize": 10
+          }
+        }
       },
       {
         "method": "GET",
@@ -32,7 +45,14 @@ export const API_DOCS: ApiDocGroup[] = [
         "summary": "各角色用户数",
         "permission": [],
         "isPublic": false,
-        "action": ""
+        "action": "",
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/dashboard/role-user-count?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "page": 1,
+            "pageSize": 10
+          }
+        }
       },
       {
         "method": "GET",
@@ -40,7 +60,14 @@ export const API_DOCS: ApiDocGroup[] = [
         "summary": "统计卡片",
         "permission": [],
         "isPublic": false,
-        "action": ""
+        "action": "",
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/dashboard/stats?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "page": 1,
+            "pageSize": 10
+          }
+        }
       }
     ]
   },
@@ -53,7 +80,14 @@ export const API_DOCS: ApiDocGroup[] = [
         "summary": "图形验证码：公开接口（登录前获取）",
         "permission": [],
         "isPublic": true,
-        "action": ""
+        "action": "",
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/auth/captcha?page=1&pageSize=10\"",
+          "query": {
+            "page": 1,
+            "pageSize": 10
+          }
+        }
       },
       {
         "method": "GET",
@@ -61,7 +95,14 @@ export const API_DOCS: ApiDocGroup[] = [
         "summary": "当前用户菜单树（仅目录/菜单节点，按角色过滤）",
         "permission": [],
         "isPublic": false,
-        "action": ""
+        "action": "",
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/auth/menus?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "page": 1,
+            "pageSize": 10
+          }
+        }
       },
       {
         "method": "GET",
@@ -69,7 +110,14 @@ export const API_DOCS: ApiDocGroup[] = [
         "summary": "当前用户权限码列表",
         "permission": [],
         "isPublic": false,
-        "action": ""
+        "action": "",
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/auth/permissions?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "page": 1,
+            "pageSize": 10
+          }
+        }
       },
       {
         "method": "GET",
@@ -77,7 +125,14 @@ export const API_DOCS: ApiDocGroup[] = [
         "summary": "当前用户信息",
         "permission": [],
         "isPublic": false,
-        "action": ""
+        "action": "",
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/auth/profile?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "page": 1,
+            "pageSize": 10
+          }
+        }
       },
       {
         "method": "POST",
@@ -85,7 +140,16 @@ export const API_DOCS: ApiDocGroup[] = [
         "summary": "登录。 挂载频率限制：连续失败 5 次 / 5 分钟 → 锁定 15 分钟（返回 429）",
         "permission": [],
         "isPublic": true,
-        "action": "认证 · 登录"
+        "action": "认证 · 登录",
+        "examples": {
+          "curl": "curl -X POST \"http://localhost:3000/api/auth/login\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"username\": \"admin\",\n      \"password\": \"123456\",\n      \"captchaId\": \"b7f3c1a2-0000-4a1b-9c3d-8e6f5a4b3c2d\",\n      \"captchaCode\": \"A1B2\"\n    }'",
+          "requestBody": {
+            "username": "admin",
+            "password": "123456",
+            "captchaId": "b7f3c1a2-0000-4a1b-9c3d-8e6f5a4b3c2d",
+            "captchaCode": "A1B2"
+          }
+        }
       },
       {
         "method": "POST",
@@ -93,7 +157,10 @@ export const API_DOCS: ApiDocGroup[] = [
         "summary": "登出",
         "permission": [],
         "isPublic": false,
-        "action": ""
+        "action": "",
+        "examples": {
+          "curl": "curl -X POST \"http://localhost:3000/api/auth/logout\" \\\n  -H \"Authorization: Bearer <accessToken>\""
+        }
       },
       {
         "method": "POST",
@@ -101,7 +168,13 @@ export const API_DOCS: ApiDocGroup[] = [
         "summary": "刷新 Token",
         "permission": [],
         "isPublic": true,
-        "action": ""
+        "action": "",
+        "examples": {
+          "curl": "curl -X POST \"http://localhost:3000/api/auth/refresh\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"refreshToken\": \"<登录返回的 refreshToken>\"\n    }'",
+          "requestBody": {
+            "refreshToken": "<登录返回的 refreshToken>"
+          }
+        }
       }
     ]
   },
@@ -116,7 +189,14 @@ export const API_DOCS: ApiDocGroup[] = [
           "system:user:list"
         ],
         "isPublic": false,
-        "action": ""
+        "action": "",
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/users?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "page": 1,
+            "pageSize": 10
+          }
+        }
       },
       {
         "method": "GET",
@@ -126,7 +206,13 @@ export const API_DOCS: ApiDocGroup[] = [
           "system:user:query"
         ],
         "isPublic": false,
-        "action": ""
+        "action": "",
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/users/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "id": "1"
+          }
+        }
       },
       {
         "method": "POST",
@@ -136,7 +222,24 @@ export const API_DOCS: ApiDocGroup[] = [
           "system:user:add"
         ],
         "isPublic": false,
-        "action": "用户管理 · 新增"
+        "action": "用户管理 · 新增",
+        "examples": {
+          "curl": "curl -X POST \"http://localhost:3000/api/users\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"username\": \"admin\",\n      \"password\": \"123456\",\n      \"nickname\": \"示例用户\",\n      \"email\": \"demo@example.com\",\n      \"phone\": \"13800138000\",\n      \"gender\": \"1\",\n      \"status\": 1,\n      \"roleIds\": [\n        1\n      ],\n      \"deptId\": 1,\n      \"remark\": \"示例备注\"\n    }'",
+          "requestBody": {
+            "username": "admin",
+            "password": "123456",
+            "nickname": "示例用户",
+            "email": "demo@example.com",
+            "phone": "13800138000",
+            "gender": "1",
+            "status": 1,
+            "roleIds": [
+              1
+            ],
+            "deptId": 1,
+            "remark": "示例备注"
+          }
+        }
       },
       {
         "method": "PUT",
@@ -146,7 +249,25 @@ export const API_DOCS: ApiDocGroup[] = [
           "system:user:edit"
         ],
         "isPublic": false,
-        "action": "用户管理 · 编辑"
+        "action": "用户管理 · 编辑",
+        "examples": {
+          "curl": "curl -X PUT \"http://localhost:3000/api/users/1\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"nickname\": \"示例用户\",\n      \"email\": \"demo@example.com\",\n      \"phone\": \"13800138000\",\n      \"gender\": \"1\",\n      \"status\": 1,\n      \"roleIds\": [\n        1\n      ],\n      \"deptId\": 1,\n      \"remark\": \"示例备注\"\n    }'",
+          "pathParams": {
+            "id": "1"
+          },
+          "requestBody": {
+            "nickname": "示例用户",
+            "email": "demo@example.com",
+            "phone": "13800138000",
+            "gender": "1",
+            "status": 1,
+            "roleIds": [
+              1
+            ],
+            "deptId": 1,
+            "remark": "示例备注"
+          }
+        }
       },
       {
         "method": "PUT",
@@ -156,7 +277,16 @@ export const API_DOCS: ApiDocGroup[] = [
           "system:user:resetPwd"
         ],
         "isPublic": false,
-        "action": "用户管理 · 重置密码"
+        "action": "用户管理 · 重置密码",
+        "examples": {
+          "curl": "curl -X PUT \"http://localhost:3000/api/users/1/password\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"password\": \"123456\"\n    }'",
+          "pathParams": {
+            "id": "1"
+          },
+          "requestBody": {
+            "password": "123456"
+          }
+        }
       },
       {
         "method": "PUT",
@@ -166,7 +296,18 @@ export const API_DOCS: ApiDocGroup[] = [
           "system:user:assignRole"
         ],
         "isPublic": false,
-        "action": "用户管理 · 分配角色"
+        "action": "用户管理 · 分配角色",
+        "examples": {
+          "curl": "curl -X PUT \"http://localhost:3000/api/users/1/roles\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"roleIds\": [\n        1\n      ]\n    }'",
+          "pathParams": {
+            "id": "1"
+          },
+          "requestBody": {
+            "roleIds": [
+              1
+            ]
+          }
+        }
       },
       {
         "method": "PUT",
@@ -176,7 +317,16 @@ export const API_DOCS: ApiDocGroup[] = [
           "system:user:edit"
         ],
         "isPublic": false,
-        "action": "用户管理 · 状态变更"
+        "action": "用户管理 · 状态变更",
+        "examples": {
+          "curl": "curl -X PUT \"http://localhost:3000/api/users/1/status\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"status\": 1\n    }'",
+          "pathParams": {
+            "id": "1"
+          },
+          "requestBody": {
+            "status": 1
+          }
+        }
       },
       {
         "method": "DELETE",
@@ -186,7 +336,13 @@ export const API_DOCS: ApiDocGroup[] = [
           "system:user:remove"
         ],
         "isPublic": false,
-        "action": "用户管理 · 删除"
+        "action": "用户管理 · 删除",
+        "examples": {
+          "curl": "curl -X DELETE \"http://localhost:3000/api/users/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "id": "1"
+          }
+        }
       }
     ]
   },
@@ -201,7 +357,14 @@ export const API_DOCS: ApiDocGroup[] = [
           "system:role:list"
         ],
         "isPublic": false,
-        "action": ""
+        "action": "",
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/roles?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "page": 1,
+            "pageSize": 10
+          }
+        }
       },
       {
         "method": "GET",
@@ -211,7 +374,13 @@ export const API_DOCS: ApiDocGroup[] = [
           "system:role:query"
         ],
         "isPublic": false,
-        "action": ""
+        "action": "",
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/roles/1/menus\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "id": "1"
+          }
+        }
       },
       {
         "method": "GET",
@@ -221,7 +390,14 @@ export const API_DOCS: ApiDocGroup[] = [
           "system:role:all"
         ],
         "isPublic": false,
-        "action": ""
+        "action": "",
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/roles/all?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "page": 1,
+            "pageSize": 10
+          }
+        }
       },
       {
         "method": "POST",
@@ -231,7 +407,21 @@ export const API_DOCS: ApiDocGroup[] = [
           "system:role:add"
         ],
         "isPublic": false,
-        "action": "角色管理 · 新增"
+        "action": "角色管理 · 新增",
+        "examples": {
+          "curl": "curl -X POST \"http://localhost:3000/api/roles\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"roleName\": \"示例角色\",\n      \"roleCode\": \"demo_role\",\n      \"sort\": 1,\n      \"status\": 1,\n      \"dataScope\": 1,\n      \"deptIds\": [\n        1\n      ],\n      \"remark\": \"示例备注\"\n    }'",
+          "requestBody": {
+            "roleName": "示例角色",
+            "roleCode": "demo_role",
+            "sort": 1,
+            "status": 1,
+            "dataScope": 1,
+            "deptIds": [
+              1
+            ],
+            "remark": "示例备注"
+          }
+        }
       },
       {
         "method": "PUT",
@@ -241,7 +431,23 @@ export const API_DOCS: ApiDocGroup[] = [
           "system:role:edit"
         ],
         "isPublic": false,
-        "action": "角色管理 · 编辑"
+        "action": "角色管理 · 编辑",
+        "examples": {
+          "curl": "curl -X PUT \"http://localhost:3000/api/roles/1\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"roleName\": \"示例角色\",\n      \"sort\": 1,\n      \"status\": 1,\n      \"dataScope\": 1,\n      \"deptIds\": [\n        1\n      ],\n      \"remark\": \"示例备注\"\n    }'",
+          "pathParams": {
+            "id": "1"
+          },
+          "requestBody": {
+            "roleName": "示例角色",
+            "sort": 1,
+            "status": 1,
+            "dataScope": 1,
+            "deptIds": [
+              1
+            ],
+            "remark": "示例备注"
+          }
+        }
       },
       {
         "method": "PUT",
@@ -251,7 +457,18 @@ export const API_DOCS: ApiDocGroup[] = [
           "system:role:assignMenu"
         ],
         "isPublic": false,
-        "action": "角色管理 · 授权菜单"
+        "action": "角色管理 · 授权菜单",
+        "examples": {
+          "curl": "curl -X PUT \"http://localhost:3000/api/roles/1/menus\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"menuIds\": [\n        1\n      ]\n    }'",
+          "pathParams": {
+            "id": "1"
+          },
+          "requestBody": {
+            "menuIds": [
+              1
+            ]
+          }
+        }
       },
       {
         "method": "DELETE",
@@ -261,7 +478,13 @@ export const API_DOCS: ApiDocGroup[] = [
           "system:role:remove"
         ],
         "isPublic": false,
-        "action": "角色管理 · 删除"
+        "action": "角色管理 · 删除",
+        "examples": {
+          "curl": "curl -X DELETE \"http://localhost:3000/api/roles/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "id": "1"
+          }
+        }
       }
     ]
   },
@@ -276,7 +499,14 @@ export const API_DOCS: ApiDocGroup[] = [
           "system:menu:list"
         ],
         "isPublic": false,
-        "action": ""
+        "action": "",
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/menus?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "page": 1,
+            "pageSize": 10
+          }
+        }
       },
       {
         "method": "GET",
@@ -286,7 +516,13 @@ export const API_DOCS: ApiDocGroup[] = [
           "system:menu:query"
         ],
         "isPublic": false,
-        "action": ""
+        "action": "",
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/menus/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "id": "1"
+          }
+        }
       },
       {
         "method": "GET",
@@ -297,7 +533,14 @@ export const API_DOCS: ApiDocGroup[] = [
           "system:role:list"
         ],
         "isPublic": false,
-        "action": ""
+        "action": "",
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/menus/tree?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "page": 1,
+            "pageSize": 10
+          }
+        }
       },
       {
         "method": "POST",
@@ -307,7 +550,24 @@ export const API_DOCS: ApiDocGroup[] = [
           "system:menu:add"
         ],
         "isPublic": false,
-        "action": "菜单管理 · 新增"
+        "action": "菜单管理 · 新增",
+        "examples": {
+          "curl": "curl -X POST \"http://localhost:3000/api/menus\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"parentId\": 1,\n      \"menuName\": \"示例菜单\",\n      \"menuType\": \"C\",\n      \"path\": \"示例值\",\n      \"component\": \"示例值\",\n      \"icon\": \"示例值\",\n      \"permission\": \"示例值\",\n      \"sort\": 1,\n      \"visible\": 1,\n      \"status\": 1,\n      \"redirect\": \"示例值\",\n      \"keepAlive\": 1\n    }'",
+          "requestBody": {
+            "parentId": 1,
+            "menuName": "示例菜单",
+            "menuType": "C",
+            "path": "示例值",
+            "component": "示例值",
+            "icon": "示例值",
+            "permission": "示例值",
+            "sort": 1,
+            "visible": 1,
+            "status": 1,
+            "redirect": "示例值",
+            "keepAlive": 1
+          }
+        }
       },
       {
         "method": "PUT",
@@ -317,7 +577,27 @@ export const API_DOCS: ApiDocGroup[] = [
           "system:menu:edit"
         ],
         "isPublic": false,
-        "action": "菜单管理 · 编辑"
+        "action": "菜单管理 · 编辑",
+        "examples": {
+          "curl": "curl -X PUT \"http://localhost:3000/api/menus/1\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"parentId\": 1,\n      \"menuName\": \"示例菜单\",\n      \"menuType\": \"C\",\n      \"path\": \"示例值\",\n      \"component\": \"示例值\",\n      \"icon\": \"示例值\",\n      \"permission\": \"示例值\",\n      \"sort\": 1,\n      \"visible\": 1,\n      \"status\": 1,\n      \"redirect\": \"示例值\",\n      \"keepAlive\": 1\n    }'",
+          "pathParams": {
+            "id": "1"
+          },
+          "requestBody": {
+            "parentId": 1,
+            "menuName": "示例菜单",
+            "menuType": "C",
+            "path": "示例值",
+            "component": "示例值",
+            "icon": "示例值",
+            "permission": "示例值",
+            "sort": 1,
+            "visible": 1,
+            "status": 1,
+            "redirect": "示例值",
+            "keepAlive": 1
+          }
+        }
       },
       {
         "method": "DELETE",
@@ -327,7 +607,13 @@ export const API_DOCS: ApiDocGroup[] = [
           "system:menu:remove"
         ],
         "isPublic": false,
-        "action": "菜单管理 · 删除"
+        "action": "菜单管理 · 删除",
+        "examples": {
+          "curl": "curl -X DELETE \"http://localhost:3000/api/menus/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "id": "1"
+          }
+        }
       }
     ]
   },
@@ -342,7 +628,14 @@ export const API_DOCS: ApiDocGroup[] = [
           "system:dept:list"
         ],
         "isPublic": false,
-        "action": ""
+        "action": "",
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/depts?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "page": 1,
+            "pageSize": 10
+          }
+        }
       },
       {
         "method": "GET",
@@ -352,7 +645,13 @@ export const API_DOCS: ApiDocGroup[] = [
           "system:dept:query"
         ],
         "isPublic": false,
-        "action": ""
+        "action": "",
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/depts/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "id": "1"
+          }
+        }
       },
       {
         "method": "GET",
@@ -362,7 +661,14 @@ export const API_DOCS: ApiDocGroup[] = [
           "system:dept:list"
         ],
         "isPublic": false,
-        "action": ""
+        "action": "",
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/depts/tree?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "page": 1,
+            "pageSize": 10
+          }
+        }
       },
       {
         "method": "POST",
@@ -372,7 +678,19 @@ export const API_DOCS: ApiDocGroup[] = [
           "system:dept:add"
         ],
         "isPublic": false,
-        "action": "部门管理 · 新增"
+        "action": "部门管理 · 新增",
+        "examples": {
+          "curl": "curl -X POST \"http://localhost:3000/api/depts\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"parentId\": 1,\n      \"deptName\": \"示例部门\",\n      \"leader\": \"张三\",\n      \"phone\": \"13800138000\",\n      \"email\": \"demo@example.com\",\n      \"sort\": 1,\n      \"status\": 1\n    }'",
+          "requestBody": {
+            "parentId": 1,
+            "deptName": "示例部门",
+            "leader": "张三",
+            "phone": "13800138000",
+            "email": "demo@example.com",
+            "sort": 1,
+            "status": 1
+          }
+        }
       },
       {
         "method": "PUT",
@@ -382,7 +700,22 @@ export const API_DOCS: ApiDocGroup[] = [
           "system:dept:edit"
         ],
         "isPublic": false,
-        "action": "部门管理 · 编辑"
+        "action": "部门管理 · 编辑",
+        "examples": {
+          "curl": "curl -X PUT \"http://localhost:3000/api/depts/1\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"parentId\": 1,\n      \"deptName\": \"示例部门\",\n      \"leader\": \"张三\",\n      \"phone\": \"13800138000\",\n      \"email\": \"demo@example.com\",\n      \"sort\": 1,\n      \"status\": 1\n    }'",
+          "pathParams": {
+            "id": "1"
+          },
+          "requestBody": {
+            "parentId": 1,
+            "deptName": "示例部门",
+            "leader": "张三",
+            "phone": "13800138000",
+            "email": "demo@example.com",
+            "sort": 1,
+            "status": 1
+          }
+        }
       },
       {
         "method": "DELETE",
@@ -392,7 +725,13 @@ export const API_DOCS: ApiDocGroup[] = [
           "system:dept:remove"
         ],
         "isPublic": false,
-        "action": "部门管理 · 删除"
+        "action": "部门管理 · 删除",
+        "examples": {
+          "curl": "curl -X DELETE \"http://localhost:3000/api/depts/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "id": "1"
+          }
+        }
       }
     ]
   },
@@ -405,7 +744,13 @@ export const API_DOCS: ApiDocGroup[] = [
         "summary": "按类型编码取启用中的字典项（标签 + 值）。 仅需登录、不设权限码（与 /api/profile 的「自有资源豁免」同类处理）",
         "permission": [],
         "isPublic": false,
-        "action": ""
+        "action": "",
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/dict/data/sys_demo\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "dictType": "sys_demo"
+          }
+        }
       },
       {
         "method": "GET",
@@ -415,7 +760,14 @@ export const API_DOCS: ApiDocGroup[] = [
           "system:dict:list"
         ],
         "isPublic": false,
-        "action": ""
+        "action": "",
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/dict/items?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "page": 1,
+            "pageSize": 10
+          }
+        }
       },
       {
         "method": "GET",
@@ -425,7 +777,14 @@ export const API_DOCS: ApiDocGroup[] = [
           "system:dict:list"
         ],
         "isPublic": false,
-        "action": ""
+        "action": "",
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/dict/types?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "page": 1,
+            "pageSize": 10
+          }
+        }
       },
       {
         "method": "POST",
@@ -435,7 +794,18 @@ export const API_DOCS: ApiDocGroup[] = [
           "system:dict:add"
         ],
         "isPublic": false,
-        "action": "字典管理 · 新增"
+        "action": "字典管理 · 新增",
+        "examples": {
+          "curl": "curl -X POST \"http://localhost:3000/api/dict/items\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"dictType\": \"sys_demo\",\n      \"dictLabel\": \"示例标签\",\n      \"dictValue\": \"1\",\n      \"sort\": 1,\n      \"status\": 1,\n      \"remark\": \"示例备注\"\n    }'",
+          "requestBody": {
+            "dictType": "sys_demo",
+            "dictLabel": "示例标签",
+            "dictValue": "1",
+            "sort": 1,
+            "status": 1,
+            "remark": "示例备注"
+          }
+        }
       },
       {
         "method": "POST",
@@ -445,7 +815,16 @@ export const API_DOCS: ApiDocGroup[] = [
           "system:dict:add"
         ],
         "isPublic": false,
-        "action": "字典管理 · 新增"
+        "action": "字典管理 · 新增",
+        "examples": {
+          "curl": "curl -X POST \"http://localhost:3000/api/dict/types\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"dictName\": \"示例字典\",\n      \"dictType\": \"sys_demo\",\n      \"status\": 1,\n      \"remark\": \"示例备注\"\n    }'",
+          "requestBody": {
+            "dictName": "示例字典",
+            "dictType": "sys_demo",
+            "status": 1,
+            "remark": "示例备注"
+          }
+        }
       },
       {
         "method": "PUT",
@@ -455,7 +834,20 @@ export const API_DOCS: ApiDocGroup[] = [
           "system:dict:edit"
         ],
         "isPublic": false,
-        "action": "字典管理 · 编辑"
+        "action": "字典管理 · 编辑",
+        "examples": {
+          "curl": "curl -X PUT \"http://localhost:3000/api/dict/items/1\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"dictLabel\": \"示例标签\",\n      \"dictValue\": \"1\",\n      \"sort\": 1,\n      \"status\": 1,\n      \"remark\": \"示例备注\"\n    }'",
+          "pathParams": {
+            "id": "1"
+          },
+          "requestBody": {
+            "dictLabel": "示例标签",
+            "dictValue": "1",
+            "sort": 1,
+            "status": 1,
+            "remark": "示例备注"
+          }
+        }
       },
       {
         "method": "PUT",
@@ -465,7 +857,16 @@ export const API_DOCS: ApiDocGroup[] = [
           "system:dict:edit"
         ],
         "isPublic": false,
-        "action": "字典管理 · 编辑"
+        "action": "字典管理 · 编辑",
+        "examples": {
+          "curl": "curl -X PUT \"http://localhost:3000/api/dict/items/1/status\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"status\": 1\n    }'",
+          "pathParams": {
+            "id": "1"
+          },
+          "requestBody": {
+            "status": 1
+          }
+        }
       },
       {
         "method": "PUT",
@@ -475,7 +876,18 @@ export const API_DOCS: ApiDocGroup[] = [
           "system:dict:edit"
         ],
         "isPublic": false,
-        "action": "字典管理 · 编辑"
+        "action": "字典管理 · 编辑",
+        "examples": {
+          "curl": "curl -X PUT \"http://localhost:3000/api/dict/types/1\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"dictName\": \"示例字典\",\n      \"status\": 1,\n      \"remark\": \"示例备注\"\n    }'",
+          "pathParams": {
+            "id": "1"
+          },
+          "requestBody": {
+            "dictName": "示例字典",
+            "status": 1,
+            "remark": "示例备注"
+          }
+        }
       },
       {
         "method": "PUT",
@@ -485,7 +897,16 @@ export const API_DOCS: ApiDocGroup[] = [
           "system:dict:edit"
         ],
         "isPublic": false,
-        "action": "字典管理 · 编辑"
+        "action": "字典管理 · 编辑",
+        "examples": {
+          "curl": "curl -X PUT \"http://localhost:3000/api/dict/types/1/status\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"status\": 1\n    }'",
+          "pathParams": {
+            "id": "1"
+          },
+          "requestBody": {
+            "status": 1
+          }
+        }
       },
       {
         "method": "DELETE",
@@ -495,7 +916,13 @@ export const API_DOCS: ApiDocGroup[] = [
           "system:dict:remove"
         ],
         "isPublic": false,
-        "action": "字典管理 · 删除"
+        "action": "字典管理 · 删除",
+        "examples": {
+          "curl": "curl -X DELETE \"http://localhost:3000/api/dict/items/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "id": "1"
+          }
+        }
       },
       {
         "method": "DELETE",
@@ -505,7 +932,13 @@ export const API_DOCS: ApiDocGroup[] = [
           "system:dict:remove"
         ],
         "isPublic": false,
-        "action": "字典管理 · 删除"
+        "action": "字典管理 · 删除",
+        "examples": {
+          "curl": "curl -X DELETE \"http://localhost:3000/api/dict/types/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "id": "1"
+          }
+        }
       }
     ]
   },
@@ -520,7 +953,14 @@ export const API_DOCS: ApiDocGroup[] = [
           "system:config:list"
         ],
         "isPublic": false,
-        "action": ""
+        "action": "",
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/configs?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "page": 1,
+            "pageSize": 10
+          }
+        }
       },
       {
         "method": "GET",
@@ -530,7 +970,13 @@ export const API_DOCS: ApiDocGroup[] = [
           "system:config:query"
         ],
         "isPublic": false,
-        "action": ""
+        "action": "",
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/configs/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "id": "1"
+          }
+        }
       },
       {
         "method": "GET",
@@ -538,7 +984,13 @@ export const API_DOCS: ApiDocGroup[] = [
         "summary": "按键取参数值（业务取数，仅需登录、不设权限码）",
         "permission": [],
         "isPublic": false,
-        "action": ""
+        "action": "",
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/configs/data/sys.demo.key\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "configKey": "sys.demo.key"
+          }
+        }
       },
       {
         "method": "POST",
@@ -548,7 +1000,16 @@ export const API_DOCS: ApiDocGroup[] = [
           "system:config:add"
         ],
         "isPublic": false,
-        "action": "参数管理 · 新增"
+        "action": "参数管理 · 新增",
+        "examples": {
+          "curl": "curl -X POST \"http://localhost:3000/api/configs\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"configName\": \"示例参数\",\n      \"configKey\": \"sys.demo.key\",\n      \"configValue\": \"示例值\",\n      \"remark\": \"示例备注\"\n    }'",
+          "requestBody": {
+            "configName": "示例参数",
+            "configKey": "sys.demo.key",
+            "configValue": "示例值",
+            "remark": "示例备注"
+          }
+        }
       },
       {
         "method": "PUT",
@@ -558,7 +1019,18 @@ export const API_DOCS: ApiDocGroup[] = [
           "system:config:edit"
         ],
         "isPublic": false,
-        "action": "参数管理 · 编辑"
+        "action": "参数管理 · 编辑",
+        "examples": {
+          "curl": "curl -X PUT \"http://localhost:3000/api/configs/1\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"configName\": \"示例参数\",\n      \"configValue\": \"示例值\",\n      \"remark\": \"示例备注\"\n    }'",
+          "pathParams": {
+            "id": "1"
+          },
+          "requestBody": {
+            "configName": "示例参数",
+            "configValue": "示例值",
+            "remark": "示例备注"
+          }
+        }
       },
       {
         "method": "DELETE",
@@ -568,7 +1040,13 @@ export const API_DOCS: ApiDocGroup[] = [
           "system:config:remove"
         ],
         "isPublic": false,
-        "action": "参数管理 · 删除"
+        "action": "参数管理 · 删除",
+        "examples": {
+          "curl": "curl -X DELETE \"http://localhost:3000/api/configs/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "id": "1"
+          }
+        }
       }
     ]
   },
@@ -583,7 +1061,14 @@ export const API_DOCS: ApiDocGroup[] = [
           "log:http:list"
         ],
         "isPublic": false,
-        "action": ""
+        "action": "",
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/logs/http?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "page": 1,
+            "pageSize": 10
+          }
+        }
       },
       {
         "method": "GET",
@@ -593,7 +1078,13 @@ export const API_DOCS: ApiDocGroup[] = [
           "log:http:list"
         ],
         "isPublic": false,
-        "action": ""
+        "action": "",
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/logs/http/detail/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "id": "1"
+          }
+        }
       },
       {
         "method": "GET",
@@ -603,7 +1094,11 @@ export const API_DOCS: ApiDocGroup[] = [
           "log:http:export"
         ],
         "isPublic": false,
-        "action": ""
+        "action": "",
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/logs/http/export\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "isRawResponse": true
+        }
       },
       {
         "method": "GET",
@@ -613,7 +1108,14 @@ export const API_DOCS: ApiDocGroup[] = [
           "log:login:list"
         ],
         "isPublic": false,
-        "action": ""
+        "action": "",
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/logs/login?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "page": 1,
+            "pageSize": 10
+          }
+        }
       },
       {
         "method": "GET",
@@ -623,7 +1125,11 @@ export const API_DOCS: ApiDocGroup[] = [
           "log:login:export"
         ],
         "isPublic": false,
-        "action": ""
+        "action": "",
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/logs/login/export\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "isRawResponse": true
+        }
       },
       {
         "method": "GET",
@@ -633,7 +1139,14 @@ export const API_DOCS: ApiDocGroup[] = [
           "log:operation:list"
         ],
         "isPublic": false,
-        "action": ""
+        "action": "",
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/logs/operation?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "page": 1,
+            "pageSize": 10
+          }
+        }
       },
       {
         "method": "GET",
@@ -643,7 +1156,11 @@ export const API_DOCS: ApiDocGroup[] = [
           "log:operation:export"
         ],
         "isPublic": false,
-        "action": ""
+        "action": "",
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/logs/operation/export\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "isRawResponse": true
+        }
       },
       {
         "method": "DELETE",
@@ -653,7 +1170,10 @@ export const API_DOCS: ApiDocGroup[] = [
           "log:http:clear"
         ],
         "isPublic": false,
-        "action": "日志管理 · 清空 HTTP 日志"
+        "action": "日志管理 · 清空 HTTP 日志",
+        "examples": {
+          "curl": "curl -X DELETE \"http://localhost:3000/api/logs/http\" \\\n  -H \"Authorization: Bearer <accessToken>\""
+        }
       }
     ]
   },
@@ -668,7 +1188,14 @@ export const API_DOCS: ApiDocGroup[] = [
           "file:list"
         ],
         "isPublic": false,
-        "action": ""
+        "action": "",
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/files?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "page": 1,
+            "pageSize": 10
+          }
+        }
       },
       {
         "method": "GET",
@@ -678,7 +1205,14 @@ export const API_DOCS: ApiDocGroup[] = [
           "file:download"
         ],
         "isPublic": false,
-        "action": ""
+        "action": "",
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/files/1/download\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "id": "1"
+          },
+          "isRawResponse": true
+        }
       },
       {
         "method": "GET",
@@ -688,7 +1222,13 @@ export const API_DOCS: ApiDocGroup[] = [
           "file:upload"
         ],
         "isPublic": false,
-        "action": ""
+        "action": "",
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/files/check?hash=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        }
       },
       {
         "method": "GET",
@@ -698,7 +1238,14 @@ export const API_DOCS: ApiDocGroup[] = [
           "file:list"
         ],
         "isPublic": false,
-        "action": ""
+        "action": "",
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/files/types?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "page": 1,
+            "pageSize": 10
+          }
+        }
       },
       {
         "method": "GET",
@@ -708,7 +1255,14 @@ export const API_DOCS: ApiDocGroup[] = [
           "file:list"
         ],
         "isPublic": false,
-        "action": ""
+        "action": "",
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/files/uploaders?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "page": 1,
+            "pageSize": 10
+          }
+        }
       },
       {
         "method": "POST",
@@ -718,7 +1272,10 @@ export const API_DOCS: ApiDocGroup[] = [
           "file:upload"
         ],
         "isPublic": false,
-        "action": "文件管理 · 上传"
+        "action": "文件管理 · 上传",
+        "examples": {
+          "curl": "curl -X POST \"http://localhost:3000/api/files/upload\" \\\n  -H \"Authorization: Bearer <accessToken>\""
+        }
       },
       {
         "method": "DELETE",
@@ -728,7 +1285,13 @@ export const API_DOCS: ApiDocGroup[] = [
           "file:remove"
         ],
         "isPublic": false,
-        "action": "文件管理 · 删除"
+        "action": "文件管理 · 删除",
+        "examples": {
+          "curl": "curl -X DELETE \"http://localhost:3000/api/files/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "id": "1"
+          }
+        }
       }
     ]
   },
@@ -743,7 +1306,14 @@ export const API_DOCS: ApiDocGroup[] = [
           "tool:gen:list"
         ],
         "isPublic": false,
-        "action": ""
+        "action": "",
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/gen/tables?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "page": 1,
+            "pageSize": 10
+          }
+        }
       },
       {
         "method": "GET",
@@ -753,7 +1323,13 @@ export const API_DOCS: ApiDocGroup[] = [
           "tool:gen:list"
         ],
         "isPublic": false,
-        "action": ""
+        "action": "",
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/gen/tables/sys_config\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "tableName": "sys_config"
+          }
+        }
       },
       {
         "method": "POST",
@@ -763,7 +1339,13 @@ export const API_DOCS: ApiDocGroup[] = [
           "tool:gen:create"
         ],
         "isPublic": false,
-        "action": "代码生成 · 写入项目"
+        "action": "代码生成 · 写入项目",
+        "examples": {
+          "curl": "curl -X POST \"http://localhost:3000/api/gen/create\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"overwrite\": false\n    }'",
+          "requestBody": {
+            "overwrite": false
+          }
+        }
       },
       {
         "method": "POST",
@@ -773,7 +1355,20 @@ export const API_DOCS: ApiDocGroup[] = [
           "tool:gen:download"
         ],
         "isPublic": false,
-        "action": ""
+        "action": "",
+        "examples": {
+          "curl": "curl -X POST \"http://localhost:3000/api/gen/download\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"tableName\": \"sys_config\",\n      \"moduleName\": \"demo\",\n      \"businessName\": \"demo\",\n      \"author\": \"作者\",\n      \"isTree\": false,\n      \"treeParentField\": \"示例值\",\n      \"columnOptions\": []\n    }'",
+          "requestBody": {
+            "tableName": "sys_config",
+            "moduleName": "demo",
+            "businessName": "demo",
+            "author": "作者",
+            "isTree": false,
+            "treeParentField": "示例值",
+            "columnOptions": []
+          },
+          "isRawResponse": true
+        }
       },
       {
         "method": "POST",
@@ -783,7 +1378,19 @@ export const API_DOCS: ApiDocGroup[] = [
           "tool:gen:preview"
         ],
         "isPublic": false,
-        "action": ""
+        "action": "",
+        "examples": {
+          "curl": "curl -X POST \"http://localhost:3000/api/gen/preview\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"tableName\": \"sys_config\",\n      \"moduleName\": \"demo\",\n      \"businessName\": \"demo\",\n      \"author\": \"作者\",\n      \"isTree\": false,\n      \"treeParentField\": \"示例值\",\n      \"columnOptions\": []\n    }'",
+          "requestBody": {
+            "tableName": "sys_config",
+            "moduleName": "demo",
+            "businessName": "demo",
+            "author": "作者",
+            "isTree": false,
+            "treeParentField": "示例值",
+            "columnOptions": []
+          }
+        }
       }
     ]
   },
@@ -796,7 +1403,10 @@ export const API_DOCS: ApiDocGroup[] = [
         "summary": "更换头像",
         "permission": [],
         "isPublic": false,
-        "action": "个人中心 · 更换头像"
+        "action": "个人中心 · 更换头像",
+        "examples": {
+          "curl": "curl -X POST \"http://localhost:3000/api/profile/avatar\" \\\n  -H \"Authorization: Bearer <accessToken>\""
+        }
       },
       {
         "method": "PUT",
@@ -804,7 +1414,17 @@ export const API_DOCS: ApiDocGroup[] = [
         "summary": "修改资料",
         "permission": [],
         "isPublic": false,
-        "action": "个人中心 · 修改资料"
+        "action": "个人中心 · 修改资料",
+        "examples": {
+          "curl": "curl -X PUT \"http://localhost:3000/api/profile\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"nickname\": \"示例用户\",\n      \"email\": \"demo@example.com\",\n      \"phone\": \"13800138000\",\n      \"gender\": \"1\",\n      \"avatar\": \"/static/2026/avatar.png\"\n    }'",
+          "requestBody": {
+            "nickname": "示例用户",
+            "email": "demo@example.com",
+            "phone": "13800138000",
+            "gender": "1",
+            "avatar": "/static/2026/avatar.png"
+          }
+        }
       },
       {
         "method": "PUT",
@@ -812,7 +1432,14 @@ export const API_DOCS: ApiDocGroup[] = [
         "summary": "修改密码",
         "permission": [],
         "isPublic": false,
-        "action": "个人中心 · 修改密码"
+        "action": "个人中心 · 修改密码",
+        "examples": {
+          "curl": "curl -X PUT \"http://localhost:3000/api/profile/password\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"oldPassword\": \"123456\",\n      \"newPassword\": \"123456\"\n    }'",
+          "requestBody": {
+            "oldPassword": "123456",
+            "newPassword": "123456"
+          }
+        }
       }
     ]
   },
@@ -825,7 +1452,14 @@ export const API_DOCS: ApiDocGroup[] = [
         "summary": "全部接口清单（按业务模块分组）",
         "permission": [],
         "isPublic": true,
-        "action": ""
+        "action": "",
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/docs?page=1&pageSize=10\"",
+          "query": {
+            "page": 1,
+            "pageSize": 10
+          }
+        }
       }
     ]
   },
@@ -838,7 +1472,14 @@ export const API_DOCS: ApiDocGroup[] = [
         "summary": "健康检查：返回服务名称、状态与服务器时间",
         "permission": [],
         "isPublic": true,
-        "action": ""
+        "action": "",
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api?page=1&pageSize=10\"",
+          "query": {
+            "page": 1,
+            "pageSize": 10
+          }
+        }
       }
     ]
   }

@@ -6,6 +6,22 @@
  * （见 `api-docs.generated.ts`），运行时不做反射，保证「文档 = 代码」的单一事实来源。
  */
 
+/** 单个接口的请求 / 响应示例。 */
+export interface ApiDocExamples {
+  /** curl 命令（可直接复制执行；公开接口不带鉴权头） */
+  curl: string;
+  /** 路径参数示例（如 `{ id: '1' }`） */
+  pathParams?: Record<string, string>;
+  /** 查询参数示例 */
+  query?: Record<string, unknown>;
+  /** 请求体示例（由 DTO 自动合成） */
+  requestBody?: Record<string, unknown>;
+  /** 是否文件流响应（CSV / ZIP / 附件，无 JSON 响应体） */
+  isRawResponse?: boolean;
+  /** 响应示例（运行时由契约示例库补全，见 `api-examples.ts`） */
+  response?: unknown;
+}
+
 /** 单个接口条目。 */
 export interface ApiDocEndpoint {
   /** HTTP 方法：GET / POST / PUT / PATCH / DELETE */
@@ -20,6 +36,8 @@ export interface ApiDocEndpoint {
   isPublic: boolean;
   /** 操作日志语义（`@OperationLog` 的「模块 · 动作」，无则为空串） */
   action: string;
+  /** 请求 / 响应示例 */
+  examples: ApiDocExamples;
 }
 
 /** 按业务模块分组的接口集合。 */

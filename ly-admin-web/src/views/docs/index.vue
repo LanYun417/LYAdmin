@@ -42,6 +42,9 @@ const METHOD_TAG_TYPE: Record<string, 'primary' | 'success' | 'warning' | 'dange
  */
 const collapseStyle: Record<string, string> = { '--el-collapse-border-color': 'transparent' };
 
+/** 窄屏（< 768px）：与布局层同一断点（见 layout/index.vue），用于单列展示等降级 */
+const isMobileScreen = useMediaQuery('(max-width: 767px)');
+
 /** 全部接口分组 */
 const groups = ref<ApiDocGroup[]>([]);
 /** 接口总数 */
@@ -126,11 +129,43 @@ function select(group: string, endpoint: ApiDocEndpoint): void {
   selected.value = { group, endpoint };
 }
 
-/** 复制路径到剪贴板 */
-async function copyPath(path: string): Promise<void> {
+/** 代码块样式：Tailwind 工具类，避免为三处示例块写 scoped CSS（长行换行，窄屏不横向溢出） */
+const CODE_BLOCK =
+  'overflow-x-auto whitespace-pre-wrap break-all rounded-md bg-fill-light p-3 font-mono text-xs leading-[1.6]';
+
+/** 请求参数示例文本：合并路径参数 / 查询参数 / 请求体，无则为空串 */
+const requestParamsText = computed<string>(() => {
+  const examples = selected.value?.endpoint.examples;
+  if (!examples) {
+    return '';
+  }
+  const payload: Record<string, unknown> = {};
+  if (examples.pathParams) {
+    payload.path = examples.pathParams;
+  }
+  if (examples.query) {
+    payload.query = examples.query;
+  }
+  if (examples.requestBody) {
+    payload.body = examples.requestBody;
+  }
+  return Object.keys(payload).length ? JSON.stringify(payload, null, 2) : '';
+});
+
+/** 响应示例文本：对象按 JSON 格式化；字符串（文件流说明）原样展示 */
+const responseText = computed<string>(() => {
+  const response = selected.value?.endpoint.examples?.response;
+  if (response === undefined || response === null) {
+    return '';
+  }
+  return typeof response === 'string' ? response : JSON.stringify(response, null, 2);
+});
+
+/** 复制任意文本到剪贴板 */
+async function copyText(text: string, okMessage = '已复制'): Promise<void> {
   try {
-    await navigator.clipboard.writeText(path);
-    ElMessage.success('已复制路径');
+    await navigator.clipboard.writeText(text);
+    ElMessage.success(okMessage);
   } catch {
     ElMessage.error('复制失败，请手动复制');
   }
@@ -165,17 +200,19 @@ onMounted(loadDocs);
           <el-tag type="info" effect="plain">{{ groups.length }} 个模块</el-tag>
           <span v-if="generatedText" class="text-xs text-muted">生成于 {{ generatedText }}</span>
         </div>
-        <!-- 外层定宽：el-input 自身 width:100%，由这层 Tailwind 盒子控制实际宽度 -->
-        <div class="w-[260px]">
+        <!-- 外层定宽：el-input 自身 width:100%，由这层 Tailwind 盒子控制实际宽度（窄屏铺满） -->
+        <div class="w-full sm:w-[260px]">
           <el-input v-model="keyword" clearable placeholder="搜索路径 / 说明 / 权限码" />
         </div>
       </div>
     </template>
 
-    <!-- 主体固定为视口高度，左右两栏各自滚动，避免整页被上百个接口拉得很长 -->
-    <div class="flex h-[calc(100vh-220px)] min-h-[420px] gap-4">
+    <!-- 桌面（≥ lg）左右两栏、各自滚动；窄屏纵向堆叠（导航在上、限高独立滚动，详情在下） -->
+    <div class="flex flex-col gap-4 lg:h-[calc(100vh-220px)] lg:min-h-[420px] lg:flex-row">
       <!-- 左侧：按模块折叠的接口导航 -->
-      <aside class="w-[340px] shrink-0 border-r border-line-lighter pr-2">
+      <aside
+        class="h-[40vh] shrink-0 border-b border-line-lighter pb-2 lg:h-auto lg:w-[340px] lg:border-b-0 lg:border-r lg:pr-2 lg:pb-0"
+      >
         <el-scrollbar v-if="filteredGroups.length">
           <!-- 折叠面板去边框（见 collapseStyle 说明） -->
           <el-collapse v-model="activeGroups" :style="collapseStyle">
@@ -204,7 +241,7 @@ onMounted(loadDocs);
       </aside>
 
       <!-- 右侧：接口详情（纵向 flex + gap 控制间距，避免给 EP 组件加外边距被其 margin:0 覆盖） -->
-      <main class="min-w-0 flex-1">
+      <main class="min-w-0 lg:flex-1">
         <el-scrollbar v-if="selected">
           <div class="flex flex-col gap-4 pr-2">
             <div class="flex items-center gap-2">
@@ -213,14 +250,14 @@ onMounted(loadDocs);
               </el-tag>
               <el-input :model-value="selected.endpoint.path" readonly class="flex-1">
                 <template #append>
-                  <el-button @click="copyPath(selected.endpoint.path)">复制</el-button>
+                  <el-button @click="copyText(selected.endpoint.path, '已复制路径')">复制</el-button>
                 </template>
               </el-input>
             </div>
 
             <p class="leading-[1.7] text-ink-regular">{{ selected.endpoint.summary || '（该接口暂无说明）' }}</p>
 
-            <el-descriptions :column="2" border>
+            <el-descriptions :column="isMobileScreen ? 1 : 2" border>
               <el-descriptions-item label="所属模块">{{ selected.group }}</el-descriptions-item>
               <el-descriptions-item label="访问要求">
                 <el-tag v-if="selected.endpoint.isPublic" type="success" effect="plain">公开（无需登录）</el-tag>
@@ -254,6 +291,32 @@ onMounted(loadDocs);
               show-icon
               title="所有成功响应恒为 HTTP 200，响应体统一为 { code, message, data }。"
             />
+
+            <!-- 请求示例：curl（可直接执行）+ 请求参数（路径 / 查询 / 请求体） -->
+            <div class="flex flex-col gap-2">
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-semibold">请求示例（curl）</span>
+                <el-button size="small" text @click="copyText(selected.endpoint.examples.curl)">复制</el-button>
+              </div>
+              <pre :class="CODE_BLOCK">{{ selected.endpoint.examples.curl }}</pre>
+
+              <template v-if="requestParamsText">
+                <div class="flex items-center justify-between">
+                  <span class="text-sm font-semibold">请求参数示例</span>
+                  <el-button size="small" text @click="copyText(requestParamsText)">复制</el-button>
+                </div>
+                <pre :class="CODE_BLOCK">{{ requestParamsText }}</pre>
+              </template>
+            </div>
+
+            <!-- 响应示例：对象按 JSON 格式化；文件流类接口给出文字说明 -->
+            <div v-if="responseText" class="flex flex-col gap-2">
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-semibold">响应示例</span>
+                <el-button size="small" text @click="copyText(responseText)">复制</el-button>
+              </div>
+              <pre :class="CODE_BLOCK">{{ responseText }}</pre>
+            </div>
           </div>
         </el-scrollbar>
         <el-empty v-else description="请从左侧选择一个接口" />
