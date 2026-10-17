@@ -324,12 +324,11 @@ onMounted(loadDocs);
   background: var(--el-color-primary-light-9);
 }
 
-/* 方法标签统一宽度，视觉对齐 */
+/* 方法标签统一宽度并居中，视觉对齐（字体沿用 Element Plus 默认，不额外指定） */
 .method-tag,
 .method-tag-lg {
   justify-content: center;
   width: 58px;
-  font-family: var(--el-font-family-mono, monospace);
 }
 
 .method-tag-lg {
