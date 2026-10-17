@@ -1,7 +1,6 @@
 /**
  * 认证服务。
  * 模块职责：登录校验、双 Token 签发、刷新、用户上下文组装、菜单树下发。
- * 迁移自原 Express 版本的 services/auth.service.ts。
  */
 import { Injectable, Logger } from '@nestjs/common';
 import { AppException } from '../../common/app.exception.js';

@@ -1,7 +1,6 @@
 /**
  * 权限校验守卫与装饰器。
  * 模块职责：校验当前用户是否具备所需权限码（按钮/接口级），超管直通。
- * 迁移自原 Express 版本的 middlewares/permission.ts。
  */
 import { type CanActivate, type ExecutionContext, Injectable, SetMetadata, createParamDecorator } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
@@ -16,8 +15,7 @@ export const PERMISSION_KEY = 'ly:permission';
 /**
  * 声明访问该接口所需的权限码（命中任一即通过）。
  *
- * 用法：`@RequirePermissions('system:user:list')`
- * 对应原版 `requirePermission('system:user:list')`。
+ * 用法：`@RequirePermissions('system:user:list')`。
  */
 export const RequirePermissions = (...codes: string[]): MethodDecorator & ClassDecorator =>
   SetMetadata(PERMISSION_KEY, codes);
@@ -25,11 +23,11 @@ export const RequirePermissions = (...codes: string[]): MethodDecorator & ClassD
 /**
  * 权限校验守卫（APP_GUARD，需在 AuthGuard 之后执行）。
  *
- * 规则（与原实现 1:1）：
- * - 超级管理员不受权限裁剪；
- * - 未声明任何权限码视为配置缺失，按最小权限原则**默认拒绝**（fail-closed）。
- *   历史实现为 `codes.length === 0` 直接放行，一旦误写 `@RequirePermissions()` 就会让
- *   所有已登录用户通过，属越权风险。
+ * 规则：
+ * - 未声明 `@RequirePermissions` → 仅要求已登录（登录即可访问的接口依赖此行为）；
+ * - 声明了权限码 → 命中任一即通过，超管直通；
+ * - 声明了装饰器但**没给权限码**（`@RequirePermissions()` 误用）→ 按最小权限原则拒绝，
+ *   避免「写漏参数即全员放行」。
  */
 @Injectable()
 export class PermissionGuard implements CanActivate {
@@ -40,8 +38,8 @@ export class PermissionGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
-    // 未声明权限码 → 视为公开（由 @Public 控制鉴权），直接放行
-    if (!codes || codes.length === 0) {
+    // 未声明权限码 → 不额外裁剪（鉴权由 AuthGuard 负责）
+    if (!codes) {
       return true;
     }
 
@@ -54,7 +52,7 @@ export class PermissionGuard implements CanActivate {
     if (user.roles.includes(SUPER_ADMIN_ROLE)) {
       return true;
     }
-    // 未声明任何权限码视为配置缺失，默认拒绝（fail-closed）
+    // 声明了装饰器却未给出权限码：配置缺失，默认拒绝（fail-closed）
     if (codes.length === 0) {
       throw AppException.forbidden();
     }

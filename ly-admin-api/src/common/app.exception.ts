@@ -1,7 +1,6 @@
 /**
  * 统一响应体与业务异常。
  * 模块职责：定义成功/失败响应结构与 `AppException` 异常类。
- * 迁移自原 Express 版本的 utils/response.ts，异常改为继承 Nest 的 HttpException。
  */
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { ERROR_CODE, ERROR_MESSAGE } from './constants.js';
@@ -16,7 +15,7 @@ export interface ApiResponse<T> {
 /**
  * 业务异常：携带业务码与 HTTP 状态码，由全局异常过滤器统一转换为响应体。
  *
- * 与原版 AppError 等价，仅基类改为 HttpException 以便被 Nest 的过滤器捕获。
+ * 继承 HttpException，以便被 Nest 的全局异常过滤器按状态码捕获。
  */
 export class AppException extends HttpException {
   /** 业务错误码 */

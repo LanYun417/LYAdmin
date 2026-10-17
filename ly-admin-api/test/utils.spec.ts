@@ -91,9 +91,9 @@ describe('buildTree', () => {
     expect(
       flattenTree(tree)
         .map((node) => Number(node.id))
-        .sort(),
+        .sort((a, b) => a - b),
     ).toEqual([1, 2, 3, 4]);
-    expect(collectIds(tree).sort()).toEqual([1, 2, 3, 4]);
+    expect(collectIds(tree).sort((a, b) => a - b)).toEqual([1, 2, 3, 4]);
     expect(Number(findNode(tree, 3)?.id)).toBe(3);
     expect(findNode(tree, 12345)).toBeNull();
   });

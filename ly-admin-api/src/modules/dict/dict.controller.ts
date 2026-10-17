@@ -2,12 +2,12 @@
  * 字典控制器。
  * 模块职责：解析字典模块请求参数、调用服务、组装统一响应。
  * 命名前缀 `type*` 对应字典类型、`item*` 对应字典项（同属 /api/dict 一个模块）。
- * 迁移自原 Express 版本的 controllers/dict.controller.ts 与 routes/dict.routes.ts。
  */
 import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
 import { OperationLog } from '../../common/operation-log.decorator.js';
 import { RequirePermissions } from '../../common/permission.guard.js';
 import type { ResponseEnvelope } from '../../common/response.interceptor.js';
+import { IdParamDto } from '../../common/dto/id-param.dto.js';
 import { DictService } from './dict.service.js';
 import {
   CreateDictItemDto,
@@ -43,8 +43,8 @@ export class DictController {
   @Put('types/:id')
   @RequirePermissions('system:dict:edit')
   @OperationLog('字典管理', '编辑')
-  async updateType(@Param('id') id: string, @Body() dto: UpdateDictTypeDto): Promise<ResponseEnvelope<unknown>> {
-    const data = await this.dictService.updateDictType(Number(id), dto);
+  async updateType(@Param() params: IdParamDto, @Body() dto: UpdateDictTypeDto): Promise<ResponseEnvelope<unknown>> {
+    const data = await this.dictService.updateDictType(params.id, dto);
     return { __raw: true, data, message: '编辑成功' };
   }
 
@@ -52,8 +52,8 @@ export class DictController {
   @Put('types/:id/status')
   @RequirePermissions('system:dict:edit')
   @OperationLog('字典管理', '编辑')
-  async setTypeStatus(@Param('id') id: string, @Body() dto: SetStatusDto): Promise<ResponseEnvelope<unknown>> {
-    const data = await this.dictService.setDictTypeStatus(Number(id), dto.status);
+  async setTypeStatus(@Param() params: IdParamDto, @Body() dto: SetStatusDto): Promise<ResponseEnvelope<unknown>> {
+    const data = await this.dictService.setDictTypeStatus(params.id, dto.status);
     return { __raw: true, data, message: dto.status === 1 ? '已启用' : '已禁用' };
   }
 
@@ -61,8 +61,8 @@ export class DictController {
   @Delete('types/:id')
   @RequirePermissions('system:dict:remove')
   @OperationLog('字典管理', '删除')
-  async removeType(@Param('id') id: string): Promise<ResponseEnvelope<unknown>> {
-    await this.dictService.deleteDictType(Number(id));
+  async removeType(@Param() params: IdParamDto): Promise<ResponseEnvelope<unknown>> {
+    await this.dictService.deleteDictType(params.id);
     return { __raw: true, data: null, message: '删除成功' };
   }
 
@@ -88,8 +88,8 @@ export class DictController {
   @Put('items/:id')
   @RequirePermissions('system:dict:edit')
   @OperationLog('字典管理', '编辑')
-  async updateItem(@Param('id') id: string, @Body() dto: UpdateDictItemDto): Promise<ResponseEnvelope<unknown>> {
-    const data = await this.dictService.updateDictItem(Number(id), dto);
+  async updateItem(@Param() params: IdParamDto, @Body() dto: UpdateDictItemDto): Promise<ResponseEnvelope<unknown>> {
+    const data = await this.dictService.updateDictItem(params.id, dto);
     return { __raw: true, data, message: '编辑成功' };
   }
 
@@ -97,8 +97,8 @@ export class DictController {
   @Put('items/:id/status')
   @RequirePermissions('system:dict:edit')
   @OperationLog('字典管理', '编辑')
-  async setItemStatus(@Param('id') id: string, @Body() dto: SetStatusDto): Promise<ResponseEnvelope<unknown>> {
-    const data = await this.dictService.setDictItemStatus(Number(id), dto.status);
+  async setItemStatus(@Param() params: IdParamDto, @Body() dto: SetStatusDto): Promise<ResponseEnvelope<unknown>> {
+    const data = await this.dictService.setDictItemStatus(params.id, dto.status);
     return { __raw: true, data, message: dto.status === 1 ? '已启用' : '已禁用' };
   }
 
@@ -106,8 +106,8 @@ export class DictController {
   @Delete('items/:id')
   @RequirePermissions('system:dict:remove')
   @OperationLog('字典管理', '删除')
-  async removeItem(@Param('id') id: string): Promise<ResponseEnvelope<unknown>> {
-    await this.dictService.deleteDictItem(Number(id));
+  async removeItem(@Param() params: IdParamDto): Promise<ResponseEnvelope<unknown>> {
+    await this.dictService.deleteDictItem(params.id);
     return { __raw: true, data: null, message: '删除成功' };
   }
 

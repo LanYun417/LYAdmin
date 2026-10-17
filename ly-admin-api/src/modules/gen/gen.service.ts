@@ -5,7 +5,6 @@
  * 安全约束：表名必须与 information_schema 中真实存在的表匹配，模块名/业务名只允许
  * 字母数字（业务名会拼进生成物路径，必须挡住路径穿越）。
  *
- * 迁移自原 Express 版本的 services/gen.service.ts（Sequelize → Prisma $queryRawUnsafe）。
  */
 import { Injectable } from '@nestjs/common';
 import { AppException } from '../../common/app.exception.js';

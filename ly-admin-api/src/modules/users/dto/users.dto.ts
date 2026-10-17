@@ -1,10 +1,9 @@
 /**
  * 用户模块入参 DTO（class-validator）。
  * 模块职责：用户增改、状态、重置密码、分配角色、路径 id 的校验规则。
- * 迁移自原 Express 版本的 validators/user.validator.ts（zod → class-validator），
- * 字段规则与原 schema 1:1，并通过 @Transform 还原原 zod 的默认值/类型归一行为。
+ * 用 @Transform 统一做去空白 / 空串归一 / 默认值处理。
  */
-import { Transform, Type } from 'class-transformer';
+import { Transform } from 'class-transformer';
 import {
   IsArray,
   IsInt,
@@ -23,17 +22,9 @@ import { MSG } from '../../../common/validation-messages.js';
 /** 去除首尾空白（对字符串入参统一处理）。 */
 const trim = ({ value }: { value: unknown }): unknown => (typeof value === 'string' ? value.trim() : value);
 
-/** 空串归一为 undefined，便于配合 @IsOptional 跳过校验（还原原 zod `z.literal('')` 语义）。 */
+/** 空串归一为 undefined，便于配合 @IsOptional 跳过校验。 */
 const emptyToUndefined = ({ value }: { value: unknown }): unknown =>
   typeof value === 'string' && value.trim() === '' ? undefined : value;
-
-/** 路径 id 参数（正整数）。 */
-export class IdParamDto {
-  @Type(() => Number)
-  @IsInt({ message: 'id 必须为正整数' })
-  @Min(1, { message: 'id 必须为正整数' })
-  id!: number;
-}
 
 /** 新增用户。 */
 export class CreateUserDto {

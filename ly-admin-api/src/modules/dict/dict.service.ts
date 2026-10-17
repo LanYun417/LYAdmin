@@ -3,7 +3,7 @@
  * 模块职责：字典类型 / 字典项的分页查询、CRUD、启停用，以及业务侧「按类型取启用项」。
  * 本模块是**唯一操作 DictType / DictItem 的层**。
  *
- * 关键约定（与原 Express 版 1:1）：
+ * 关键约定：
  * - 字典项以 `dictType` 编码字符串关联类型；类型编码一经创建不可修改（见 DTO）。
  * - 字典值的唯一性在「同一类型内」由本层保证（数据库不强制），故新增/编辑均需判重。
  * - 删除类型须连带删除其下字典项，使用事务保证一致性（Prisma 已配 onDelete: Cascade）。
@@ -222,7 +222,7 @@ export class DictService {
    */
   async listDictItems(query: Record<string, unknown>): Promise<PageResult<DictItemBrief>> {
     const { page, pageSize, offset, limit } = parsePagination(query);
-    const dictType = String(query.dictType ?? '').trim();
+    const dictType = readString(query.dictType) ?? '';
     const dictLabel = readString(query.dictLabel);
     const status = readNumber(query.status);
 

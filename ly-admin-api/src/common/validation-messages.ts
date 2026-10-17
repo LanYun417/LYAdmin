@@ -3,8 +3,7 @@
  *
  * 背景：class-validator 在未自定义 message 时会漏出英文默认文案
  * （如 `username must be shorter than or equal to 20 characters`、`roleName must be a string`），
- * 而本项目所有对用户可见的提示都应为中文。原 Express 版用 zod，其校验失败文案同样是英文直出，
- * 这里属于刻意的体验改进。
+ * 而本项目所有对用户可见的提示都应为中文，故在此统一提供中文文案。
  *
  * 使用约定：
  * - 字段级的关键提示（如"账号不能为空"）仍在各 DTO 内联书写，保证语义精确；

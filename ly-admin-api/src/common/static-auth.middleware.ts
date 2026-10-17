@@ -1,7 +1,6 @@
 /**
  * 静态资源鉴权中间件。
  * 模块职责：在静态服务链最前端完成令牌校验，未通过即短路 401（连文件都不必读）。
- * 迁移自原 Express 版本的 middlewares/auth.ts 的 `authenticateStatic`。
  *
  * 为何不用守卫：NestJS 的 APP_GUARD 只作用于控制器路由，
  * 而 `/static/*` 由 express.static 处理器直接出图，不经过控制器，故须用中间件兜。

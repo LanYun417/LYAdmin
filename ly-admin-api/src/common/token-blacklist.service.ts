@@ -9,7 +9,6 @@
  * - 判定式：`payload.iat * 1000 < 登出时间` → 失效（与 `passwordChangedAt` 检查同构）。
  *
  * 降级：Redis 不可用/未配置时，读返回「未失效」、写静默跳过，绝不阻断主流程。
- * 迁移自原 Express 版本的 services/tokenBlacklist.ts。
  */
 import { Injectable } from '@nestjs/common';
 import { RedisService } from './redis.service.js';

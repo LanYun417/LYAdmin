@@ -1,9 +1,9 @@
 /**
- * Express 适配器（对齐原 Express 版的响应语义）。
+ * 统一成功状态码的 Express 适配器。
  *
- * 为什么需要它：原 Express 版的 `ok(res, data, message)` 对所有成功响应一律
- * `res.status(200).json(...)`——**不区分请求方法**，POST 也回 200。而 NestJS 默认会给
- * POST 处理器回 201 Created，与既有契约不一致（前端 request.ts 及外部调用方都按 200 处理）。
+ * 为什么需要它：本项目对外契约是**所有成功响应一律 HTTP 200**，业务结果由响应体
+ * `{ code, message, data }` 表达。NestJS 默认按请求方法推导成功状态码（POST → 201 Created），
+ * 与契约不符——调用方（前端 request.ts、脚本、第三方集成）都按 200 判断成功。
  *
  * 实现方式：只重写 `reply`，把状态码固定为 200（`reply` 是 Nest 写入响应的唯一入口）。
  * 三类路径不受影响：
@@ -11,15 +11,14 @@
  * - 异常路径 → 走 AllExceptionsFilter，同样不经过 reply；
  * - SSE / `@Redirect` → 走各自的适配器方法（sse / redirect），不经过 reply。
  *
- * 注意：业务错误码仍走响应体 `code` 字段（如 401/403/500），HTTP 状态码仅用于
- * 鉴权与网络层语义，这一点与旧版一致（旧版错误走 `fail(res, code, message, httpStatus)`，
- * 由异常过滤器负责，不在本适配器范围内）。
+ * 注意：HTTP 状态码只承担传输层与鉴权语义（401/403/404/500），业务错误码一律看响应体
+ * `code` 字段；错误响应由异常过滤器写出，不在本适配器范围内。
  */
 import { HttpStatus } from '@nestjs/common';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import type { Response } from 'express';
 
-export class LegacyExpressAdapter extends ExpressAdapter {
+export class OkExpressAdapter extends ExpressAdapter {
   /**
    * 写出响应：恒用 HTTP 200，忽略框架按请求方法推导出的状态码（POST 的 201）。
    * @param response Express 响应对象

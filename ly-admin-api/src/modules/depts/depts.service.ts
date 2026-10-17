@@ -1,7 +1,6 @@
 /**
  * 部门服务。
  * 模块职责：部门 CRUD、树构建（唯一操作 Dept/RoleDept 的层）。
- * 迁移自原 Express 版本的 services/dept.service.ts，逐方法 1:1 移植。
  */
 import { Injectable } from '@nestjs/common';
 import { AppException } from '../../common/app.exception.js';
@@ -52,7 +51,7 @@ export class DeptService {
     });
     const nodes = depts.map((dept) => this.toDeptNode(dept));
 
-    const treeFlag = String(query.tree ?? '');
+    const treeFlag = readString(query.tree);
     const wantTree = treeFlag === '1' || treeFlag === 'true';
     return wantTree ? buildTree(nodes) : nodes;
   }

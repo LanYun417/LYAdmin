@@ -1,7 +1,6 @@
 /**
  * 用户服务。
  * 模块职责：用户分页查询、CRUD、角色绑定、状态切换、密码重置（唯一操作 User/Role 关联的层）。
- * 迁移自原 Express 版本的 services/user.service.ts，Sequelize → Prisma 逐方法 1:1 移植。
  */
 import { Injectable, Logger } from '@nestjs/common';
 import { AppException } from '../../common/app.exception.js';
@@ -82,7 +81,7 @@ export class UsersService {
       updatedAt: user.updatedAt,
       remark: user.remark,
       isSuperAdmin: this.isSuperAdmin(user.username, roles),
-      // 只输出 id + roleName：与旧后端 1:1（roleCode 仍参与超管判定，但不对外暴露——
+      // 只输出 id + roleName：roleCode 仍参与超管判定，但不对外暴露——
       // 前端 UserDetail 类型也只声明这两个字段）
       roles: roles.map((role) => ({
         id: Number(role.id),
@@ -127,7 +126,7 @@ export class UsersService {
 
   /**
    * 分页查询用户（含数据权限过滤 + 用户名/状态/显式部门筛选）。
-   * 与原实现 1:1：self 仅看本人；dept 按可见部门集合裁剪（显式部门需落在可见范围内，否则空集）；
+   * 规则：self 仅看本人；dept 按可见部门集合裁剪（显式部门需落在可见范围内，否则空集）；
    * all 或仅显式部门时不裁剪。
    */
   async listUsers(query: Record<string, unknown>, authUser: AuthUserContext): Promise<PageResult<UserDetail>> {

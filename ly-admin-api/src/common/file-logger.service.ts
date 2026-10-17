@@ -1,7 +1,6 @@
 /**
  * 文件日志服务。
  * 模块职责：按天分文件写入 JSON Lines 日志，提供定时归档与保留期清理。
- * 迁移自原 Express 版本的 logging/ 子系统（logManager / archiver / retention / scheduler）。
  *
  * 目录结构：
  * - <logDir>/app-YYYY-MM-DD.log      应用日志
@@ -33,8 +32,24 @@ export class FileLoggerService implements OnModuleInit, OnModuleDestroy {
 
   onModuleInit(): void {
     this.ensureDirs();
+    this.subscribeSlowSql();
     this.startArchiveScheduler();
     this.startRetentionScheduler();
+  }
+
+  /**
+   * 订阅 Prisma 查询事件：耗时超过 `LOG_SLOW_SQL_MS` 的写入 `db-YYYY-MM-DD.log`。
+   * 仅当 `DB_LOGGING=true` 时 Prisma 才会发出事件（见 PrismaService 的 log 配置）。
+   */
+  private subscribeSlowSql(): void {
+    if (!config.db.logging) {
+      return;
+    }
+    this.prisma.onQuery((event) => {
+      if (event.duration >= config.log.slowSqlMs) {
+        this.slowSql(event.query, event.duration);
+      }
+    });
   }
 
   onModuleDestroy(): void {

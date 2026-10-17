@@ -2,7 +2,6 @@
  * 鉴权守卫与请求上下文装饰器。
  * 模块职责：解析 Bearer Token、校验 accessToken、查库校验用户状态（强制下线）、
  * 校验改密后旧 Token 失效与登出黑名单，并把用户上下文挂载到请求对象。
- * 迁移自原 Express 版本的 middlewares/auth.ts。
  */
 import { type CanActivate, type ExecutionContext, Injectable, SetMetadata, createParamDecorator } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';

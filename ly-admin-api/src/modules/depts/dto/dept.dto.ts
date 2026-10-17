@@ -2,7 +2,7 @@
  * 部门模块入参 DTO。
  * 模块职责：部门新增/编辑的请求体校验（class-validator）。
  * 全局 ValidationPipe 已开启 whitelist + transform，故用 @Type 做数值强转，
- * 与旧版 zod 的 coerce 语义一致。新增与编辑共用同一 Upsert 结构（编辑时前端传全量）。
+ * 新增与编辑共用同一 Upsert 结构（编辑时前端传全量）。
  */
 import { Type } from 'class-transformer';
 import { IsInt, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';

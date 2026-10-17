@@ -1,13 +1,13 @@
 /**
  * 代码生成控制器。
  * 模块职责：接收代码生成请求、调用服务、返回统一响应或 ZIP 二进制流。
- * 迁移自原 Express 版本的 controllers/gen.controller.ts。
  *
  * 权限严格分离：list / preview / download / create 使用四个独立权限码，
  * 只读角色一律不授予 preview / download / create，避免越权导出、下载或写入源码。
  */
 import { Controller, Get, Param, Post, Body, Res } from '@nestjs/common';
 import type { Response } from 'express';
+import { OperationLog } from '../../common/operation-log.decorator.js';
 import { RequirePermissions } from '../../common/permission.guard.js';
 import { RawResponse } from '../../common/response.interceptor.js';
 import { GenService } from './gen.service.js';
@@ -65,6 +65,7 @@ export class GenController {
   /** 生成代码并直接写入项目目录（含自动接线）。 */
   @Post('create')
   @RequirePermissions('tool:gen:create')
+  @OperationLog('代码生成', '写入项目')
   create(@Body() body: GenCreateDto): Promise<GenCreateResult> {
     return this.genWriter.createGenCode(body, body.overwrite === true);
   }

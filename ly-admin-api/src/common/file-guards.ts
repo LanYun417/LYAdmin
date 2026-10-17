@@ -3,7 +3,6 @@
  * 模块职责：
  * - `HotlinkGuard`：拦截外站盗链请求（Referer 白名单）
  * - `ImageScaleService`：按 `?scale=` 参数生成缩略图并缓存
- * 迁移自原 Express 版本的 middlewares/{hotlinkGuard,imageScale}.ts + services/image.service.ts。
  */
 import { Injectable, type NestMiddleware } from '@nestjs/common';
 import type { NextFunction, Request, Response } from 'express';

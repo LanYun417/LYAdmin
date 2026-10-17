@@ -1,7 +1,6 @@
 /**
  * 用户控制器。
  * 模块职责：解析请求参数、调用用户服务、组装统一响应（含写操作的自定义提示语）。
- * 迁移自原 Express 版本的 controllers/user.controller.ts，端点与权限码与原 user.routes.ts 1:1。
  */
 import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
 import { OperationLog } from '../../common/operation-log.decorator.js';
@@ -10,14 +9,8 @@ import { CurrentUser } from '../../common/auth.guard.js';
 import type { AuthUserContext } from '../../common/types.js';
 import { type ResponseEnvelope } from '../../common/response.interceptor.js';
 import { UsersService } from './users.service.js';
-import {
-  AssignRoleDto,
-  CreateUserDto,
-  IdParamDto,
-  ResetPasswordDto,
-  StatusDto,
-  UpdateUserDto,
-} from './dto/users.dto.js';
+import { IdParamDto } from '../../common/dto/id-param.dto.js';
+import { AssignRoleDto, CreateUserDto, ResetPasswordDto, StatusDto, UpdateUserDto } from './dto/users.dto.js';
 
 @Controller('users')
 export class UsersController {

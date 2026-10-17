@@ -1,7 +1,6 @@
 /**
  * 全局响应拦截器。
  * 模块职责：把控制器返回的裸数据包装为统一响应体 `{ code: 200, message, data }`。
- * 迁移自原 Express 版本的 `ok(res, data, message)`。
  *
  * 约定：
  * - 控制器直接返回业务数据本体，message 默认 `success`；
@@ -9,10 +8,10 @@
  * - 二进制响应（文件流/图片缩放等）通过 `@RawResponse()` 标记跳过包装。
  *
  * 实现要点（勿改回「手动 res.json」写法）：
- * 本拦截器**只负责把返回值改写成响应体**，由 Nest 的适配器负责写出。早期版本在这里
- * 直接调用 `res.status(200).json(...)` 再返回 payload，会导致框架随后重复写出响应，
- * 每个成功请求都抛 `ERR_HTTP_HEADERS_SENT: Cannot set headers after they are sent`。
- * HTTP 状态码统一为 200 的职责改由 LegacyExpressAdapter.reply 承担（见该文件）。
+ * 本拦截器**只负责把返回值改写成响应体**，由 Nest 的适配器负责写出。若在这里直接调用
+ * `res.status(200).json(...)` 再返回 payload，框架随后会重复写出响应，每个成功请求都抛
+ * `ERR_HTTP_HEADERS_SENT: Cannot set headers after they are sent`。
+ * HTTP 状态码统一为 200 的职责由 OkExpressAdapter.reply 承担（见该文件）。
  */
 import { type CallHandler, type ExecutionContext, Injectable, NestInterceptor, SetMetadata } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';

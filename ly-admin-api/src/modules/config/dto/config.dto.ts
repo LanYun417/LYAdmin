@@ -1,7 +1,6 @@
 /**
  * 系统参数模块 DTO（class-validator）。
  * 模块职责：参数新增、编辑入参校验。
- * 迁移自原 Express 版本的 validators/config.validator.ts（zod → class-validator）。
  *
  * 约定：
  * - 编辑 DTO 不含 `configKey`（键名即业务引用键，创建后不可修改），白名单模式下即便前端误传也会被剔除；

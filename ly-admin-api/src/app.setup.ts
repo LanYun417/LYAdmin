@@ -1,12 +1,12 @@
 /**
  * 应用装配（`main.ts` 与 e2e 测试共用）。
  *
- * 为什么单独抽出来：这些配置原先只写在 `main.ts` 里，而 e2e 测试用
+ * 为什么单独抽出来：这些配置若只写在 `main.ts` 里，e2e 测试用
  * `createNestApplication()` 起的实例**没有**全局校验管道、CORS 与 body 上限，
  * 于是「测的装配」和「跑的装配」不是同一套 —— 校验失败文案、POST 恒 200 这类
  * 契约断言在测试里根本无法验证。抽成共用函数后两边完全一致。
  *
- * 保留在调用方的只有三件事：适配器（测试要显式 new 同一个 `LegacyExpressAdapter`）、
+ * 保留在调用方的只有三件事：适配器（测试要显式 new 同一个 `OkExpressAdapter`）、
  * 监听端口、以及静态资源托管（由 `serveStatic` 开关控制——单测不需要，也避免引入
  * 对 uploads / 前端产物目录的文件系统依赖）。
  */
@@ -47,7 +47,7 @@ export function configureApp(app: NestExpressApplication, options: AppSetupOptio
     credentials: true,
   });
 
-  // 请求体上限 2mb（与原版一致）
+  // 请求体上限 2mb
   app.useBodyParser('json', { limit: '2mb' });
   app.useBodyParser('urlencoded', { limit: '2mb', extended: true });
 

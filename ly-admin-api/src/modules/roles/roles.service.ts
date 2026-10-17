@@ -1,7 +1,6 @@
 /**
  * 角色服务。
  * 模块职责：角色分页/下拉查询、CRUD、菜单授权（唯一操作 Role/RoleMenu/RoleDept 的层）。
- * 迁移自原 Express 版本的 services/role.service.ts，逐方法 1:1 移植。
  */
 import { Injectable } from '@nestjs/common';
 import { AppException } from '../../common/app.exception.js';

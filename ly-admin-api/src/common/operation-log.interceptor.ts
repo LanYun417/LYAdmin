@@ -1,7 +1,6 @@
 /**
  * 操作日志拦截器。
  * 模块职责：拦截声明了 `@OperationLog` 的写操作端点，在响应结束时异步落库。
- * 迁移自原 Express 版本的 middlewares/operationLog.ts。
  *
  * 时序说明：拦截器在 handler 执行**前**记录起始时间与请求体，
  * 在 `res.on('finish')` 回调中读取最终 statusCode 并异步写库（fire-and-forget）。
@@ -50,11 +49,12 @@ export class OperationLogInterceptor implements NestInterceptor {
     const startAt = Date.now();
     let errorMessage: string | null = null;
 
-    // 劫持 json() 以捕获失败响应中的 message（原实现同款做法）
+    // 劫持 json() 以捕获失败响应中的 message
     const originalJson = res.json.bind(res);
     res.json = (body: unknown): Response => {
       if (body !== null && typeof body === 'object' && 'message' in (body as Record<string, unknown>)) {
-        errorMessage = String((body as Record<string, unknown>).message ?? '');
+        const message = (body as Record<string, unknown>).message;
+        errorMessage = typeof message === 'string' ? message : '';
       }
       return originalJson(body);
     };

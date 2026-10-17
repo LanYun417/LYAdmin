@@ -1,12 +1,12 @@
 /**
  * 部门控制器。
  * 模块职责：部门模块请求解析、调用服务、组装统一响应。
- * 迁移自原 Express 版本的 controllers/dept.controller.ts 与 routes/dept.routes.ts。
  */
 import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
 import { OperationLog } from '../../common/operation-log.decorator.js';
 import { RequirePermissions } from '../../common/permission.guard.js';
 import type { ResponseEnvelope } from '../../common/response.interceptor.js';
+import { IdParamDto } from '../../common/dto/id-param.dto.js';
 import { DeptService } from './depts.service.js';
 import { DeptUpsertDto } from './dto/dept.dto.js';
 
@@ -31,8 +31,8 @@ export class DeptController {
   /** 部门详情。 */
   @Get(':id')
   @RequirePermissions('system:dept:query')
-  detail(@Param('id') id: string) {
-    return this.deptService.getDeptDetail(Number(id));
+  detail(@Param() params: IdParamDto) {
+    return this.deptService.getDeptDetail(params.id);
   }
 
   /** 新增部门。 */
@@ -49,9 +49,9 @@ export class DeptController {
   @Put(':id')
   @RequirePermissions('system:dept:edit')
   @OperationLog('部门管理', '编辑')
-  update(@Param('id') id: string, @Body() dto: DeptUpsertDto): Promise<ResponseEnvelope<unknown>> {
+  update(@Param() params: IdParamDto, @Body() dto: DeptUpsertDto): Promise<ResponseEnvelope<unknown>> {
     return this.deptService
-      .updateDept(Number(id), dto)
+      .updateDept(params.id, dto)
       .then((dept) => ({ __raw: true, data: dept, message: '编辑成功' }) as ResponseEnvelope<unknown>);
   }
 
@@ -59,9 +59,9 @@ export class DeptController {
   @Delete(':id')
   @RequirePermissions('system:dept:remove')
   @OperationLog('部门管理', '删除')
-  remove(@Param('id') id: string): Promise<ResponseEnvelope<null>> {
+  remove(@Param() params: IdParamDto): Promise<ResponseEnvelope<null>> {
     return this.deptService
-      .deleteDept(Number(id))
+      .deleteDept(params.id)
       .then(() => ({ __raw: true, data: null, message: '删除成功' }) as ResponseEnvelope<null>);
   }
 }

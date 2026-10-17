@@ -1,7 +1,6 @@
 /**
  * 操作日志服务：写入 sys_operation_log。
  * 模块职责：把写操作的模块/动作/参数/耗时/结果落库，失败不阻断业务。
- * 迁移自原 Express 版本的 services/log.service.ts 的 createOperationLog。
  */
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -24,7 +23,7 @@ export interface OperationLogInput {
 
 /**
  * 递归脱敏：命中敏感键名（password/oldPassword/newPassword/confirmPassword）
- * 的值整体替换为 `***`。大小写敏感、精确匹配（与原实现一致）。
+ * 的值整体替换为 `***`。大小写敏感、精确匹配。
  */
 export function maskSensitive(value: unknown): unknown {
   if (Array.isArray(value)) {

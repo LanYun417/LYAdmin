@@ -2,7 +2,7 @@
  * 环境配置中心。
  * 统一读取项目根 `.env`，导出强类型配置对象，供全局引用。
  * 模块职责：唯一的环境变量读取入口，禁止在其它模块直接读取 process.env。
- * 迁移自原 Express 版本的 config/index.ts，保留全部 fail-fast 安全校验。
+ * 安全校验一律 fail-fast：缺失必填项即抛错，服务拒绝启动。
  */
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -63,6 +63,9 @@ export function toBoolean(value: string | undefined, fallback: boolean): boolean
 
 /** 将字符串数字安全转换为 number。 */
 export function toNumber(value: string | undefined, fallback: number): number {
+  if (value === undefined || value.trim() === '') {
+    return fallback;
+  }
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
 }
@@ -122,6 +125,13 @@ function parseRetentionDays(name: string, fallback: number): number {
 /** 生成 32 字节随机密钥的命令（用于必填项报错信息与 .env.example 说明）。 */
 const SECRET_GEN_HINT = `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`;
 
+/** 两个 JWT 密钥：均为必填，且必须互不相同（否则 refreshToken 可直接当 accessToken 使用）。 */
+const JWT_ACCESS_SECRET = requireEnv('JWT_ACCESS_SECRET', `请执行以下命令生成后写入 .env：${SECRET_GEN_HINT}`);
+const JWT_REFRESH_SECRET = requireEnv('JWT_REFRESH_SECRET', `请执行以下命令生成后写入 .env：${SECRET_GEN_HINT}`);
+if (JWT_ACCESS_SECRET === JWT_REFRESH_SECRET) {
+  throw new Error('[Config] JWT_ACCESS_SECRET 与 JWT_REFRESH_SECRET 必须不同，服务拒绝启动。');
+}
+
 /**
  * 读取必填的环境变量；缺失或为空时抛出清晰错误并终止启动（fail-fast）。
  *
@@ -162,10 +172,10 @@ export const config = {
     password: process.env.DB_PASSWORD ?? '',
     logging: toBoolean(process.env.DB_LOGGING, true),
   },
-  /** JWT 配置（密钥必填：缺失即抛错拒绝启动，禁止硬编码默认值） */
+  /** JWT 配置（密钥必填：缺失、为空或两者相同均抛错拒绝启动） */
   jwt: {
-    accessSecret: requireEnv('JWT_ACCESS_SECRET', `请执行以下命令生成后写入 .env：${SECRET_GEN_HINT}`),
-    refreshSecret: requireEnv('JWT_REFRESH_SECRET', `请执行以下命令生成后写入 .env：${SECRET_GEN_HINT}`),
+    accessSecret: JWT_ACCESS_SECRET,
+    refreshSecret: JWT_REFRESH_SECRET,
     accessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN ?? '2h',
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN ?? '7d',
   },

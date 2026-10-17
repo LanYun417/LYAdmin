@@ -2,7 +2,6 @@
  * 角色模块入参 DTO。
  * 模块职责：角色新增/编辑/授权菜单的请求体校验（class-validator）。
  * 全局 ValidationPipe 已开启 whitelist + transform，故这里用 @Type 做数值强转，
- * 与旧版 zod 的 coerce 语义一致。
  */
 import { Type } from 'class-transformer';
 import { IsArray, IsInt, IsOptional, IsString, Matches, Max, MaxLength, Min } from 'class-validator';

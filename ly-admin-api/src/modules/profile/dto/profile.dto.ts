@@ -1,6 +1,6 @@
 /**
  * 个人中心模块入参 DTO（class-validator）。
- * 模块职责：修改资料、修改密码的校验规则（由原 zod schema 迁移，规则 1:1）。
+ * 模块职责：修改资料、修改密码的校验规则。
  * 说明：邮箱/手机允许空串（表示清空），故正则合并「空串或合法值」；与前端契约一致。
  */
 import { Transform, Type } from 'class-transformer';

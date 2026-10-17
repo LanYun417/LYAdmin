@@ -1,12 +1,11 @@
 /**
  * 日志控制器。
  * 模块职责：解析日志模块请求、调用服务、组装统一响应（含 CSV 导出，使用 @RawResponse 原样输出）。
- * 迁移自原 Express 版 log.controller.ts，端点与权限码 1:1。
  */
 import { Get, Delete, Controller, Query, Res } from '@nestjs/common';
 import type { Response } from 'express';
-import { RequirePermissions } from '../../common/permission.guard.js';
-import { TimezoneOffset } from '../../common/permission.guard.js';
+import { OperationLog } from '../../common/operation-log.decorator.js';
+import { RequirePermissions, TimezoneOffset } from '../../common/permission.guard.js';
 import { RawResponse } from '../../common/response.interceptor.js';
 import { LogsService } from './logs.service.js';
 
@@ -38,6 +37,7 @@ export class LogsController {
   /** 清空所有 HTTP 访问日志（高危操作，独立权限码 log:http:clear）。 */
   @Delete('http')
   @RequirePermissions('log:http:clear')
+  @OperationLog('日志管理', '清空 HTTP 日志')
   async clearHttpLogs(): Promise<{ __raw: true; data: null; message: string }> {
     await this.logsService.clearHttpLogs();
     return { __raw: true, data: null, message: '已清空所有 HTTP 日志' };

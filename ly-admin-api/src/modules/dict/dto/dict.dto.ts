@@ -1,7 +1,6 @@
 /**
  * 字典模块 DTO（class-validator）。
  * 模块职责：字典类型 / 字典项的新增、编辑、启停用入参校验。
- * 迁移自原 Express 版本的 validators/dict.validator.ts（zod → class-validator）。
  *
  * 约定：
  * - 编辑 DTO 不含 `dictType`（类型编码创建后不可修改），白名单模式下即便前端误传也会被剔除；

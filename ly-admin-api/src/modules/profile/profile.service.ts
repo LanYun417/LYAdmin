@@ -1,7 +1,6 @@
 /**
  * 个人中心服务。
  * 模块职责：修改个人资料、修改密码（校验旧密码并写 passwordChangedAt）、更换头像。
- * 迁移自原 Express 版 services/profile.service.ts，逻辑 1:1，数据层换为 Prisma。
  */
 import { Injectable } from '@nestjs/common';
 import { AppException } from '../../common/app.exception.js';

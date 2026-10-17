@@ -1,15 +1,13 @@
 /**
- * 种子数据（Prisma 版）。
+ * 种子数据。
  * 模块职责：把默认菜单 / 角色 / 用户 / 字典 / 系统参数幂等写入数据库，并执行两条
- * 「既有库自愈」的数据级迁移（废弃系统参数清理、历史菜单图标归一化）。
+ * 「既有库自愈」的数据归一（废弃系统参数清理、菜单图标名归一化）。
  *
- * 迁移自原 Express 版 `api/src/seed/*`（index + menu / role / user / dict / config），数据 1:1。
- * 与原版的差异：
- * - 原版负责的**列级迁移**（sys_user.dept_id、sys_role.data_scope、sys_http_log 操作者列及索引）
- *   改由 `prisma db push` 按 schema 统一完成（列定义见 prisma/schema/ 各文件），本文件不再重复实现；
- * - 原版 `syncDatabase()` 的建表职责同样交给 `prisma db push`。
+ * 职责边界：
+ * - 建表与列变更由 `prisma db push` 按 schema 统一完成（见 prisma/schema/ 各文件），本文件不承担 DDL；
+ * - 本文件只负责**数据**：默认数据的幂等写入与存量数据的收敛。
  *
- * 执行时机（对齐原版 server.ts 的 `await runSeed()`）：
+ * 执行时机：
  * - 服务启动时由 SeedService 的 onApplicationBootstrap 自动执行，早于 app.listen；
  * - 也可手动执行：`npm run seed`（入口见 prisma/seed.ts）。
  */
@@ -668,7 +666,7 @@ const ROLE_SEEDS: RoleSeed[] = [
 ];
 
 /**
- * 写入默认角色并重建其菜单授权（幂等：授权每次按种子定义重建，与原版 RoleMenu.destroy + bulkCreate 一致）。
+ * 写入默认角色并重建其菜单授权（幂等：授权每次按种子定义重建）。
  * @param prisma Prisma 客户端
  * @param menuIdMap 菜单 key → id 映射（由菜单种子产出）
  */
@@ -788,7 +786,7 @@ const DICT_SEEDS: DictTypeSeed[] = [
 
 /**
  * 写入常用字典类型与字典项（幂等：类型按 dictType、项按「类型 + 值」去重，已存在则跳过，
- * 不覆盖使用者在界面上后续做的修改，与原版 findOrCreate 语义一致）。
+ * 不覆盖使用者在界面上后续做的修改）。
  */
 async function seedDict(prisma: PrismaService): Promise<void> {
   let typeCreated = 0;
@@ -876,14 +874,13 @@ async function seedConfig(prisma: PrismaService): Promise<void> {
   logger.log(`系统参数数据完成，共 ${CONFIG_SEEDS.length} 项`);
 }
 
-/* ------------------------------ 既有库数据迁移 ------------------------------ */
+/* ------------------------------ 既有库数据归一 ------------------------------ */
 
 /**
- * 清理历史遗留的废弃系统参数。
- * 背景：早期实验版曾把 `sys.company.name`（参数名称"公司名称"）写入种子并入库存量数据；
- * 后续方案改为「顶级部门即公司」，已将该项从 CONFIG_SEEDS 移除。由于种子只增不删，
- * 既有库中已插入的行不会自动消失，导致参数管理页面仍列出"公司名称"。此处按 configKey
- * 幂等删除，任何环境重启服务即自愈，且不影响其他参数。
+ * 清理废弃的系统参数。
+ * 背景：`sys.company.name` 已不再属于种子定义（公司信息由「顶级部门」承载）。种子只增不删，
+ * 既有库中残留的行不会自动消失，会导致参数管理页面仍列出「公司名称」。此处按 configKey
+ * 幂等删除，任何环境重启即收敛，且不影响其他参数。
  */
 async function cleanupObsoleteConfigs(prisma: PrismaService): Promise<void> {
   const OBSOLETE_CONFIG_KEYS = ['sys.company.name'];
@@ -894,25 +891,24 @@ async function cleanupObsoleteConfigs(prisma: PrismaService): Promise<void> {
 }
 
 /**
- * 已知歧义的旧图标组件名 → 原生图标名。
+ * 组件名无法直接推导的图标别名。
  *
  * 原生类名的数字连字符规则**不一致**：`diagram-3` 对应 `BIconDiagram3`（数字前有连字符），
  * 而 `speedometer2` 对应 `BIconSpeedometer2`（数字前无连字符）。两者组件名形式完全相同，
- * 却指向不同的原生类名，无法用统一规则还原，只能显式列出。
- * 实际会出现在库里的只有旧注册表收录过的图标，其中仅 diagram 系列命中该歧义。
+ * 却指向不同的原生类名，无法用统一规则还原，只能显式列出（仅 diagram 系列命中该歧义）。
  */
-const LEGACY_ICON_ALIASES: Record<string, string> = {
+const ICON_ALIASES: Record<string, string> = {
   BIconDiagram2: 'diagram-2',
   BIconDiagram3: 'diagram-3',
 };
 
-/** 旧组件名（`BIconBarChartLine`）→ 原生图标名（`bar-chart-line`）。 */
-function toNativeIconName(legacy: string): string {
-  const alias = LEGACY_ICON_ALIASES[legacy];
+/** 组件名（`BIconBarChartLine`）→ 原生图标名（`bar-chart-line`）。 */
+function toNativeIconName(name: string): string {
+  const alias = ICON_ALIASES[name];
   if (alias) {
     return alias;
   }
-  return legacy
+  return name
     .replace(/^BIcon/, '')
     .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
     .replace(/([A-Z])([A-Z][a-z])/g, '$1-$2')
@@ -920,14 +916,13 @@ function toNativeIconName(legacy: string): string {
 }
 
 /**
- * 历史数据迁移：把 `sys_menu.icon` 中旧的图标**组件名**转成 Bootstrap Icons 原生类名（幂等）。
+ * 归一化 `sys_menu.icon`：把组件名形式（`BIconDiagram3`）转成 Bootstrap Icons 原生类名（`diagram-3`）。
  *
- * 背景：图标方案已由 `bootstrap-icons-vue` 的 SVG 组件改为 `bootstrap-icons` 的图标字体，
- * 前端改为直接使用 CSS 类名（`<i class="bi bi-diagram-3" />`），组件注册表已废弃。
- * 库里遗留的旧值（形如 `BIconDiagram3`）无法再渲染，故在启动时一次性归一化。
- * 迁移完成后不再有匹配行，后续启动为空操作。
+ * 约定：`sys_menu.icon` 统一存储原生类名，前端以 `<i class="bi bi-diagram-3" />` 渲染。
+ * 存量行若为组件名形式则无法渲染，故在启动时做一次幂等转换；归一化完成后不再有匹配行，
+ * 后续启动为空操作。
  */
-async function migrateLegacyMenuIcons(prisma: PrismaService): Promise<void> {
+async function normalizeMenuIcons(prisma: PrismaService): Promise<void> {
   const rows = await prisma.menu.findMany({
     where: { icon: { startsWith: 'BIcon' } },
     select: { id: true, icon: true },
@@ -937,24 +932,24 @@ async function migrateLegacyMenuIcons(prisma: PrismaService): Promise<void> {
   }
 
   for (const row of rows) {
-    const legacy = String(row.icon);
-    const native = toNativeIconName(legacy);
+    const name = String(row.icon);
+    const native = toNativeIconName(name);
     await prisma.menu.update({ where: { id: row.id }, data: { icon: native } });
-    logger.log(`菜单图标已迁移：${legacy} -> ${native}`);
+    logger.log(`菜单图标已归一化：${name} -> ${native}`);
   }
-  logger.log(`已迁移 ${rows.length} 个历史菜单图标为 Bootstrap Icons 原生类名`);
+  logger.log(`已归一化 ${rows.length} 个菜单图标为 Bootstrap Icons 原生类名`);
 }
 
 /* ---------------------------------- 入口 ---------------------------------- */
 
 /**
  * 执行全部种子（幂等）。
- * 顺序与原版一致：先做既有库数据迁移（清理废弃参数、归一化历史图标），
+ * 顺序：先做既有库数据归一（清理废弃参数、归一化图标名），
  * 再按 菜单 → 角色 → 用户 → 字典 → 系统参数 写入种子数据。
  */
 export async function runSeed(prisma: PrismaService): Promise<void> {
   await cleanupObsoleteConfigs(prisma);
-  await migrateLegacyMenuIcons(prisma);
+  await normalizeMenuIcons(prisma);
 
   const menuIdMap = await seedMenu(prisma);
   logger.log(`菜单数据完成，共 ${menuIdMap.size} 个节点`);
@@ -972,7 +967,7 @@ export async function runSeed(prisma: PrismaService): Promise<void> {
 }
 
 /**
- * 种子服务：在应用启动时执行种子（对齐原版 server.ts 中 `await runSeed()` 的位置，
+ * 种子服务：在应用启动时执行种子（早于 app.listen 接受请求）。
  * 即早于 app.listen 接受请求）。
  */
 @Injectable()

@@ -1,7 +1,6 @@
 /**
  * 数据权限服务（RBAC 增强）。
  * 模块职责：依据用户所属角色的 dataScope 计算可见数据范围，供列表查询注入过滤条件。
- * 迁移自原 Express 版本的 services/dataScope.service.ts。
  *
  * 返回判别联合（discriminated union），由调用方翻译成 Prisma where 条件：
  * - `{ mode:'all' }`  → 不加过滤
@@ -24,7 +23,7 @@ export class DataScopeService {
   /**
    * 收集指定部门及其全部下级部门 id。
    *
-   * 实现：一次性加载整张 dept 表 → 内存建树 → DFS 收集（与原实现一致）。
+   * 实现：一次性加载整张 dept 表 → 内存建树 → DFS 收集（O(n)，避免逐层查库）。
    * rootId 不存在于树中时静默跳过。
    *
    * @param rootIds 起始部门 id 列表
@@ -59,7 +58,7 @@ export class DataScopeService {
   /**
    * 计算数据权限范围。
    *
-   * 流程（与原实现严格一致）：
+   * 流程：
    * ① 超管短路 → all；
    * ② 无角色 → **fail-closed 收敛为 self**（而非放开全部）；
    * ③ 任一角色 dataScope=ALL → 立即 all（短路，多角色并集）；

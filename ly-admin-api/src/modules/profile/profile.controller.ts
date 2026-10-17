@@ -4,12 +4,11 @@
  *
  * ⚠️ 权限说明（显式豁免）：三个接口操作的是**用户自己的**资料/密码/头像，仅登录即可访问，
  * 有意只挂鉴权（全局 AuthGuard）不加 @RequirePermissions 权限码，避免只读角色连自己的资料都改不了。
- * 对应原 Express 版 profile.routes.ts 的文件头说明。
  */
-import { BadRequestException, UseInterceptors } from '@nestjs/common';
-import { Body, Controller, Post, Put, UploadedFile } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Post, Put, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CurrentUser } from '../../common/auth.guard.js';
+import { OperationLog } from '../../common/operation-log.decorator.js';
 import type { AuthUserContext } from '../../common/types.js';
 import type { ResponseEnvelope } from '../../common/response.interceptor.js';
 import { UPLOAD_MULTER_OPTIONS } from '../../common/upload.config.js';
@@ -22,6 +21,7 @@ export class ProfileController {
 
   /** 修改资料。 */
   @Put()
+  @OperationLog('个人中心', '修改资料')
   async updateProfile(
     @Body() dto: UpdateProfileDto,
     @CurrentUser() user: AuthUserContext,
@@ -32,6 +32,7 @@ export class ProfileController {
 
   /** 修改密码。 */
   @Put('password')
+  @OperationLog('个人中心', '修改密码')
   async changePassword(
     @Body() dto: ChangePasswordDto,
     @CurrentUser() user: AuthUserContext,
@@ -42,6 +43,7 @@ export class ProfileController {
 
   /** 更换头像。 */
   @Post('avatar')
+  @OperationLog('个人中心', '更换头像')
   @UseInterceptors(FileInterceptor('file', UPLOAD_MULTER_OPTIONS))
   async uploadAvatar(
     @UploadedFile() file: Express.Multer.File,

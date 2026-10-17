@@ -95,8 +95,7 @@ model HttpLog {
   @@index([method])
   @@index([statusCode])
   @@index([method, time])
-  // 操作者筛选索引：原旧后端由种子里的幂等迁移补建（idx_user_id / idx_dept_id），
-  // 这里显式声明，保证「旧后端删除后」的全新部署同样有这两个索引
+  // 操作者筛选索引：显式声明，保证每一次全新部署都带 idx_user_id / idx_dept_id
   @@index([userId])
   @@index([deptId])
   @@map("sys_http_log")

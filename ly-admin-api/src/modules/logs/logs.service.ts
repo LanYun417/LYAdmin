@@ -1,11 +1,10 @@
 /**
  * 日志服务。
  * 模块职责：登录/操作/HTTP 访问日志查询与导出（CSV），HTTP 日志浏览器/操作系统由 UA 解析。
- * 迁移自原 Express 版 services/log.service.ts，逻辑 1:1，数据层换为 Prisma。
  */
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service.js';
-import { buildPageResult, formatDateTimeInZone, parsePagination, toCsv } from '../../common/utils.js';
+import { buildPageResult, formatDateTimeInZone, parsePagination, readString, toCsv } from '../../common/utils.js';
 import { parseUserAgent } from '../../common/user-agent.js';
 
 /** HTTP 日志 count 缓存 TTL（毫秒）。 */
@@ -15,6 +14,27 @@ const COUNT_CACHE_TTL_MS = 30_000;
 interface CountCacheEntry {
   total: number;
   expiresAt: number;
+}
+
+/** HTTP 日志对外项（列表与 CSV 共用）。 */
+interface HttpLogItem {
+  id: number;
+  time: Date;
+  method: string;
+  url: string;
+  statusCode: number;
+  duration: number;
+  ip: string;
+  userAgent: string;
+  query: unknown;
+  reqBody: string | null;
+  resBody: string | null;
+  userId: number;
+  deptId: number;
+  username: string;
+  deptName: string;
+  browser: string;
+  os: string;
 }
 
 /** HTTP 日志 count 缓存：键含全部筛选条件，避免不同筛选串数（不近似计数，不改契约）。 */
@@ -135,8 +155,9 @@ export class LogsService {
   /** 构造 HTTP 日志查询条件。 */
   private buildHttpWhere(query: Record<string, unknown>): Record<string, unknown> {
     const where: Record<string, unknown> = {};
-    if (query.method) {
-      where.method = String(query.method).toUpperCase();
+    const method = readString(query.method);
+    if (method) {
+      where.method = method.toUpperCase();
     }
     if (query.statusCode !== undefined && query.statusCode !== '') {
       where.statusCode = Number(query.statusCode);
@@ -163,7 +184,7 @@ export class LogsService {
   /** 构造 count 缓存键（含全部筛选条件，page/pageSize 无关）。 */
   private buildCountCacheKey(query: Record<string, unknown>): string {
     return JSON.stringify({
-      method: query.method ? String(query.method).toUpperCase() : '',
+      method: (readString(query.method) ?? '').toUpperCase(),
       statusCode: query.statusCode ?? null,
       startTime: query.startTime ?? '',
       endTime: query.endTime ?? '',
@@ -189,7 +210,7 @@ export class LogsService {
     username: string | null;
     deptId: bigint;
     deptName: string | null;
-  }): Record<string, unknown> {
+  }): HttpLogItem {
     const { browser, os } = parseUserAgent(row.userAgent);
     return {
       id: Number(row.id),
@@ -331,7 +352,7 @@ export class LogsService {
     const list = rows.map((row) => this.mapHttpLog(row));
     const csvRows = list.map((item) => [
       item.id,
-      formatDateTimeInZone(item.time as Date, timezoneOffset),
+      formatDateTimeInZone(item.time, timezoneOffset),
       item.method,
       item.url,
       item.statusCode,

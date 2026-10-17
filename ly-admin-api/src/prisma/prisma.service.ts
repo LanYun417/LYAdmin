@@ -30,12 +30,31 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
       // 连接池上限：避免高并发下耗尽 MySQL 连接数
       connectionLimit: 10,
     });
-    super({ adapter });
+    super({
+      adapter,
+      // 查询事件用于慢 SQL 日志（FileLoggerService 订阅后按 LOG_SLOW_SQL_MS 过滤）
+      log: config.db.logging ? [{ emit: 'event', level: 'query' }] : [],
+    });
   }
 
   async onModuleInit(): Promise<void> {
     await this.$connect();
     this.logger.log(`数据库已连接: ${config.db.host}:${config.db.port}/${config.db.name}`);
+  }
+
+  /**
+   * 订阅查询事件（供慢 SQL 日志使用）。
+   *
+   * 说明：Prisma Client 的 `$on` 事件类型由**生成时的 log 配置**决定，而本项目的 log 选项是
+   * 运行期按 `DB_LOGGING` 传入的，生成的类型因此收窄为 `never`。这里用最小可用签名收敛这处断言，
+   * 避免调用方各自做类型转换。
+   * @param listener 收到 query 事件时的回调
+   */
+  onQuery(listener: (event: { query: string; duration: number }) => void): void {
+    const client = this as unknown as {
+      $on: (event: 'query', callback: (event: { query: string; duration: number }) => void) => void;
+    };
+    client.$on('query', listener);
   }
 
   async onModuleDestroy(): Promise<void> {

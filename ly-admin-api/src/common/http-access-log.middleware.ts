@@ -2,7 +2,6 @@
  * HTTP 访问日志中间件与 User-Agent 解析。
  * 模块职责：记录每个 API 请求的时间/方法/URL/状态码/耗时/操作者快照，
  * 同时写入文件与 sys_http_log 表（页面查询用）。
- * 迁移自原 Express 版本的 utils/logger.ts 的 httpAccessLogger 与 userAgent 解析。
  */
 import { Injectable, type NestMiddleware } from '@nestjs/common';
 import type { NextFunction, Request, Response } from 'express';

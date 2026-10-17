@@ -1,7 +1,6 @@
 /**
  * 全局异常过滤器。
  * 模块职责：把各类异常统一转换为 `{ code, message, data: null }` 响应体。
- * 迁移自原 Express 版本的 middlewares/errorHandler.ts，保留全部错误分类与文案。
  */
 import { type ArgumentsHost, type ExceptionFilter, Catch, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { MulterError } from 'multer';

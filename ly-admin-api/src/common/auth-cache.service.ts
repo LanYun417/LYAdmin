@@ -12,7 +12,6 @@
  * - menu.service：createMenu / updateMenu / deleteMenu → `invalidateAuthCache()`（全清）
  * - dept/dict/config：不参与鉴权码，不调用（靠 TTL 自然过期）
  *
- * 迁移自原 Express 版本的 services/authCache.ts。
  */
 import { Injectable } from '@nestjs/common';
 import type { AuthContext } from './types.js';

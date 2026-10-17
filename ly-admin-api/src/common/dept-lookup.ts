@@ -1,11 +1,10 @@
 /**
- * 部门名解析工具（替代已被移除的 user → dept Prisma 关系）。
+ * 部门名解析工具（按 deptId 显式补查，替代 user → dept 关系）。
  *
- * 为什么没有关系可用：`sys_user.dept_id` 沿用「0 = 未分配」的哨兵约定，原 Sequelize 对该关联
- * 显式声明了 `constraints: false`（不建数据库外键）。若在 Prisma schema 里声明关系，Prisma 会
- * 生成外键约束，dept_id=0 的写入会被 MySQL 直接拒绝（0 不在 sys_dept 中），同时也会让哨兵约定
- * 失效。故 schema 中不声明该关系，需要部门名的地方按 deptId 显式补查——语义等价于旧版的
- * `include: [Dept]` 左连接：部门存在取其名，deptId=0 或部门已删则返回 null。
+ * 为什么不声明 Prisma 关系：`sys_user.dept_id` 使用「0 = 未分配」的哨兵约定，而 0 不在
+ * `sys_dept` 中。若声明关系，Prisma 会生成外键约束，`dept_id = 0` 的写入会被 MySQL 直接拒绝，
+ * 哨兵约定随之失效。故 schema 中不声明该关系，需要部门名的地方按 deptId 显式补查：
+ * 部门存在取其名，deptId=0 或部门已删则返回 null。
  */
 import type { PrismaService } from '../prisma/prisma.service.js';
 

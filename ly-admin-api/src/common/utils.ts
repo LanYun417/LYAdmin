@@ -1,7 +1,6 @@
 /**
  * 通用工具：分页解析、树构建、CSV、时间格式化、口令哈希。
  * 模块职责：收敛跨模块复用的纯函数，避免各处重复实现。
- * 迁移自原 Express 版本的 utils/{pagination,tree,password,datetime}.ts 与 log.service 的 toCsv。
  */
 import { createHash } from 'node:crypto';
 import bcrypt from 'bcryptjs';
@@ -51,7 +50,7 @@ export function buildPageResult<T>(list: T[], total: number, page: number, pageS
 /**
  * 由扁平列表构建树。
  *
- * 规则（与原实现 1:1）：
+ * 规则：
  * - `parentId === 0`（rootParentId）为根；
  * - **父节点缺失时按根处理**（防数据丢失兜底）；
  * - 按 `sort` 升序 → 相等则 `id` 升序，**递归对每层子节点排序**；
@@ -148,7 +147,7 @@ const DEFAULT_OFFSET_MINUTES = -480;
  * `offsetMinutes` 取浏览器 `Date.getTimezoneOffset()` 的值：**东八区为 -480**。
  * 该值的符号与「UTC 偏移」相反（getTimezoneOffset = UTC - 本地），因此内部需**取负**后
  * 再交给 `dayjs.utcOffset()` —— 直接传会让时间往反方向偏 2 倍差值（东八区实际差 16 小时）。
- * 缺省或传入非法值时按 +08:00 处理（对齐迁移前的默认值约定）。
+ * 缺省或传入非法值时按 +08:00（东八区）处理。
  */
 export function formatDateTimeInZone(value: Date | string | number | null | undefined, offsetMinutes?: number): string {
   if (value === null || value === undefined || value === '') {
@@ -169,7 +168,19 @@ function csvCell(value: unknown): string {
   if (value === null || value === undefined) {
     return '';
   }
-  const text = value instanceof Date ? formatDateTimeInZone(value) : String(value);
+  let text: string;
+  if (value instanceof Date) {
+    text = formatDateTimeInZone(value);
+  } else if (typeof value === 'object') {
+    text = JSON.stringify(value);
+  } else if (typeof value === 'string') {
+    text = value;
+  } else if (typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint') {
+    text = String(value);
+  } else {
+    // symbol / function 不会出现在表格数据中，兜底为空
+    text = '';
+  }
   if (/[",\n\r]/.test(text)) {
     return `"${text.replace(/"/g, '""')}"`;
   }
@@ -179,7 +190,7 @@ function csvCell(value: unknown): string {
 /**
  * 生成 CSV 字符串：UTF-8 BOM + CRLF 行尾。
  *
- * BOM 防 Excel 打开中文乱码（与原实现一致）。
+ * BOM 防 Excel 打开中文乱码。
  */
 export function toCsv(headers: string[], rows: unknown[][]): string {
   const lines: string[] = [headers.map((header) => csvCell(header)).join(',')];

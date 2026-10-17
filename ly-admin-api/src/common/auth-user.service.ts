@@ -1,7 +1,6 @@
 /**
  * 鉴权用户服务：加载用户 + 角色码 + 权限码。
  * 模块职责：为鉴权守卫与 /auth/profile 等接口提供统一的用户上下文查询（带 30s 缓存）。
- * 迁移自原 Express 版本的 services/auth.service.ts 的 loadAuthUser + collectPermissions。
  */
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';

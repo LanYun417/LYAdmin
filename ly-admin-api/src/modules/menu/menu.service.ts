@@ -1,15 +1,31 @@
 /**
  * 菜单服务。
  * 模块职责：菜单树查询、按角色过滤下发的菜单（供动态路由）、菜单 CRUD、防成环校验。
- * 迁移自原 Express 版本的 services/menu.service.ts。
  */
 import { Injectable } from '@nestjs/common';
 import { AppException } from '../../common/app.exception.js';
 import { AuthCacheService } from '../../common/auth-cache.service.js';
 import { MenuType, Status, SUPER_ADMIN_ROLE } from '../../common/constants.js';
-import { buildTree, readString } from '../../common/utils.js';
+import { buildTree, readNumber, readString } from '../../common/utils.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import type { MenuNode } from '../../common/types.js';
+import type { MenuUpsertDto } from './dto/menu.dto.js';
+
+/** 菜单写入字段（新增与编辑共用）。 */
+interface MenuWriteData {
+  parentId: bigint;
+  menuName: string;
+  menuType: string;
+  path: string | null;
+  component: string | null;
+  icon: string | null;
+  permission: string | null;
+  sort: number;
+  visible: number;
+  status: number;
+  redirect: string | null;
+  keepAlive: number;
+}
 
 @Injectable()
 export class MenuService {
@@ -54,13 +70,23 @@ export class MenuService {
   /**
    * 按角色查询菜单树（供 /auth/menus 下发，供前端生成动态路由）。
    *
-   * 三重过滤（与原实现 1:1）：
+   * 三重过滤：
    * ① 超管短路（不加角色关联限制 → 全部启用菜单）；
    * ② SQL 层 `menuType IN ('M','C')`——**按钮（F）在 SQL 层被裁掉**，不是内存剔除；
    * ③ 非超管按 roleIds 过滤（INNER JOIN 语义 → Prisma include + some）。
    */
-  async getMenusByRoles(roleCodes: string[], roleIds: number[]): Promise<MenuNode[]> {
+  async getMenusByRoles(roleCodes: string[]): Promise<MenuNode[]> {
     const isSuperAdmin = roleCodes.includes(SUPER_ADMIN_ROLE);
+
+    // 非超管：先把角色编码解析成 id（角色不存在时为空 → 直接返回空，不查菜单）
+    const roleIds = isSuperAdmin
+      ? []
+      : (
+          await this.prisma.role.findMany({
+            where: { roleCode: { in: roleCodes } },
+            select: { id: true },
+          })
+        ).map((role) => Number(role.id));
 
     // 非超管且无角色：直接返回空，不查库
     if (!isSuperAdmin && roleIds.length === 0) {
@@ -86,9 +112,9 @@ export class MenuService {
   }
 
   /** 列表查询菜单（支持按名称/状态过滤，tree=1 返回树）。 */
-  async listMenus(query: Record<string, unknown>): Promise<MenuNode[] | MenuNode[]> {
+  async listMenus(query: Record<string, unknown>): Promise<MenuNode[]> {
     const menuName = readString(query.menuName);
-    const status = readStatus(query.status);
+    const status = readNumber(query.status);
 
     const rows = await this.prisma.menu.findMany({
       where: {
@@ -98,7 +124,8 @@ export class MenuService {
       orderBy: [{ sort: 'asc' }, { id: 'asc' }],
     });
     const nodes = rows.map((row) => this.toMenuNode(row));
-    const isTree = String(query.tree ?? '') === '1' || String(query.tree ?? '') === 'true';
+    const treeFlag = readString(query.tree);
+    const isTree = treeFlag === '1' || treeFlag === 'true';
     return isTree ? buildTree(nodes) : nodes;
   }
 
@@ -119,7 +146,7 @@ export class MenuService {
 
   /**
    * 收集指定节点的全部后代 id（广度优先逐层下钻）。
-   * 与原实现一致：每层一次查询，层数 = 树深度。
+   * 每层一次查询，层数 = 树深度。
    */
   private async collectDescendantIds(id: number): Promise<number[]> {
     const result: number[] = [];
@@ -150,41 +177,41 @@ export class MenuService {
     }
   }
 
-  /** 菜单创建入参。 */
-  private toCreateData(input: Record<string, unknown>): Record<string, unknown> {
+  /** 入参 → 写入字段（统一处理默认值与空串）。 */
+  private toWriteData(input: MenuUpsertDto): MenuWriteData {
     return {
-      parentId: BigInt(Number(input.parentId ?? 0)),
-      menuName: String(input.menuName),
-      menuType: String(input.menuType),
-      path: (input.path as string) || null,
-      component: (input.component as string) || null,
-      icon: (input.icon as string) || null,
-      permission: (input.permission as string) || null,
-      sort: Number(input.sort ?? 0),
-      visible: Number(input.visible ?? 1),
-      status: Number(input.status ?? 1),
-      redirect: (input.redirect as string) || null,
-      keepAlive: Number(input.keepAlive ?? 0),
+      parentId: BigInt(input.parentId ?? 0),
+      menuName: input.menuName,
+      menuType: input.menuType,
+      path: input.path ?? null,
+      component: input.component ?? null,
+      icon: input.icon ?? null,
+      permission: input.permission ?? null,
+      sort: input.sort ?? 0,
+      visible: input.visible ?? 1,
+      status: input.status ?? 1,
+      redirect: input.redirect ?? null,
+      keepAlive: input.keepAlive ?? 0,
     };
   }
 
   /** 创建菜单。 */
-  async createMenu(input: Record<string, unknown>): Promise<MenuNode> {
-    const parentId = Number(input.parentId ?? 0);
+  async createMenu(input: MenuUpsertDto): Promise<MenuNode> {
+    const parentId = input.parentId ?? 0;
     await this.assertParentExists(parentId);
-    const row = await this.prisma.menu.create({ data: this.toCreateData(input) as never });
+    const row = await this.prisma.menu.create({ data: this.toWriteData(input) });
     this.authCache.invalidate();
     return this.toMenuNode(row);
   }
 
   /** 更新菜单（含防成环校验）。 */
-  async updateMenu(id: number, input: Record<string, unknown>): Promise<MenuNode> {
+  async updateMenu(id: number, input: MenuUpsertDto): Promise<MenuNode> {
     const existing = await this.prisma.menu.findUnique({ where: { id: BigInt(id) } });
     if (!existing) {
       throw AppException.notFound('菜单不存在');
     }
 
-    const parentId = Number(input.parentId ?? 0);
+    const parentId = input.parentId ?? 0;
     // 自环
     if (parentId === id) {
       throw AppException.badRequest('上级菜单不能为自身');
@@ -200,20 +227,7 @@ export class MenuService {
 
     const row = await this.prisma.menu.update({
       where: { id: BigInt(id) },
-      data: {
-        parentId: BigInt(parentId),
-        menuName: String(input.menuName),
-        menuType: String(input.menuType),
-        path: (input.path as string) || null,
-        component: (input.component as string) || null,
-        icon: (input.icon as string) || null,
-        permission: (input.permission as string) || null,
-        sort: Number(input.sort ?? 0),
-        visible: Number(input.visible ?? 1),
-        status: Number(input.status ?? 1),
-        redirect: (input.redirect as string) || null,
-        keepAlive: Number(input.keepAlive ?? 0),
-      },
+      data: this.toWriteData(input),
     });
     this.authCache.invalidate();
     return this.toMenuNode(row);
@@ -234,13 +248,4 @@ export class MenuService {
     await this.prisma.menu.delete({ where: { id: BigInt(id) } });
     this.authCache.invalidate();
   }
-}
-
-/** 解析 status 查询参数。 */
-function readStatus(value: unknown): number | undefined {
-  if (value === undefined || value === null || value === '') {
-    return undefined;
-  }
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : undefined;
 }

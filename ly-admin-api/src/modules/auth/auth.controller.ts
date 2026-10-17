@@ -1,7 +1,6 @@
 /**
  * 认证控制器。
  * 模块职责：解析请求参数、调用认证服务，交由全局拦截器组装统一响应。
- * 迁移自原 Express 版本的 controllers/auth.controller.ts。
  */
 import { Body, Controller, Get, Post, Req } from '@nestjs/common';
 import type { Request } from 'express';
@@ -13,7 +12,6 @@ import { CurrentUser, Public, type AuthenticatedRequest } from '../../common/aut
 import { getClientIp } from '../../common/operation-log.interceptor.js';
 import { isResponseEnvelope } from '../../common/response.interceptor.js';
 import type { AuthUserContext } from '../../common/types.js';
-import { PrismaService } from '../../prisma/prisma.service.js';
 import { AuthService } from './auth.service.js';
 import { LoginDto, RefreshDto } from './dto/auth.dto.js';
 import { MenuService } from '../menu/menu.service.js';
@@ -25,7 +23,6 @@ export class AuthController {
     private readonly captchaService: CaptchaService,
     private readonly menuService: MenuService,
     private readonly rateLimiter: LoginRateLimiterService,
-    private readonly prisma: PrismaService,
   ) {}
 
   /** 图形验证码：公开接口（登录前获取）。 */
@@ -92,25 +89,12 @@ export class AuthController {
   /** 当前用户菜单树（仅目录/菜单节点，按角色过滤）。 */
   @Get('menus')
   async menus(@CurrentUser() user: AuthUserContext): Promise<unknown> {
-    const roleIds = await this.resolveRoleIds(user);
-    return this.menuService.getMenusByRoles(user.roles, roleIds);
+    return this.menuService.getMenusByRoles(user.roles);
   }
 
   /** 当前用户权限码列表。 */
   @Get('permissions')
   async permissions(@CurrentUser() user: AuthUserContext): Promise<unknown> {
     return this.authService.getPermissions(user.userId);
-  }
-
-  /** 由角色编码解析角色 id（供菜单按角色过滤）。 */
-  private async resolveRoleIds(user: AuthUserContext): Promise<number[]> {
-    if (user.roles.length === 0) {
-      return [];
-    }
-    const rows = await this.prisma.role.findMany({
-      where: { roleCode: { in: user.roles } },
-      select: { id: true },
-    });
-    return rows.map((row) => Number(row.id));
   }
 }

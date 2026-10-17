@@ -4,7 +4,6 @@
  *
  * 设计原则（降级优先）：未配置 REDIS_HOST 时视为「不启用」，相关增强整体降级关闭，
  * 但**绝不阻断主流程**（登录与鉴权必须正常工作）。所有方法在 Redis 不可用时静默返回。
- * 迁移自原 Express 版本的 config/redis.ts + services/tokenBlacklist.ts 的存储层。
  */
 import { Injectable, Logger, type OnModuleDestroy } from '@nestjs/common';
 import { createClient, type RedisClientType } from 'redis';

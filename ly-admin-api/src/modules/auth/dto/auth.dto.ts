@@ -1,7 +1,6 @@
 /**
  * 认证模块 DTO。
  * 模块职责：定义登录 / 刷新请求的入参校验规则。
- * 迁移自原 Express 版本的 validators/auth.validator.ts（zod → class-validator）。
  */
 import { IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 import { Transform } from 'class-transformer';

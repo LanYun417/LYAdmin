@@ -1,7 +1,6 @@
 /**
  * JWT 服务：签发与校验 accessToken / refreshToken。
  * 模块职责：统一密钥与有效期来源。
- * 迁移自原 Express 版本的 utils/jwt.ts，底层库由 jsonwebtoken 换成 jose。
  *
  * 为何用 jose 而非 jsonwebtoken：
  * - 纯 ESM，与本项目 `"type": "module"` 天然契合，无需 CJS interop；
@@ -31,7 +30,7 @@ export class JwtService {
   /**
    * 签发 accessToken（默认 2h）。
    *
-   * 载荷形状与原实现一致：顶层直接放 `userId` / `username`，
+   * 载荷形状：顶层直接放 `userId` / `username`，
    * 外加 jose 自动写入的 `iat` / `exp`（鉴权判定依赖 `iat`）。
    */
   async signAccessToken(payload: JwtUserPayload): Promise<string> {
@@ -60,7 +59,7 @@ export class JwtService {
     const { payload } = await jwtVerify(token, this.accessKey);
     return {
       userId: Number(payload.userId),
-      username: String(payload.username ?? ''),
+      username: typeof payload.username === 'string' ? payload.username : '',
       iat: Number(payload.iat ?? 0),
       exp: Number(payload.exp ?? 0),
     };
@@ -74,7 +73,7 @@ export class JwtService {
     const { payload } = await jwtVerify(token, this.refreshKey);
     return {
       userId: Number(payload.userId),
-      username: String(payload.username ?? ''),
+      username: typeof payload.username === 'string' ? payload.username : '',
       iat: Number(payload.iat ?? 0),
       exp: Number(payload.exp ?? 0),
     };

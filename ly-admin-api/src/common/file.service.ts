@@ -1,7 +1,6 @@
 /**
  * 文件服务：上传（含哈希秒传预检）、列表查询、删除。
  * 模块职责：落盘 + 写 sys_file 元信息，并提供秒传与白名单校验。
- * 迁移自原 Express 版本的 services/file.service.ts + middlewares/upload.ts 的业务部分。
  */
 import { Injectable } from '@nestjs/common';
 import { existsSync, mkdirSync } from 'node:fs';

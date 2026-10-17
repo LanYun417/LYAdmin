@@ -1,9 +1,9 @@
 /**
  * 接口契约快照测试（e2e）。
  *
- * 目的：把「结构签名比对」升级为**带真实值样本**的断言 —— 原 Phase 4 的新旧后端 A/B 只比
- * 键集合 / 类型 / 数组长度，因此漏掉了时区符号反向那类「结构对、值错」的缺陷。
- * 本文件对**当前实现**固化一份 golden 契约，年复一年地拦住同类回归。
+ * 目的：用**带真实值样本**的断言把对外契约固化下来，拦住「结构对、值错」的回归 ——
+ * 只比对键集合 / 类型 / 数组长度的断言，发现不了时区符号反向那类缺陷。本文件即当前
+ * 接口的 golden 契约，年复一年地拦住同类回归。
  *
  * 断言口径（避免脆弱的假失败）：
  * - **精确断言**：响应信封、分页键集合、状态码、种子身份常量（admin / super_admin / `['*']`）、
@@ -120,7 +120,7 @@ describe('接口契约快照 (e2e)', () => {
     });
 
     it('POST 成功响应同样是 HTTP 200（不是 201）', async () => {
-      // 对齐原 Express 版 ok() 恒 200；靠 LegacyExpressAdapter 保证，退化会立刻在此暴露
+      // 成功响应恒 200，由 OkExpressAdapter 保证；退化会立刻在此暴露
       const res = await authPost('/gen/preview', {
         tableName: 'sys_config',
         moduleName: 'demo',
@@ -199,12 +199,12 @@ describe('接口契约快照 (e2e)', () => {
 
     it('/dict/data/:type 返回 {label,value} 形状的种子字典项', async () => {
       const res = await authGet('/dict/data/sys_common_status').expect(200);
-      const items = res.body.data as Array<Record<string, unknown>>;
+      const items = res.body.data as Array<{ label: string; value: string }>;
       expect(items).toHaveLength(2);
       // 业务侧直接用 label 渲染、value 提交，键名不可随意改动
-      expect(Object.keys(items[0]).sort()).toEqual(['label', 'value']);
-      expect(items.map((item) => item.value).sort()).toEqual(['0', '1']);
-      expect(items.every((item) => String(item.label).length > 0)).toBe(true);
+      expect(Object.keys(items[0]).sort((a, b) => a.localeCompare(b))).toEqual(['label', 'value']);
+      expect(items.map((item) => item.value).sort((a, b) => a.localeCompare(b))).toEqual(['0', '1']);
+      expect(items.every((item) => item.label.length > 0)).toBe(true);
     });
 
     it('/configs/data/:key 返回 {configKey,configValue} 且与列表值一致', async () => {
@@ -241,7 +241,7 @@ describe('接口契约快照 (e2e)', () => {
       expect(message).not.toMatch(/must be|Invalid input|is not a valid|should not be/);
     });
 
-    it('/files/check 缺少 hash → 400（原版即必填）；未命中 → {exists:false, file:null}', async () => {
+    it('/files/check 缺少 hash → 400；未命中 → {exists:false, file:null}', async () => {
       const missing = await authGet('/files/check').expect(400);
       expect(String((missing.body as { message: string }).message)).toContain('hash');
 
@@ -250,6 +250,17 @@ describe('接口契约快照 (e2e)', () => {
         '/files/check?hash=0000000000000000000000000000000000000000000000000000000000000000',
       ).expect(200);
       expect(notFound.body).toMatchObject({ code: 200, data: { exists: false, file: null } });
+    });
+
+    it('POST /menus 缺少 menuName → 400（DTO 校验生效，未被 whitelist 清空）', async () => {
+      // 回归护栏：若 DTO 失去校验装饰器，whitelist 会把字段全部剥掉，请求会「成功」写入空记录
+      const res = await authPost('/menus', { menuType: 'C' }).expect(400);
+      expect(String((res.body as { message: string }).message)).toContain('菜单名称');
+    });
+
+    it('GET /menus/abc → 400（路径 id 统一由 IdParamDto 校验）', async () => {
+      const res = await authGet('/menus/abc').expect(400);
+      expect((res.body as { code: number }).code).toBe(400);
     });
   });
 

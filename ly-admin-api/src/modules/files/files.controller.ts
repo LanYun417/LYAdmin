@@ -1,21 +1,20 @@
 /**
  * 文件控制器。
  * 模块职责：解析文件模块请求参数、调用服务、组装统一响应（含上传/删除的自定义提示语）。
- * 迁移自原 Express 版的 file.controller.ts，端点与权限码 1:1。
  */
-import { UseInterceptors } from '@nestjs/common';
-import { Controller, Delete, Get, Param, Post, Query, Res, UploadedFiles } from '@nestjs/common';
+import { Controller, Delete, Get, Param, Post, Query, Res, UploadedFiles, UseInterceptors } from '@nestjs/common';
 import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
+import { OperationLog } from '../../common/operation-log.decorator.js';
 import { RequirePermissions } from '../../common/permission.guard.js';
 import { CurrentUser } from '../../common/auth.guard.js';
 import { AppException } from '../../common/app.exception.js';
 import type { AuthUserContext } from '../../common/types.js';
-import type { ResponseEnvelope } from '../../common/response.interceptor.js';
-import { RawResponse } from '../../common/response.interceptor.js';
+import { type ResponseEnvelope, RawResponse } from '../../common/response.interceptor.js';
 import { UPLOAD_MULTER_OPTIONS } from '../../common/upload.config.js';
-import { FilesService } from './files.service.js';
-import { CheckQueryDto, IdParamDto } from './dto/files.dto.js';
+import { FilesService, type FileItem } from './files.service.js';
+import { IdParamDto } from '../../common/dto/id-param.dto.js';
+import { CheckQueryDto } from './dto/files.dto.js';
 
 @Controller('files')
 export class FilesController {
@@ -25,6 +24,7 @@ export class FilesController {
   @Post('upload')
   @UseInterceptors(AnyFilesInterceptor(UPLOAD_MULTER_OPTIONS))
   @RequirePermissions('file:upload')
+  @OperationLog('文件管理', '上传')
   async upload(
     @UploadedFiles() files: Express.Multer.File[],
     @CurrentUser() user: AuthUserContext,
@@ -36,7 +36,7 @@ export class FilesController {
   /** 秒传预检：按内容哈希查询库内是否已存在相同文件。 */
   @Get('check')
   @RequirePermissions('file:upload')
-  async check(@Query() query: CheckQueryDto): Promise<{ exists: boolean; file: unknown | null }> {
+  async check(@Query() query: CheckQueryDto): Promise<{ exists: boolean; file: FileItem | null }> {
     const hash = (query.hash ?? '').toLowerCase();
     if (!hash) {
       throw AppException.badRequest('hash 非法，应为 SHA-256 十六进制（64 位）');
@@ -83,6 +83,7 @@ export class FilesController {
   /** 删除文件。 */
   @Delete(':id')
   @RequirePermissions('file:remove')
+  @OperationLog('文件管理', '删除')
   async remove(@Param() params: IdParamDto): Promise<ResponseEnvelope<null>> {
     await this.filesService.deleteFile(params.id);
     return { __raw: true, data: null, message: '删除成功' };

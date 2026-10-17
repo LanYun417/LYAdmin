@@ -1,7 +1,6 @@
 /**
  * 文件服务。
  * 模块职责：上传（含幻数校验/哈希秒传预检）、列表、类型/上传人选项、下载、删除。
- * 迁移自原 Express 版的 services/file.service.ts，逻辑 1:1，仅数据层由 Sequelize 换为 Prisma。
  */
 import { Injectable } from '@nestjs/common';
 import { existsSync, mkdirSync } from 'node:fs';
@@ -59,7 +58,7 @@ function startsWithBytes(head: Buffer, bytes: number[]): boolean {
 }
 
 /**
- * 扩展名 → 幻数匹配函数（与原版一致；`.txt` 无稳定魔数故有意不登记，`.zip/.docx/.xlsx`
+ * 扩展名 → 幻数匹配函数（`.txt` 无稳定魔数故有意不登记，`.zip/.docx/.xlsx`
  * 均为 PK 容器族；`.doc/.xls` 为 OLE 复合文档）。
  */
 const MAGIC_BY_EXT: Record<string, (head: Buffer) => boolean> = {
@@ -265,7 +264,7 @@ export class FilesService {
     return items;
   }
 
-  /** 按内容哈希查询已存在的文件（秒传预检）。原版对入参统一 toLowerCase，此处保持一致。 */
+  /** 按内容哈希查询已存在的文件（秒传预检）。入参统一转小写后再匹配。 */
   async checkFileByHash(hash: string): Promise<FileItem | null> {
     const normalized = hash.toLowerCase();
     const record = await this.prisma.file.findFirst({ where: { hash: normalized }, orderBy: { id: 'asc' } });

@@ -1,7 +1,6 @@
 /**
  * 仪表盘服务。
  * 模块职责：聚合统计卡片、登录趋势、操作分布、角色用户数等数据。
- * 迁移自原 Express 版本的 services/dashboard.service.ts（Sequelize → Prisma）。
  */
 import { Injectable } from '@nestjs/common';
 import dayjs from 'dayjs';

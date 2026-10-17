@@ -39,9 +39,8 @@ model User {
 
   /// 经中间表 UserRole 的直接角色关联。
   /// ⚠️ 必须走显式中间表 `sys_user_role`（`userRoles.role`），**不要**改回隐式多对多：
-  ///    隐式 `Role[]` 关系会让 Prisma 另建一张 `_userroles` 表，而业务与旧后端读写的是
-  ///    `sys_user_role`，两者不通——表现为角色恒为空、权限码为空、所有带权限码的接口 403、
-  ///    前端菜单树为空（2026-10-16 实际踩过）。
+  ///    隐式 `Role[]` 关系会让 Prisma 另建一张 `_userroles` 表，与业务读写的 `sys_user_role`
+  ///    不互通——表现为角色恒为空、权限码为空、所有带权限码的接口 403、前端菜单树为空。
   userRoles UserRole[]
 
   @@index([deptId])

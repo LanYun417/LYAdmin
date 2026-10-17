@@ -7,24 +7,19 @@
 //
 // LYAdmin 后端数据模型（NestJS + Prisma）
 //
-// 迁移自原 Sequelize 模型，逐表 1:1 对齐：
-// - 主键沿用 BIGINT → Prisma BigInt（@db.BigInt），JS 侧统一 Number() 转换
-// - **列名一律 @map 成 snake_case**：原 Sequelize 模型统一 `underscored: true`（另有 4 处显式
-//   field 覆盖：last_login_at / password_changed_at / login_at / keep_alive，取值同为 snake_case），
-//   所以库内列名是 dept_id / created_at 这种形式。Prisma 默认拿字段名（camelCase）当列名，
-//   不 @map 就会造出 deptId / createdAt 列——既与既有库不符，也会让仍在运行的旧 Express
-//   后端（api/）直接报 Unknown column。此处 Prisma 字段名保持 camelCase（业务代码零改动），
-//   仅用 @map 落到 snake_case 列。
-// - 哨兵值约定（0 不在表内，建外键会被约束拒绝），对应原模型的 `constraints: false`：
+// 数据建模约定：
+// - 主键统一 BIGINT → Prisma BigInt（@db.BigInt），JS 侧统一 Number() 转换后再对外输出。
+// - **列名统一 @map 成 snake_case**：库内列名一律 `dept_id` / `created_at` 这种形式，Prisma 字段名
+//   保持 camelCase（业务代码零转换），仅用 @map 落到库内列名。漏写 @map 会生成 camelCase 列，
+//   与库内结构不符。
+// - 哨兵值约定（0 不在表内，建外键会被约束拒绝）：
 //   · sys_menu.parent_id / sys_dept.parent_id（0 = 根节点/顶级）→ 不声明 Prisma 自关联
 //   · sys_user.dept_id（0 = 未分配）→ 不声明 Prisma 关系，部门名由业务层按 deptId 显式查询
-// - 其余关联保留数据库外键，与原 Sequelize 关联默认行为一致：
-//   中间表（sys_user_role / sys_role_menu / sys_role_dept）与 dict_item → dict_type（含级联删除）。
+// - 关联保留数据库外键：中间表（sys_user_role / sys_role_menu / sys_role_dept）与
+//   dict_item → dict_type（含级联删除）。
 //
-// 与原 Sequelize 模型的差异说明：
-// - 原 `INT UNSIGNED` / `SMALLINT UNSIGNED` 列（File.size、HttpLog.statusCode、HttpLog.duration）
-//   在 Prisma 的 MySQL connector 中不支持 unsigned 原生类型，改用有符号 Int。
-//   三者均为非负语义（文件字节数、HTTP 状态码、耗时毫秒），且应用层已做上界校验，行为等价。
+// 列类型取舍：文件字节数、HTTP 状态码、耗时毫秒均为非负语义，但 Prisma 的 MySQL connector
+// 不支持 unsigned 原生类型，故统一用有符号 Int，并在应用层做上界校验（行为等价）。
 //
 // 文档注释（`///`）与数据库 COMMENT 的关系（重要）：
 // - `///` 是 Prisma 的 schema 级文档注释，只进 DMMF 与 Prisma Client 的 JSDoc，**不会写进数据库**：
