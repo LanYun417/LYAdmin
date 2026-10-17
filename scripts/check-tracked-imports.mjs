@@ -14,7 +14,13 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 /** 生成产物与代码生成器的输出模板：其内的 import 文本不是本仓库的真实导入。 */
-const SKIP_PATTERNS = [/\/src\/generated\//, /gen\.templates\.ts$/, /gen\.writer\.ts$/];
+const SKIP_PATTERNS = [
+  /\/src\/generated\//,
+  /gen\.templates\.ts$/,
+  /gen\.writer\.ts$/,
+  // 接口文档生成器：模板字符串内含产出文件的 import 文本，非本仓库真实导入
+  /gen-api-docs\.mjs$/,
+];
 
 const files = execSync('git ls-files -z', { encoding: 'utf8' }).split('\0').filter(Boolean);
 const tracked = new Set(files);

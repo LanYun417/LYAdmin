@@ -191,6 +191,8 @@ describe('接口契约快照 (e2e)', () => {
       expect(Array.isArray(rows)).toBe(true);
       expect(rows.length).toBeGreaterThanOrEqual(50);
       expect(rows.map((row) => row.menuName)).toContain('系统管理');
+      // 接口文档菜单（纯前端展示页，挂在种子菜单树上，经动态路由注入）
+      expect(rows.map((row) => row.menuName)).toContain('接口文档');
 
       const tree = await authGet('/auth/menus').expect(200);
       const titles = (tree.body.data as Array<{ menuName: string }>).map((node) => node.menuName);
@@ -332,6 +334,38 @@ describe('接口契约快照 (e2e)', () => {
 
       const notMatched = await authGet('/logs/http?username=dmin&page=1&pageSize=1').expect(200);
       expect((notMatched.body.data as { total: number }).total).toBe(0);
+    });
+  });
+
+  describe('接口文档', () => {
+    it('GET /api/docs 公开可访问，返回按模块分组的接口清单', async () => {
+      // @Public() 接口：不带令牌也应 200（供前端文档页与外部消费）
+      const res = await request(app.getHttpServer()).get(`${API}/docs`).expect(200);
+      expect(res.body).toMatchObject({ code: 200 });
+
+      const data = res.body.data as {
+        total: number;
+        generatedAt: string;
+        groups: Array<{
+          group: string;
+          endpoints: Array<{ method: string; path: string; permission: string[]; isPublic: boolean }>;
+        }>;
+      };
+      // 接口只增不减，用下界断言避免正常新增接口就让本用例失败
+      expect(data.total).toBeGreaterThanOrEqual(60);
+      expect(typeof data.generatedAt).toBe('string');
+      expect(data.groups.map((group) => group.group)).toContain('用户管理');
+
+      const users = data.groups.find((group) => group.group === '用户管理');
+      const detail = users?.endpoints.find((endpoint) => endpoint.path === '/api/users/:id');
+      expect(detail).toBeDefined();
+      expect(detail?.method).toBe('GET');
+      expect(detail?.permission).toEqual(['system:user:query']);
+
+      // 公开接口被正确标记（登录 / 验证码无需令牌）
+      const auth = data.groups.find((group) => group.group === '认证');
+      const login = auth?.endpoints.find((endpoint) => endpoint.path === '/api/auth/login');
+      expect(login?.isPublic).toBe(true);
     });
   });
 });

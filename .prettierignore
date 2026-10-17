@@ -18,6 +18,8 @@ ly-admin-web/public/vditor/
 
 # 新后端：Prisma 生成客户端与运行时数据目录
 ly-admin-api/src/generated/
+# 后端：接口文档数据（由 scripts/gen-api-docs.mjs 生成，格式由生成器决定）
+ly-admin-api/src/modules/docs/api-docs.generated.ts
 ly-admin-api/uploads
 ly-admin-api/logs
 ly-admin-api/cache

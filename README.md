@@ -84,6 +84,7 @@ LYAdmin 面向企业内部运营 / 管理场景，提供一套可直接二次开
 | 日志管理        | 登录日志 / 操作日志 / HTTP 访问日志；条件筛选 + 导出；自动归档 + 按保留天数清理                                                              |
 | 文件管理        | 多文件上传、哈希秒传预检、类型 / 大小白名单、列表多条件筛选、下载、删除、静态访问（防盗链 + 图片按需缩放）                                   |
 | 代码生成        | 读取数据表结构 → 预览 → 生成前后端 CRUD 骨架（下载 ZIP 或写入项目目录，含 Prisma model 与 NestJS 模块接线）                                  |
+| 接口文档        | `GET /api/docs` 扫描控制器自动生成接口清单（方法 / 路径 / 权限码 / 说明）；前端「接口文档」页按模块检索浏览                                  |
 | 仪表盘          | 统计卡片、近 7 日登录趋势、操作类型分布、各角色用户数（ECharts）                                                                             |
 | 个人中心        | 修改资料、修改密码（旧密码校验）、更换头像                                                                                                   |
 | Markdown 编辑器 | 内置 Vditor（懒加载、资源自托管、随主题切换亮 / 暗）                                                                                         |
@@ -131,7 +132,7 @@ ly-admin/
 
 ```
 ly-admin-web/src/
-├─ api/          # axios 实例(request.ts) + 各模块接口(auth/user/role/menu/dept/dict/config/log/file/gen/dashboard/profile)
+├─ api/          # axios 实例(request.ts) + 各模块接口(auth/user/role/menu/dept/dict/config/log/file/gen/dashboard/profile/docs)
 ├─ assets/       # 静态资源
 ├─ components/   # 通用组件：BasicDialog / ErrorPage / IconPicker / MenuTree / Pagination / SearchForm / VditorEditor
 ├─ directives/   # v-permission 按钮权限指令及注册
@@ -142,7 +143,7 @@ ly-admin-web/src/
 ├─ styles/       # index.css（Tailwind v4 入口 + @theme 令牌）/ element.scss（EP 覆盖）
 ├─ types/        # 全局类型 / 接口 DTO / 路由 meta
 ├─ utils/        # auth / format / permission / validate / element(命令式 API 桶) 等
-├─ views/        # 页面：home / login / upload / system / log / profile / tool / error / redirect
+├─ views/        # 页面：home / login / upload / system / log / profile / tool / docs / error / redirect
 ├─ App.vue       # 根组件
 └─ main.ts       # 入口：样式引入顺序、注册 Pinia/Router/指令
 ```
@@ -161,13 +162,14 @@ ly-admin-api/
 │  │  └─ system.prisma        #   用户 / 角色 / 菜单 / 部门 + 三张关联表
 │  └─ seed.ts                 # CLI 种子（npm run seed）
 ├─ scripts/
-│  └─ prisma-comments.ts      # 把 schema 的 /// 同步为数据库表/字段 COMMENT
+│  ├─ prisma-comments.ts      # 把 schema 的 /// 同步为数据库表/字段 COMMENT
+│  └─ gen-api-docs.mjs        # 扫描控制器生成接口文档数据（docs:gen / build 的 prebuild）
 ├─ src/
 │  ├─ common/                 # 公共层：鉴权 / 权限守卫、数据范围、响应包装、异常过滤、操作日志、
 │  │                          #   文件服务、上传配置、JWT、验证码、登录限流、HTTP 访问日志、工具与常量
 │  ├─ modules/                # 业务模块（各含 module / controller / service / dto）：
 │  │                          #   auth / menu / users / roles / depts / dict / config /
-│  │                          #   dashboard / gen / files / profile / logs
+│  │                          #   dashboard / gen / files / profile / logs / docs
 │  ├─ prisma/                 # PrismaModule / PrismaService（driver adapter）/ seed.service（启动即幂等种子）
 │  ├─ generated/              # Prisma Client 生成产物（提交入库，勿手改）
 │  ├─ app.module.ts           # 根模块（全局守卫 / 拦截器 / 过滤器装配）
@@ -304,20 +306,21 @@ npm run dev:web   # 前端 http://localhost:5173（等价 cd ly-admin-web && npm
 
 ### 后端 `ly-admin-api/`
 
-| 命令                            | 说明                                           |
-| ------------------------------- | ---------------------------------------------- |
-| `npm run start:dev`             | Nest watch 模式热重载（:3000）                 |
-| `npm run build`                 | 编译到 `dist/`                                 |
-| `npm run start:prod`            | 运行编译产物 `node dist/main`                  |
-| `npm run prisma:push`           | 建表 / 同步表结构（首次必执行）                |
-| `npm run prisma:comments`       | 把 schema 的 `///` 同步为库内表 / 字段 COMMENT |
-| `npm run prisma:comments:check` | 检查库内注释是否漂移（有差异退出码 1）         |
-| `npm run prisma:generate`       | 重新生成 Prisma Client                         |
-| `npm run prisma:studio`         | 启动 Prisma Studio 可视化                      |
-| `npm run seed`                  | 单独执行种子数据（幂等）                       |
-| `npm run typecheck`             | 仅类型检查（`tsc --noEmit`）                   |
-| `npm run lint`                  | oxlint（type-aware）                           |
-| `npm run test`                  | vitest 单元测试                                |
+| 命令                            | 说明                                                       |
+| ------------------------------- | ---------------------------------------------------------- |
+| `npm run start:dev`             | Nest watch 模式热重载（:3000）                             |
+| `npm run build`                 | 编译到 `dist/`                                             |
+| `npm run start:prod`            | 运行编译产物 `node dist/main`                              |
+| `npm run prisma:push`           | 建表 / 同步表结构（首次必执行）                            |
+| `npm run prisma:comments`       | 把 schema 的 `///` 同步为库内表 / 字段 COMMENT             |
+| `npm run prisma:comments:check` | 检查库内注释是否漂移（有差异退出码 1）                     |
+| `npm run prisma:generate`       | 重新生成 Prisma Client                                     |
+| `npm run prisma:studio`         | 启动 Prisma Studio 可视化                                  |
+| `npm run docs:gen`              | 扫描控制器重新生成接口文档（`build` 的 prebuild 自动执行） |
+| `npm run seed`                  | 单独执行种子数据（幂等）                                   |
+| `npm run typecheck`             | 仅类型检查（`tsc --noEmit`）                               |
+| `npm run lint`                  | oxlint（type-aware）                                       |
+| `npm run test`                  | vitest 单元测试                                            |
 
 ## 环境变量
 
@@ -407,6 +410,9 @@ NODE_ENV=production node dist/main.js
 - **静态资源**：`GET /static/:filename`（启用防盗链与图片按需缩放）。
 
 接口清单以代码为准：后端各模块的 `src/modules/*/*.controller.ts`，前端调用见 `ly-admin-web/src/api/*.ts`。
+
+在线接口文档：`GET /api/docs` 返回结构化接口清单（公开接口），前端「接口文档」页可视化检索浏览。
+清单由控制器源码自动生成（详见 [后端开发规范/14-接口文档](./knowledge/后端开发规范/14-接口文档.md)）。
 
 ## 贡献指南
 

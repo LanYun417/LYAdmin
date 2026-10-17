@@ -8,6 +8,7 @@
   "type": "module",
   "scripts": {
     "build": "nest build",
+    "prebuild": "npm run docs:gen",
     "format": "prettier --write \"src/**/*.ts\" \"prisma/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
@@ -24,6 +25,7 @@
     "prisma:comments": "tsx scripts/prisma-comments.ts",
     "prisma:comments:check": "tsx scripts/prisma-comments.ts --check",
     "prisma:studio": "prisma studio",
+    "docs:gen": "node scripts/gen-api-docs.mjs",
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {

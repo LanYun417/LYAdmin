@@ -495,6 +495,17 @@ const MENU_TREE: MenuSeedNode[] = [
     ],
   },
   {
+    key: 'docs',
+    menuName: '接口文档',
+    menuType: MenuType.MENU,
+    path: '/docs',
+    component: 'docs/index',
+    icon: 'journal-text',
+    sort: 6,
+    visible: Status.ENABLED,
+    keepAlive: 1,
+  },
+  {
     key: 'profile',
     menuName: '个人中心',
     menuType: MenuType.MENU,
@@ -634,6 +645,8 @@ const ROLE_SEEDS: RoleSeed[] = [
       // Vditor 编辑器示例页（纯前端，只读的查看类权限）
       // 注意：此处为**菜单节点的 key**（非权限码），写错会导致该角色拿不到授权
       'tool:vditor',
+      // 接口文档（纯只读的查看类菜单，无按钮权限码）
+      'docs',
       'profile',
     ],
   },
@@ -660,6 +673,8 @@ const ROLE_SEEDS: RoleSeed[] = [
       'log:login',
       'log:operation',
       'log:http',
+      // 接口文档（纯只读的查看类菜单，无写操作）
+      'docs',
       'profile',
     ],
   },

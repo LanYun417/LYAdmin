@@ -29,6 +29,8 @@ export default [
       'ly-admin-web/public/vditor/**',
       // 后端：Prisma 生成客户端（构建产物）与运行时数据目录
       'ly-admin-api/src/generated/**',
+      // 后端：接口文档数据（由 scripts/gen-api-docs.mjs 生成）
+      'ly-admin-api/src/modules/docs/api-docs.generated.ts',
       'ly-admin-api/uploads/**',
       'ly-admin-api/logs/**',
       'ly-admin-api/cache/**',

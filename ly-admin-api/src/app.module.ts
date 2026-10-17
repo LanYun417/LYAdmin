@@ -26,6 +26,7 @@ import { GenModule } from './modules/gen/gen.module.js';
 import { FilesModule } from './modules/files/files.module.js';
 import { ProfileModule } from './modules/profile/profile.module.js';
 import { LogsModule } from './modules/logs/logs.module.js';
+import { DocsModule } from './modules/docs/docs.module.js';
 
 /** 健康检查：全局前缀下即 GET /api。 */
 @Controller()
@@ -53,6 +54,7 @@ export class HealthController {
     FilesModule,
     ProfileModule,
     LogsModule,
+    DocsModule,
   ],
   controllers: [HealthController],
   providers: [
