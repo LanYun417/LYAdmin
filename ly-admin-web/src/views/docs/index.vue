@@ -6,6 +6,8 @@
  *
  * 数据来源：后端 `scripts/gen-api-docs.mjs` 扫描控制器生成的 JSON，因此本页展示的
  * 路由、权限码、说明始终与代码一致，无需手工维护。
+ * 组件化：整页以 Element Plus 组件搭建（el-card / el-scrollbar / el-collapse / el-tag /
+ * el-input / el-descriptions / el-alert / el-empty …），方法等标记一律用 el-tag。
  */
 
 import { ElMessage } from '@/utils/element';
@@ -13,6 +15,21 @@ import { getApiDocsApi } from '@/api/docs';
 import type { ApiDocEndpoint, ApiDocGroup } from '@/types/docs';
 
 defineOptions({ name: 'Docs' });
+
+/** 单个接口条目 + 所属模块（选中态用） */
+interface SelectedEndpoint {
+  group: string;
+  endpoint: ApiDocEndpoint;
+}
+
+/** HTTP 方法 → Element Plus Tag 类型 */
+const METHOD_TAG_TYPE: Record<string, 'primary' | 'success' | 'warning' | 'danger' | 'info'> = {
+  GET: 'primary',
+  POST: 'success',
+  PUT: 'warning',
+  PATCH: 'warning',
+  DELETE: 'danger',
+};
 
 /** 全部接口分组 */
 const groups = ref<ApiDocGroup[]>([]);
@@ -24,8 +41,10 @@ const generatedAt = ref('');
 const loading = ref(false);
 /** 搜索关键字（匹配路径 / 说明 / 权限码） */
 const keyword = ref('');
-/** 当前选中的接口（含所属模块名） */
-const selected = ref<{ group: string; endpoint: ApiDocEndpoint } | null>(null);
+/** 左侧折叠面板展开的模块名 */
+const activeGroups = ref<string[]>([]);
+/** 当前选中的接口 */
+const selected = ref<SelectedEndpoint | null>(null);
 
 /** 按搜索词过滤后的分组（组内全部不命中则隐藏该组） */
 const filteredGroups = computed<ApiDocGroup[]>(() => {
@@ -55,9 +74,26 @@ const generatedText = computed(() => {
   return Number.isNaN(date.getTime()) ? generatedAt.value : date.toLocaleString();
 });
 
-/** HTTP 方法 → 徽标样式类 */
-function methodClass(method: string): string {
-  return `method-${method.toLowerCase()}`;
+/** 默认展开全部模块（搜索时同样展开命中的模块），保证一眼能看到全部接口 */
+watch(
+  filteredGroups,
+  (list) => {
+    activeGroups.value = list.map((group) => group.group);
+  },
+  { immediate: true },
+);
+
+/** HTTP 方法 → Element Plus Tag 类型 */
+function methodTagType(method: string): 'primary' | 'success' | 'warning' | 'danger' | 'info' {
+  return METHOD_TAG_TYPE[method] ?? 'info';
+}
+
+/** 是否当前选中项 */
+function isSelected(group: string, endpoint: ApiDocEndpoint): boolean {
+  const current = selected.value;
+  return (
+    current?.group === group && current.endpoint.path === endpoint.path && current.endpoint.method === endpoint.method
+  );
 }
 
 /** 选中某分组下的接口 */
@@ -99,85 +135,99 @@ onMounted(loadDocs);
     <template #header>
       <div class="docs-header">
         <div class="docs-title">
-          <span class="title-text">接口文档</span>
-          <el-tag size="small" type="info" effect="plain">{{ total }} 个接口</el-tag>
-          <el-tag size="small" type="info" effect="plain">{{ groups.length }} 个模块</el-tag>
-          <span v-if="generatedText" class="docs-generated">生成于 {{ generatedText }}</span>
+          <el-text tag="b" size="large">接口文档</el-text>
+          <el-tag type="info" effect="plain">{{ total }} 个接口</el-tag>
+          <el-tag type="info" effect="plain">{{ groups.length }} 个模块</el-tag>
+          <el-text v-if="generatedText" type="info" size="small">生成于 {{ generatedText }}</el-text>
         </div>
         <el-input v-model="keyword" class="docs-search" clearable placeholder="搜索路径 / 说明 / 权限码" />
       </div>
     </template>
 
     <div class="docs-body">
-      <!-- 左侧：接口导航 -->
+      <!-- 左侧：按模块折叠的接口导航 -->
       <aside class="docs-nav">
-        <template v-if="filteredGroups.length">
-          <div v-for="group in filteredGroups" :key="group.group" class="nav-group">
-            <div class="nav-group-title">{{ group.group }}</div>
-            <button
-              v-for="ep in group.endpoints"
-              :key="`${ep.method} ${ep.path}`"
-              type="button"
-              class="nav-item"
-              :class="{
-                'is-active': selected?.endpoint.path === ep.path && selected?.endpoint.method === ep.method,
-              }"
-              @click="select(group.group, ep)"
-            >
-              <span class="method-badge" :class="methodClass(ep.method)">{{ ep.method }}</span>
-              <span class="nav-path">{{ ep.path }}</span>
-              <span v-if="ep.isPublic" class="nav-flag">公开</span>
-            </button>
-          </div>
-        </template>
+        <el-scrollbar v-if="filteredGroups.length" class="nav-scroll">
+          <el-collapse v-model="activeGroups" class="docs-collapse">
+            <el-collapse-item v-for="group in filteredGroups" :key="group.group" :name="group.group">
+              <template #title>
+                <span class="group-title">{{ group.group }}</span>
+                <el-tag size="small" type="info" effect="plain" round>{{ group.endpoints.length }}</el-tag>
+              </template>
+              <button
+                v-for="ep in group.endpoints"
+                :key="`${ep.method} ${ep.path}`"
+                type="button"
+                class="nav-item"
+                :class="{ 'is-active': isSelected(group.group, ep) }"
+                @click="select(group.group, ep)"
+              >
+                <el-tag :type="methodTagType(ep.method)" size="small" effect="dark" class="method-tag">
+                  {{ ep.method }}
+                </el-tag>
+                <span class="nav-path">{{ ep.path }}</span>
+                <el-tag v-if="ep.isPublic" type="success" size="small" effect="plain">公开</el-tag>
+              </button>
+            </el-collapse-item>
+          </el-collapse>
+        </el-scrollbar>
         <el-empty v-else :description="keyword ? '没有匹配的接口' : '暂无接口数据'" />
       </aside>
 
       <!-- 右侧：接口详情 -->
       <main class="docs-detail">
-        <template v-if="selected">
-          <div class="detail-path">
-            <span class="method-badge lg" :class="methodClass(selected.endpoint.method)">
-              {{ selected.endpoint.method }}
-            </span>
-            <code class="detail-url">{{ selected.endpoint.path }}</code>
-            <el-button size="small" text @click="copyPath(selected.endpoint.path)">复制</el-button>
-          </div>
-
-          <p class="detail-summary">{{ selected.endpoint.summary || '（该接口暂无说明）' }}</p>
-
-          <el-descriptions :column="2" border class="detail-meta">
-            <el-descriptions-item label="所属模块">{{ selected.group }}</el-descriptions-item>
-            <el-descriptions-item label="访问要求">
-              <el-tag v-if="selected.endpoint.isPublic" size="small" type="success" effect="plain">
-                公开（无需登录）
+        <el-scrollbar v-if="selected" class="detail-scroll">
+          <div class="detail-inner">
+            <div class="detail-head">
+              <el-tag :type="methodTagType(selected.endpoint.method)" effect="dark" size="large" class="method-tag-lg">
+                {{ selected.endpoint.method }}
               </el-tag>
-              <el-tag v-else-if="!selected.endpoint.permission.length" size="small" type="warning" effect="plain">
-                登录即可访问
-              </el-tag>
-              <el-tag v-else size="small" type="danger" effect="plain">需权限码</el-tag>
-            </el-descriptions-item>
-            <el-descriptions-item label="权限码" :span="2">
-              <template v-if="selected.endpoint.permission.length">
-                <el-tag v-for="code in selected.endpoint.permission" :key="code" size="small" class="perm-tag">
-                  {{ code }}
+              <el-input :model-value="selected.endpoint.path" readonly class="detail-url">
+                <template #append>
+                  <el-button @click="copyPath(selected.endpoint.path)">复制</el-button>
+                </template>
+              </el-input>
+            </div>
+
+            <el-text class="detail-summary">{{ selected.endpoint.summary || '（该接口暂无说明）' }}</el-text>
+
+            <el-descriptions :column="2" border>
+              <el-descriptions-item label="所属模块">{{ selected.group }}</el-descriptions-item>
+              <el-descriptions-item label="访问要求">
+                <el-tag v-if="selected.endpoint.isPublic" type="success" effect="plain">公开（无需登录）</el-tag>
+                <el-tag v-else-if="!selected.endpoint.permission.length" type="warning" effect="plain">
+                  登录即可访问
                 </el-tag>
-              </template>
-              <span v-else class="text-muted">—</span>
-            </el-descriptions-item>
-            <el-descriptions-item v-if="selected.endpoint.action" label="操作日志" :span="2">
-              {{ selected.endpoint.action }}
-            </el-descriptions-item>
-          </el-descriptions>
+                <el-tag v-else type="danger" effect="plain">需权限码</el-tag>
+              </el-descriptions-item>
+              <el-descriptions-item label="权限码" :span="2">
+                <template v-if="selected.endpoint.permission.length">
+                  <el-tag
+                    v-for="code in selected.endpoint.permission"
+                    :key="code"
+                    type="info"
+                    effect="plain"
+                    class="perm-tag"
+                  >
+                    {{ code }}
+                  </el-tag>
+                </template>
+                <el-text v-else type="info">—</el-text>
+              </el-descriptions-item>
+              <el-descriptions-item v-if="selected.endpoint.action" label="操作日志" :span="2">
+                {{ selected.endpoint.action }}
+              </el-descriptions-item>
+            </el-descriptions>
 
-          <el-alert
-            class="detail-tip"
-            type="info"
-            :closable="false"
-            show-icon
-            title="所有成功响应恒为 HTTP 200，响应体统一为 { code, message, data }。"
-          />
-        </template>
+            <el-alert
+              class="detail-tip"
+              type="info"
+              :closable="false"
+              show-icon
+              title="所有成功响应恒为 HTTP 200，响应体统一为 { code, message, data }。"
+            />
+          </div>
+        </el-scrollbar>
         <el-empty v-else description="请从左侧选择一个接口" />
       </main>
     </div>
@@ -200,17 +250,6 @@ onMounted(loadDocs);
   align-items: center;
 }
 
-.title-text {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--el-text-color-primary);
-}
-
-.docs-generated {
-  font-size: 12px;
-  color: var(--el-text-color-secondary);
-}
-
 .docs-search {
   width: 260px;
 }
@@ -225,23 +264,26 @@ onMounted(loadDocs);
 
 /* 左侧导航 */
 .docs-nav {
-  flex: 0 0 320px;
+  flex: 0 0 340px;
   padding-right: 8px;
-  overflow-y: auto;
   border-right: 1px solid var(--el-border-color-lighter);
 }
 
-.nav-group + .nav-group {
-  margin-top: 12px;
+.nav-scroll,
+.detail-scroll {
+  height: 100%;
 }
 
-.nav-group-title {
-  padding: 4px 8px;
-  font-size: 12px;
+/* 折叠面板去边框、透明底，贴合导航观感（借助 EP CSS 变量，无需穿透内部样式） */
+.docs-collapse {
+  --el-collapse-border-color: transparent;
+  --el-collapse-header-bg-color: transparent;
+  --el-collapse-content-bg-color: transparent;
+}
+
+.group-title {
+  margin-right: 8px;
   font-weight: 600;
-  color: var(--el-text-color-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
 }
 
 .nav-item {
@@ -267,8 +309,22 @@ onMounted(loadDocs);
   background: var(--el-color-primary-light-9);
 }
 
+/* 方法标签统一宽度，视觉对齐 */
+.method-tag,
+.method-tag-lg {
+  justify-content: center;
+  width: 58px;
+  font-family: var(--el-font-family-mono, monospace);
+}
+
+.method-tag-lg {
+  width: 68px;
+  font-size: 13px;
+}
+
 .nav-path {
   flex: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   font-family: var(--el-font-family-mono, monospace);
@@ -276,50 +332,31 @@ onMounted(loadDocs);
   white-space: nowrap;
 }
 
-.nav-flag {
-  flex: none;
-  padding: 0 4px;
-  font-size: 11px;
-  line-height: 16px;
-  color: var(--el-color-success);
-  background: var(--el-color-success-light-9);
-  border-radius: 3px;
-}
-
 /* 右侧详情 */
 .docs-detail {
   flex: 1;
   min-width: 0;
-  padding-right: 4px;
-  overflow-y: auto;
 }
 
-.detail-path {
+.detail-inner {
+  padding-right: 8px;
+}
+
+.detail-head {
   display: flex;
   gap: 8px;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 .detail-url {
   flex: 1;
-  padding: 6px 10px;
-  overflow-x: auto;
-  font-family: var(--el-font-family-mono, monospace);
-  font-size: 13px;
-  white-space: nowrap;
-  background: var(--el-fill-color-light);
-  border-radius: 6px;
 }
 
 .detail-summary {
-  margin: 0 0 16px;
-  line-height: 1.7;
-  color: var(--el-text-color-regular);
-}
-
-.detail-meta {
+  display: block;
   margin-bottom: 16px;
+  line-height: 1.7;
 }
 
 .perm-tag {
@@ -327,47 +364,6 @@ onMounted(loadDocs);
 }
 
 .detail-tip {
-  margin-top: 4px;
-}
-
-/* 方法徽标配色 */
-.method-badge {
-  display: inline-block;
-  flex: none;
-  width: 52px;
-  padding: 1px 0;
-  font-family: var(--el-font-family-mono, monospace);
-  font-size: 11px;
-  font-weight: 700;
-  color: #fff;
-  text-align: center;
-  letter-spacing: 0.02em;
-  border-radius: 4px;
-}
-
-.method-badge.lg {
-  width: 64px;
-  font-size: 13px;
-}
-
-.method-get {
-  background: #409eff;
-}
-
-.method-post {
-  background: #67c23a;
-}
-
-.method-put,
-.method-patch {
-  background: #e6a23c;
-}
-
-.method-delete {
-  background: #f56c6c;
-}
-
-.text-muted {
-  color: var(--el-text-color-secondary);
+  margin-top: 16px;
 }
 </style>
