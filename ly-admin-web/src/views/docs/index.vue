@@ -88,6 +88,20 @@ function methodTagType(method: string): 'primary' | 'success' | 'warning' | 'dan
   return METHOD_TAG_TYPE[method] ?? 'info';
 }
 
+/**
+ * 导航展示名：取接口说明（summary）的**首句**作为中文名。
+ * 说明较长时（首句里带「（补充）」「：补充」），再去掉括号补充与冒号后的内容，得到更简洁的名称；
+ * 始终有可读文本——无说明时回退为路由路径。
+ */
+function endpointLabel(ep: ApiDocEndpoint): string {
+  const firstSentence = (ep.summary.split('。')[0] ?? '')
+    .trim()
+    .replace(/（[^）]*）$/, '')
+    .trim();
+  const beforeColon = firstSentence.split(/[：:]/)[0]?.trim() ?? '';
+  return (beforeColon.length >= 2 ? beforeColon : firstSentence) || ep.path;
+}
+
 /** 是否当前选中项 */
 function isSelected(group: string, endpoint: ApiDocEndpoint): boolean {
   const current = selected.value;
@@ -160,12 +174,13 @@ onMounted(loadDocs);
                 type="button"
                 class="nav-item"
                 :class="{ 'is-active': isSelected(group.group, ep) }"
+                :title="`${ep.method} ${ep.path}`"
                 @click="select(group.group, ep)"
               >
                 <el-tag :type="methodTagType(ep.method)" size="small" effect="dark" class="method-tag">
                   {{ ep.method }}
                 </el-tag>
-                <span class="nav-path">{{ ep.path }}</span>
+                <span class="nav-label">{{ endpointLabel(ep) }}</span>
                 <el-tag v-if="ep.isPublic" type="success" size="small" effect="plain">公开</el-tag>
               </button>
             </el-collapse-item>
@@ -322,13 +337,12 @@ onMounted(loadDocs);
   font-size: 13px;
 }
 
-.nav-path {
+.nav-label {
   flex: 1;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-family: var(--el-font-family-mono, monospace);
-  font-size: 12px;
+  font-size: 13px;
   white-space: nowrap;
 }
 
