@@ -18,41 +18,6 @@ export { Prisma }
 export * as $Enums from './enums.js'
 export * from './enums.js';
 /**
- * Model User
- * 用户表
- */
-export type User = Prisma.UserModel
-/**
- * Model Role
- * 角色表
- */
-export type Role = Prisma.RoleModel
-/**
- * Model Menu
- * 菜单权限表
- */
-export type Menu = Prisma.MenuModel
-/**
- * Model Dept
- * 部门表
- */
-export type Dept = Prisma.DeptModel
-/**
- * Model UserRole
- * 用户角色关联表
- */
-export type UserRole = Prisma.UserRoleModel
-/**
- * Model RoleMenu
- * 角色菜单关联表
- */
-export type RoleMenu = Prisma.RoleMenuModel
-/**
- * Model RoleDept
- * 角色数据权限部门关联表（承载 data_scope=2 的自定义部门集合）
- */
-export type RoleDept = Prisma.RoleDeptModel
-/**
  * Model DictType
  * 字典类型表
  */
@@ -87,3 +52,38 @@ export type OperationLog = Prisma.OperationLogModel
  * HTTP 访问日志表（页面查询用；操作者为写入时快照，不与 sys_user 建外键）
  */
 export type HttpLog = Prisma.HttpLogModel
+/**
+ * Model User
+ * 用户表
+ */
+export type User = Prisma.UserModel
+/**
+ * Model Role
+ * 角色表
+ */
+export type Role = Prisma.RoleModel
+/**
+ * Model Menu
+ * 菜单权限表
+ */
+export type Menu = Prisma.MenuModel
+/**
+ * Model Dept
+ * 部门表
+ */
+export type Dept = Prisma.DeptModel
+/**
+ * Model UserRole
+ * 用户角色关联表
+ */
+export type UserRole = Prisma.UserRoleModel
+/**
+ * Model RoleMenu
+ * 角色菜单关联表
+ */
+export type RoleMenu = Prisma.RoleMenuModel
+/**
+ * Model RoleDept
+ * 角色数据权限部门关联表（承载 data_scope=2 的自定义部门集合）
+ */
+export type RoleDept = Prisma.RoleDeptModel

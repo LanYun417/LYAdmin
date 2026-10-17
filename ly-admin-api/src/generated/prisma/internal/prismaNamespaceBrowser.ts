@@ -51,20 +51,20 @@ export const AnyNull = runtime.AnyNull
 
 
 export const ModelName = {
-  User: 'User',
-  Role: 'Role',
-  Menu: 'Menu',
-  Dept: 'Dept',
-  UserRole: 'UserRole',
-  RoleMenu: 'RoleMenu',
-  RoleDept: 'RoleDept',
   DictType: 'DictType',
   DictItem: 'DictItem',
   SysConfig: 'SysConfig',
   File: 'File',
   LoginLog: 'LoginLog',
   OperationLog: 'OperationLog',
-  HttpLog: 'HttpLog'
+  HttpLog: 'HttpLog',
+  User: 'User',
+  Role: 'Role',
+  Menu: 'Menu',
+  Dept: 'Dept',
+  UserRole: 'UserRole',
+  RoleMenu: 'RoleMenu',
+  RoleDept: 'RoleDept'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -81,106 +81,6 @@ export const TransactionIsolationLevel = runtime.makeStrictEnum({
 } as const)
 
 export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof typeof TransactionIsolationLevel]
-
-
-export const UserScalarFieldEnum = {
-  id: 'id',
-  username: 'username',
-  password: 'password',
-  nickname: 'nickname',
-  avatar: 'avatar',
-  email: 'email',
-  phone: 'phone',
-  gender: 'gender',
-  status: 'status',
-  lastLoginAt: 'lastLoginAt',
-  passwordChangedAt: 'passwordChangedAt',
-  remark: 'remark',
-  deptId: 'deptId',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-} as const
-
-export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
-
-
-export const RoleScalarFieldEnum = {
-  id: 'id',
-  roleName: 'roleName',
-  roleCode: 'roleCode',
-  sort: 'sort',
-  status: 'status',
-  dataScope: 'dataScope',
-  remark: 'remark',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-} as const
-
-export type RoleScalarFieldEnum = (typeof RoleScalarFieldEnum)[keyof typeof RoleScalarFieldEnum]
-
-
-export const MenuScalarFieldEnum = {
-  id: 'id',
-  parentId: 'parentId',
-  menuName: 'menuName',
-  menuType: 'menuType',
-  path: 'path',
-  component: 'component',
-  icon: 'icon',
-  permission: 'permission',
-  sort: 'sort',
-  visible: 'visible',
-  status: 'status',
-  redirect: 'redirect',
-  keepAlive: 'keepAlive',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-} as const
-
-export type MenuScalarFieldEnum = (typeof MenuScalarFieldEnum)[keyof typeof MenuScalarFieldEnum]
-
-
-export const DeptScalarFieldEnum = {
-  id: 'id',
-  parentId: 'parentId',
-  deptName: 'deptName',
-  sort: 'sort',
-  status: 'status',
-  leader: 'leader',
-  phone: 'phone',
-  email: 'email',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-} as const
-
-export type DeptScalarFieldEnum = (typeof DeptScalarFieldEnum)[keyof typeof DeptScalarFieldEnum]
-
-
-export const UserRoleScalarFieldEnum = {
-  id: 'id',
-  userId: 'userId',
-  roleId: 'roleId'
-} as const
-
-export type UserRoleScalarFieldEnum = (typeof UserRoleScalarFieldEnum)[keyof typeof UserRoleScalarFieldEnum]
-
-
-export const RoleMenuScalarFieldEnum = {
-  id: 'id',
-  roleId: 'roleId',
-  menuId: 'menuId'
-} as const
-
-export type RoleMenuScalarFieldEnum = (typeof RoleMenuScalarFieldEnum)[keyof typeof RoleMenuScalarFieldEnum]
-
-
-export const RoleDeptScalarFieldEnum = {
-  id: 'id',
-  roleId: 'roleId',
-  deptId: 'deptId'
-} as const
-
-export type RoleDeptScalarFieldEnum = (typeof RoleDeptScalarFieldEnum)[keyof typeof RoleDeptScalarFieldEnum]
 
 
 export const DictTypeScalarFieldEnum = {
@@ -294,6 +194,106 @@ export const HttpLogScalarFieldEnum = {
 export type HttpLogScalarFieldEnum = (typeof HttpLogScalarFieldEnum)[keyof typeof HttpLogScalarFieldEnum]
 
 
+export const UserScalarFieldEnum = {
+  id: 'id',
+  username: 'username',
+  password: 'password',
+  nickname: 'nickname',
+  avatar: 'avatar',
+  email: 'email',
+  phone: 'phone',
+  gender: 'gender',
+  status: 'status',
+  lastLoginAt: 'lastLoginAt',
+  passwordChangedAt: 'passwordChangedAt',
+  remark: 'remark',
+  deptId: 'deptId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
+
+
+export const RoleScalarFieldEnum = {
+  id: 'id',
+  roleName: 'roleName',
+  roleCode: 'roleCode',
+  sort: 'sort',
+  status: 'status',
+  dataScope: 'dataScope',
+  remark: 'remark',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type RoleScalarFieldEnum = (typeof RoleScalarFieldEnum)[keyof typeof RoleScalarFieldEnum]
+
+
+export const MenuScalarFieldEnum = {
+  id: 'id',
+  parentId: 'parentId',
+  menuName: 'menuName',
+  menuType: 'menuType',
+  path: 'path',
+  component: 'component',
+  icon: 'icon',
+  permission: 'permission',
+  sort: 'sort',
+  visible: 'visible',
+  status: 'status',
+  redirect: 'redirect',
+  keepAlive: 'keepAlive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type MenuScalarFieldEnum = (typeof MenuScalarFieldEnum)[keyof typeof MenuScalarFieldEnum]
+
+
+export const DeptScalarFieldEnum = {
+  id: 'id',
+  parentId: 'parentId',
+  deptName: 'deptName',
+  sort: 'sort',
+  status: 'status',
+  leader: 'leader',
+  phone: 'phone',
+  email: 'email',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type DeptScalarFieldEnum = (typeof DeptScalarFieldEnum)[keyof typeof DeptScalarFieldEnum]
+
+
+export const UserRoleScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  roleId: 'roleId'
+} as const
+
+export type UserRoleScalarFieldEnum = (typeof UserRoleScalarFieldEnum)[keyof typeof UserRoleScalarFieldEnum]
+
+
+export const RoleMenuScalarFieldEnum = {
+  id: 'id',
+  roleId: 'roleId',
+  menuId: 'menuId'
+} as const
+
+export type RoleMenuScalarFieldEnum = (typeof RoleMenuScalarFieldEnum)[keyof typeof RoleMenuScalarFieldEnum]
+
+
+export const RoleDeptScalarFieldEnum = {
+  id: 'id',
+  roleId: 'roleId',
+  deptId: 'deptId'
+} as const
+
+export type RoleDeptScalarFieldEnum = (typeof RoleDeptScalarFieldEnum)[keyof typeof RoleDeptScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -316,52 +316,6 @@ export const NullsOrder = {
 } as const
 
 export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
-
-
-export const UserOrderByRelevanceFieldEnum = {
-  username: 'username',
-  password: 'password',
-  nickname: 'nickname',
-  avatar: 'avatar',
-  email: 'email',
-  phone: 'phone',
-  gender: 'gender',
-  remark: 'remark'
-} as const
-
-export type UserOrderByRelevanceFieldEnum = (typeof UserOrderByRelevanceFieldEnum)[keyof typeof UserOrderByRelevanceFieldEnum]
-
-
-export const RoleOrderByRelevanceFieldEnum = {
-  roleName: 'roleName',
-  roleCode: 'roleCode',
-  remark: 'remark'
-} as const
-
-export type RoleOrderByRelevanceFieldEnum = (typeof RoleOrderByRelevanceFieldEnum)[keyof typeof RoleOrderByRelevanceFieldEnum]
-
-
-export const MenuOrderByRelevanceFieldEnum = {
-  menuName: 'menuName',
-  menuType: 'menuType',
-  path: 'path',
-  component: 'component',
-  icon: 'icon',
-  permission: 'permission',
-  redirect: 'redirect'
-} as const
-
-export type MenuOrderByRelevanceFieldEnum = (typeof MenuOrderByRelevanceFieldEnum)[keyof typeof MenuOrderByRelevanceFieldEnum]
-
-
-export const DeptOrderByRelevanceFieldEnum = {
-  deptName: 'deptName',
-  leader: 'leader',
-  phone: 'phone',
-  email: 'email'
-} as const
-
-export type DeptOrderByRelevanceFieldEnum = (typeof DeptOrderByRelevanceFieldEnum)[keyof typeof DeptOrderByRelevanceFieldEnum]
 
 
 export const DictTypeOrderByRelevanceFieldEnum = {
@@ -458,4 +412,50 @@ export const HttpLogOrderByRelevanceFieldEnum = {
 } as const
 
 export type HttpLogOrderByRelevanceFieldEnum = (typeof HttpLogOrderByRelevanceFieldEnum)[keyof typeof HttpLogOrderByRelevanceFieldEnum]
+
+
+export const UserOrderByRelevanceFieldEnum = {
+  username: 'username',
+  password: 'password',
+  nickname: 'nickname',
+  avatar: 'avatar',
+  email: 'email',
+  phone: 'phone',
+  gender: 'gender',
+  remark: 'remark'
+} as const
+
+export type UserOrderByRelevanceFieldEnum = (typeof UserOrderByRelevanceFieldEnum)[keyof typeof UserOrderByRelevanceFieldEnum]
+
+
+export const RoleOrderByRelevanceFieldEnum = {
+  roleName: 'roleName',
+  roleCode: 'roleCode',
+  remark: 'remark'
+} as const
+
+export type RoleOrderByRelevanceFieldEnum = (typeof RoleOrderByRelevanceFieldEnum)[keyof typeof RoleOrderByRelevanceFieldEnum]
+
+
+export const MenuOrderByRelevanceFieldEnum = {
+  menuName: 'menuName',
+  menuType: 'menuType',
+  path: 'path',
+  component: 'component',
+  icon: 'icon',
+  permission: 'permission',
+  redirect: 'redirect'
+} as const
+
+export type MenuOrderByRelevanceFieldEnum = (typeof MenuOrderByRelevanceFieldEnum)[keyof typeof MenuOrderByRelevanceFieldEnum]
+
+
+export const DeptOrderByRelevanceFieldEnum = {
+  deptName: 'deptName',
+  leader: 'leader',
+  phone: 'phone',
+  email: 'email'
+} as const
+
+export type DeptOrderByRelevanceFieldEnum = (typeof DeptOrderByRelevanceFieldEnum)[keyof typeof DeptOrderByRelevanceFieldEnum]
 

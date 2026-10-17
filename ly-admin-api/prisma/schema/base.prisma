@@ -36,17 +36,23 @@
 // - 这些注释并非装饰：代码生成器（tool:gen）从 information_schema 读 TABLE_COMMENT / COLUMN_COMMENT
 //   作为业务名与表单字段标签，缺失时生成物会退化为英文列名。
 
-// 文件划分（按域拆分；新增业务表时优先放进对应文件，或新建 NN-<域>.prisma）：
-//   00-base.prisma        公共约定（本文件）+ generator + datasource
-//   10-system.prisma      用户 / 角色 / 菜单 / 部门 + 三张关联表
-//   20-dict-config.prisma 字典类型 / 字典项 / 系统参数
-//   25-file.prisma        文件管理
-//   30-log.prisma         登录日志 / 操作日志 / HTTP 访问日志
-//   90-generated.prisma   代码生成器注入区（[GEN-ANCHOR]），勿手工在此放业务模型
+// 文件划分（按域拆分；新增业务表时优先放进对应文件，或新建 <域>.prisma）：
+//   base.prisma         公共约定（本文件）+ generator + datasource
+//   dict-config.prisma  字典类型 / 字典项 / 系统参数
+//   file.prisma         文件管理
+//   log.prisma          登录日志 / 操作日志 / HTTP 访问日志
+//   system.prisma       用户 / 角色 / 菜单 / 部门 + 三张关联表
+//   generated.prisma    代码生成器注入区（[GEN-ANCHOR]），勿手工在此放业务模型
 //
 // 为什么拆：这是开源基础工程，接手方通常会继续加自己的业务表；单文件会随模型数量线性膨胀，
-// 而按域拆分能让改动 diff 聚焦在对应文件、也减少多人并行改 schema 的冲突。
-// 注意：Prisma 的目录式 schema 要求各文件内容合并后唯一（模型名不可重复），文件内顺序不敏感。
+// 而按域拆分能让改动 diff 聚焦在对应文件，也减少多人并行改 schema 的冲突。
+//
+// 关于合并顺序（重要）：Prisma 的目录式 schema **没有** include / 顺序声明，CLI 按**文件名字典序**
+// 合并，而合并顺序会体现在生成客户端的模型顺序上。故本目录按上述字典序读入
+// （base → dict-config → file → generated → log → system）。
+// 这里刻意不加数字前缀：顺序只影响生成物的排列、不影响语义；若某天确实需要固定顺序，
+// 加 `NN-` 前缀即可（字典序即顺序，建议留间隔以便插入新文件）。
+// 注意：各文件内容合并后必须唯一（模型名不可重复），文件内字段顺序则不受跨文件影响。
 
 generator client {
   provider     = "prisma-client"

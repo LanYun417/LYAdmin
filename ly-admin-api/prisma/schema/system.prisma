@@ -3,7 +3,7 @@
 //   缺失会回落到 v6 语义并误报 `Argument "url" is missing in data source block "db"`。
 //
 // 系统与权限：用户 / 角色 / 菜单 / 部门，以及三张关联表
-// 公共约定（snake_case 映射 / 哨兵值 / 注释落库）见 00-base.prisma。
+// 公共约定（snake_case 映射 / 哨兵值 / 注释落库）见 base.prisma。
 /// 用户表
 model User {
   /// 主键

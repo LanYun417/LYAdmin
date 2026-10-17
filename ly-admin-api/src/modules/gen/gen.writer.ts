@@ -42,10 +42,10 @@ const GEN_ANCHOR = '[GEN-ANCHOR]';
  * 代码生成器写入 Prisma 模型的**目标文件**（相对项目根）。
  *
  * schema 是目录式的（划分见 `ly-admin-api/prisma/schema/00-base.prisma` 的「文件划分」一节），
- * 生成物统一落在 `90-generated.prisma`：这样自动插入的 diff 不会混进业务模型文件，
+ * 生成物统一落在 `generated.prisma`：这样自动插入的 diff 不会混进业务模型文件，
  * 接手方 review「自己改的模型」时也不会被生成块干扰。
  */
-const PRISMA_GENERATED_SCHEMA = 'ly-admin-api/prisma/schema/90-generated.prisma';
+const PRISMA_GENERATED_SCHEMA = 'ly-admin-api/prisma/schema/generated.prisma';
 
 /** 自动插入结果。 */
 type InjectionResult = 'injected' | 'exists' | 'no-anchor';

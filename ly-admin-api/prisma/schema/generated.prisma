@@ -1,5 +1,5 @@
 // use prisma-next
-// ↑ 首行不可删（原因见 00-base.prisma）。
+// ↑ 首行不可删（原因见 base.prisma）。
 //
 // 代码生成器的注入区：gen.writer 会把新模型的 Prisma model 片段插到下方锚点之前。
 // 单独成文件，是为了让「自动生成的 schema 变更」在 diff 里与业务模型分开。

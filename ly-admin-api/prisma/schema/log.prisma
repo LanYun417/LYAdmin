@@ -3,7 +3,7 @@
 //   缺失会回落到 v6 语义并误报 `Argument "url" is missing in data source block "db"`。
 //
 // 日志：登录 / 操作 / HTTP 访问
-// 公共约定（snake_case 映射 / 哨兵值 / 注释落库）见 00-base.prisma。
+// 公共约定（snake_case 映射 / 哨兵值 / 注释落库）见 base.prisma。
 /// 登录日志表
 model LoginLog {
   /// 主键
