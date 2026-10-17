@@ -6,8 +6,12 @@
  *
  * 数据来源：后端 `scripts/gen-api-docs.mjs` 扫描控制器生成的 JSON，因此本页展示的
  * 路由、权限码、说明始终与代码一致，无需手工维护。
- * 组件化：整页以 Element Plus 组件搭建（el-card / el-scrollbar / el-collapse / el-tag /
- * el-input / el-descriptions / el-alert / el-empty …），方法等标记一律用 el-tag。
+ *
+ * 样式：布局与排版一律用 Tailwind 工具类（含 @theme 语义色令牌 text-ink-regular /
+ * bg-fill-light / border-line-lighter）；结构组件用 Element Plus（el-card / el-scrollbar /
+ * el-collapse / el-tag / el-input / el-descriptions / el-alert / el-empty）。
+ * ⚠️ 少数「覆盖 EP 自身声明」的属性（如 el-input 宽度、el-collapse 边框色）不能用工具类：
+ * EP 样式无层级、工具类在 @layer 内会整体压不过它，故改用 EP 暴露的 CSS 变量（内联）。
  */
 
 import { ElMessage } from '@/utils/element';
@@ -30,6 +34,13 @@ const METHOD_TAG_TYPE: Record<string, 'primary' | 'success' | 'warning' | 'dange
   PATCH: 'warning',
   DELETE: 'danger',
 };
+
+/**
+ * 折叠面板去边框。
+ * el-collapse 把 `--el-collapse-border-color` 声明在自身元素上、且 EP 样式无层级——
+ * Tailwind 工具类在 @layer 内会整体压不过它，故只能用内联 CSS 变量覆盖。
+ */
+const collapseStyle: Record<string, string> = { '--el-collapse-border-color': 'transparent' };
 
 /** 全部接口分组 */
 const groups = ref<ApiDocGroup[]>([]);
@@ -145,42 +156,45 @@ onMounted(loadDocs);
 </script>
 
 <template>
-  <el-card v-loading="loading" shadow="never" class="docs-card">
+  <el-card v-loading="loading" shadow="never">
     <template #header>
-      <div class="docs-header">
-        <div class="docs-title">
-          <el-text tag="b" size="large">接口文档</el-text>
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="text-[15px] font-semibold">接口文档</span>
           <el-tag type="info" effect="plain">{{ total }} 个接口</el-tag>
           <el-tag type="info" effect="plain">{{ groups.length }} 个模块</el-tag>
-          <el-text v-if="generatedText" type="info" size="small">生成于 {{ generatedText }}</el-text>
+          <span v-if="generatedText" class="text-xs text-muted">生成于 {{ generatedText }}</span>
         </div>
-        <el-input v-model="keyword" class="docs-search" clearable placeholder="搜索路径 / 说明 / 权限码" />
+        <!-- 外层定宽：el-input 自身 width:100%，由这层 Tailwind 盒子控制实际宽度 -->
+        <div class="w-[260px]">
+          <el-input v-model="keyword" clearable placeholder="搜索路径 / 说明 / 权限码" />
+        </div>
       </div>
     </template>
 
-    <div class="docs-body">
+    <!-- 主体固定为视口高度，左右两栏各自滚动，避免整页被上百个接口拉得很长 -->
+    <div class="flex h-[calc(100vh-220px)] min-h-[420px] gap-4">
       <!-- 左侧：按模块折叠的接口导航 -->
-      <aside class="docs-nav">
-        <el-scrollbar v-if="filteredGroups.length" class="nav-scroll">
-          <el-collapse v-model="activeGroups" class="docs-collapse">
+      <aside class="w-[340px] shrink-0 border-r border-line-lighter pr-2">
+        <el-scrollbar v-if="filteredGroups.length">
+          <!-- 折叠面板去边框（见 collapseStyle 说明） -->
+          <el-collapse v-model="activeGroups" :style="collapseStyle">
             <el-collapse-item v-for="group in filteredGroups" :key="group.group" :name="group.group">
               <template #title>
-                <span class="group-title">{{ group.group }}</span>
+                <span class="mr-2 font-semibold">{{ group.group }}</span>
                 <el-tag size="small" type="info" effect="plain" round>{{ group.endpoints.length }}</el-tag>
               </template>
               <button
                 v-for="ep in group.endpoints"
                 :key="`${ep.method} ${ep.path}`"
                 type="button"
-                class="nav-item"
-                :class="{ 'is-active': isSelected(group.group, ep) }"
+                class="my-1 flex w-full cursor-pointer items-center gap-2 rounded-md border-0 bg-transparent px-2 py-1.5 text-left text-ink-regular transition-colors [font:inherit] hover:bg-fill-light"
+                :class="{ 'bg-primary/10': isSelected(group.group, ep) }"
                 :title="`${ep.method} ${ep.path}`"
                 @click="select(group.group, ep)"
               >
-                <el-tag :type="methodTagType(ep.method)" size="small" effect="dark" class="method-tag">
-                  {{ ep.method }}
-                </el-tag>
-                <span class="nav-label">{{ endpointLabel(ep) }}</span>
+                <el-tag :type="methodTagType(ep.method)" effect="dark" class="w-[58px]">{{ ep.method }}</el-tag>
+                <span class="min-w-0 flex-1 truncate text-[13px]">{{ endpointLabel(ep) }}</span>
                 <el-tag v-if="ep.isPublic" type="success" size="small" effect="plain">公开</el-tag>
               </button>
             </el-collapse-item>
@@ -189,22 +203,22 @@ onMounted(loadDocs);
         <el-empty v-else :description="keyword ? '没有匹配的接口' : '暂无接口数据'" />
       </aside>
 
-      <!-- 右侧：接口详情 -->
-      <main class="docs-detail">
-        <el-scrollbar v-if="selected" class="detail-scroll">
-          <div class="detail-inner">
-            <div class="detail-head">
-              <el-tag :type="methodTagType(selected.endpoint.method)" effect="dark" size="large" class="method-tag-lg">
+      <!-- 右侧：接口详情（纵向 flex + gap 控制间距，避免给 EP 组件加外边距被其 margin:0 覆盖） -->
+      <main class="min-w-0 flex-1">
+        <el-scrollbar v-if="selected">
+          <div class="flex flex-col gap-4 pr-2">
+            <div class="flex items-center gap-2">
+              <el-tag :type="methodTagType(selected.endpoint.method)" effect="dark" size="large" class="w-[68px]">
                 {{ selected.endpoint.method }}
               </el-tag>
-              <el-input :model-value="selected.endpoint.path" readonly class="detail-url">
+              <el-input :model-value="selected.endpoint.path" readonly class="flex-1">
                 <template #append>
                   <el-button @click="copyPath(selected.endpoint.path)">复制</el-button>
                 </template>
               </el-input>
             </div>
 
-            <el-text class="detail-summary">{{ selected.endpoint.summary || '（该接口暂无说明）' }}</el-text>
+            <p class="leading-[1.7] text-ink-regular">{{ selected.endpoint.summary || '（该接口暂无说明）' }}</p>
 
             <el-descriptions :column="2" border>
               <el-descriptions-item label="所属模块">{{ selected.group }}</el-descriptions-item>
@@ -222,12 +236,12 @@ onMounted(loadDocs);
                     :key="code"
                     type="info"
                     effect="plain"
-                    class="perm-tag"
+                    class="my-0.5 mr-1.5"
                   >
                     {{ code }}
                   </el-tag>
                 </template>
-                <el-text v-else type="info">—</el-text>
+                <span v-else class="text-muted">—</span>
               </el-descriptions-item>
               <el-descriptions-item v-if="selected.endpoint.action" label="操作日志" :span="2">
                 {{ selected.endpoint.action }}
@@ -235,7 +249,6 @@ onMounted(loadDocs);
             </el-descriptions>
 
             <el-alert
-              class="detail-tip"
               type="info"
               :closable="false"
               show-icon
@@ -248,135 +261,3 @@ onMounted(loadDocs);
     </div>
   </el-card>
 </template>
-
-<style scoped>
-.docs-header {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.docs-title {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-}
-
-.docs-search {
-  width: 260px;
-}
-
-/* 主体固定为视口高度，左右两栏各自滚动，避免整页被上百个接口拉得很长 */
-.docs-body {
-  display: flex;
-  gap: 16px;
-  height: calc(100vh - 220px);
-  min-height: 420px;
-}
-
-/* 左侧导航 */
-.docs-nav {
-  flex: 0 0 340px;
-  padding-right: 8px;
-  border-right: 1px solid var(--el-border-color-lighter);
-}
-
-.nav-scroll,
-.detail-scroll {
-  height: 100%;
-}
-
-/* 折叠面板去边框、透明底，贴合导航观感（借助 EP CSS 变量，无需穿透内部样式） */
-.docs-collapse {
-  --el-collapse-border-color: transparent;
-  --el-collapse-header-bg-color: transparent;
-  --el-collapse-content-bg-color: transparent;
-}
-
-.group-title {
-  margin-right: 8px;
-  font-weight: 600;
-}
-
-.nav-item {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  width: 100%;
-  padding: 6px 8px;
-  color: var(--el-text-color-regular);
-  text-align: left;
-  cursor: pointer;
-  background: transparent;
-  border: none;
-  border-radius: 6px;
-  transition: background-color 0.15s;
-}
-
-.nav-item:hover {
-  background: var(--el-fill-color-light);
-}
-
-.nav-item.is-active {
-  background: var(--el-color-primary-light-9);
-}
-
-/* 方法标签统一宽度并居中，视觉对齐（字体沿用 Element Plus 默认，不额外指定） */
-.method-tag,
-.method-tag-lg {
-  justify-content: center;
-  width: 58px;
-}
-
-.method-tag-lg {
-  width: 68px;
-  font-size: 13px;
-}
-
-.nav-label {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: 13px;
-  white-space: nowrap;
-}
-
-/* 右侧详情 */
-.docs-detail {
-  flex: 1;
-  min-width: 0;
-}
-
-.detail-inner {
-  padding-right: 8px;
-}
-
-.detail-head {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.detail-url {
-  flex: 1;
-}
-
-.detail-summary {
-  display: block;
-  margin-bottom: 16px;
-  line-height: 1.7;
-}
-
-.perm-tag {
-  margin: 2px 6px 2px 0;
-}
-
-.detail-tip {
-  margin-top: 16px;
-}
-</style>
