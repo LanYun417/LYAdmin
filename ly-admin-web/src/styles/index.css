@@ -88,7 +88,9 @@
   }
 
   body {
-    font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', Arial, sans-serif;
+    /* 基础字体统一走 Element Plus 的默认字体变量（其随组件样式一并加载，见 theme-chalk/base.css），
+       不再手写字体栈——避免与 EP 默认字体两处维护、产生细微差异 */
+    font-family: var(--el-font-family);
     font-size: 14px;
     line-height: 1.5;
     color: var(--el-text-color-primary);
