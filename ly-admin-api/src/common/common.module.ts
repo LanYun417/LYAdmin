@@ -14,6 +14,7 @@ import { DataScopeService } from './data-scope.service.js';
 import { LoginRateLimiterService } from './login-rate-limit.service.js';
 import { OperationLogService } from './operation-log.service.js';
 import { FileLoggerService } from './file-logger.service.js';
+import { HttpLogQueueService } from './http-log-queue.service.js';
 import { FileService } from './file.service.js';
 import { ImageScaleService } from './file-guards.js';
 
@@ -30,6 +31,7 @@ import { ImageScaleService } from './file-guards.js';
     LoginRateLimiterService,
     OperationLogService,
     FileLoggerService,
+    HttpLogQueueService,
     FileService,
     ImageScaleService,
   ],
@@ -44,6 +46,7 @@ import { ImageScaleService } from './file-guards.js';
     LoginRateLimiterService,
     OperationLogService,
     FileLoggerService,
+    HttpLogQueueService,
     FileService,
     ImageScaleService,
   ],

@@ -4,6 +4,7 @@
  */
 import { Injectable } from '@nestjs/common';
 import { AppException } from '../../common/app.exception.js';
+import { DataScopeService } from '../../common/data-scope.service.js';
 import { buildTree, readNumber, readString } from '../../common/utils.js';
 import type { DeptNode } from '../../common/types.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
@@ -11,7 +12,10 @@ import type { DeptUpsertDto } from './dto/dept.dto.js';
 
 @Injectable()
 export class DeptService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly dataScope: DataScopeService,
+  ) {}
 
   /** 将 Prisma Dept 记录转换为部门节点。 */
   private toDeptNode(dept: {
@@ -97,6 +101,7 @@ export class DeptService {
         email: input.email || null,
       },
     });
+    this.dataScope.invalidateDeptCache();
     return this.toDeptNode(dept);
   }
 
@@ -136,6 +141,7 @@ export class DeptService {
         email: input.email || null,
       },
     });
+    this.dataScope.invalidateDeptCache();
     return this.toDeptNode(updated);
   }
 
@@ -177,5 +183,6 @@ export class DeptService {
     // sys_role_dept 含真实外键约束，删除部门前必须先清理授权，否则会触发数据库级外键错误
     await this.prisma.roleDept.deleteMany({ where: { deptId: BigInt(id) } });
     await this.prisma.dept.delete({ where: { id: BigInt(id) } });
+    this.dataScope.invalidateDeptCache();
   }
 }

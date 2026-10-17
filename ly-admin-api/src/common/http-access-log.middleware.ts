@@ -5,7 +5,8 @@
  */
 import { Injectable, type NestMiddleware } from '@nestjs/common';
 import type { NextFunction, Request, Response } from 'express';
-import { PrismaService } from '../prisma/prisma.service.js';
+import { HttpLogQueueService } from './http-log-queue.service.js';
+import type { Prisma } from '../generated/prisma/client.js';
 import { FileLoggerService } from './file-logger.service.js';
 import type { AuthenticatedRequest } from './auth.guard.js';
 import { getClientIp } from './operation-log.interceptor.js';
@@ -87,8 +88,8 @@ function serializeResponse(body: unknown): string | null {
 @Injectable()
 export class HttpAccessLoggerMiddleware implements NestMiddleware {
   constructor(
-    private readonly prisma: PrismaService,
     private readonly fileLogger: FileLoggerService,
+    private readonly httpLogs: HttpLogQueueService,
   ) {}
 
   use(req: Request, res: Response, next: NextFunction): void {
@@ -106,7 +107,11 @@ export class HttpAccessLoggerMiddleware implements NestMiddleware {
     // 捕获响应体（用于日志留痕）
     const originalJson = res.json.bind(res);
     res.json = (body: unknown): Response => {
-      responseBody = body;
+      // 成功 GET 不保留响应体：列表响应体积大，序列化 + 递归脱敏纯属额外开销；
+      // 失败响应与写操作仍保留，便于审计与排障。
+      if (req.method !== 'GET' || res.statusCode >= 400) {
+        responseBody = body;
+      }
       return originalJson(body);
     };
 
@@ -129,7 +134,7 @@ export class HttpAccessLoggerMiddleware implements NestMiddleware {
         username: authReq.user?.username ?? null,
         deptId: authReq.user?.deptId ?? 0,
         deptName: authReq.user?.deptName ?? null,
-        query: mask(req.query) as Record<string, unknown>,
+        query: mask(req.query) as Prisma.InputJsonValue,
         reqBody: safeSerialize(req.body),
         resBody: serializeResponse(responseBody),
       };
@@ -144,27 +149,23 @@ export class HttpAccessLoggerMiddleware implements NestMiddleware {
         username: record.username,
       });
 
-      // 2) 异步落库（页面查询用），失败不阻断
-      void this.prisma.httpLog
-        .create({
-          data: {
-            time: record.time,
-            method: record.method,
-            url: record.url,
-            statusCode: record.statusCode,
-            duration: record.duration,
-            ip: record.ip,
-            userAgent: record.userAgent,
-            userId: BigInt(record.userId),
-            username: record.username,
-            deptId: BigInt(record.deptId),
-            deptName: record.deptName,
-            query: record.query as never,
-            reqBody: record.reqBody,
-            resBody: record.resBody,
-          },
-        })
-        .catch(() => undefined);
+      // 2) 入队批量落库（页面查询用），不阻塞响应
+      this.httpLogs.enqueue({
+        time: record.time,
+        method: record.method,
+        url: record.url,
+        statusCode: record.statusCode,
+        duration: record.duration,
+        ip: record.ip,
+        userAgent: record.userAgent,
+        userId: BigInt(record.userId),
+        username: record.username,
+        deptId: BigInt(record.deptId),
+        deptName: record.deptName,
+        query: record.query,
+        reqBody: record.reqBody,
+        resBody: record.resBody,
+      });
     });
 
     next();

@@ -27,8 +27,8 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
       user,
       password,
       database: name,
-      // 连接池上限：避免高并发下耗尽 MySQL 连接数
-      connectionLimit: 10,
+      // 连接池上限：避免高并发下耗尽 MySQL 连接数（DB_CONNECTION_LIMIT，默认 10）
+      connectionLimit: config.db.connectionLimit,
     });
     super({
       adapter,

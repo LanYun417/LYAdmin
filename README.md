@@ -331,7 +331,8 @@ npm run dev:admin  # 前端 http://localhost:5173（等价 cd ly-admin-web && np
 | `DB_NAME` / `DB_USER`               | `ly_admin` / `root`     | 数据库名 / 账号                                            |
 | `DB_PASSWORD`                       | `your_password`         | 数据库密码（改成实际值）                                   |
 | `DATABASE_URL`                      | `mysql://…`             | 可选。Prisma CLI 用的完整连接串（优先于 `DB_*` 拼装）      |
-| `DB_LOGGING`                        | `true`                  | 是否记录 SQL 到控制台                                      |
+| `DB_LOGGING`                        | `true`                  | 是否订阅 Prisma 查询事件（慢 SQL 日志 `db-*.log`）         |
+| `DB_CONNECTION_LIMIT`               | `10`                    | 数据库连接池上限（1~100）                                  |
 | `JWT_ACCESS_SECRET`                 | `<32 字节随机 hex>`     | accessToken 密钥（**必填**，无默认值）                     |
 | `JWT_REFRESH_SECRET`                | `<32 字节随机 hex>`     | refreshToken 密钥（**必填**，须与上方不同）                |
 | `JWT_ACCESS_EXPIRES_IN`             | `2h`                    | accessToken 有效期                                         |

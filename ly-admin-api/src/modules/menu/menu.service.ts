@@ -74,9 +74,23 @@ export class MenuService {
    * ① 超管短路（不加角色关联限制 → 全部启用菜单）；
    * ② SQL 层 `menuType IN ('M','C')`——**按钮（F）在 SQL 层被裁掉**，不是内存剔除；
    * ③ 非超管按 roleIds 过滤（INNER JOIN 语义 → Prisma include + some）。
+   *
+   * 结果按「角色组合」缓存 30s（`AuthCacheService`）；菜单增删改与角色授权会全清缓存。
    */
   async getMenusByRoles(roleCodes: string[]): Promise<MenuNode[]> {
     const isSuperAdmin = roleCodes.includes(SUPER_ADMIN_ROLE);
+
+    // 非超管且无角色：直接返回空，不查库也不缓存
+    if (!isSuperAdmin && roleCodes.length === 0) {
+      return [];
+    }
+
+    // 角色组合 → 菜单树，30s TTL；菜单 / 角色授权变更时由 authCache.invalidate() 全清
+    const cacheKey = isSuperAdmin ? 'super' : [...roleCodes].sort().join(',');
+    const cached = this.authCache.getMenuTree(cacheKey);
+    if (cached) {
+      return cached;
+    }
 
     // 非超管：先把角色编码解析成 id（角色不存在时为空 → 直接返回空，不查菜单）
     const roleIds = isSuperAdmin
@@ -108,6 +122,7 @@ export class MenuService {
     const nodes = rows.map((row) => this.toMenuNode(row));
     // buildTree 会再按 sort → id 排一次每层子节点
     const tree = buildTree(nodes);
+    this.authCache.setMenuTree(cacheKey, tree);
     return tree;
   }
 

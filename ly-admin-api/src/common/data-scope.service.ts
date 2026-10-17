@@ -16,14 +16,52 @@ import type { AuthUserContext } from './types.js';
 /** 数据范围结果。 */
 export type DataScopeResult = { mode: 'all' } | { mode: 'dept'; deptIds: number[] } | { mode: 'self'; userId: number };
 
+/** 部门树缓存 TTL：60 秒（部门结构变更低频，增删改时主动失效）。 */
+const DEPT_CACHE_TTL_MS = 60_000;
+
+/** 部门行（只读树所需的三个字段）。 */
+interface DeptRow {
+  id: number;
+  parentId: number;
+  sort: number;
+}
+
 @Injectable()
 export class DataScopeService {
+  /** 部门结构缓存：每次列表查询都整表加载代价高，缓存后仅内存建树。 */
+  private deptRowsCache: { rows: DeptRow[]; expiresAt: number } | null = null;
+
   constructor(private readonly prisma: PrismaService) {}
+
+  /** 部门增删改后调用，保证数据权限立即基于新结构计算。 */
+  invalidateDeptCache(): void {
+    this.deptRowsCache = null;
+  }
+
+  /** 读取部门结构（带 60s 缓存）。 */
+  private async loadDeptRows(): Promise<DeptRow[]> {
+    if (this.deptRowsCache && this.deptRowsCache.expiresAt > Date.now()) {
+      return this.deptRowsCache.rows;
+    }
+    // 一次性拉取整张 dept 表，按 id 升序
+    const depts = await this.prisma.dept.findMany({
+      orderBy: { id: 'asc' },
+      select: { id: true, parentId: true, sort: true },
+    });
+    const rows = depts.map((dept) => ({
+      id: Number(dept.id),
+      parentId: Number(dept.parentId),
+      sort: Number(dept.sort),
+    }));
+    this.deptRowsCache = { rows, expiresAt: Date.now() + DEPT_CACHE_TTL_MS };
+    return rows;
+  }
 
   /**
    * 收集指定部门及其全部下级部门 id。
    *
-   * 实现：一次性加载整张 dept 表 → 内存建树 → DFS 收集（O(n)，避免逐层查库）。
+   * 实现：部门结构按 60s 缓存整表加载 → 内存建树 → DFS 收集（O(n)，避免逐层查库；
+   * 部门增删改由 `DeptService` 主动失效缓存）。
    * rootId 不存在于树中时静默跳过。
    *
    * @param rootIds 起始部门 id 列表
@@ -32,18 +70,8 @@ export class DataScopeService {
     if (rootIds.length === 0) {
       return [];
     }
-    // 一次性拉取整张 dept 表，按 id 升序
-    const depts = await this.prisma.dept.findMany({
-      orderBy: { id: 'asc' },
-      select: { id: true, parentId: true, sort: true },
-    });
-    const tree = buildTree(
-      depts.map((dept) => ({
-        id: Number(dept.id),
-        parentId: Number(dept.parentId),
-        sort: Number(dept.sort),
-      })),
-    );
+    const depts = await this.loadDeptRows();
+    const tree = buildTree(depts);
 
     const result = new Set<number>();
     for (const rootId of rootIds) {

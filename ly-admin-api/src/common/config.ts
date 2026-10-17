@@ -171,6 +171,8 @@ export const config = {
     user: process.env.DB_USER ?? 'root',
     password: process.env.DB_PASSWORD ?? '',
     logging: toBoolean(process.env.DB_LOGGING, true),
+    // 连接池上限：默认 10，限制在 1~100，避免配置失误打满数据库
+    connectionLimit: Math.min(Math.max(toNumber(process.env.DB_CONNECTION_LIMIT, 10), 1), 100),
   },
   /** JWT 配置（密钥必填：缺失、为空或两者相同均抛错拒绝启动） */
   jwt: {
