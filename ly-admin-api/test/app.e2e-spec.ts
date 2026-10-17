@@ -1,27 +1,22 @@
-import { INestApplication } from '@nestjs/common';
-import { Test, TestingModule } from '@nestjs/testing';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import request from 'supertest';
-import { App } from 'supertest/types.js';
-import { AppModule } from './../src/app.module.js';
+import { createTestApp } from './setup-app.js';
 
 /**
  * 应用装配冒烟（e2e）。
  *
  * 覆盖全局约定：路由前缀 /api、统一响应信封、鉴权守卫与异常过滤器的状态码。
+ * 装配取自 `setup-app.ts`（与 `src/main.ts` 共用 `configureApp`），故与生产实例一致 ——
+ * 原先此处手写 `createNestApplication()` + `setGlobalPrefix()`，缺了校验管道与自定义适配器，
+ * 「测的装配」与「跑的装配」并不相同。
+ *
  * 注意：AppModule 初始化时会连接 MySQL 与 Redis，因此运行本测试需要本地环境可用。
  */
 describe('应用装配冒烟 (e2e)', () => {
-  let app: INestApplication<App>;
+  let app: NestExpressApplication;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    // 与 main.ts 保持一致：业务路由统一挂在 /api 下
-    app.setGlobalPrefix('api');
-    await app.init();
+    app = await createTestApp();
   });
 
   afterAll(async () => {
