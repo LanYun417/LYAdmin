@@ -3,6 +3,7 @@
  * 模块职责：登录/操作/HTTP 访问日志查询与导出（CSV），HTTP 日志浏览器/操作系统由 UA 解析。
  */
 import { Injectable } from '@nestjs/common';
+import { AppException } from '../../common/app.exception.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { buildPageResult, formatDateTimeInZone, parsePagination, readString, toCsv } from '../../common/utils.js';
 import { parseUserAgent } from '../../common/user-agent.js';
@@ -16,7 +17,7 @@ interface CountCacheEntry {
   expiresAt: number;
 }
 
-/** HTTP 日志对外项（列表与 CSV 共用）。 */
+/** HTTP 日志摘要（列表 / CSV 用，不含请求体与响应体）。 */
 interface HttpLogItem {
   id: number;
   time: Date;
@@ -26,9 +27,6 @@ interface HttpLogItem {
   duration: number;
   ip: string;
   userAgent: string;
-  query: unknown;
-  reqBody: string | null;
-  resBody: string | null;
   userId: number;
   deptId: number;
   username: string;
@@ -36,6 +34,29 @@ interface HttpLogItem {
   browser: string;
   os: string;
 }
+
+/** HTTP 日志详情（展开行 / 详情接口用）。 */
+interface HttpLogDetail extends HttpLogItem {
+  query: unknown;
+  reqBody: string | null;
+  resBody: string | null;
+}
+
+/** 列表与导出只取摘要列，避免把 Text 类型的请求/响应体读进内存。 */
+const HTTP_LOG_SUMMARY_SELECT = {
+  id: true,
+  time: true,
+  method: true,
+  url: true,
+  statusCode: true,
+  duration: true,
+  ip: true,
+  userAgent: true,
+  userId: true,
+  username: true,
+  deptId: true,
+  deptName: true,
+} as const;
 
 /** HTTP 日志 count 缓存：键含全部筛选条件，避免不同筛选串数（不近似计数，不改契约）。 */
 const countCache = new Map<string, CountCacheEntry>();
@@ -164,7 +185,8 @@ export class LogsService {
     }
     const username = typeof query.username === 'string' ? query.username.trim() : '';
     if (username) {
-      where.username = { contains: username };
+      // 前缀匹配（而非 %x%）：可命中 username 索引，避免大表全表扫描
+      where.username = { startsWith: username };
     }
     const deptId = readFilterNumber(query.deptId);
     if (deptId !== undefined) {
@@ -193,8 +215,8 @@ export class LogsService {
     });
   }
 
-  /** 按条件把所有 HTTP 日志映射为对外项（含 UA 解析的 browser/os）。 */
-  private mapHttpLog(row: {
+  /** 摘要映射（含 UA 解析的 browser/os）。 */
+  private mapHttpLogSummary(row: {
     id: bigint;
     time: Date;
     method: string;
@@ -203,9 +225,6 @@ export class LogsService {
     duration: number;
     ip: string | null;
     userAgent: string | null;
-    query: unknown;
-    reqBody: string | null;
-    resBody: string | null;
     userId: bigint;
     username: string | null;
     deptId: bigint;
@@ -221,9 +240,6 @@ export class LogsService {
       duration: Number(row.duration),
       ip: row.ip ?? '',
       userAgent: row.userAgent ?? '',
-      query: row.query ?? null,
-      reqBody: row.reqBody ?? null,
-      resBody: row.resBody ?? null,
       userId: Number(row.userId),
       username: row.username ?? '',
       deptId: Number(row.deptId),
@@ -240,6 +256,7 @@ export class LogsService {
 
     const rows = await this.prisma.httpLog.findMany({
       where,
+      select: HTTP_LOG_SUMMARY_SELECT,
       orderBy: [{ time: 'desc' }, { id: 'desc' }],
       skip: offset,
       take: limit,
@@ -252,8 +269,22 @@ export class LogsService {
       this.writeCachedCount(cacheKey, total);
     }
 
-    const list = rows.map((row) => this.mapHttpLog(row));
+    const list = rows.map((row) => this.mapHttpLogSummary(row));
     return buildPageResult(list, total, page, pageSize);
+  }
+
+  /** HTTP 日志详情（请求 / 响应体按需单独取，列表不携带）。 */
+  async getHttpLogDetail(id: number): Promise<HttpLogDetail> {
+    const row = await this.prisma.httpLog.findUnique({ where: { id: BigInt(id) } });
+    if (!row) {
+      throw AppException.notFound('日志不存在');
+    }
+    return {
+      ...this.mapHttpLogSummary(row),
+      query: row.query ?? null,
+      reqBody: row.reqBody ?? null,
+      resBody: row.resBody ?? null,
+    };
   }
 
   /** 清空所有 HTTP 访问日志。 */
@@ -346,10 +377,11 @@ export class LogsService {
     const where = this.buildHttpWhere(query);
     const rows = await this.prisma.httpLog.findMany({
       where,
+      select: HTTP_LOG_SUMMARY_SELECT,
       orderBy: [{ time: 'desc' }, { id: 'desc' }],
       take: 10000,
     });
-    const list = rows.map((row) => this.mapHttpLog(row));
+    const list = rows.map((row) => this.mapHttpLogSummary(row));
     const csvRows = list.map((item) => [
       item.id,
       formatDateTimeInZone(item.time, timezoneOffset),

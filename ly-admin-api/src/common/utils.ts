@@ -3,7 +3,7 @@
  * 模块职责：收敛跨模块复用的纯函数，避免各处重复实现。
  */
 import { createHash } from 'node:crypto';
-import bcrypt from 'bcryptjs';
+import { hash as bcryptHash, verify as bcryptVerify } from '@node-rs/bcrypt';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc.js';
 import { PAGINATION } from './constants.js';
@@ -123,12 +123,12 @@ export function findNode<T extends TreeItem>(nodes: WithChildren<T>[], id: numbe
 
 /** 生成 bcrypt 口令哈希。 */
 export async function hashPassword(plain: string): Promise<string> {
-  return bcrypt.hash(plain, 10);
+  return bcryptHash(plain, { cost: 10 });
 }
 
 /** 校验明文口令与 bcrypt 哈希是否匹配。 */
 export async function comparePassword(plain: string, hashed: string): Promise<boolean> {
-  return bcrypt.compare(plain, hashed);
+  return bcryptVerify(plain, hashed);
 }
 
 /** 计算文件内容 SHA-256（秒传/去重依据）。 */

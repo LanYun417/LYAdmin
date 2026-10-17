@@ -27,6 +27,11 @@ export function getHttpLogsApi(params: HttpLogQuery): Promise<PageResult<HttpLog
   return get<PageResult<HttpLog>>('/logs/http', params);
 }
 
+/** HTTP 访问日志详情（请求 / 响应体按需加载） */
+export function getHttpLogDetailApi(id: number): Promise<HttpLog> {
+  return get<HttpLog>(`/logs/http/detail/${id}`);
+}
+
 /** 清空所有 HTTP 访问日志 */
 export function clearHttpLogsApi(): Promise<null> {
   return del<null>('/logs/http');

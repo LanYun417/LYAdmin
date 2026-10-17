@@ -6,7 +6,7 @@
  */
 
 import { ElMessage, ElMessageBox } from '@/utils/element';
-import { clearHttpLogsApi, exportHttpLogsApi, getHttpLogsApi } from '@/api/log';
+import { clearHttpLogsApi, exportHttpLogsApi, getHttpLogDetailApi, getHttpLogsApi } from '@/api/log';
 import { getDeptTreeApi } from '@/api/dept';
 import { useTable } from '@/composables/useTable';
 import { downloadBlob } from '@/utils/download';
@@ -20,6 +20,9 @@ defineOptions({ name: 'LogHttp' });
 const exporting = ref(false);
 const dateRange = ref<string[]>([]);
 const deptTree = ref<DeptNode[]>([]);
+/** 展开行详情（请求/响应体按需加载，列表不携带） */
+const detailMap = ref<Record<number, HttpLog>>({});
+const detailLoading = ref<Record<number, boolean>>({});
 
 const { loading, list, total, query, getList, search, reset, changePage, changePageSize } = useTable(
   (p) =>
@@ -84,6 +87,23 @@ function statusType(code: number): 'success' | 'info' | 'warning' | 'danger' {
   return 'danger';
 }
 
+/** 展开行时按需拉取详情（已加载或加载中则跳过） */
+async function handleExpand(row: HttpLog, expandedRows: HttpLog[] | boolean): Promise<void> {
+  const expanded = typeof expandedRows === 'boolean' ? expandedRows : expandedRows.includes(row);
+  const id = row.id;
+  if (!expanded || detailMap.value[id] || detailLoading.value[id]) {
+    return;
+  }
+  detailLoading.value[id] = true;
+  try {
+    detailMap.value[id] = await getHttpLogDetailApi(id);
+  } catch {
+    ElMessage.error('加载日志详情失败');
+  } finally {
+    detailLoading.value[id] = false;
+  }
+}
+
 /** 格式化请求查询参数（JSON 缩进展示），无参数返回空串 */
 function formatQuery(query: Record<string, unknown> | null | undefined): string {
   if (!query || Object.keys(query).length === 0) {
@@ -104,8 +124,11 @@ function formatBody(body: string | null | undefined): string {
   }
 }
 
-/** 合并完整请求参数：Query + 请求体 */
-function formatParams(row: HttpLog): string {
+/** 合并完整请求参数：Query + 请求体（详情未加载时返回空串） */
+function formatParams(row: HttpLog | undefined): string {
+  if (!row) {
+    return '';
+  }
   const parts: string[] = [];
   const queryText = formatQuery(row.query);
   if (queryText) {
@@ -130,6 +153,7 @@ async function handleClear(): Promise<void> {
     return;
   }
   await clearHttpLogsApi();
+  detailMap.value = {};
   ElMessage.success('已清空所有 HTTP 日志');
   query.page = 1;
   await getList();
@@ -160,7 +184,7 @@ onMounted(() => {
       <el-form-item label="操作账号">
         <el-input
           v-model="query.username"
-          placeholder="请输入账号"
+          placeholder="请输入账号前缀"
           clearable
           style="width: 160px"
           @keyup.enter="search"
@@ -210,15 +234,15 @@ onMounted(() => {
         </div>
       </div>
 
-      <el-table v-loading="loading" :data="list">
+      <el-table v-loading="loading" :data="list" @expand-change="handleExpand">
         <el-table-column type="expand">
           <template #default="{ row }">
-            <div class="py-2 px-4">
+            <div v-loading="detailLoading[row.id]" class="py-2 px-4">
               <div>
                 <p class="mt-2.5 mb-1 text-xs font-semibold text-muted">请求参数（Query + Body，敏感字段已脱敏）</p>
                 <pre
                   class="max-h-60 m-0 overflow-auto whitespace-pre-wrap break-all rounded bg-fill-light px-3 py-2.5 font-mono text-xs leading-[1.6]"
-                  >{{ formatParams(row as HttpLog) }}</pre>
+                  >{{ formatParams(detailMap[row.id]) }}</pre>
               </div>
               <div>
                 <p class="mt-2.5 mb-1 text-xs font-semibold text-muted">User-Agent</p>
@@ -226,11 +250,11 @@ onMounted(() => {
                   class="max-h-60 m-0 overflow-auto whitespace-pre-wrap break-all rounded bg-fill-light px-3 py-2.5 font-mono text-xs leading-[1.6]"
                   >{{ row.userAgent || '无 User-Agent' }}</pre>
               </div>
-              <div v-if="row.resBody">
+              <div v-if="detailMap[row.id]?.resBody">
                 <p class="mt-2.5 mb-1 text-xs font-semibold text-muted">响应内容</p>
                 <pre
                   class="max-h-60 m-0 overflow-auto whitespace-pre-wrap break-all rounded bg-fill-light px-3 py-2.5 font-mono text-xs leading-[1.6]"
-                  >{{ row.resBody }}</pre>
+                  >{{ detailMap[row.id]?.resBody }}</pre>
               </div>
             </div>
           </template>

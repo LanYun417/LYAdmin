@@ -18,8 +18,8 @@
     "guard:imports": "node scripts/check-tracked-imports.mjs",
     "commit": "cz",
     "dev:api": "npm --prefix ly-admin-api run start:dev",
-    "dev:admin": "npm --prefix ly-admin-web run dev",
-    "dev": "concurrently -n api,web -c blue,green \"npm run dev:api\" \"npm run dev:admin\""
+    "dev:web": "npm --prefix ly-admin-web run dev",
+    "dev": "concurrently -n api,web -c blue,green \"npm run dev:api\" \"npm run dev:web\""
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.3",

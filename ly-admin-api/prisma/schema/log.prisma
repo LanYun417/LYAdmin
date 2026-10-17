@@ -98,5 +98,7 @@ model HttpLog {
   // 操作者筛选索引：显式声明，保证每一次全新部署都带 idx_user_id / idx_dept_id
   @@index([userId])
   @@index([deptId])
+  // 操作者前缀检索索引（列表按 username startsWith 过滤）
+  @@index([username])
   @@map("sys_http_log")
 }

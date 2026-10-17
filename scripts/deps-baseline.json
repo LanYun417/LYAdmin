@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-17T05:54:48.371Z",
+  "generatedAt": "2026-10-17T09:51:05.336Z",
   "packages": {
     "package.json": {
       "dependencies": {},
@@ -34,9 +34,9 @@
         "@nestjs/common": "^12.0.1",
         "@nestjs/core": "^12.0.1",
         "@nestjs/platform-express": "^12.0.1",
+        "@node-rs/bcrypt": "^2.0.0",
         "@prisma/adapter-mariadb": "^7.10.0",
         "@prisma/client": "^7.10.0",
-        "bcryptjs": "^3.0.3",
         "class-transformer": "^0.5.1",
         "class-validator": "^0.15.1",
         "compression": "^1.8.2",

@@ -300,7 +300,7 @@ describe('接口契约快照 (e2e)', () => {
 
   describe('访问日志', () => {
     it('HTTP 日志列表带出操作者与解析后的浏览器字段', async () => {
-      const res = await authGet('/logs/http?page=1&pageSize=1').expect(200);
+      const res = await authGet('/logs/http?username=admin&page=1&pageSize=1').expect(200);
       const data = res.body.data as { total: number; list: Array<Record<string, unknown>> };
       expect(data.total).toBeGreaterThan(0);
 
@@ -310,6 +310,28 @@ describe('接口契约快照 (e2e)', () => {
         expect.arrayContaining(['username', 'deptName', 'browser', 'os', 'ip', 'userAgent', 'statusCode', 'duration']),
       );
       expect(first.username).toBe('admin');
+      // 列表只带摘要：请求/响应体改由详情接口按需加载
+      expect(first).not.toHaveProperty('reqBody');
+      expect(first).not.toHaveProperty('resBody');
+    });
+
+    it('HTTP 日志详情按需返回请求 / 响应体，列表不携带', async () => {
+      const list = await authGet('/logs/http?page=1&pageSize=1').expect(200);
+      const first = (list.body.data as { list: Array<{ id: number }> }).list[0];
+      expect(first.id).toBeGreaterThan(0);
+
+      const detail = await authGet(`/logs/http/detail/${first.id}`).expect(200);
+      expect(Object.keys(detail.body.data as Record<string, unknown>)).toEqual(
+        expect.arrayContaining(['id', 'username', 'query', 'reqBody', 'resBody']),
+      );
+    });
+
+    it('HTTP 日志按操作账号前缀过滤（可命中索引）', async () => {
+      const matched = await authGet('/logs/http?username=adm&page=1&pageSize=1').expect(200);
+      expect((matched.body.data as { total: number }).total).toBeGreaterThan(0);
+
+      const notMatched = await authGet('/logs/http?username=dmin&page=1&pageSize=1').expect(200);
+      expect((notMatched.body.data as { total: number }).total).toBe(0);
     });
   });
 });

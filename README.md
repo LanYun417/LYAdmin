@@ -91,16 +91,16 @@ LYAdmin 面向企业内部运营 / 管理场景，提供一套可直接二次开
 
 ## 技术栈
 
-| 层             | 技术                                                                                                                                                            |
-| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 前端框架       | Vue 3.5 + Vue Router 5 + Pinia 4（`pinia-plugin-persistedstate`）                                                                                               |
-| 前端 UI / 生态 | Element Plus 2.14 + Tailwind CSS 4.3 + `bootstrap-icons` + ECharts 6 + Vditor 4 + axios + dayjs + `@vueuse/core` + `lodash-es` + nprogress                      |
-| 前端工程       | Vite 8 + TypeScript 5.9 + vue-tsc；`unplugin-auto-import` + `unplugin-vue-components` 按需引入；`vite-plugin-compression2` 构建期 gzip / brotli 压缩            |
-| 后端框架       | NestJS 12 + TypeScript（纯 ESM，Express 5 适配层）                                                                                                              |
-| 后端数据层     | Prisma 7 + `@prisma/adapter-mariadb`（driver adapter 提供运行期连接；CLI 连接串见 `prisma.config.ts`）                                                          |
-| 后端能力       | jose（JWT）+ bcryptjs（口令）+ class-validator / class-transformer（校验）+ multer（上传）+ sharp（图片处理）+ redis（官方 node-redis：验证码 / 黑名单 / 限流） |
-| 数据库 / 缓存  | MySQL 8.x（库 `ly_admin`，utf8mb4）；Redis（可选，留空 `REDIS_HOST` 即降级：验证码跨实例共享、黑名单、限流失效）                                                |
-| 工程规范       | ESLint 10 + oxlint 1.88（后端）+ Prettier 3.9 + Stylelint 17 + husky 9 + lint-staged 17 + commitlint 21 + cz-git + concurrently                                 |
+| 层             | 技术                                                                                                                                                                   |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 前端框架       | Vue 3.5 + Vue Router 5 + Pinia 4（`pinia-plugin-persistedstate`）                                                                                                      |
+| 前端 UI / 生态 | Element Plus 2.14 + Tailwind CSS 4.3 + `bootstrap-icons` + ECharts 6 + Vditor 4 + axios + dayjs + `@vueuse/core` + `lodash-es` + nprogress                             |
+| 前端工程       | Vite 8 + TypeScript 5.9 + vue-tsc；`unplugin-auto-import` + `unplugin-vue-components` 按需引入；`vite-plugin-compression2` 构建期 gzip / brotli 压缩                   |
+| 后端框架       | NestJS 12 + TypeScript（纯 ESM，Express 5 适配层）                                                                                                                     |
+| 后端数据层     | Prisma 7 + `@prisma/adapter-mariadb`（driver adapter 提供运行期连接；CLI 连接串见 `prisma.config.ts`）                                                                 |
+| 后端能力       | jose（JWT）+ @node-rs/bcrypt（口令）+ class-validator / class-transformer（校验）+ multer（上传）+ sharp（图片处理）+ redis（官方 node-redis：验证码 / 黑名单 / 限流） |
+| 数据库 / 缓存  | MySQL 8.x（库 `ly_admin`，utf8mb4）；Redis（可选，留空 `REDIS_HOST` 即降级：验证码跨实例共享、黑名单、限流失效）                                                       |
+| 工程规范       | ESLint 10 + oxlint 1.88（后端）+ Prettier 3.9 + Stylelint 17 + husky 9 + lint-staged 17 + commitlint 21 + cz-git + concurrently                                        |
 
 > 代码规范由 ESLint / oxlint / Prettier / Stylelint 统一约束，提交信息由 commitlint 校验，均由 husky 钩子在提交前自动拦截。
 
@@ -252,7 +252,7 @@ npm run dev
 
 ```bash
 npm run dev:api    # 后端 http://localhost:3000（等价 cd ly-admin-api && npm run start:dev）
-npm run dev:admin  # 前端 http://localhost:5173（等价 cd ly-admin-web && npm run dev）
+npm run dev:web   # 前端 http://localhost:5173（等价 cd ly-admin-web && npm run dev）
 ```
 
 启动后可访问：
@@ -280,7 +280,7 @@ npm run dev:admin  # 前端 http://localhost:5173（等价 cd ly-admin-web && np
 | ----------------------- | ------------------------------------------------ |
 | `npm run dev`           | 并行启动前后端                                   |
 | `npm run dev:api`       | 仅启动后端                                       |
-| `npm run dev:admin`     | 仅启动前端                                       |
+| `npm run dev:web`       | 仅启动前端                                       |
 | `npm run lint`          | 全仓 ESLint 检查（`--max-warnings 0`）           |
 | `npm run lint:fix`      | 全仓 ESLint 自动修复                             |
 | `npm run format`        | 全仓 Prettier 格式化                             |

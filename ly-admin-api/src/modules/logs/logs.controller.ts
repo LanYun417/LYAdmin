@@ -2,11 +2,12 @@
  * 日志控制器。
  * 模块职责：解析日志模块请求、调用服务、组装统一响应（含 CSV 导出，使用 @RawResponse 原样输出）。
  */
-import { Get, Delete, Controller, Query, Res } from '@nestjs/common';
+import { Get, Delete, Controller, Param, Query, Res } from '@nestjs/common';
 import type { Response } from 'express';
 import { OperationLog } from '../../common/operation-log.decorator.js';
 import { RequirePermissions, TimezoneOffset } from '../../common/permission.guard.js';
 import { RawResponse } from '../../common/response.interceptor.js';
+import { IdParamDto } from '../../common/dto/id-param.dto.js';
 import { LogsService } from './logs.service.js';
 
 @Controller('logs')
@@ -32,6 +33,13 @@ export class LogsController {
   @RequirePermissions('log:http:list')
   listHttpLogs(@Query() query: Record<string, unknown>): Promise<unknown> {
     return this.logsService.listHttpLogs(query);
+  }
+
+  /** HTTP 日志详情（请求 / 响应体按需加载）。 */
+  @Get('http/detail/:id')
+  @RequirePermissions('log:http:list')
+  getHttpLogDetail(@Param() params: IdParamDto): Promise<unknown> {
+    return this.logsService.getHttpLogDetail(params.id);
   }
 
   /** 清空所有 HTTP 访问日志（高危操作，独立权限码 log:http:clear）。 */

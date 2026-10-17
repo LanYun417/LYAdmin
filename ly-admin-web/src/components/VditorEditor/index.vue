@@ -6,7 +6,7 @@
  *
  * 关键设计：
  * - **懒加载**：`import('vditor')` 动态引入，仅在使用本组件的页面才加载（含 lute wasm 等资源）；
- * - **资源自托管**：`cdn` 指向 `/vditor`（见 `admin/public/vditor/`），不依赖外部网络；
+ * - **资源自托管**：`cdn` 指向 `/vditor`（见 `ly-admin-web/public/vditor/`），不依赖外部网络；
  * - **主题联动**：跟随 app store 的暗黑模式切换编辑器主题；
  * - **受控**：关闭 Vditor 的 localStorage 缓存，内容完全由外部 v-model 掌控。
  */
@@ -49,7 +49,11 @@ const emit = defineEmits<{
  * Vditor 静态资源根路径（自托管）。
  * Vditor 会按需从 `${cdn}/dist/...` 加载 emoji、内容主题、代码高亮、KaTeX、mermaid 等资源。
  * 若要启用未自托管的能力（流程图 / 脑图 / 五线谱等），请把对应 `dist/js/<name>` 一并拷入
- * `admin/public/vditor/dist/js/`，无需改动本组件。
+ * `ly-admin-web/public/vditor/dist/js/`，无需改动本组件。
+ *
+ * **资源裁剪**：`public/vditor/dist/js/highlight.js/styles/` 只保留 `github.min.css`，
+ * 与下方 `preview.hljs.style: 'github'` 固定值一致；其余 75+ 套主题已删除以缩小产物。
+ * 如需切换高亮主题，先从 `node_modules/vditor/dist/js/highlight.js/styles/` 拷回对应 CSS，再改该配置。
  */
 const VDITOR_CDN = '/vditor';
 

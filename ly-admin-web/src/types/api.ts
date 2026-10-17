@@ -268,7 +268,7 @@ export interface OperationLogQuery extends PageQuery {
 
 /** HTTP 访问日志 */
 export interface HttpLog {
-  id?: number;
+  id: number;
   method: string;
   url: string;
   statusCode: number;
@@ -303,7 +303,7 @@ export interface HttpLogQuery extends PageQuery {
   statusCode?: number;
   startTime?: string;
   endTime?: string;
-  /** 操作账号模糊匹配 */
+  /** 操作账号前缀匹配（可命中索引） */
   username?: string;
   /** 所属部门 id（0 表示无部门） */
   deptId?: number;

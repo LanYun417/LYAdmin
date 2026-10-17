@@ -80,5 +80,5 @@ DTO 的 `message` 没写中文，且没有用 `MSG`。契约测试会断言错�
 **Q21：操作日志没有记录？**
 端点是否加了 `@OperationLog`；方法是否是 POST/PUT/PATCH/DELETE；路径是否命中 `/api/auth/` 排除前缀。
 
-**Q22：HTTP 日志里看不到请求体？**
-请求体超过 2KB 会截断；敏感键（password/token/secret…）会被替换为 `******`。
+**Q22：HTTP 日志列表里看不到请求体 / 响应体？**
+列表接口返回的是摘要（不含 `reqBody` / `resBody`）以降低响应体积；点击表格行展开或调用 `GET /api/logs/http/detail/:id` 可获取完整请求体与响应体。注意请求体超过 2KB 仍会截断，敏感键（password/token/secret…）会被替换为 `******`；用户名搜索已改为前缀匹配（`startsWith`），可更精准地命中索引。
