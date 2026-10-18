@@ -5,7 +5,7 @@
 import { type ArgumentsHost, type ExceptionFilter, Catch, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { MulterError } from 'multer';
 import { AppException } from './app.exception.js';
-import { ERROR_CODE, ERROR_MESSAGE } from './constants.js';
+import { ERROR_CODE, ERROR_MESSAGE } from '../config/constants.js';
 
 /** 从校验异常载荷中提取全部提示文案。
  *

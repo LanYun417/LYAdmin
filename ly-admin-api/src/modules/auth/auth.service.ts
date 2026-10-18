@@ -3,17 +3,17 @@
  * 模块职责：登录校验、双 Token 签发、刷新、用户上下文组装、菜单树下发。
  */
 import { Injectable, Logger } from '@nestjs/common';
-import { AppException } from '../../common/app.exception.js';
-import { AuthCacheService } from '../../common/auth-cache.service.js';
-import { CaptchaService } from '../../common/captcha.service.js';
-import { ERROR_MESSAGE, LogResult, Status } from '../../common/constants.js';
-import { lookupDeptName } from '../../common/dept-lookup.js';
-import { IpRegionService } from '../../common/ip-region.service.js';
-import { JwtService } from '../../common/jwt.service.js';
-import { TokenBlacklistService } from '../../common/token-blacklist.service.js';
-import { comparePassword } from '../../common/utils.js';
+import { AppException } from '../../common/exception/app.exception.js';
+import { AuthCacheService } from '../../common/auth/auth-cache.service.js';
+import { CaptchaService } from '../../common/auth/captcha.service.js';
+import { ERROR_MESSAGE, LogResult, Status } from '../../common/config/constants.js';
+import { lookupDeptName } from '../../common/utils/dept-lookup.js';
+import { IpRegionService } from '../../common/ip/ip-region.service.js';
+import { JwtService } from '../../common/auth/jwt.service.js';
+import { TokenBlacklistService } from '../../common/auth/token-blacklist.service.js';
+import { comparePassword } from '../../common/utils/utils.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
-import { AuthUserService } from '../../common/auth-user.service.js';
+import { AuthUserService } from '../../common/auth/auth-user.service.js';
 import type { AuthContext, JwtPayload, UserBrief } from '../../common/types.js';
 
 /** 登录结果。 */

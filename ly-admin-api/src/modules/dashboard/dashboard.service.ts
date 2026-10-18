@@ -4,7 +4,7 @@
  */
 import { Injectable } from '@nestjs/common';
 import dayjs from 'dayjs';
-import { LogResult } from '../../common/constants.js';
+import { LogResult } from '../../common/config/constants.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import type { DashboardStats } from '../../common/types.js';
 

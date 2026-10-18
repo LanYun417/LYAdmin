@@ -7,11 +7,11 @@
  */
 import { Injectable, type NestMiddleware } from '@nestjs/common';
 import type { NextFunction, Request, Response } from 'express';
-import { AppException } from './app.exception.js';
-import { JwtService } from './jwt.service.js';
-import { TokenBlacklistService } from './token-blacklist.service.js';
-import { AuthUserService } from './auth-user.service.js';
-import { authenticateRequest, type AuthenticatedRequest } from './auth.guard.js';
+import { AppException } from '../exception/app.exception.js';
+import { JwtService } from '../auth/jwt.service.js';
+import { TokenBlacklistService } from '../auth/token-blacklist.service.js';
+import { AuthUserService } from '../auth/auth-user.service.js';
+import { authenticateRequest, type AuthenticatedRequest } from '../auth/auth.guard.js';
 
 @Injectable()
 export class StaticAuthMiddleware implements NestMiddleware {

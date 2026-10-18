@@ -3,9 +3,9 @@
  * 模块职责：角色模块请求解析、调用服务、组装统一响应。
  */
 import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
-import { OperationLog } from '../../common/operation-log.decorator.js';
-import { RequirePermissions } from '../../common/permission.guard.js';
-import type { ResponseEnvelope } from '../../common/response.interceptor.js';
+import { OperationLog } from '../../common/log/operation-log.decorator.js';
+import { RequirePermissions } from '../../common/auth/permission.guard.js';
+import type { ResponseEnvelope } from '../../common/http/response.interceptor.js';
 import { IdParamDto } from '../../common/dto/id-param.dto.js';
 import { RoleService } from './roles.service.js';
 import { AssignMenuDto, CreateRoleDto, UpdateRoleDto } from './dto/role.dto.js';

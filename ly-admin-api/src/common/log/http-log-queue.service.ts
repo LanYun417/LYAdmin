@@ -8,8 +8,8 @@
  * - 写入失败只记 warn，不影响任何业务响应。
  */
 import { Injectable, Logger, type OnModuleDestroy } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service.js';
-import type { Prisma } from '../generated/prisma/client.js';
+import { PrismaService } from '../../prisma/prisma.service.js';
+import type { Prisma } from '../../generated/prisma/client.js';
 
 /** 定时刷盘间隔（毫秒）。 */
 const FLUSH_INTERVAL_MS = 500;

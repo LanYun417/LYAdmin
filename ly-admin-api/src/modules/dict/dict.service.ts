@@ -10,9 +10,9 @@
  * - 字典不参与鉴权，故变更时**无需**清理鉴权缓存（与角色/菜单不同）。
  */
 import { Injectable } from '@nestjs/common';
-import { AppException } from '../../common/app.exception.js';
-import { Status } from '../../common/constants.js';
-import { buildPageResult, parsePagination, readNumber, readString } from '../../common/utils.js';
+import { AppException } from '../../common/exception/app.exception.js';
+import { Status } from '../../common/config/constants.js';
+import { buildPageResult, parsePagination, readNumber, readString } from '../../common/utils/utils.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import type { PageResult } from '../../common/types.js';
 import type { CreateDictItemDto, CreateDictTypeDto, UpdateDictItemDto, UpdateDictTypeDto } from './dto/dict.dto.js';

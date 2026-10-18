@@ -3,12 +3,12 @@
  * 模块职责：用户分页查询、CRUD、角色绑定、状态切换、密码重置（唯一操作 User/Role 关联的层）。
  */
 import { Injectable, Logger } from '@nestjs/common';
-import { AppException } from '../../common/app.exception.js';
-import { AuthCacheService } from '../../common/auth-cache.service.js';
-import { DataScopeService } from '../../common/data-scope.service.js';
-import { Status, SUPER_ADMIN_ROLE } from '../../common/constants.js';
-import { lookupDeptName, lookupDeptNames } from '../../common/dept-lookup.js';
-import { buildPageResult, hashPassword, parsePagination, readNumber, readString } from '../../common/utils.js';
+import { AppException } from '../../common/exception/app.exception.js';
+import { AuthCacheService } from '../../common/auth/auth-cache.service.js';
+import { DataScopeService } from '../../common/auth/data-scope.service.js';
+import { Status, SUPER_ADMIN_ROLE } from '../../common/config/constants.js';
+import { lookupDeptName, lookupDeptNames } from '../../common/utils/dept-lookup.js';
+import { buildPageResult, hashPassword, parsePagination, readNumber, readString } from '../../common/utils/utils.js';
 import type { AuthUserContext, PageResult, UserDetail } from '../../common/types.js';
 import type { Prisma } from '../../generated/prisma/client.js';
 import type { CreateUserDto, UpdateUserDto } from './dto/users.dto.js';

@@ -16,7 +16,7 @@ import { Logger, ValidationPipe } from '@nestjs/common';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import compression from 'compression';
 import type { NextFunction, Request, Response } from 'express';
-import { config } from './common/config.js';
+import { config } from './common/config/config.js';
 
 /** 构建期预压缩副本可覆盖的文本类型（扩展名 → Content-Type）。 */
 const PRECOMPRESSED_TYPES: Record<string, string> = {

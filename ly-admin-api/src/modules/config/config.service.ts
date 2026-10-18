@@ -8,8 +8,8 @@
  * - 参数不参与鉴权缓存，变更无需清理鉴权缓存（与角色/菜单不同）。
  */
 import { Injectable } from '@nestjs/common';
-import { AppException } from '../../common/app.exception.js';
-import { buildPageResult, parsePagination, readString } from '../../common/utils.js';
+import { AppException } from '../../common/exception/app.exception.js';
+import { buildPageResult, parsePagination, readString } from '../../common/utils/utils.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import type { PageResult } from '../../common/types.js';
 import type { CreateConfigDto, UpdateConfigDto } from './dto/config.dto.js';

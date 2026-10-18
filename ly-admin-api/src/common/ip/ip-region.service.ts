@@ -13,7 +13,7 @@
  */
 import { Injectable, Logger, type OnModuleDestroy, type OnModuleInit } from '@nestjs/common';
 import { IPv4, loadContentFromFile, newWithBuffer, type Searcher } from 'ip2region.js';
-import { config } from './config.js';
+import { config } from '../config/config.js';
 
 /** 归属地落库上限（与 log.prisma 三张表的 VarChar(100) 对齐）。 */
 const LOCATION_MAX_LENGTH = 100;
@@ -73,7 +73,7 @@ export class IpRegionService implements OnModuleInit, OnModuleDestroy {
       const raw = await Promise.resolve(this.searcher.search(normalized));
       location = formatRegion(raw);
     } catch {
-      // 非法 IP / 数据异常：视为无归属地（location 保持空串）
+      // 非法 IP / 数据异常：视为无归属地
     }
 
     if (this.cache.size >= CACHE_LIMIT) {

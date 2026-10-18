@@ -18,12 +18,12 @@
  */
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import request from 'supertest';
-import { RedisService } from '../src/common/redis.service.js';
+import { RedisService } from '../src/common/redis/redis.service.js';
 import { createTestApp } from './setup-app.js';
 
 /** 路由前缀（见 src/app.setup.ts 的 setGlobalPrefix）。 */
 const API = '/api';
-/** 验证码在 Redis 中的键前缀（见 src/common/captcha.service.ts）。 */
+/** 验证码在 Redis 中的键前缀（见 src/common/auth/captcha.service.ts）。 */
 const CAPTCHA_KEY_PREFIX = 'auth:captcha:';
 /** 登录日志导出 CSV 的表头 —— 逐字固化，改动会破坏既有的下载/对账习惯。 */
 const LOGIN_CSV_HEADER = 'ID,账号,IP,归属地,结果,描述,User-Agent,登录时间';

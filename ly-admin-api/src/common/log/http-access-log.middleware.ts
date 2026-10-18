@@ -6,11 +6,11 @@
 import { Injectable, type NestMiddleware } from '@nestjs/common';
 import type { NextFunction, Request, Response } from 'express';
 import { HttpLogQueueService } from './http-log-queue.service.js';
-import type { Prisma } from '../generated/prisma/client.js';
+import type { Prisma } from '../../generated/prisma/client.js';
 import { FileLoggerService } from './file-logger.service.js';
-import type { AuthenticatedRequest } from './auth.guard.js';
+import type { AuthenticatedRequest } from '../auth/auth.guard.js';
 import { getClientIp } from './operation-log.interceptor.js';
-import { IpRegionService } from './ip-region.service.js';
+import { IpRegionService } from '../ip/ip-region.service.js';
 
 /** 单条日志体上限（2KB），超出截断。 */
 const BODY_LIMIT = 2048;

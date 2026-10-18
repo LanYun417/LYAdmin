@@ -4,13 +4,13 @@
  */
 import { Body, Controller, Get, Post, Req } from '@nestjs/common';
 import type { Request } from 'express';
-import { AppException } from '../../common/app.exception.js';
-import { CaptchaService } from '../../common/captcha.service.js';
-import { LoginRateLimiterService } from '../../common/login-rate-limit.service.js';
-import { OperationLog } from '../../common/operation-log.decorator.js';
-import { CurrentUser, Public, type AuthenticatedRequest } from '../../common/auth.guard.js';
-import { getClientIp } from '../../common/operation-log.interceptor.js';
-import { isResponseEnvelope } from '../../common/response.interceptor.js';
+import { AppException } from '../../common/exception/app.exception.js';
+import { CaptchaService } from '../../common/auth/captcha.service.js';
+import { LoginRateLimiterService } from '../../common/auth/login-rate-limit.service.js';
+import { OperationLog } from '../../common/log/operation-log.decorator.js';
+import { CurrentUser, Public, type AuthenticatedRequest } from '../../common/auth/auth.guard.js';
+import { getClientIp } from '../../common/log/operation-log.interceptor.js';
+import { isResponseEnvelope } from '../../common/http/response.interceptor.js';
 import type { AuthUserContext } from '../../common/types.js';
 import { AuthService } from './auth.service.js';
 import { LoginDto, RefreshDto } from './dto/auth.dto.js';

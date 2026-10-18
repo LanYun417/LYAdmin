@@ -5,7 +5,7 @@
  * - Migrate / Studio / db push 等 CLI 命令的连接串由本文件提供；
  * - 应用运行期的连接则通过 driver adapter（@prisma/adapter-mariadb）在 PrismaService 中注入。
  *
- * 本文件从 `.env` 读取 DB_* 变量并拼装连接串，与 src/common/config.ts 保持同一数据源。
+ * 本文件从 `.env` 读取 DB_* 变量并拼装连接串，与 src/common/config/config.ts 保持同一数据源。
  */
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -13,7 +13,7 @@ import { defineConfig } from 'prisma/config';
 
 /**
  * 读取项目根 `.env`。
- * 与 `src/common/config.ts` 的解析口径一致（KEY=VALUE、去成对引号、已存在的环境变量优先），
+ * 与 `src/common/config/config.ts` 的解析口径一致（KEY=VALUE、去成对引号、已存在的环境变量优先），
  * 这样 CLI 与运行期不会读到不同的连接参数。
  */
 function loadDotEnv(): void {

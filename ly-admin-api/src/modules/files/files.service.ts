@@ -6,10 +6,10 @@ import { Injectable } from '@nestjs/common';
 import { existsSync, mkdirSync } from 'node:fs';
 import { promises as fsp } from 'node:fs';
 import path from 'node:path';
-import { AppException } from '../../common/app.exception.js';
-import { config } from '../../common/config.js';
-import { UPLOAD_ALLOWED_EXT, UPLOAD_ALLOWED_MIME } from '../../common/constants.js';
-import { sha256 } from '../../common/utils.js';
+import { AppException } from '../../common/exception/app.exception.js';
+import { config } from '../../common/config/config.js';
+import { UPLOAD_ALLOWED_EXT, UPLOAD_ALLOWED_MIME } from '../../common/config/constants.js';
+import { sha256 } from '../../common/utils/utils.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 
 /** 文件列表项（对外返回，含前端契约字段）。 */

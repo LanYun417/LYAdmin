@@ -24,7 +24,7 @@ import { PrismaMariaDb } from '@prisma/adapter-mariadb';
 import fs from 'node:fs';
 import path from 'node:path';
 import { PrismaClient } from '../src/generated/prisma/client.js';
-import { config } from '../src/common/config.js';
+import { config } from '../src/common/config/config.js';
 
 /**
  * schema 目录（目录式 schema：模型按域拆在同目录的多个 `.prisma` 文件里）。

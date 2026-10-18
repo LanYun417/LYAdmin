@@ -6,7 +6,7 @@
  */
 import { Type } from 'class-transformer';
 import { IsInt, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
-import { MSG } from '../../../common/validation-messages.js';
+import { MSG } from '../../../common/utils/validation-messages.js';
 
 /** 新增/编辑部门。 */
 export class DeptUpsertDto {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PAGINATION } from '../src/common/constants.js';
+import { PAGINATION } from '../src/common/config/constants.js';
 import {
   buildPageResult,
   buildTree,
@@ -15,7 +15,7 @@ import {
   readString,
   sha256,
   toCsv,
-} from '../src/common/utils.js';
+} from '../src/common/utils/utils.js';
 
 describe('parsePagination', () => {
   it('缺省时回退默认值', () => {

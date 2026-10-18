@@ -3,10 +3,10 @@
  * 模块职责：角色分页/下拉查询、CRUD、菜单授权（唯一操作 Role/RoleMenu/RoleDept 的层）。
  */
 import { Injectable } from '@nestjs/common';
-import { AppException } from '../../common/app.exception.js';
-import { AuthCacheService } from '../../common/auth-cache.service.js';
-import { DataScope, Status, SUPER_ADMIN_ROLE } from '../../common/constants.js';
-import { buildPageResult, parsePagination, readNumber, readString } from '../../common/utils.js';
+import { AppException } from '../../common/exception/app.exception.js';
+import { AuthCacheService } from '../../common/auth/auth-cache.service.js';
+import { DataScope, Status, SUPER_ADMIN_ROLE } from '../../common/config/constants.js';
+import { buildPageResult, parsePagination, readNumber, readString } from '../../common/utils/utils.js';
 import type { PageResult } from '../../common/types.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import type { CreateRoleDto, UpdateRoleDto } from './dto/role.dto.js';

@@ -11,9 +11,9 @@
  * 约定（与项目现有代码保持一致，勿自创）：
  * - 相对导入带 `.js` 后缀（纯 ESM）；DI 类用值导入；
  * - 自定义提示语返回 `ResponseEnvelope`（`{ __raw: true, data, message }`）；
- * - 分页复用 `common/utils` 的 parsePagination / buildPageResult / readString / readNumber；
+ * - 分页复用 `common/utils/utils` 的 parsePagination / buildPageResult / readString / readNumber；
  * - 错误用 `AppException.badRequest / notFound / conflict`；权限码 `@RequirePermissions`；
- *   操作日志 `@OperationLog`；通用校验文案复用 `common/validation-messages` 的 MSG。
+ *   操作日志 `@OperationLog`；通用校验文案复用 `common/utils/validation-messages` 的 MSG。
  */
 import type { GenColumn, GenConfig, GenFile } from './gen.service.js';
 
@@ -673,11 +673,11 @@ function renderNestDto(config: GenConfig, columns: GenColumn[]): string {
     `/**`,
     ` * ${config.businessName} 模块 DTO（class-validator）。`,
     ` * 模块职责：${config.businessName}的新增、编辑、查询与主键参数校验（由代码生成器生成）。`,
-    ` * 说明：查询参数走独立 DTO；通用文案复用 common/validation-messages 的 MSG。`,
+    ` * 说明：查询参数走独立 DTO；通用文案复用 common/utils/validation-messages 的 MSG。`,
     ` */`,
     renderNamedImport(validators, 'class-validator'),
     ...(usesTransform ? [`import { Transform } from 'class-transformer';`] : []),
-    `import { MSG } from '../../../common/validation-messages.js';`,
+    `import { MSG } from '../../../common/utils/validation-messages.js';`,
     ``,
     `/** 去除首尾空白（对字符串入参统一处理）。 */`,
     `const trim = ({ value }: { value: unknown }): unknown => (typeof value === 'string' ? value.trim() : value);`,
@@ -934,8 +934,8 @@ function renderNestService(config: GenConfig, columns: GenColumn[], cnName: stri
     ` * 模块职责：${parent ? '树形查询' : '分页查询'}与 CRUD（由代码生成器生成）。`,
     ` */`,
     `import { Injectable } from '@nestjs/common';`,
-    `import { AppException } from '../../common/app.exception.js';`,
-    renderNamedImport(utilsNames, '../../common/utils.js'),
+    `import { AppException } from '../../common/exception/app.exception.js';`,
+    renderNamedImport(utilsNames, '../../common/utils/utils.js'),
     `import { PrismaService } from '../../prisma/prisma.service.js';`,
     `import type { ${parent ? 'WithChildren' : 'PageResult'} } from '../../common/types.js';`,
     `import type { Create${cls}Dto, Query${cls}Dto, Update${cls}Dto } from './dto/${name}.dto.js';`,
@@ -1051,9 +1051,9 @@ function renderNestController(config: GenConfig, columns: GenColumn[], cnName: s
     ` * 模块职责：解析请求参数、调用服务、组装统一响应（由代码生成器生成）。`,
     ` */`,
     `import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';`,
-    `import { OperationLog } from '../../common/operation-log.decorator.js';`,
-    `import { RequirePermissions } from '../../common/permission.guard.js';`,
-    `import type { ResponseEnvelope } from '../../common/response.interceptor.js';`,
+    `import { OperationLog } from '../../common/log/operation-log.decorator.js';`,
+    `import { RequirePermissions } from '../../common/auth/permission.guard.js';`,
+    `import type { ResponseEnvelope } from '../../common/http/response.interceptor.js';`,
     `import { ${cls}Service } from './${name}.service.js';`,
     `import { Create${cls}Dto, IdParamDto, Query${cls}Dto, Update${cls}Dto } from './dto/${name}.dto.js';`,
     ``,

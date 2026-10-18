@@ -8,7 +8,7 @@
  */
 import { Injectable, Logger, type OnModuleDestroy, type OnModuleInit } from '@nestjs/common';
 import { PrismaMariaDb } from '@prisma/adapter-mariadb';
-import { config } from '../common/config.js';
+import { config } from '../common/config/config.js';
 import { PrismaClient } from '../generated/prisma/client.js';
 
 /** PrismaClient 的实例类型（供业务层泛型引用）。 */

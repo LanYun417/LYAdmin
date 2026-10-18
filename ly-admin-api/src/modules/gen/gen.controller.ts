@@ -7,9 +7,9 @@
  */
 import { Controller, Get, Param, Post, Body, Res } from '@nestjs/common';
 import type { Response } from 'express';
-import { OperationLog } from '../../common/operation-log.decorator.js';
-import { RequirePermissions } from '../../common/permission.guard.js';
-import { RawResponse } from '../../common/response.interceptor.js';
+import { OperationLog } from '../../common/log/operation-log.decorator.js';
+import { RequirePermissions } from '../../common/auth/permission.guard.js';
+import { RawResponse } from '../../common/http/response.interceptor.js';
 import { GenService } from './gen.service.js';
 import { GenWriter } from './gen.writer.js';
 import type { GenTableDetail, GenTableItem } from './gen.service.js';

@@ -6,8 +6,8 @@ import { createHash } from 'node:crypto';
 import { hash as bcryptHash, verify as bcryptVerify } from '@node-rs/bcrypt';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc.js';
-import { PAGINATION } from './constants.js';
-import type { PageResult, TreeItem, WithChildren } from './types.js';
+import { PAGINATION } from '../config/constants.js';
+import type { PageResult, TreeItem, WithChildren } from '../types.js';
 
 // 启用 UTC 插件以支持按客户端时区偏移格式化
 dayjs.extend(utc);

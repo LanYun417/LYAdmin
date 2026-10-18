@@ -11,7 +11,7 @@
  * 降级：Redis 不可用/未配置时，读返回「未失效」、写静默跳过，绝不阻断主流程。
  */
 import { Injectable } from '@nestjs/common';
-import { RedisService } from './redis.service.js';
+import { RedisService } from '../redis/redis.service.js';
 
 /** 黑名单键前缀（按用户维度）。 */
 const LOGOUT_KEY_PREFIX = 'auth:logout:';

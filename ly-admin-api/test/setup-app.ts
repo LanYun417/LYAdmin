@@ -11,7 +11,7 @@ import { Test } from '@nestjs/testing';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from '../src/app.module.js';
 import { configureApp, type AppSetupOptions } from '../src/app.setup.js';
-import { OkExpressAdapter } from '../src/common/ok-express.adapter.js';
+import { OkExpressAdapter } from '../src/common/http/ok-express.adapter.js';
 
 /**
  * 创建与生产口径一致的测试实例（需本地 MySQL 与 Redis 可用）。

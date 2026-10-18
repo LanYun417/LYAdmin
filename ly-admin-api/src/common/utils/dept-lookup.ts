@@ -6,7 +6,7 @@
  * 哨兵约定随之失效。故 schema 中不声明该关系，需要部门名的地方按 deptId 显式补查：
  * 部门存在取其名，deptId=0 或部门已删则返回 null。
  */
-import type { PrismaService } from '../prisma/prisma.service.js';
+import type { PrismaService } from '../../prisma/prisma.service.js';
 
 /**
  * 查询单个部门名。

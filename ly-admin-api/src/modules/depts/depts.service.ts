@@ -3,9 +3,9 @@
  * 模块职责：部门 CRUD、树构建（唯一操作 Dept/RoleDept 的层）。
  */
 import { Injectable } from '@nestjs/common';
-import { AppException } from '../../common/app.exception.js';
-import { DataScopeService } from '../../common/data-scope.service.js';
-import { buildTree, readNumber, readString } from '../../common/utils.js';
+import { AppException } from '../../common/exception/app.exception.js';
+import { DataScopeService } from '../../common/auth/data-scope.service.js';
+import { buildTree, readNumber, readString } from '../../common/utils/utils.js';
 import type { DeptNode } from '../../common/types.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import type { DeptUpsertDto } from './dto/dept.dto.js';

@@ -11,8 +11,8 @@ import { existsSync, mkdirSync } from 'node:fs';
 import { promises as fsp } from 'node:fs';
 import path from 'node:path';
 import sharp from 'sharp';
-import { config } from './config.js';
-import { AppException } from './app.exception.js';
+import { config } from '../config/config.js';
+import { AppException } from '../exception/app.exception.js';
 
 /**
  * 防盗链守卫：外站请求直接 403，连文件都不必读。

@@ -7,8 +7,8 @@
  */
 import { Injectable } from '@nestjs/common';
 import type { Request } from 'express';
-import { AppException } from './app.exception.js';
-import { RedisService } from './redis.service.js';
+import { AppException } from '../exception/app.exception.js';
+import { RedisService } from '../redis/redis.service.js';
 
 /** 窗口内允许的失败次数。 */
 const MAX_FAILURES = 5;

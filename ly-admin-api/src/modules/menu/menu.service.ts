@@ -3,10 +3,10 @@
  * 模块职责：菜单树查询、按角色过滤下发的菜单（供动态路由）、菜单 CRUD、防成环校验。
  */
 import { Injectable } from '@nestjs/common';
-import { AppException } from '../../common/app.exception.js';
-import { AuthCacheService } from '../../common/auth-cache.service.js';
-import { MenuType, Status, SUPER_ADMIN_ROLE } from '../../common/constants.js';
-import { buildTree, readNumber, readString } from '../../common/utils.js';
+import { AppException } from '../../common/exception/app.exception.js';
+import { AuthCacheService } from '../../common/auth/auth-cache.service.js';
+import { MenuType, Status, SUPER_ADMIN_ROLE } from '../../common/config/constants.js';
+import { buildTree, readNumber, readString } from '../../common/utils/utils.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import type { MenuNode } from '../../common/types.js';
 import type { MenuUpsertDto } from './dto/menu.dto.js';

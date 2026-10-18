@@ -17,7 +17,7 @@ import { type CallHandler, type ExecutionContext, Injectable, NestInterceptor, S
 import { Reflector } from '@nestjs/core';
 import { Readable } from 'node:stream';
 import { map, type Observable } from 'rxjs';
-import { ERROR_CODE, ERROR_MESSAGE } from './constants.js';
+import { ERROR_CODE, ERROR_MESSAGE } from '../config/constants.js';
 
 /** 控制器方法装饰器：标记该响应为「原样输出」，跳过统一响应体包装。 */
 export const RAW_RESPONSE_KEY = 'ly:rawResponse';

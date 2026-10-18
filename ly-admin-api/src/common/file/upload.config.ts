@@ -6,9 +6,9 @@
 import multer from 'multer';
 import path from 'node:path';
 import type { Express } from 'express';
-import { AppException } from './app.exception.js';
-import { config } from './config.js';
-import { UPLOAD_ALLOWED_EXT, UPLOAD_ALLOWED_MIME } from './constants.js';
+import { AppException } from '../exception/app.exception.js';
+import { config } from '../config/config.js';
+import { UPLOAD_ALLOWED_EXT, UPLOAD_ALLOWED_MIME } from '../config/constants.js';
 
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, config.upload.dir),

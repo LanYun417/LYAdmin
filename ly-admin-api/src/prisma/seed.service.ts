@@ -12,8 +12,8 @@
  * - 也可手动执行：`npm run seed`（入口见 prisma/seed.ts）。
  */
 import { Injectable, Logger, type OnApplicationBootstrap } from '@nestjs/common';
-import { DataScope, MenuType, Status, SUPER_ADMIN_ROLE } from '../common/constants.js';
-import { hashPassword } from '../common/utils.js';
+import { DataScope, MenuType, Status, SUPER_ADMIN_ROLE } from '../common/config/constants.js';
+import { hashPassword } from '../common/utils/utils.js';
 import { PrismaService } from './prisma.service.js';
 
 /** 日志上下文（种子各步骤共用）。 */

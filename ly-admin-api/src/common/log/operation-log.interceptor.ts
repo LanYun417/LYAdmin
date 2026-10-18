@@ -12,8 +12,8 @@ import type { Request, Response } from 'express';
 import type { Observable } from 'rxjs';
 import { OperationLogService } from './operation-log.service.js';
 import { getOperationMeta, inferAction, type OperationMeta } from './operation-log.decorator.js';
-import type { AuthenticatedRequest } from './auth.guard.js';
-import { IpRegionService } from './ip-region.service.js';
+import type { AuthenticatedRequest } from '../auth/auth.guard.js';
+import { IpRegionService } from '../ip/ip-region.service.js';
 
 /** 读取客户端 IP（受 trust proxy 设置影响）。 */
 export function getClientIp(req: Request): string {

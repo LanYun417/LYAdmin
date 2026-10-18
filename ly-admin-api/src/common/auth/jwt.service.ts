@@ -10,8 +10,8 @@
  */
 import { Injectable } from '@nestjs/common';
 import { errors as joseErrors, jwtVerify, SignJWT } from 'jose';
-import { config } from './config.js';
-import type { JwtPayload, JwtUserPayload } from './types.js';
+import { config } from '../config/config.js';
+import type { JwtPayload, JwtUserPayload } from '../types.js';
 
 /** 把密钥字符串转为 jose 所需的 Uint8Array。 */
 function toSecretKey(secret: string): Uint8Array {

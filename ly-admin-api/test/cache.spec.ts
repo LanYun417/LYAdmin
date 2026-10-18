@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
-import { AuthCacheService } from '../src/common/auth-cache.service.js';
-import { DataScopeService } from '../src/common/data-scope.service.js';
-import { HttpLogQueueService } from '../src/common/http-log-queue.service.js';
+import { AuthCacheService } from '../src/common/auth/auth-cache.service.js';
+import { DataScopeService } from '../src/common/auth/data-scope.service.js';
+import { HttpLogQueueService } from '../src/common/log/http-log-queue.service.js';
 
 /** 构造一条满足 createMany 形状的访问日志（仅测试用，字段值不参与断言）。 */
 function httpLogRecord() {

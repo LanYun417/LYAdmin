@@ -15,8 +15,8 @@ import { createReadStream, promises as fsp } from 'node:fs';
 import { spawn } from 'node:child_process';
 import path from 'node:path';
 import dayjs from 'dayjs';
-import { config } from './config.js';
-import { PrismaService } from '../prisma/prisma.service.js';
+import { config } from '../config/config.js';
+import { PrismaService } from '../../prisma/prisma.service.js';
 
 /** 日志类型。 */
 export type LogKind = 'app' | 'error' | 'access' | 'db';

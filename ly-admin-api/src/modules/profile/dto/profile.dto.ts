@@ -5,8 +5,8 @@
  */
 import { Transform, Type } from 'class-transformer';
 import { IsNotEmpty, IsOptional, IsString, MaxLength, Matches, MinLength } from 'class-validator';
-import { REGEX } from '../../../common/constants.js';
-import { MSG } from '../../../common/validation-messages.js';
+import { REGEX } from '../../../common/config/constants.js';
+import { MSG } from '../../../common/utils/validation-messages.js';
 
 /** 去除首尾空白。 */
 const trim = ({ value }: { value: unknown }): unknown => (typeof value === 'string' ? value.trim() : value);

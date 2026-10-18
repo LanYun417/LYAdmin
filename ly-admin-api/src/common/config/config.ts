@@ -11,11 +11,11 @@ import { existsSync, readFileSync } from 'node:fs';
 /**
  * 项目根目录。
  * ESM 下无 `__dirname`，用 `import.meta.url` 反解目录：
- * - 源码运行（nest start）：本文件位于 <root>/src/common/ → 上溯两级
- * - 编译运行（node dist/main.js）：本文件位于 <root>/dist/common/ → 上溯两级
+ * - 源码运行（nest start）：本文件位于 <root>/src/common/config/ → 上溯三级
+ * - 编译运行（node dist/main.js）：本文件位于 <root>/dist/common/config/ → 上溯三级
  * 两者一致。
  */
-export const ROOT_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+export const ROOT_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 
 /**
  * 极简 .env 解析器。

@@ -5,7 +5,7 @@
  */
 import { Type } from 'class-transformer';
 import { IsArray, IsInt, IsOptional, IsString, Matches, Max, MaxLength, Min } from 'class-validator';
-import { MSG } from '../../../common/validation-messages.js';
+import { MSG } from '../../../common/utils/validation-messages.js';
 
 /** 角色编码：字母开头，2~50 位字母/数字/下划线。 */
 const ROLE_CODE_REGEX = /^[a-zA-Z][a-zA-Z0-9_]{1,49}$/;

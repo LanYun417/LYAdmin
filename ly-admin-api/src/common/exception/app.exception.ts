@@ -3,7 +3,7 @@
  * 模块职责：定义成功/失败响应结构与 `AppException` 异常类。
  */
 import { HttpException, HttpStatus } from '@nestjs/common';
-import { ERROR_CODE, ERROR_MESSAGE } from './constants.js';
+import { ERROR_CODE, ERROR_MESSAGE } from '../config/constants.js';
 
 /** 统一响应体结构。 */
 export interface ApiResponse<T> {

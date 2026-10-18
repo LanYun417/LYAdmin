@@ -3,8 +3,8 @@
  * 模块职责：把写操作的模块/动作/参数/耗时/结果落库，失败不阻断业务。
  */
 import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service.js';
-import { SENSITIVE_KEYS } from './constants.js';
+import { PrismaService } from '../../prisma/prisma.service.js';
+import { SENSITIVE_KEYS } from '../config/constants.js';
 
 /** 写入操作日志的入参。 */
 export interface OperationLogInput {

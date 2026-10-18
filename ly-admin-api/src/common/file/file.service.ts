@@ -6,11 +6,11 @@ import { Injectable } from '@nestjs/common';
 import { existsSync, mkdirSync } from 'node:fs';
 import { promises as fsp } from 'node:fs';
 import path from 'node:path';
-import { AppException } from './app.exception.js';
-import { config } from './config.js';
-import { UPLOAD_ALLOWED_EXT, UPLOAD_ALLOWED_MIME } from './constants.js';
-import { sha256 } from './utils.js';
-import { PrismaService } from '../prisma/prisma.service.js';
+import { AppException } from '../exception/app.exception.js';
+import { config } from '../config/config.js';
+import { UPLOAD_ALLOWED_EXT, UPLOAD_ALLOWED_MIME } from '../config/constants.js';
+import { sha256 } from '../utils/utils.js';
+import { PrismaService } from '../../prisma/prisma.service.js';
 
 /** 文件记录（对外返回，不含内部路径细节）。 */
 export interface FileItem {

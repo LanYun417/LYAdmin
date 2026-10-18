@@ -3,11 +3,11 @@
  * 模块职责：为鉴权守卫与 /auth/profile 等接口提供统一的用户上下文查询（带 30s 缓存）。
  */
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service.js';
+import { PrismaService } from '../../prisma/prisma.service.js';
 import { AuthCacheService } from './auth-cache.service.js';
-import { Status, SUPER_ADMIN_ROLE } from './constants.js';
-import { lookupDeptName } from './dept-lookup.js';
-import type { AuthContext } from './types.js';
+import { Status, SUPER_ADMIN_ROLE } from '../config/constants.js';
+import { lookupDeptName } from '../utils/dept-lookup.js';
+import type { AuthContext } from '../types.js';
 
 @Injectable()
 export class AuthUserService {

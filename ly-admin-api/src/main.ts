@@ -8,8 +8,8 @@ import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module.js';
 import { configureApp } from './app.setup.js';
-import { config } from './common/config.js';
-import { OkExpressAdapter } from './common/ok-express.adapter.js';
+import { config } from './common/config/config.js';
+import { OkExpressAdapter } from './common/http/ok-express.adapter.js';
 
 async function bootstrap(): Promise<void> {
   // 传入自定义适配器：成功响应恒回 HTTP 200（POST 不回 201）

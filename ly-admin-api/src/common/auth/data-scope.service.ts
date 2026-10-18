@@ -8,10 +8,10 @@
  * - `{ mode:'self', userId }` → `id = userId`
  */
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service.js';
-import { DataScope, SUPER_ADMIN_ROLE } from './constants.js';
-import { buildTree, collectIds, findNode } from './utils.js';
-import type { AuthUserContext } from './types.js';
+import { PrismaService } from '../../prisma/prisma.service.js';
+import { DataScope, SUPER_ADMIN_ROLE } from '../config/constants.js';
+import { buildTree, collectIds, findNode } from '../utils/utils.js';
+import type { AuthUserContext } from '../types.js';
 
 /** 数据范围结果。 */
 export type DataScopeResult = { mode: 'all' } | { mode: 'dept'; deptIds: number[] } | { mode: 'self'; userId: number };

@@ -4,16 +4,16 @@
  */
 import { MiddlewareConsumer, Module, Controller, Get, type NestModule } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
-import { AuthGuard, Public } from './common/auth.guard.js';
-import { PermissionGuard } from './common/permission.guard.js';
-import { AllExceptionsFilter } from './common/all-exceptions.filter.js';
-import { ResponseInterceptor } from './common/response.interceptor.js';
-import { OperationLogInterceptor } from './common/operation-log.interceptor.js';
+import { AuthGuard, Public } from './common/auth/auth.guard.js';
+import { PermissionGuard } from './common/auth/permission.guard.js';
+import { AllExceptionsFilter } from './common/exception/all-exceptions.filter.js';
+import { ResponseInterceptor } from './common/http/response.interceptor.js';
+import { OperationLogInterceptor } from './common/log/operation-log.interceptor.js';
 import { CommonModule } from './common/common.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
-import { HttpAccessLoggerMiddleware } from './common/http-access-log.middleware.js';
-import { HotlinkGuardMiddleware, ImageScaleMiddleware } from './common/file-guards.js';
-import { StaticAuthMiddleware } from './common/static-auth.middleware.js';
+import { HttpAccessLoggerMiddleware } from './common/log/http-access-log.middleware.js';
+import { HotlinkGuardMiddleware, ImageScaleMiddleware } from './common/file/file-guards.js';
+import { StaticAuthMiddleware } from './common/http/static-auth.middleware.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { MenuModule } from './modules/menu/menu.module.js';
 import { UsersModule } from './modules/users/users.module.js';

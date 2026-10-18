@@ -5,9 +5,9 @@
 import { type CanActivate, type ExecutionContext, Injectable, SetMetadata, createParamDecorator } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
-import { AppException } from './app.exception.js';
-import { SUPER_ADMIN_ROLE } from './constants.js';
-import type { AuthUserContext } from './types.js';
+import { AppException } from '../exception/app.exception.js';
+import { SUPER_ADMIN_ROLE } from '../config/constants.js';
+import type { AuthUserContext } from '../types.js';
 
 /** 权限码元数据键。 */
 export const PERMISSION_KEY = 'ly:permission';

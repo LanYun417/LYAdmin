@@ -4,20 +4,20 @@
  * 横切能力以全局模块形式导出，使业务模块无需逐个 import 即可注入。
  */
 import { Global, Module } from '@nestjs/common';
-import { JwtService } from './jwt.service.js';
-import { RedisService } from './redis.service.js';
-import { TokenBlacklistService } from './token-blacklist.service.js';
-import { AuthCacheService } from './auth-cache.service.js';
-import { AuthUserService } from './auth-user.service.js';
-import { CaptchaService } from './captcha.service.js';
-import { DataScopeService } from './data-scope.service.js';
-import { LoginRateLimiterService } from './login-rate-limit.service.js';
-import { OperationLogService } from './operation-log.service.js';
-import { FileLoggerService } from './file-logger.service.js';
-import { HttpLogQueueService } from './http-log-queue.service.js';
-import { FileService } from './file.service.js';
-import { ImageScaleService } from './file-guards.js';
-import { IpRegionService } from './ip-region.service.js';
+import { JwtService } from './auth/jwt.service.js';
+import { RedisService } from './redis/redis.service.js';
+import { TokenBlacklistService } from './auth/token-blacklist.service.js';
+import { AuthCacheService } from './auth/auth-cache.service.js';
+import { AuthUserService } from './auth/auth-user.service.js';
+import { CaptchaService } from './auth/captcha.service.js';
+import { DataScopeService } from './auth/data-scope.service.js';
+import { LoginRateLimiterService } from './auth/login-rate-limit.service.js';
+import { OperationLogService } from './log/operation-log.service.js';
+import { FileLoggerService } from './log/file-logger.service.js';
+import { HttpLogQueueService } from './log/http-log-queue.service.js';
+import { FileService } from './file/file.service.js';
+import { ImageScaleService } from './file/file-guards.js';
+import { IpRegionService } from './ip/ip-region.service.js';
 
 @Global()
 @Module({

@@ -6,14 +6,14 @@
 import { type CanActivate, type ExecutionContext, Injectable, SetMetadata, createParamDecorator } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
-import { AppException } from './app.exception.js';
-import { ERROR_MESSAGE, Status } from './constants.js';
+import { AppException } from '../exception/app.exception.js';
+import { ERROR_MESSAGE, Status } from '../config/constants.js';
 import { JwtService } from './jwt.service.js';
 import { TokenBlacklistService } from './token-blacklist.service.js';
 // 必须为**值导入**（非 import type）：Nest 依赖注入需要运行时的构造函数引用，
 // 用 import type 会在 emitDecoratorMetadata 下退化为 Function，导致无法解析依赖。
 import { AuthUserService } from './auth-user.service.js';
-import type { AuthContext, AuthUserContext } from './types.js';
+import type { AuthContext, AuthUserContext } from '../types.js';
 
 /** 请求对象扩展：挂载鉴权上下文。 */
 export interface AuthenticatedRequest extends Request {

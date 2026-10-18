@@ -10,8 +10,8 @@
  * 返回体经全局响应拦截器包装为 `{ code, message, data }`，前端解包后即为文档数据。
  */
 import { Controller, Get, Req } from '@nestjs/common';
-import { Public } from '../../common/auth.guard.js';
-import { RawResponse } from '../../common/response.interceptor.js';
+import { Public } from '../../common/auth/auth.guard.js';
+import { RawResponse } from '../../common/http/response.interceptor.js';
 import { API_DOCS } from './api-docs.generated.js';
 import { OPENAPI_DOC } from './openapi.generated.js';
 import { responseExampleOf } from './api-examples.js';

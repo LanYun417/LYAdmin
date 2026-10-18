@@ -7,11 +7,11 @@
  */
 import { BadRequestException, Body, Controller, Post, Put, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { CurrentUser } from '../../common/auth.guard.js';
-import { OperationLog } from '../../common/operation-log.decorator.js';
+import { CurrentUser } from '../../common/auth/auth.guard.js';
+import { OperationLog } from '../../common/log/operation-log.decorator.js';
 import type { AuthUserContext } from '../../common/types.js';
-import type { ResponseEnvelope } from '../../common/response.interceptor.js';
-import { UPLOAD_MULTER_OPTIONS } from '../../common/upload.config.js';
+import type { ResponseEnvelope } from '../../common/http/response.interceptor.js';
+import { UPLOAD_MULTER_OPTIONS } from '../../common/file/upload.config.js';
 import { ProfileService } from './profile.service.js';
 import { ChangePasswordDto, UpdateProfileDto } from './dto/profile.dto.js';
 

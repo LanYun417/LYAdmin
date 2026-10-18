@@ -17,7 +17,7 @@
 import { Injectable } from '@nestjs/common';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { isAbsolute, join, resolve, sep } from 'path';
-import { AppException } from '../../common/app.exception.js';
+import { AppException } from '../../common/exception/app.exception.js';
 import { toCamel, toPascal, unknownTypeNames } from './gen.templates.js';
 import { GenService } from './gen.service.js';
 import type { GenConfig, GenFile } from './gen.service.js';

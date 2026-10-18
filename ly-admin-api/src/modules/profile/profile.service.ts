@@ -3,11 +3,11 @@
  * 模块职责：修改个人资料、修改密码（校验旧密码并写 passwordChangedAt）、更换头像。
  */
 import { Injectable } from '@nestjs/common';
-import { AppException } from '../../common/app.exception.js';
-import { lookupDeptName } from '../../common/dept-lookup.js';
-import { comparePassword, hashPassword } from '../../common/utils.js';
+import { AppException } from '../../common/exception/app.exception.js';
+import { lookupDeptName } from '../../common/utils/dept-lookup.js';
+import { comparePassword, hashPassword } from '../../common/utils/utils.js';
 import type { UserBrief } from '../../common/types.js';
-import { AuthCacheService } from '../../common/auth-cache.service.js';
+import { AuthCacheService } from '../../common/auth/auth-cache.service.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { FilesService } from '../files/files.service.js';
 

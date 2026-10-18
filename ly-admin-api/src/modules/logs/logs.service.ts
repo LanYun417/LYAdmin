@@ -3,10 +3,10 @@
  * 模块职责：登录/操作/HTTP 访问日志查询与导出（CSV），HTTP 日志浏览器/操作系统由 UA 解析。
  */
 import { Injectable } from '@nestjs/common';
-import { AppException } from '../../common/app.exception.js';
+import { AppException } from '../../common/exception/app.exception.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
-import { buildPageResult, formatDateTimeInZone, parsePagination, readString, toCsv } from '../../common/utils.js';
-import { parseUserAgent } from '../../common/user-agent.js';
+import { buildPageResult, formatDateTimeInZone, parsePagination, readString, toCsv } from '../../common/utils/utils.js';
+import { parseUserAgent } from '../../common/utils/user-agent.js';
 
 /** HTTP 日志 count 缓存 TTL（毫秒）。 */
 const COUNT_CACHE_TTL_MS = 30_000;

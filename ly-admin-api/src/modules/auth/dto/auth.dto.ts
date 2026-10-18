@@ -4,7 +4,7 @@
  */
 import { IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 import { Transform } from 'class-transformer';
-import { MSG } from '../../../common/validation-messages.js';
+import { MSG } from '../../../common/utils/validation-messages.js';
 
 /** 去除首尾空白（对字符串入参统一处理）。 */
 const trim = ({ value }: { value: unknown }): unknown => (typeof value === 'string' ? value.trim() : value);

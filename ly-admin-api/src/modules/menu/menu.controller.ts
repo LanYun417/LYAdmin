@@ -3,8 +3,8 @@
  * 模块职责：菜单树查询与 CRUD 接口。
  */
 import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
-import { OperationLog } from '../../common/operation-log.decorator.js';
-import { RequirePermissions } from '../../common/permission.guard.js';
+import { OperationLog } from '../../common/log/operation-log.decorator.js';
+import { RequirePermissions } from '../../common/auth/permission.guard.js';
 import { IdParamDto } from '../../common/dto/id-param.dto.js';
 import { MenuService } from './menu.service.js';
 import { MenuUpsertDto } from './dto/menu.dto.js';

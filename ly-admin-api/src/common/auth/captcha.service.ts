@@ -12,9 +12,9 @@
 import { randomInt, randomUUID } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
 import sharp from 'sharp';
-import { config } from './config.js';
-import { RedisService } from './redis.service.js';
-import type { CaptchaResult } from './types.js';
+import { config } from '../config/config.js';
+import { RedisService } from '../redis/redis.service.js';
+import type { CaptchaResult } from '../types.js';
 
 /** 字符集：剔除易混淆的 0/O/1/I 等，降低正常用户误输。 */
 const CHARSET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';

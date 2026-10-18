@@ -6,7 +6,7 @@
  */
 import { Transform, Type } from 'class-transformer';
 import { IsIn, IsInt, IsNotEmpty, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
-import { MSG } from '../../../common/validation-messages.js';
+import { MSG } from '../../../common/utils/validation-messages.js';
 
 /** 去首尾空白；空串归一为 undefined（可选字段传空串视为不设置）。 */
 const trimToOptional = ({ value }: { value: unknown }): unknown => {

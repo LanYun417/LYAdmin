@@ -7,7 +7,7 @@
  */
 import { Injectable, Logger, type OnModuleDestroy } from '@nestjs/common';
 import { createClient, type RedisClientType } from 'redis';
-import { config } from '../common/config.js';
+import { config } from '../config/config.js';
 
 @Injectable()
 export class RedisService implements OnModuleDestroy {

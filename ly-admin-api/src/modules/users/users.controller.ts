@@ -3,11 +3,11 @@
  * 模块职责：解析请求参数、调用用户服务、组装统一响应（含写操作的自定义提示语）。
  */
 import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
-import { OperationLog } from '../../common/operation-log.decorator.js';
-import { RequirePermissions } from '../../common/permission.guard.js';
-import { CurrentUser } from '../../common/auth.guard.js';
+import { OperationLog } from '../../common/log/operation-log.decorator.js';
+import { RequirePermissions } from '../../common/auth/permission.guard.js';
+import { CurrentUser } from '../../common/auth/auth.guard.js';
 import type { AuthUserContext } from '../../common/types.js';
-import { type ResponseEnvelope } from '../../common/response.interceptor.js';
+import { type ResponseEnvelope } from '../../common/http/response.interceptor.js';
 import { UsersService } from './users.service.js';
 import { IdParamDto } from '../../common/dto/id-param.dto.js';
 import { AssignRoleDto, CreateUserDto, ResetPasswordDto, StatusDto, UpdateUserDto } from './dto/users.dto.js';

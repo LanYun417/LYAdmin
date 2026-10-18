@@ -7,7 +7,7 @@
  *
  */
 import { Injectable } from '@nestjs/common';
-import { AppException } from '../../common/app.exception.js';
+import { AppException } from '../../common/exception/app.exception.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { generateFiles, toCamel, toPascal, toTsType } from './gen.templates.js';
 import type { ZipEntry } from './zip.util.js';

@@ -15,7 +15,7 @@
  * - dept/dict/config：不参与鉴权码与菜单树，不调用（数据权限的部门缓存单独失效，见 DataScopeService）
  */
 import { Injectable } from '@nestjs/common';
-import type { AuthContext, MenuNode } from './types.js';
+import type { AuthContext, MenuNode } from '../types.js';
 
 /** 缓存条目：值 + 过期时间戳。 */
 interface CacheEntry {

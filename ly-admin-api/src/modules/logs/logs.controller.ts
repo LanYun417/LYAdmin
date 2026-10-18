@@ -4,9 +4,9 @@
  */
 import { Get, Delete, Controller, Param, Query, Res } from '@nestjs/common';
 import type { Response } from 'express';
-import { OperationLog } from '../../common/operation-log.decorator.js';
-import { RequirePermissions, TimezoneOffset } from '../../common/permission.guard.js';
-import { RawResponse } from '../../common/response.interceptor.js';
+import { OperationLog } from '../../common/log/operation-log.decorator.js';
+import { RequirePermissions, TimezoneOffset } from '../../common/auth/permission.guard.js';
+import { RawResponse } from '../../common/http/response.interceptor.js';
 import { IdParamDto } from '../../common/dto/id-param.dto.js';
 import { LogsService } from './logs.service.js';
 
