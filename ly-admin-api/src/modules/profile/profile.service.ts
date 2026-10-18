@@ -8,6 +8,7 @@ import { lookupDeptName } from '../../common/utils/dept-lookup.js';
 import { comparePassword, hashPassword } from '../../common/utils/utils.js';
 import type { UserBrief } from '../../common/types.js';
 import { AuthCacheService } from '../../common/auth/auth-cache.service.js';
+import { assertPasswordNotContainsAccount } from '../../common/auth/password-policy.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { FilesService } from '../files/files.service.js';
 
@@ -110,6 +111,11 @@ export class ProfileService {
     const matched = await comparePassword(input.oldPassword, user.password);
     if (!matched) {
       throw AppException.badRequest('原密码不正确');
+    }
+    // 新口令不得与账号互相包含，也不得与原口令相同（防「改了个寂寞」）
+    assertPasswordNotContainsAccount(input.newPassword, user.username);
+    if (input.newPassword === input.oldPassword) {
+      throw AppException.badRequest('新密码不能与原密码相同');
     }
     await this.prisma.user.update({
       where: { id: BigInt(userId) },

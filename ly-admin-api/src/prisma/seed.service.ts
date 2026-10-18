@@ -743,16 +743,29 @@ async function seedRole(prisma: PrismaService, menuIdMap: Map<string, number>): 
 
 /* --------------------------------- 用户种子 -------------------------------- */
 
-/** 写入超级管理员 `admin` / `123456` 并绑定超管角色（幂等：已存在的账号不覆盖密码）。 */
+/** 种子超管口令的默认值（仅本地开发便利，生产部署必须用 `SEED_ADMIN_PASSWORD` 覆盖）。 */
+const DEFAULT_SEED_ADMIN_PASSWORD = '123456';
+
+/**
+ * 写入超级管理员 `admin` 并绑定超管角色（幂等：已存在的账号不覆盖密码）。
+ *
+ * 口令来自 `SEED_ADMIN_PASSWORD`；未配置时回退默认值，并在生产环境打 warn —— 默认口令
+ * 是弱口令（且不满足口令策略的长度要求，仅因为种子直写哈希才绕过了校验）。
+ */
 async function seedUser(prisma: PrismaService): Promise<void> {
   const superRole = await prisma.role.findUnique({ where: { roleCode: SUPER_ADMIN_ROLE } });
+  const configuredPassword = process.env.SEED_ADMIN_PASSWORD?.trim();
+  const password = configuredPassword || DEFAULT_SEED_ADMIN_PASSWORD;
+  if (!configuredPassword && process.env.NODE_ENV === 'production') {
+    logger.warn('[Seed] 未配置 SEED_ADMIN_PASSWORD，超管账号使用默认弱口令；请设置后重新执行种子或立即改密');
+  }
 
   const admin = await prisma.user.upsert({
     where: { username: 'admin' },
     update: {},
     create: {
       username: 'admin',
-      password: await hashPassword('123456'),
+      password: await hashPassword(password),
       nickname: '超级管理员',
       status: Status.ENABLED,
       remark: '内置超级管理员账号',
@@ -994,7 +1007,7 @@ export async function runSeed(prisma: PrismaService): Promise<void> {
   logger.log(`角色数据完成，共 ${ROLE_SEEDS.length} 个角色`);
 
   await seedUser(prisma);
-  logger.log('用户数据完成，超管账号 admin / 123456');
+  logger.log('用户数据完成，超管账号 admin（口令见 SEED_ADMIN_PASSWORD，未配置时为开发默认口令）');
 
   await seedDict(prisma);
   await seedConfig(prisma);

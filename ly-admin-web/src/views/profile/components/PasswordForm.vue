@@ -6,7 +6,7 @@ import type { FormInstance, FormRules } from 'element-plus';
 import { changePasswordApi } from '@/api/profile';
 import { useUserStore } from '@/store/modules/user';
 import { usePermissionStore } from '@/store/modules/permission';
-import { PASSWORD_REGEX } from '@/utils/validate';
+import { PASSWORD_MESSAGE, PASSWORD_REGEX } from '@/utils/validate';
 import type { ChangePasswordParams } from '@/types/api';
 
 defineOptions({ name: 'PasswordForm' });
@@ -37,7 +37,7 @@ const rules: FormRules = {
   oldPassword: [{ required: true, message: '请输入原密码', trigger: 'blur' }],
   newPassword: [
     { required: true, message: '请输入新密码', trigger: 'blur' },
-    { pattern: PASSWORD_REGEX, message: '密码为 6-20 位字符', trigger: 'blur' },
+    { pattern: PASSWORD_REGEX, message: PASSWORD_MESSAGE, trigger: 'blur' },
   ],
   confirmPassword: [
     { required: true, message: '请再次输入新密码', trigger: 'blur' },

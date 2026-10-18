@@ -6,6 +6,13 @@
 import { Transform, Type } from 'class-transformer';
 import { IsNotEmpty, IsOptional, IsString, MaxLength, Matches, MinLength } from 'class-validator';
 import { REGEX } from '../../../common/config/constants.js';
+import {
+  PASSWORD_COMPLEXITY_MESSAGE,
+  PASSWORD_COMPLEXITY_REGEX,
+  PASSWORD_LENGTH_MESSAGE,
+  PASSWORD_MAX_LENGTH,
+  PASSWORD_MIN_LENGTH,
+} from '../../../common/auth/password-policy.js';
 import { MSG } from '../../../common/utils/validation-messages.js';
 
 /** 去除首尾空白。 */
@@ -54,6 +61,8 @@ export class ChangePasswordDto {
 
   @Type(() => String)
   @IsString({ message: '新密码必须为字符串' })
-  @Matches(REGEX.PASSWORD, { message: '密码格式不正确（6~20 位非空白字符）' })
+  @MinLength(PASSWORD_MIN_LENGTH, { message: PASSWORD_LENGTH_MESSAGE })
+  @MaxLength(PASSWORD_MAX_LENGTH, { message: PASSWORD_LENGTH_MESSAGE })
+  @Matches(PASSWORD_COMPLEXITY_REGEX, { message: PASSWORD_COMPLEXITY_MESSAGE })
   newPassword!: string;
 }

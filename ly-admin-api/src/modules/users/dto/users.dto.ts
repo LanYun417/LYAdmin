@@ -17,6 +17,13 @@ import {
   Max,
 } from 'class-validator';
 import { REGEX } from '../../../common/config/constants.js';
+import {
+  PASSWORD_COMPLEXITY_MESSAGE,
+  PASSWORD_COMPLEXITY_REGEX,
+  PASSWORD_LENGTH_MESSAGE,
+  PASSWORD_MAX_LENGTH,
+  PASSWORD_MIN_LENGTH,
+} from '../../../common/auth/password-policy.js';
 import { MSG } from '../../../common/utils/validation-messages.js';
 
 /** 去除首尾空白（对字符串入参统一处理）。 */
@@ -36,12 +43,13 @@ export class CreateUserDto {
   @MaxLength(20, { message: MSG.maxLength(20) })
   username!: string;
 
-  /** 明文密码：6~20 位 */
-  @IsString({ message: '密码至少 6 位' })
+  /** 明文密码：长度与复杂度统一由 common/auth/password-policy.ts 决定 */
+  @IsString({ message: PASSWORD_LENGTH_MESSAGE })
   @Transform(trim)
   @IsNotEmpty({ message: '密码不能为空' })
-  @MinLength(6, { message: '密码至少 6 位' })
-  @MaxLength(20, { message: '密码最多 20 位' })
+  @MinLength(PASSWORD_MIN_LENGTH, { message: PASSWORD_LENGTH_MESSAGE })
+  @MaxLength(PASSWORD_MAX_LENGTH, { message: PASSWORD_LENGTH_MESSAGE })
+  @Matches(PASSWORD_COMPLEXITY_REGEX, { message: PASSWORD_COMPLEXITY_MESSAGE })
   password!: string;
 
   /** 昵称 */
@@ -169,11 +177,12 @@ export class StatusDto {
 
 /** 重置密码。 */
 export class ResetPasswordDto {
-  @IsString({ message: '密码至少 6 位' })
+  @IsString({ message: PASSWORD_LENGTH_MESSAGE })
   @Transform(trim)
   @IsNotEmpty({ message: '密码不能为空' })
-  @MinLength(6, { message: '密码至少 6 位' })
-  @MaxLength(20, { message: '密码最多 20 位' })
+  @MinLength(PASSWORD_MIN_LENGTH, { message: PASSWORD_LENGTH_MESSAGE })
+  @MaxLength(PASSWORD_MAX_LENGTH, { message: PASSWORD_LENGTH_MESSAGE })
+  @Matches(PASSWORD_COMPLEXITY_REGEX, { message: PASSWORD_COMPLEXITY_MESSAGE })
   password!: string;
 }
 

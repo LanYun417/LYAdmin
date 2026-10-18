@@ -270,6 +270,27 @@ describe('接口契约快照 (e2e)', () => {
       const res = await authGet('/menus/abc').expect(400);
       expect((res.body as { code: number }).code).toBe(400);
     });
+
+    it('POST /users 弱口令 → 400（长度与复杂度走统一口令策略）', async () => {
+      const res = await authPost('/users', {
+        // 账号须满足 3~20 位，否则会先被账号规则拦掉、验不到口令规则
+        username: `pw${Date.now().toString().slice(-6)}`,
+        password: '123',
+        nickname: '口令校验',
+      }).expect(400);
+      // 长度不足先被拦；消息里带实际生效的边界，便于前端对齐提示
+      expect(String((res.body as { message: string }).message)).toContain('密码长度');
+    });
+
+    it('POST /users 口令与账号互相包含 → 400（跨字段规则由服务层兜住）', async () => {
+      const username = `pw${Date.now().toString().slice(-8)}`;
+      const res = await authPost('/users', {
+        username,
+        password: username.slice(0, username.length - 1),
+        nickname: '口令校验',
+      }).expect(400);
+      expect(String((res.body as { message: string }).message)).toContain('密码不能包含登录账号');
+    });
   });
 
   describe('CSV 导出契约', () => {

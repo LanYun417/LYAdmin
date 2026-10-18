@@ -10,8 +10,15 @@ export const PHONE_REGEX = /^1[3-9]\d{9}$/;
 export const EMAIL_REGEX = /^[\w.-]+@[\w-]+(\.[\w-]+)+$/;
 /** 用户名正则：3-20 位字母、数字、下划线 */
 export const USERNAME_REGEX = /^[a-zA-Z0-9_]{3,20}$/;
-/** 密码正则：6-20 位，允许字母、数字及常见符号 */
-export const PASSWORD_REGEX = /^[a-zA-Z0-9_!@#$%^&*.]{6,20}$/;
+/**
+ * 密码正则：8-20 位，且至少包含字母和数字。
+ * 需与后端 `ly-admin-api/src/common/auth/password-policy.ts` 保持一致
+ * （后端可用 PASSWORD_MIN_LENGTH / PASSWORD_REQUIRE_COMPLEXITY 调整，前端为固定提示口径）。
+ */
+export const PASSWORD_REGEX = /^(?=.*[A-Za-z])(?=.*\d)[a-zA-Z0-9_!@#$%^&*.]{8,20}$/;
+
+/** 密码规则提示文案（三处复用，避免各写一份后走样）。 */
+export const PASSWORD_MESSAGE = '密码为 8-20 位，且至少包含字母和数字';
 
 /** 是否手机号 */
 export function isPhone(value: string): boolean {
@@ -50,7 +57,7 @@ export const passwordRule: FormItemRule = {
     if (!value) {
       return callback();
     }
-    return PASSWORD_REGEX.test(String(value)) ? callback() : callback(new Error('密码为 6-20 位字符'));
+    return PASSWORD_REGEX.test(String(value)) ? callback() : callback(new Error(PASSWORD_MESSAGE));
   },
   trigger: 'blur',
 };

@@ -9,6 +9,7 @@ import { DataScopeService } from '../../common/auth/data-scope.service.js';
 import { Status, SUPER_ADMIN_ROLE } from '../../common/config/constants.js';
 import { lookupDeptName, lookupDeptNames } from '../../common/utils/dept-lookup.js';
 import { buildPageResult, hashPassword, parsePagination, readNumber, readString } from '../../common/utils/utils.js';
+import { assertPasswordNotContainsAccount } from '../../common/auth/password-policy.js';
 import type { AuthUserContext, PageResult, UserDetail } from '../../common/types.js';
 import type { Prisma } from '../../generated/prisma/client.js';
 import type { CreateUserDto, UpdateUserDto } from './dto/users.dto.js';
@@ -211,6 +212,8 @@ export class UsersService {
     if (exists) {
       throw AppException.conflict('用户名已存在');
     }
+    // 口令不得与账号互相包含（DTO 只能校验长度与复杂度，跨字段规则在这里兜）
+    assertPasswordNotContainsAccount(dto.password, dto.username);
 
     const user = await this.prisma.user.create({
       data: {
@@ -300,6 +303,7 @@ export class UsersService {
     if (this.isSuperAdmin(user.username, user.roles)) {
       throw AppException.conflict('超级管理员不可重置密码');
     }
+    assertPasswordNotContainsAccount(password, user.username);
     await this.prisma.user.update({
       where: { id: BigInt(id) },
       data: {

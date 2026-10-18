@@ -7,7 +7,7 @@ import { createUserApi, getUserDetailApi, updateUserApi } from '@/api/user';
 import { getDeptTreeApi } from '@/api/dept';
 import BasicDialog from '@/components/BasicDialog/index.vue';
 import { useDict, useStatusDict } from '@/composables/useDict';
-import { emailRule, phoneRule, usernameRule } from '@/utils/validate';
+import { emailRule, passwordRule, phoneRule, usernameRule } from '@/utils/validate';
 import type { DeptNode, RoleBrief, UserUpsert } from '@/types/api';
 
 defineOptions({ name: 'UserForm' });
@@ -66,7 +66,7 @@ const { statusOptions } = useStatusDict();
 
 const rules: FormRules = {
   username: [{ required: true, message: '请输入账号', trigger: 'blur' }, usernameRule],
-  password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
+  password: [{ required: true, message: '请输入密码', trigger: 'blur' }, passwordRule],
   nickname: [{ required: true, message: '请输入昵称', trigger: 'blur' }],
   email: [emailRule],
   phone: [phoneRule],

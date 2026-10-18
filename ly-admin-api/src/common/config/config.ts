@@ -71,7 +71,16 @@ export function toNumber(value: string | undefined, fallback: number): number {
 }
 
 /** 日志根目录（绝对路径）。 */
+/** 日志根目录（绝对路径）。 */
 const LOG_DIR = path.resolve(ROOT_DIR, process.env.LOG_DIR ?? 'logs');
+
+/**
+ * 口令长度边界：先夹下限（6~32），再让上限不小于下限——
+ * 若只写 `max(env, 8)`，把 PASSWORD_MIN_LENGTH 配成 32 而上限用默认 20 时，
+ * 会出现「min > max」导致任何口令都校验不过。
+ */
+const PASSWORD_MIN_LENGTH = Math.min(Math.max(toNumber(process.env.PASSWORD_MIN_LENGTH, 8), 6), 32);
+const PASSWORD_MAX_LENGTH = Math.min(Math.max(toNumber(process.env.PASSWORD_MAX_LENGTH, 20), PASSWORD_MIN_LENGTH), 64);
 
 /**
  * 解析防盗链 Referer 白名单：接受逗号分隔的 origin（`http://a.com`）或裸 host（`a.com`），
@@ -292,6 +301,18 @@ export const config = {
     windowMs: toNumber(process.env.RATE_LIMIT_WINDOW_MS, 60_000),
     /** 单窗口内单 IP 的默认上限（登录/验证码/文档等敏感接口另有收紧值，见中间件） */
     max: toNumber(process.env.RATE_LIMIT_MAX, 300),
+  },
+  /**
+   * 口令策略（新增用户 / 重置密码 / 自助改密共用，见 common/auth/password-policy.ts）。
+   * 只约束**新设置**的口令，不影响存量账号登录。
+   */
+  password: {
+    /** 最小长度：默认 8，夹在 6~32 之间（低于 6 无意义，高于 32 会显著拖慢 bcrypt） */
+    minLength: PASSWORD_MIN_LENGTH,
+    /** 最大长度：默认 20，夹在最小长度~64 之间（bcrypt 只取前 72 字节，过长无收益） */
+    maxLength: PASSWORD_MAX_LENGTH,
+    /** 是否要求「字母 + 数字」组合（默认要求；纯数字弱口令是最常见的撞库起点） */
+    requireComplexity: toBoolean(process.env.PASSWORD_REQUIRE_COMPLEXITY, true),
   },
 } as const;
 

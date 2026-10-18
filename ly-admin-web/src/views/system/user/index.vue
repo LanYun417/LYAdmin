@@ -12,7 +12,7 @@ import { useDict, useStatusDict } from '@/composables/useDict';
 import { useTable } from '@/composables/useTable';
 import { hasPermission } from '@/utils/permission';
 import { formatDateTime } from '@/utils/format';
-import { PASSWORD_REGEX } from '@/utils/validate';
+import { PASSWORD_MESSAGE, PASSWORD_REGEX } from '@/utils/validate';
 import type { DeptNode, RoleBrief, UserDetail } from '@/types/api';
 import Pagination from '@/components/Pagination/index.vue';
 import SearchForm from '@/components/SearchForm/index.vue';
@@ -130,7 +130,7 @@ async function handleResetPwd(row: UserDetail): Promise<void> {
   try {
     const { value } = await ElMessageBox.prompt(`请输入「${row.username}」的新密码`, '重置密码', {
       inputPattern: PASSWORD_REGEX,
-      inputErrorMessage: '密码为 6-20 位字符',
+      inputErrorMessage: PASSWORD_MESSAGE,
       confirmButtonText: '确定',
       cancelButtonText: '取消',
     });
