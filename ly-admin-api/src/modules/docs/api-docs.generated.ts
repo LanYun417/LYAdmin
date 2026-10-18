@@ -345,7 +345,7 @@ export const API_DOCS: ApiDocGroup[] = [
             "in": "body",
             "type": "string",
             "required": true,
-            "description": "refreshToken",
+            "description": "刷新令牌（refreshToken）",
             "example": "<登录返回的 refreshToken>"
           }
         ],

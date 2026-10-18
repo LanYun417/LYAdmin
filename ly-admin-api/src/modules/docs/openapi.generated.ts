@@ -5736,7 +5736,7 @@ export const OPENAPI_DOC: Record<string, unknown> = {
         "properties": {
           "refreshToken": {
             "type": "string",
-            "description": "refreshToken",
+            "description": "刷新令牌（refreshToken）",
             "example": "<登录返回的 refreshToken>"
           }
         },
