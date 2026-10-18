@@ -2571,6 +2571,162 @@ export const API_DOCS: ApiDocGroup[] = [
         "examples": {
           "curl": "curl -X DELETE \"http://localhost:3000/api/logs/http\" \\\n  -H \"Authorization: Bearer <accessToken>\""
         }
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/logs/http/:id",
+        "summary": "删除单条 HTTP 访问日志",
+        "permission": [
+          "log:http:remove"
+        ],
+        "isPublic": false,
+        "action": "日志管理 · 删除 HTTP 日志",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X DELETE \"http://localhost:3000/api/logs/http/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "id": "1"
+          }
+        }
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/logs/http/batch",
+        "summary": "批量删除 HTTP 访问日志（多选）",
+        "permission": [
+          "log:http:remove"
+        ],
+        "isPublic": false,
+        "action": "日志管理 · 批量删除 HTTP 日志",
+        "params": [
+          {
+            "name": "ids",
+            "in": "body",
+            "type": "number[]",
+            "required": true,
+            "description": "",
+            "example": []
+          }
+        ],
+        "examples": {
+          "curl": "curl -X DELETE \"http://localhost:3000/api/logs/http/batch\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"ids\": []\n    }'",
+          "requestBody": {
+            "ids": []
+          }
+        }
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/logs/login/:id",
+        "summary": "删除单条登录日志",
+        "permission": [
+          "log:login:remove"
+        ],
+        "isPublic": false,
+        "action": "日志管理 · 删除登录日志",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X DELETE \"http://localhost:3000/api/logs/login/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "id": "1"
+          }
+        }
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/logs/login/batch",
+        "summary": "批量删除登录日志（多选）",
+        "permission": [
+          "log:login:remove"
+        ],
+        "isPublic": false,
+        "action": "日志管理 · 批量删除登录日志",
+        "params": [
+          {
+            "name": "ids",
+            "in": "body",
+            "type": "number[]",
+            "required": true,
+            "description": "",
+            "example": []
+          }
+        ],
+        "examples": {
+          "curl": "curl -X DELETE \"http://localhost:3000/api/logs/login/batch\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"ids\": []\n    }'",
+          "requestBody": {
+            "ids": []
+          }
+        }
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/logs/operation/:id",
+        "summary": "删除单条操作日志",
+        "permission": [
+          "log:operation:remove"
+        ],
+        "isPublic": false,
+        "action": "日志管理 · 删除操作日志",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X DELETE \"http://localhost:3000/api/logs/operation/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "id": "1"
+          }
+        }
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/logs/operation/batch",
+        "summary": "批量删除操作日志（多选）",
+        "permission": [
+          "log:operation:remove"
+        ],
+        "isPublic": false,
+        "action": "日志管理 · 批量删除操作日志",
+        "params": [
+          {
+            "name": "ids",
+            "in": "body",
+            "type": "number[]",
+            "required": true,
+            "description": "",
+            "example": []
+          }
+        ],
+        "examples": {
+          "curl": "curl -X DELETE \"http://localhost:3000/api/logs/operation/batch\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"ids\": []\n    }'",
+          "requestBody": {
+            "ids": []
+          }
+        }
       }
     ]
   },
