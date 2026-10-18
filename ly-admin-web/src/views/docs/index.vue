@@ -144,23 +144,18 @@ function select(group: string, endpoint: ApiDocEndpoint): void {
 const CODE_BLOCK =
   'overflow-x-auto whitespace-pre-wrap break-all rounded-md bg-fill-light p-3 font-mono text-xs leading-[1.6]';
 
-/** 请求参数示例文本：合并路径参数 / 查询参数 / 请求体，无则为空串 */
+/**
+ * 请求参数示例文本：仅展示**请求体（Body）**。
+ * 路径参数 / 查询参数已体现在 curl 示例的 URL 中，无需在此重复；
+ * 早期曾把三者包成 `{ path, query, body }` 的嵌套对象，既与真实请求结构不符、又和 curl 重复，属误导，已废弃。
+ * 无请求体（GET / DELETE 等）则为空串，对应区块不渲染。
+ */
 const requestParamsText = computed<string>(() => {
-  const examples = selected.value?.endpoint.examples;
-  if (!examples) {
+  const requestBody = selected.value?.endpoint.examples?.requestBody;
+  if (requestBody === undefined || requestBody === null) {
     return '';
   }
-  const payload: Record<string, unknown> = {};
-  if (examples.pathParams) {
-    payload.path = examples.pathParams;
-  }
-  if (examples.query) {
-    payload.query = examples.query;
-  }
-  if (examples.requestBody) {
-    payload.body = examples.requestBody;
-  }
-  return Object.keys(payload).length ? JSON.stringify(payload, null, 2) : '';
+  return typeof requestBody === 'object' ? JSON.stringify(requestBody, null, 2) : String(requestBody);
 });
 
 /** 响应示例文本：对象按 JSON 格式化；字符串（文件流说明）原样展示 */
@@ -359,7 +354,7 @@ onMounted(loadDocs);
               </div>
             </template>
 
-            <!-- 请求示例：curl（可直接执行）+ 请求参数（路径 / 查询 / 请求体） -->
+            <!-- 请求示例：curl（可直接执行，含路径 / 查询参数）+ 请求体示例（仅 Body） -->
             <div class="flex flex-col gap-2">
               <div class="flex items-center justify-between">
                 <span class="text-sm font-semibold">请求示例（curl）</span>
