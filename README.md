@@ -165,8 +165,8 @@ ly-admin-api/
 │  ├─ prisma-comments.ts      # 把 schema 的 /// 同步为数据库表/字段 COMMENT
 │  └─ gen-api-docs.mjs        # 扫描控制器生成接口文档数据（docs:gen / build 的 prebuild）
 ├─ src/
-│  ├─ common/                 # 公共层：鉴权 / 权限守卫、数据范围、响应包装、异常过滤、操作日志、
-│  │                          #   文件服务、上传配置、JWT、验证码、登录限流、HTTP 访问日志、工具与常量
+│  ├─ common/                 # 公共层（按职责分组）：config 配置常量 / utils 工具 / exception 异常 /
+│  │                          #   http 适配与响应 / auth 鉴权体系 / log 日志 / file 文件 / ip 归属地 / redis
 │  ├─ modules/                # 业务模块（各含 module / controller / service / dto）：
 │  │                          #   auth / menu / users / roles / depts / dict / config /
 │  │                          #   dashboard / gen / files / profile / logs / docs
