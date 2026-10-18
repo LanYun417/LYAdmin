@@ -16,8 +16,14 @@ export class DeptUpsertDto {
   @Min(0, { message: MSG.min(0) })
   parentId?: number = 0;
 
+  /** 类型：1 部门 / 2 岗位（岗位为叶子节点，不能再挂下级） */
+  @IsInt({ message: MSG.isInt })
+  @Min(1, { message: '类型值不在允许范围' })
+  @Max(2, { message: '类型值不在允许范围' })
+  deptType!: number;
+
   @IsString({ message: MSG.isString })
-  @MaxLength(50, { message: '部门名称过长' })
+  @MaxLength(50, { message: '名称过长' })
   deptName!: string;
 
   @IsOptional()

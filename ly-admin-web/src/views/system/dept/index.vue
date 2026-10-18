@@ -1,5 +1,5 @@
 <script setup lang="ts">
-/** 部门管理页。模块职责：以树表展示部门并支持新增、编辑、删除。 */
+/** 部门 / 岗位管理页。模块职责：以树表展示部门与岗位并支持新增、编辑、删除；新增时可指定类型为部门或岗位。 */
 
 import { ElMessage, ElMessageBox } from '@/utils/element';
 import { deleteDeptApi, getDeptListApi } from '@/api/dept';
@@ -16,6 +16,26 @@ const editId = ref<number | undefined>(undefined);
 
 /** 状态字典（字典管理 → 通用状态 sys_common_status），用于列表状态列文案 */
 const { statusLabel } = useStatusDict();
+
+/** 部门 / 岗位数量：展平树按 deptType 计数（1 部门 / 2 岗位） */
+const typeCounts = computed(() => {
+  let dept = 0;
+  let post = 0;
+  const walk = (nodes: DeptNode[]): void => {
+    for (const node of nodes) {
+      if (node.deptType === 2) {
+        post += 1;
+      } else {
+        dept += 1;
+      }
+      if (node.children?.length) {
+        walk(node.children);
+      }
+    }
+  };
+  walk(deptTree.value);
+  return { dept, post };
+});
 
 /** 加载部门树 */
 async function loadTree(): Promise<void> {
@@ -46,7 +66,7 @@ function handleEdit(row: DeptNode): void {
 /** 删除 */
 async function handleDelete(row: DeptNode): Promise<void> {
   try {
-    await ElMessageBox.confirm(`确定删除部门「${row.deptName}」吗？`, '提示', { type: 'warning' });
+    await ElMessageBox.confirm(`确定删除「${row.deptName}」吗？`, '提示', { type: 'warning' });
   } catch {
     return;
   }
@@ -64,14 +84,18 @@ onMounted(() => {
   <div class="dept-page">
     <el-card shadow="never">
       <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-        <span class="text-[15px] font-semibold text-ink">部门列表</span>
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="text-[15px] font-semibold text-ink">部门 / 岗位列表</span>
+          <el-tag type="primary" effect="plain" size="small">部门 {{ typeCounts.dept }}</el-tag>
+          <el-tag type="warning" effect="plain" size="small">岗位 {{ typeCounts.post }}</el-tag>
+        </div>
         <div class="flex items-center gap-2">
           <el-button @click="loadTree">
             <template #icon><i class="bi bi-arrow-clockwise" /></template>刷新</el-button
           >
           <el-button v-permission="'system:dept:add'" type="primary" @click="handleAdd()">
             <template #icon><i class="bi bi-plus" /></template>
-            新增部门
+            新增
           </el-button>
         </div>
       </div>
@@ -84,7 +108,14 @@ onMounted(() => {
         default-expand-all
         border
       >
-        <el-table-column prop="deptName" label="部门名称" min-width="180" />
+        <el-table-column prop="deptName" label="名称" min-width="180" />
+        <el-table-column label="类型" width="90" align="center">
+          <template #default="{ row }">
+            <el-tag :type="row.deptType === 2 ? 'warning' : 'primary'" size="small">
+              {{ row.deptType === 2 ? '岗位' : '部门' }}
+            </el-tag>
+          </template>
+        </el-table-column>
         <el-table-column prop="leader" label="负责人" min-width="120" show-overflow-tooltip />
         <el-table-column prop="phone" label="联系电话" min-width="140" show-overflow-tooltip />
         <el-table-column prop="email" label="邮箱" min-width="180" show-overflow-tooltip />

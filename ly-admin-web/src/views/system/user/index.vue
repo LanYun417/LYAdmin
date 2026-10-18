@@ -204,7 +204,7 @@ onMounted(() => {
         </el-table-column>
         <el-table-column prop="username" label="账号" min-width="120" />
         <el-table-column prop="nickname" label="昵称" min-width="120" />
-        <el-table-column label="部门" min-width="140" show-overflow-tooltip>
+        <el-table-column label="部门 / 岗位" min-width="140" show-overflow-tooltip>
           <template #default="{ row }">{{ row.deptName || '-' }}</template>
         </el-table-column>
         <el-table-column label="角色" min-width="180">

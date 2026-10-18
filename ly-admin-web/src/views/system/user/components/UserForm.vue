@@ -182,7 +182,7 @@ async function handleSubmit(): Promise<void> {
           <el-option v-for="item in genderOptions" :key="item.value" :label="item.label" :value="item.value" />
         </el-select>
       </el-form-item>
-      <el-form-item v-if="showDeptField" label="部门">
+      <el-form-item v-if="showDeptField" label="部门 / 岗位">
         <el-tree-select
           v-model="form.deptId"
           :data="deptTree"

@@ -38,7 +38,7 @@ export class DeptController {
   /** 新增部门。 */
   @Post()
   @RequirePermissions('system:dept:add')
-  @OperationLog('部门管理', '新增')
+  @OperationLog('部门/岗位管理', '新增')
   create(@Body() dto: DeptUpsertDto): Promise<ResponseEnvelope<unknown>> {
     return this.deptService
       .createDept(dto)
@@ -48,7 +48,7 @@ export class DeptController {
   /** 编辑部门。 */
   @Put(':id')
   @RequirePermissions('system:dept:edit')
-  @OperationLog('部门管理', '编辑')
+  @OperationLog('部门/岗位管理', '编辑')
   update(@Param() params: IdParamDto, @Body() dto: DeptUpsertDto): Promise<ResponseEnvelope<unknown>> {
     return this.deptService
       .updateDept(params.id, dto)
@@ -58,7 +58,7 @@ export class DeptController {
   /** 删除部门。 */
   @Delete(':id')
   @RequirePermissions('system:dept:remove')
-  @OperationLog('部门管理', '删除')
+  @OperationLog('部门/岗位管理', '删除')
   remove(@Param() params: IdParamDto): Promise<ResponseEnvelope<null>> {
     return this.deptService
       .deleteDept(params.id)

@@ -192,6 +192,8 @@ export interface MenuUpsert {
 export interface DeptNode {
   id: number;
   parentId: number;
+  /** 类型：1 部门 / 2 岗位 */
+  deptType: number;
   deptName: string;
   sort: number;
   status: number;
@@ -211,6 +213,8 @@ export interface DeptQuery {
 /** 部门新增 / 编辑参数 */
 export interface DeptUpsert {
   parentId: number;
+  /** 类型：1 部门 / 2 岗位 */
+  deptType: number;
   deptName: string;
   leader?: string;
   phone?: string;

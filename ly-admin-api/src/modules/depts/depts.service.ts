@@ -21,6 +21,7 @@ export class DeptService {
   private toDeptNode(dept: {
     id: bigint;
     parentId: bigint;
+    deptType: number;
     deptName: string;
     sort: number;
     status: number;
@@ -31,6 +32,7 @@ export class DeptService {
     return {
       id: Number(dept.id),
       parentId: Number(dept.parentId),
+      deptType: Number(dept.deptType),
       deptName: dept.deptName,
       sort: Number(dept.sort),
       status: Number(dept.status),
@@ -77,22 +79,27 @@ export class DeptService {
     return this.toDeptNode(dept);
   }
 
-  /** 新增部门。 */
+  /** 新增部门 / 岗位。 */
   async createDept(input: DeptUpsertDto): Promise<DeptNode> {
     const parentId = input.parentId ?? 0;
     if (parentId !== 0) {
       const parent = await this.prisma.dept.findUnique({
         where: { id: BigInt(parentId) },
-        select: { id: true },
+        select: { id: true, deptType: true },
       });
       if (!parent) {
         throw AppException.badRequest('上级部门不存在');
+      }
+      // 岗位为叶子节点，不能再挂下级：禁止把岗位设为上级
+      if (parent.deptType === 2) {
+        throw AppException.badRequest('上级不能为岗位');
       }
     }
 
     const dept = await this.prisma.dept.create({
       data: {
         parentId: BigInt(parentId),
+        deptType: input.deptType,
         deptName: input.deptName,
         sort: input.sort ?? 0,
         status: input.status ?? 1,
@@ -111,6 +118,10 @@ export class DeptService {
     if (!dept) {
       throw AppException.notFound('部门不存在');
     }
+    // 类型创建后不可修改：避免部门↔岗位互改导致其下岗位/子部门归属错乱
+    if (Number(dept.deptType) !== input.deptType) {
+      throw AppException.badRequest('类型创建后不可修改');
+    }
     const parentId = input.parentId ?? 0;
     if (parentId === id) {
       throw AppException.badRequest('上级部门不能为自身');
@@ -118,10 +129,14 @@ export class DeptService {
     if (parentId !== 0) {
       const parent = await this.prisma.dept.findUnique({
         where: { id: BigInt(parentId) },
-        select: { id: true },
+        select: { id: true, deptType: true },
       });
       if (!parent) {
         throw AppException.badRequest('上级部门不存在');
+      }
+      // 岗位为叶子节点，不能再挂下级：禁止把岗位设为上级
+      if (parent.deptType === 2) {
+        throw AppException.badRequest('上级不能为岗位');
       }
       const descendants = await this.collectDescendantIds(id);
       if (descendants.includes(parentId)) {
@@ -133,6 +148,7 @@ export class DeptService {
       where: { id: BigInt(id) },
       data: {
         parentId: BigInt(parentId),
+        deptType: input.deptType,
         deptName: input.deptName,
         sort: input.sort ?? 0,
         status: input.status ?? 1,

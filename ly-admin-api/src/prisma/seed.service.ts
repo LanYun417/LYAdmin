@@ -252,7 +252,7 @@ const MENU_TREE: MenuSeedNode[] = [
       },
       {
         key: 'system:dept',
-        menuName: '部门管理',
+        menuName: '部门/岗位管理',
         menuType: MenuType.MENU,
         path: '/system/dept',
         component: 'system/dept/index',
@@ -264,28 +264,28 @@ const MENU_TREE: MenuSeedNode[] = [
         children: [
           {
             key: 'system:dept:query',
-            menuName: '查询部门',
+            menuName: '查询',
             menuType: MenuType.BUTTON,
             permission: 'system:dept:query',
             sort: 1,
           },
           {
             key: 'system:dept:add',
-            menuName: '新增部门',
+            menuName: '新增',
             menuType: MenuType.BUTTON,
             permission: 'system:dept:add',
             sort: 2,
           },
           {
             key: 'system:dept:edit',
-            menuName: '编辑部门',
+            menuName: '编辑',
             menuType: MenuType.BUTTON,
             permission: 'system:dept:edit',
             sort: 3,
           },
           {
             key: 'system:dept:remove',
-            menuName: '删除部门',
+            menuName: '删除',
             menuType: MenuType.BUTTON,
             permission: 'system:dept:remove',
             sort: 4,

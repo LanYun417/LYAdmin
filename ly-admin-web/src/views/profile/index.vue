@@ -85,7 +85,7 @@ async function handleAvatarUpload(options: UploadRequestOptions): Promise<void> 
             <el-descriptions-item label="昵称">{{ nickname }}</el-descriptions-item>
             <el-descriptions-item label="角色">{{ roles }}</el-descriptions-item>
             <!-- 部门由管理员在「用户管理」中分配，此处只读展示；未分配时显示 - -->
-            <el-descriptions-item label="所属部门">
+            <el-descriptions-item label="所属部门 / 岗位">
               {{ userStore.userInfo?.deptName || '-' }}
             </el-descriptions-item>
             <el-descriptions-item label="邮箱">

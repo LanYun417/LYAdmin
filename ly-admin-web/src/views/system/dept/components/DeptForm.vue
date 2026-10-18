@@ -1,5 +1,5 @@
 <script setup lang="ts">
-/** 部门新增 / 编辑弹窗。模块职责：维护部门信息与上级归属，并避免层级选择成环。 */
+/** 部门 / 岗位新增 / 编辑弹窗。模块职责：维护部门/岗位信息与上级归属，并避免层级选择成环。 */
 
 import { ElMessage } from '@/utils/element';
 import type { FormInstance, FormRules } from 'element-plus';
@@ -7,6 +7,10 @@ import { createDeptApi, getDeptDetailApi, getDeptTreeApi, updateDeptApi } from '
 import { useStatusDict } from '@/composables/useDict';
 import BasicDialog from '@/components/BasicDialog/index.vue';
 import type { DeptNode, DeptUpsert } from '@/types/api';
+
+/** 部门类型：1 部门 / 2 岗位 */
+const DEPT_TYPE_DEPT = 1;
+const DEPT_TYPE_POST = 2;
 
 /**
  * 表单内部数据模型。
@@ -40,6 +44,7 @@ const deptTree = ref<DeptNode[]>([]);
 
 const defaultForm = (): DeptFormModel => ({
   parentId: null,
+  deptType: DEPT_TYPE_DEPT,
   deptName: '',
   leader: '',
   phone: '',
@@ -51,9 +56,10 @@ const defaultForm = (): DeptFormModel => ({
 const form = reactive<DeptFormModel>(defaultForm());
 
 const rules: FormRules = {
-  deptName: [{ required: true, message: '请输入部门名称', trigger: 'blur' }],
-  // 字段隐藏时（无可选上级）不参与校验，此时提交即为顶级部门
-  parentId: [{ required: true, message: '请选择上级部门', trigger: 'change' }],
+  deptName: [{ required: true, message: '请输入名称', trigger: 'blur' }],
+  deptType: [{ required: true, message: '请选择类型', trigger: 'change' }],
+  // 字段隐藏时（无可选上级）不参与校验，此时提交即为顶级
+  parentId: [{ required: true, message: '请选择上级', trigger: 'change' }],
 };
 
 /** 过滤掉自身及其子树，避免上级选择成环 */
@@ -66,8 +72,22 @@ function filterSelf(nodes: DeptNode[], selfId?: number): DeptNode[] {
     }));
 }
 
-/** 可选的上级部门树（真实部门，剔除自身及其子树） */
-const parentOptions = computed<DeptNode[]>(() => filterSelf(deptTree.value, props.deptId));
+/** 仅保留部门节点（剔除岗位），用于「岗位只能挂在部门下」的上级过滤 */
+function filterDeptOnly(nodes: DeptNode[]): DeptNode[] {
+  return nodes
+    .filter((node) => node.deptType !== DEPT_TYPE_POST)
+    .map((node) => ({
+      ...node,
+      children: node.children ? filterDeptOnly(node.children) : [],
+    }));
+}
+
+/**
+ * 可选的上级树：岗位是叶子节点、不能作为任何节点的上级，
+ * 故无论本次新增/编辑的是部门还是岗位，上级下拉都只列「部门」节点；
+ * 同时剔除自身及其子树，避免成环。
+ */
+const parentOptions = computed<DeptNode[]>(() => filterDeptOnly(filterSelf(deptTree.value, props.deptId)));
 
 /**
  * 是否展示「上级部门」字段。
@@ -90,6 +110,7 @@ async function loadData(): Promise<void> {
     const detail = await getDeptDetailApi(props.deptId);
     Object.assign(form, {
       parentId: detail.parentId,
+      deptType: detail.deptType,
       deptName: detail.deptName,
       leader: detail.leader ?? '',
       phone: detail.phone ?? '',
@@ -148,14 +169,21 @@ async function handleSubmit(): Promise<void> {
 <template>
   <BasicDialog
     :model-value="modelValue"
-    :title="isEdit ? '编辑部门' : '新增部门'"
+    :title="isEdit ? '编辑' : '新增'"
     width="560px"
     :confirm-loading="submitting"
     @update:model-value="handleClose"
     @confirm="handleSubmit"
   >
     <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
-      <el-form-item v-if="showParentField" label="上级部门" prop="parentId">
+      <el-form-item label="类型" prop="deptType">
+        <el-radio-group v-model="form.deptType" :disabled="isEdit">
+          <el-radio :value="DEPT_TYPE_DEPT">部门</el-radio>
+          <el-radio :value="DEPT_TYPE_POST">岗位</el-radio>
+        </el-radio-group>
+        <span v-if="isEdit" class="ml-2 text-[12px] text-muted">类型创建后不可修改</span>
+      </el-form-item>
+      <el-form-item v-if="showParentField" label="上级" prop="parentId">
         <el-tree-select
           v-model="form.parentId"
           :data="parentOptions"
@@ -163,20 +191,20 @@ async function handleSubmit(): Promise<void> {
           node-key="id"
           check-strictly
           :render-after-expand="false"
-          placeholder="请选择上级部门"
+          placeholder="请选择上级"
           style="width: 100%"
         />
       </el-form-item>
-      <el-form-item label="部门名称" prop="deptName">
-        <el-input v-model="form.deptName" placeholder="请输入部门名称" />
+      <el-form-item label="名称" prop="deptName">
+        <el-input v-model="form.deptName" placeholder="请输入名称" />
       </el-form-item>
-      <el-form-item label="负责人">
+      <el-form-item v-if="form.deptType !== DEPT_TYPE_POST" label="负责人">
         <el-input v-model="form.leader" placeholder="请输入负责人" />
       </el-form-item>
-      <el-form-item label="联系电话">
+      <el-form-item v-if="form.deptType !== DEPT_TYPE_POST" label="联系电话">
         <el-input v-model="form.phone" placeholder="请输入联系电话" />
       </el-form-item>
-      <el-form-item label="邮箱">
+      <el-form-item v-if="form.deptType !== DEPT_TYPE_POST" label="邮箱">
         <el-input v-model="form.email" placeholder="请输入邮箱" />
       </el-form-item>
       <el-form-item label="排序">

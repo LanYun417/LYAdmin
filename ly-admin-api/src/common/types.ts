@@ -69,6 +69,8 @@ export interface TreeItem {
 export interface DeptNode {
   id: number;
   parentId: number;
+  /** 类型：1 部门 / 2 岗位 */
+  deptType: number;
   deptName: string;
   sort: number;
   status: number;
