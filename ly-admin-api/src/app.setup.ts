@@ -19,6 +19,7 @@ import express, { type NextFunction, type Request, type Response } from 'express
 import { config } from './common/config/config.js';
 import { HotlinkGuardMiddleware, ImageScaleMiddleware } from './common/file/file-guards.js';
 import { StaticAuthMiddleware } from './common/http/static-auth.middleware.js';
+import { securityHeaders } from './common/http/security-headers.js';
 
 /** 构建期预压缩副本可覆盖的文本类型（扩展名 → Content-Type）。 */
 const PRECOMPRESSED_TYPES: Record<string, string> = {
@@ -120,6 +121,10 @@ export function configureApp(app: NestExpressApplication, options: AppSetupOptio
 
   // 响应压缩：>1KB 的可压缩响应（JSON / JS / CSS / SVG）按 Accept-Encoding 协商 br / gzip
   app.use(compression({ threshold: 1024 }));
+
+  // 安全响应头：nosniff / 点击劫持 / Referrer / 权限策略（+ 可选 HSTS、CSP）
+  // 放在最前，保证错误响应（401/403/429/503）也带上这些头
+  app.use(securityHeaders());
 
   // 请求体上限 2mb
   app.useBodyParser('json', { limit: '2mb' });

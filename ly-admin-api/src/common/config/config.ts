@@ -270,6 +270,29 @@ export const config = {
     /** 是否输出 HTTP 日志 count 缓存的命中/未命中调试日志（默认 false） */
     httpCountCacheDebug: toBoolean(process.env.LOG_HTTP_COUNT_CACHE_DEBUG, false),
   },
+  /** 安全响应头（零依赖实现，见 common/http/security-headers.ts） */
+  security: {
+    /**
+     * Content-Security-Policy。默认空 = **不下发**：本项目前端是 Vue SPA，
+     * Element Plus / Tailwind / ECharts 会注入内联样式与 canvas，
+     * 过严的 CSP 会直接白屏，必须按实际部署显式配置（如
+     * `default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'`）。
+     */
+    csp: process.env.CSP_POLICY ?? '',
+    /**
+     * 是否下发 HSTS。仅在部署于 HTTPS 反向代理之后才有意义，
+     * 故默认跟随 NODE_ENV=production，可由 SECURITY_HSTS 覆盖。
+     */
+    hsts: toBoolean(process.env.SECURITY_HSTS, process.env.NODE_ENV === 'production'),
+  },
+  /** 接口限流（按 IP 固定窗口；Redis 不可用时自动降级放行，不阻断业务） */
+  rateLimit: {
+    enabled: toBoolean(process.env.RATE_LIMIT_ENABLED, true),
+    /** 窗口长度（ms），默认 1 分钟 */
+    windowMs: toNumber(process.env.RATE_LIMIT_WINDOW_MS, 60_000),
+    /** 单窗口内单 IP 的默认上限（登录/验证码/文档等敏感接口另有收紧值，见中间件） */
+    max: toNumber(process.env.RATE_LIMIT_MAX, 300),
+  },
 } as const;
 
 export type AppConfig = typeof config;

@@ -12,6 +12,7 @@ import { OperationLogInterceptor } from './common/log/operation-log.interceptor.
 import { CommonModule } from './common/common.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { HttpAccessLoggerMiddleware } from './common/log/http-access-log.middleware.js';
+import { RateLimitMiddleware } from './common/http/rate-limit.middleware.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { MenuModule } from './modules/menu/menu.module.js';
 import { UsersModule } from './modules/users/users.module.js';
@@ -65,6 +66,9 @@ export class AppModule implements NestModule {
     // 视作 `/api/*` 并每次启动打一条路由转换告警（自动转成 `/api/{*path}`）。
     // 显式写等价形式即可消警，实际覆盖范围不变（仅 /api 下的请求；静态资源不计入访问日志）。
     consumer.apply(HttpAccessLoggerMiddleware).forRoutes('{*path}');
+
+    // 接口限流：注册在访问日志之后 → 被限流的请求同样留下访问记录，便于排查刷量来源
+    consumer.apply(RateLimitMiddleware).forRoutes('{*path}');
 
     // 静态资源链（鉴权 → 防盗链 → 图片缩放）不在这里挂：
     // consumer.apply 的路由会被全局前缀改写成 /api/static/...，永远匹配不到真实的 /static/...，

@@ -26,6 +26,20 @@ describe('应用装配冒烟 (e2e)', () => {
     await app.close();
   });
 
+  it('所有响应都带安全响应头（错误响应也不例外）', async () => {
+    const ok = await request(app.getHttpServer()).get('/api').expect(200);
+    expect(ok.headers['x-content-type-options']).toBe('nosniff');
+    expect(ok.headers['x-frame-options']).toBe('SAMEORIGIN');
+    expect(ok.headers['referrer-policy']).toBe('strict-origin-when-cross-origin');
+    expect(ok.headers['permissions-policy']).toContain('geolocation=()');
+    // 框架标识不暴露
+    expect(ok.headers['x-powered-by']).toBeUndefined();
+
+    // 401 也走同一套头（中间件挂在最前，早于守卫）
+    const unauthorized = await request(app.getHttpServer()).get('/api/users').expect(401);
+    expect(unauthorized.headers['x-content-type-options']).toBe('nosniff');
+  });
+
   it('GET /api 健康检查返回统一响应信封', async () => {
     const res = await request(app.getHttpServer()).get('/api').expect(200);
     expect(res.body).toMatchObject({ code: 200, message: 'success' });
