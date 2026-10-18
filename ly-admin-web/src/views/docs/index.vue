@@ -187,6 +187,27 @@ async function loadDocs(): Promise<void> {
   }
 }
 
+/** 下载 OpenAPI 3.0 文档（后端 GET /api/docs/openapi.json）。 */
+async function downloadOpenApi(): Promise<void> {
+  try {
+    const res = await fetch('/api/docs/openapi.json');
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
+    }
+    const text = await res.text();
+    const blob = new Blob([text], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'openapi.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    ElMessage.success('已下载 openapi.json');
+  } catch {
+    ElMessage.error('下载失败，请确认后端已启动');
+  }
+}
+
 onMounted(loadDocs);
 </script>
 
@@ -201,8 +222,11 @@ onMounted(loadDocs);
           <span v-if="generatedText" class="text-xs text-muted">生成于 {{ generatedText }}</span>
         </div>
         <!-- 外层定宽：el-input 自身 width:100%，由这层 Tailwind 盒子控制实际宽度（窄屏铺满） -->
-        <div class="w-full sm:w-[260px]">
-          <el-input v-model="keyword" clearable placeholder="搜索路径 / 说明 / 权限码" />
+        <div class="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto">
+          <el-button size="small" @click="downloadOpenApi">下载 OpenAPI</el-button>
+          <div class="w-full sm:w-[260px]">
+            <el-input v-model="keyword" clearable placeholder="搜索路径 / 说明 / 权限码" />
+          </div>
         </div>
       </div>
     </template>

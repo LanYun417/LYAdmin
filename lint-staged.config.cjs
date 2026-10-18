@@ -32,6 +32,7 @@ const IGNORED_PATTERNS = [
   '**/ly-admin-api/src/generated/**',
   // 接口文档数据（由 scripts/gen-api-docs.mjs 生成）
   '**/ly-admin-api/src/modules/docs/api-docs.generated.ts',
+  '**/ly-admin-api/src/modules/docs/openapi.generated.ts',
   // 运行时数据目录
   '**/ly-admin-api/uploads/**',
   '**/ly-admin-api/logs/**',

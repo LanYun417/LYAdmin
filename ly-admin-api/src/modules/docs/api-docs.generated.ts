@@ -1460,6 +1460,21 @@ export const API_DOCS: ApiDocGroup[] = [
             "pageSize": 10
           }
         }
+      },
+      {
+        "method": "GET",
+        "path": "/api/docs/openapi.json",
+        "summary": "OpenAPI 3.0 文档（注入响应示例，server 指向当前运行实例，可直接被 Swagger UI 消费）",
+        "permission": [],
+        "isPublic": true,
+        "action": "",
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/docs/openapi.json?page=1&pageSize=10\"",
+          "query": {
+            "page": 1,
+            "pageSize": 10
+          }
+        }
       }
     ]
   },

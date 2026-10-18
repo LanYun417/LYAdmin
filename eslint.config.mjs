@@ -31,6 +31,7 @@ export default [
       'ly-admin-api/src/generated/**',
       // 后端：接口文档数据（由 scripts/gen-api-docs.mjs 生成）
       'ly-admin-api/src/modules/docs/api-docs.generated.ts',
+      'ly-admin-api/src/modules/docs/openapi.generated.ts',
       'ly-admin-api/uploads/**',
       'ly-admin-api/logs/**',
       'ly-admin-api/cache/**',

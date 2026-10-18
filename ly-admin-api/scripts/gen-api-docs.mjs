@@ -24,6 +24,8 @@ const SRC_DIR = join(API_ROOT, 'src');
 /** 额外纳入扫描的非 controller 文件（内含 @Controller 的类，如健康检查）。 */
 const EXTRA_FILES = [join(SRC_DIR, 'app.module.ts')];
 const OUT_FILE = join(SRC_DIR, 'modules', 'docs', 'api-docs.generated.ts');
+/** OpenAPI 3.0 导出文件（由同一份扫描数据重映射生成，供 Swagger UI / Postman / 代码生成使用）。 */
+const OUT_OPENAPI = join(SRC_DIR, 'modules', 'docs', 'openapi.generated.ts');
 /** 全局路由前缀（与 app.setup.ts 的 setGlobalPrefix 保持一致）。 */
 const GLOBAL_PREFIX = 'api';
 
@@ -429,6 +431,10 @@ function parseControllerFile(file, dtoMap) {
         isPublic,
         action,
         examples,
+        // 以下为生成期内部字段，供 OpenAPI 导出重映射使用，不进入对外产物（buildSource 已剥离）
+        bodyDto,
+        queryDto,
+        isRaw,
       });
     }
 
@@ -465,7 +471,20 @@ function pickGroup(moduleNames, classJsDoc, className) {
 
 /** 生成 TypeScript 源码。 */
 function buildSource(groups) {
-  const body = JSON.stringify(groups, null, 2);
+  // 仅保留对外字段，剥离生成期内部字段（bodyDto / queryDto / isRaw），避免泄漏到产物
+  const publicGroups = groups.map((g) => ({
+    group: g.group,
+    endpoints: g.endpoints.map((e) => ({
+      method: e.method,
+      path: e.path,
+      summary: e.summary,
+      permission: e.permission,
+      isPublic: e.isPublic,
+      action: e.action,
+      examples: e.examples,
+    })),
+  }));
+  const body = JSON.stringify(publicGroups, null, 2);
   return `/**
  * 接口文档数据（自动生成，请勿手工编辑）。
  *
@@ -475,6 +494,192 @@ function buildSource(groups) {
 import type { ApiDocGroup } from './docs.types.js';
 
 export const API_DOCS: ApiDocGroup[] = ${body};
+`;
+}
+
+/* ----------------------------- OpenAPI 3.0 导出 ----------------------------- */
+
+/**
+ * 由同一份扫描数据重映射为 OpenAPI 3.0.3 文档。
+ *
+ * 设计取舍：
+ * - 请求侧（参数 / 请求体）直接来自已解析的 DTO，字段类型映射为 OpenAPI schema；
+ * - 响应统一信封 `{ code, message, data }` 由 `envelopeSchema` 建模，`data` 的类型做**最佳推断**：
+ *   写操作（POST/PUT/PATCH）带回参实体时引用请求 DTO schema；列表类 GET 给通用分页信封；其余为自由对象；
+ * - 具体的响应**示例值**由运行时 `api-examples.ts` 注入（见 docs.controller 的 openapi.json 端点），
+ *   因此此处只用 schema 描述形状、用 example 描述字段样例。
+ */
+function buildOpenApi(groups, dtoMap, version) {
+  const paths = {};
+  const schemas = {};
+
+  const innerSchema = (raw, dm, sc) => {
+    const t = raw.trim();
+    if (t === 'number' || t === 'float' || t === 'double' || t === 'decimal') return { type: 'number' };
+    if (t === 'bigint' || t === 'integer' || t === 'int') return { type: 'integer' };
+    if (t === 'boolean') return { type: 'boolean' };
+    if (t === 'Date') return { type: 'string', format: 'date-time' };
+    if (t === 'string') return { type: 'string' };
+    if (dm.has(t)) {
+      ensureSchema(t, dm, sc);
+      return { $ref: `#/components/schemas/${t}` };
+    }
+    return { type: 'string' };
+  };
+
+  const schemaForField = (f, dm, sc) => {
+    const t = (f.type || 'unknown').trim();
+    let base;
+    if (t.endsWith('[]')) {
+      base = { type: 'array', items: innerSchema(t.slice(0, -2), dm, sc) };
+    } else {
+      const arr = t.match(/^Array<(.+)>$/);
+      if (arr) base = { type: 'array', items: innerSchema(arr[1], dm, sc) };
+      else base = innerSchema(t, dm, sc);
+    }
+    if (!base.$ref) {
+      if (f.comment) base.description = f.comment;
+      const ex = sampleValue(f);
+      if (ex !== undefined && ex !== '') base.example = ex;
+    }
+    return base;
+  };
+
+  const ensureSchema = (className, dm, sc) => {
+    if (sc[className]) return;
+    const fields = dm.get(className);
+    if (!fields) return;
+    sc[className] = { type: 'object', properties: {}, required: [] }; // 占位，避免自引用死循环
+    for (const f of fields) {
+      sc[className].properties[f.name] = schemaForField(f, dm, sc);
+      if (!f.optional) sc[className].required.push(f.name);
+    }
+    if (!sc[className].required.length) delete sc[className].required;
+  };
+
+  const dataSchemaFor = (ep, dm, sc) => {
+    if (ep.bodyDto && dm.has(ep.bodyDto) && ['POST', 'PUT', 'PATCH'].includes(ep.method)) {
+      ensureSchema(ep.bodyDto, dm, sc);
+      return { $ref: `#/components/schemas/${ep.bodyDto}` };
+    }
+    if (ep.method === 'GET' && !ep.bodyDto) {
+      return {
+        type: 'object',
+        properties: {
+          list: { type: 'array', items: {} },
+          total: { type: 'integer', example: 0 },
+          page: { type: 'integer', example: 1 },
+          pageSize: { type: 'integer', example: 10 },
+        },
+      };
+    }
+    return {};
+  };
+
+  const envelopeSchema = (ep, dm, sc) => ({
+    type: 'object',
+    properties: {
+      code: { type: 'integer', example: 0, description: '业务码，0 表示成功' },
+      message: { type: 'string', example: 'success' },
+      data: dataSchemaFor(ep, dm, sc),
+    },
+    required: ['code', 'message', 'data'],
+  });
+
+  for (const { group, endpoints } of groups) {
+    for (const ep of endpoints) {
+      const oasPath = ep.path.replace(/:([A-Za-z0-9_]+)/g, '{$1}');
+      const op = {};
+      op.tags = [group];
+      if (ep.summary) op.summary = ep.summary;
+      op.operationId = `${ep.method.toLowerCase()}_${ep.path.replace(/[^a-zA-Z0-9]/g, '_')}`;
+
+      const params = [];
+      for (const name of pathParamNames(ep.path)) {
+        params.push({ name, in: 'path', required: true, schema: { type: 'string' }, description: `路径参数 ${name}` });
+      }
+      if (ep.queryDto && dtoMap.has(ep.queryDto)) {
+        for (const f of dtoMap.get(ep.queryDto)) {
+          const p = { name: f.name, in: 'query', required: !f.optional, schema: schemaForField(f, dtoMap, schemas) };
+          if (f.comment) p.description = f.comment;
+          params.push(p);
+        }
+      } else if (ep.method === 'GET' && pathParamNames(ep.path).length === 0 && !ep.isRaw) {
+        params.push({
+          name: 'page',
+          in: 'query',
+          required: false,
+          schema: { type: 'integer', default: 1 },
+          description: '页码',
+        });
+        params.push({
+          name: 'pageSize',
+          in: 'query',
+          required: false,
+          schema: { type: 'integer', default: 10 },
+          description: '每页条数',
+        });
+      }
+      if (params.length) op.parameters = params;
+
+      if (ep.bodyDto && dtoMap.has(ep.bodyDto)) {
+        ensureSchema(ep.bodyDto, dtoMap, schemas);
+        op.requestBody = {
+          required: true,
+          content: { 'application/json': { schema: { $ref: `#/components/schemas/${ep.bodyDto}` } } },
+        };
+      }
+
+      if (ep.isRaw) {
+        op.responses = {
+          200: {
+            description: '文件流（CSV / ZIP / 附件），响应体为二进制，无 JSON 信封',
+            content: { 'application/octet-stream': { schema: { type: 'string', format: 'binary' } } },
+          },
+        };
+      } else {
+        op.responses = {
+          200: {
+            description: '成功（统一信封 { code, message, data }）',
+            content: { 'application/json': { schema: envelopeSchema(ep, dtoMap, schemas) } },
+          },
+        };
+      }
+
+      if (!ep.isPublic) op.security = [{ bearerAuth: [] }];
+      paths[oasPath] = paths[oasPath] || {};
+      paths[oasPath][ep.method.toLowerCase()] = op;
+    }
+  }
+
+  return {
+    openapi: '3.0.3',
+    info: {
+      title: 'LY Admin API',
+      version,
+      description: 'LY Admin 后台接口（OpenAPI 3.0 导出）。所有成功响应统一包装为 { code, message, data }。',
+    },
+    servers: [{ url: DOC_BASE_URL, description: '本地开发环境' }],
+    tags: groups.map((g) => ({ name: g.group })),
+    paths,
+    components: {
+      securitySchemes: { bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' } },
+      schemas,
+    },
+  };
+}
+
+/** 生成 OpenAPI 文档的 TypeScript 源码。 */
+function buildOpenApiSource(doc) {
+  const body = JSON.stringify(doc, null, 2);
+  return `/**
+ * OpenAPI 3.0 文档（自动生成，请勿手工编辑）。
+ *
+ * 由 \`scripts/gen-api-docs.mjs\` 在构建期从同一份控制器/DTO 扫描数据重映射生成；
+ * 运行时由 \`docs.controller\` 的 \`GET /api/docs/openapi.json\` 注入响应示例后返回。
+ * 可用于 Swagger UI / Redoc / Postman 导入 / 客户端代码生成。
+ */
+export const OPENAPI_DOC: Record<string, unknown> = ${body};
 `;
 }
 
@@ -516,8 +721,16 @@ function main() {
   mkdirSync(dirname(OUT_FILE), { recursive: true });
   writeFileSync(OUT_FILE, buildSource(groups), 'utf8');
 
+  // OpenAPI 3.0 导出：同一份扫描数据的规范重映射
+  const pkg = JSON.parse(readFileSync(join(API_ROOT, 'package.json'), 'utf8'));
+  const openapiDoc = buildOpenApi(groups, dtoMap, pkg.version || '1.0.0');
+  mkdirSync(dirname(OUT_OPENAPI), { recursive: true });
+  writeFileSync(OUT_OPENAPI, buildOpenApiSource(openapiDoc), 'utf8');
+
   const total = groups.reduce((sum, g) => sum + g.endpoints.length, 0);
-  console.log(`[ApiDocs] 已生成 ${groups.length} 个模块 / ${total} 个接口（解析 ${dtoMap.size} 个 DTO）→ ${OUT_FILE}`);
+  console.log(
+    `[ApiDocs] 已生成 ${groups.length} 个模块 / ${total} 个接口（解析 ${dtoMap.size} 个 DTO）→ ${OUT_FILE} 与 ${OUT_OPENAPI}`,
+  );
 }
 
 main();
