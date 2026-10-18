@@ -95,6 +95,9 @@ async function handleExport(): Promise<void> {
             <template #icon><i class="bi bi-download" /></template>
             导出
           </el-button>
+          <el-button @click="getList">
+            <template #icon><i class="bi bi-arrow-clockwise" /></template>刷新</el-button
+          >
           <el-button
             v-permission="'log:login:remove'"
             type="danger"
@@ -106,9 +109,6 @@ async function handleExport(): Promise<void> {
             <template #icon><i class="bi bi-trash" /></template>
             删除{{ selected.length > 0 ? `（${selected.length}）` : '' }}
           </el-button>
-          <el-button @click="getList">
-            <template #icon><i class="bi bi-arrow-clockwise" /></template>刷新</el-button
-          >
         </div>
       </div>
 

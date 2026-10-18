@@ -248,6 +248,9 @@ onMounted(() => {
             <template #icon><i class="bi bi-download" /></template>
             导出
           </el-button>
+          <el-button @click="getList">
+            <template #icon><i class="bi bi-arrow-clockwise" /></template>刷新</el-button
+          >
           <el-button
             v-permission="'log:http:remove'"
             type="danger"
@@ -259,9 +262,6 @@ onMounted(() => {
             <template #icon><i class="bi bi-trash" /></template>
             删除{{ selected.length > 0 ? `（${selected.length}）` : '' }}
           </el-button>
-          <el-button @click="getList">
-            <template #icon><i class="bi bi-arrow-clockwise" /></template>刷新</el-button
-          >
           <el-button v-permission="'log:http:clear'" type="danger" plain @click="handleClear">
             <template #icon><i class="bi bi-trash" /></template>清空所有日志</el-button
           >

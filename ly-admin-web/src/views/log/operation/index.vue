@@ -118,6 +118,9 @@ function methodTag(method: string): EpTagType {
             <template #icon><i class="bi bi-download" /></template>
             导出
           </el-button>
+          <el-button @click="getList">
+            <template #icon><i class="bi bi-arrow-clockwise" /></template>刷新</el-button
+          >
           <el-button
             v-permission="'log:operation:remove'"
             type="danger"
@@ -129,9 +132,6 @@ function methodTag(method: string): EpTagType {
             <template #icon><i class="bi bi-trash" /></template>
             删除{{ selected.length > 0 ? `（${selected.length}）` : '' }}
           </el-button>
-          <el-button @click="getList">
-            <template #icon><i class="bi bi-arrow-clockwise" /></template>刷新</el-button
-          >
         </div>
       </div>
 
