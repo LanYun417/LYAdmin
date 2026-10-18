@@ -12,6 +12,7 @@ import { AppException } from '../../common/exception/app.exception.js';
 import { buildPageResult, parsePagination, readString } from '../../common/utils/utils.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import type { PageResult } from '../../common/types.js';
+import { recordAfter, recordBefore } from '../../common/log/operation-snapshot.js';
 import type { CreateConfigDto, UpdateConfigDto } from './dto/config.dto.js';
 
 /** 参数（对外 DTO）。 */
@@ -138,6 +139,13 @@ export class ConfigService {
     if (!existing) {
       throw AppException.notFound('参数不存在');
     }
+    // 变更留痕：系统参数直接影响运行行为，改动前值必须留档
+    recordBefore({
+      configKey: existing.configKey,
+      configName: existing.configName,
+      configValue: existing.configValue,
+      remark: existing.remark,
+    });
     const row = await this.prisma.sysConfig.update({
       where: { id: BigInt(id) },
       data: {
@@ -145,6 +153,12 @@ export class ConfigService {
         configValue: input.configValue ?? '',
         remark: input.remark || null,
       },
+    });
+    recordAfter({
+      configKey: row.configKey,
+      configName: row.configName,
+      configValue: row.configValue,
+      remark: row.remark,
     });
     return this.toSysConfigBrief(row);
   }

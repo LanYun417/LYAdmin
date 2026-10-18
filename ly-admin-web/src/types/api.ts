@@ -256,6 +256,14 @@ export interface OperationLog {
   method: string;
   url: string;
   params: string | null;
+  /**
+   * 变更前数据（JSON 文本）。
+   * 仅「支持留痕的写操作」会返回内容（用户/角色/部门编辑、系统参数修改），
+   * 其余接口为 null —— 不编造数据，前端需按「无留痕」渲染。
+   */
+  beforeData: string | null;
+  /** 变更后数据（JSON 文本），口径同 beforeData */
+  afterData: string | null;
   duration: number;
   result: number;
   errorMessage: string | null;

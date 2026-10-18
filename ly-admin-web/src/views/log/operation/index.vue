@@ -8,6 +8,7 @@ import { useLogDelete } from '@/composables/useLogDelete';
 import { formatDate, formatDateTime, formatDuration } from '@/utils/format';
 import { downloadBlob } from '@/utils/download';
 import type { OperationLog } from '@/types/api';
+import BasicDialog from '@/components/BasicDialog/index.vue';
 import Pagination from '@/components/Pagination/index.vue';
 import SearchForm from '@/components/SearchForm/index.vue';
 
@@ -15,6 +16,67 @@ defineOptions({ name: 'LogOperation' });
 
 const exporting = ref(false);
 const dateRange = ref<string[]>([]);
+
+/* ------------------------------ 变更留痕 ------------------------------ */
+
+/** 变更留痕弹窗 */
+const snapshotVisible = ref(false);
+const snapshotRow = ref<OperationLog | null>(null);
+
+/** 一行变更对比。 */
+interface SnapshotDiffRow {
+  field: string;
+  before: string;
+  after: string;
+  changed: boolean;
+}
+
+/** 解析 JSON 文本为对象（空/非法一律当作空对象，不抛错打断渲染）。 */
+function parseSnapshot(text: string | null | undefined): Record<string, unknown> {
+  if (!text) {
+    return {};
+  }
+  try {
+    const parsed: unknown = JSON.parse(text);
+    return parsed !== null && typeof parsed === 'object' ? (parsed as Record<string, unknown>) : {};
+  } catch {
+    return {};
+  }
+}
+
+/** 单元格展示值（对象/数组走紧凑 JSON，null/空 统一显示 '-'）。 */
+function formatSnapshotValue(value: unknown): string {
+  if (value === null || value === undefined || value === '') {
+    return '-';
+  }
+  return typeof value === 'string' ? value : JSON.stringify(value);
+}
+
+/**
+ * 字段级对比：取前后键的并集逐字段比对。
+ * 只做「值是否相等」的判断（不做文本 diff）——审计关心的是"哪个字段被改了"。
+ */
+const snapshotDiff = computed<SnapshotDiffRow[]>(() => {
+  const before = parseSnapshot(snapshotRow.value?.beforeData);
+  const after = parseSnapshot(snapshotRow.value?.afterData);
+  const fields = Array.from(new Set([...Object.keys(before), ...Object.keys(after)]));
+  return fields.map((field) => {
+    const beforeText = formatSnapshotValue(before[field]);
+    const afterText = formatSnapshotValue(after[field]);
+    return { field, before: beforeText, after: afterText, changed: beforeText !== afterText };
+  });
+});
+
+/** 是否记录了变更前后值（未采集的接口为 null） */
+function hasSnapshot(row: OperationLog): boolean {
+  return Boolean(row.beforeData || row.afterData);
+}
+
+/** 打开变更留痕弹窗 */
+function openSnapshot(row: OperationLog): void {
+  snapshotRow.value = row;
+  snapshotVisible.value = true;
+}
 
 const { loading, list, total, query, getList, search, reset, changePage, changePageSize } = useTable(
   (p) =>
@@ -147,6 +209,19 @@ function methodTag(method: string): EpTagType {
         </el-table-column>
         <el-table-column prop="url" label="URL" min-width="180" show-overflow-tooltip />
         <el-table-column prop="params" label="参数" min-width="200" show-overflow-tooltip />
+        <el-table-column label="变更留痕" width="110" align="center">
+          <template #default="{ row }">
+            <el-button
+              v-if="hasSnapshot(row as OperationLog)"
+              type="primary"
+              link
+              @click="openSnapshot(row as OperationLog)"
+            >
+              查看变更
+            </el-button>
+            <span v-else class="text-muted">-</span>
+          </template>
+        </el-table-column>
         <el-table-column label="耗时" width="100" align="center">
           <template #default="{ row }">{{ formatDuration(row.duration) }}</template>
         </el-table-column>
@@ -181,5 +256,31 @@ function methodTag(method: string): EpTagType {
         @current-change="changePage"
       />
     </el-card>
+
+    <!-- 变更留痕：字段级前后对比（只对比值是否相等，不做文本 diff） -->
+    <BasicDialog v-model="snapshotVisible" title="变更留痕" width="720px" :show-footer="false">
+      <el-descriptions :column="2" border size="small">
+        <el-descriptions-item label="模块">{{ snapshotRow?.module || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="动作">{{ snapshotRow?.action || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="操作人">{{ snapshotRow?.username || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="时间">
+          {{ snapshotRow ? formatDateTime(snapshotRow.createdAt) : '-' }}
+        </el-descriptions-item>
+      </el-descriptions>
+
+      <el-table :data="snapshotDiff" class="mt-4" max-height="360" border size="small">
+        <el-table-column prop="field" label="字段" width="140" />
+        <el-table-column label="变更前" min-width="200">
+          <template #default="{ row }">
+            <span :class="row.changed ? 'text-danger' : ''">{{ row.before }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="变更后" min-width="200">
+          <template #default="{ row }">
+            <span :class="row.changed ? 'text-success font-medium' : ''">{{ row.after }}</span>
+          </template>
+        </el-table-column>
+      </el-table>
+    </BasicDialog>
   </div>
 </template>

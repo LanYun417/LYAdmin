@@ -45,6 +45,10 @@ model OperationLog {
   url          String   @db.VarChar(255)
   /// 请求参数（密码脱敏）
   params       String?  @db.Text
+  /// 变更前数据（JSON 文本；敏感字段已脱敏、超长已截断，仅支持的写操作会写）
+  beforeData   String?  @map("before_data") @db.VarChar(2000)
+  /// 变更后数据（JSON 文本；口径同 before_data）
+  afterData    String?  @map("after_data") @db.VarChar(2000)
   /// 耗时 ms
   duration     Int      @default(0)
   /// 1 成功 / 0 失败

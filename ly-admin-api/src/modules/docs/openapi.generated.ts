@@ -3757,7 +3757,7 @@ export const OPENAPI_DOC: Record<string, unknown> = {
         "tags": [
           "日志管理"
         ],
-        "summary": "导出 HTTP 访问日志 CSV",
+        "summary": "导出 HTTP 访问日志 CSV（流式）",
         "operationId": "get__api_logs_http_export",
         "responses": {
           "200": {
@@ -3787,42 +3787,6 @@ export const OPENAPI_DOC: Record<string, unknown> = {
         "summary": "登录日志列表",
         "operationId": "get__api_logs_login",
         "parameters": [
-          {
-            "name": "username",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            },
-            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
-          },
-          {
-            "name": "status",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer"
-            },
-            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
-          },
-          {
-            "name": "startTime",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            },
-            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
-          },
-          {
-            "name": "endTime",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            },
-            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
-          },
           {
             "name": "page",
             "in": "query",
@@ -3905,7 +3869,7 @@ export const OPENAPI_DOC: Record<string, unknown> = {
         "tags": [
           "日志管理"
         ],
-        "summary": "导出登录日志 CSV",
+        "summary": "导出登录日志 CSV（流式：分批查、逐批写，内存不随行数增长）",
         "operationId": "get__api_logs_login_export",
         "responses": {
           "200": {
@@ -3935,51 +3899,6 @@ export const OPENAPI_DOC: Record<string, unknown> = {
         "summary": "操作日志列表",
         "operationId": "get__api_logs_operation",
         "parameters": [
-          {
-            "name": "module",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            },
-            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
-          },
-          {
-            "name": "username",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            },
-            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
-          },
-          {
-            "name": "result",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer"
-            },
-            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
-          },
-          {
-            "name": "startTime",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            },
-            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
-          },
-          {
-            "name": "endTime",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            },
-            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
-          },
           {
             "name": "page",
             "in": "query",
@@ -4062,7 +3981,7 @@ export const OPENAPI_DOC: Record<string, unknown> = {
         "tags": [
           "日志管理"
         ],
-        "summary": "导出操作日志 CSV",
+        "summary": "导出操作日志 CSV（流式）",
         "operationId": "get__api_logs_operation_export",
         "responses": {
           "200": {
@@ -6235,7 +6154,7 @@ export const OPENAPI_DOC: Record<string, unknown> = {
           },
           "password": {
             "type": "string",
-            "description": "明文密码：6~20 位",
+            "description": "明文密码：长度与复杂度统一由 common/auth/password-policy.ts 决定",
             "example": "123456"
           },
           "nickname": {

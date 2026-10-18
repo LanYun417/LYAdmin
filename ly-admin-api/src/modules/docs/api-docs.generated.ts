@@ -466,7 +466,7 @@ export const API_DOCS: ApiDocGroup[] = [
             "in": "body",
             "type": "string",
             "required": true,
-            "description": "明文密码：6~20 位",
+            "description": "明文密码：长度与复杂度统一由 common/auth/password-policy.ts 决定",
             "example": "123456"
           },
           {
@@ -2387,7 +2387,7 @@ export const API_DOCS: ApiDocGroup[] = [
       {
         "method": "GET",
         "path": "/api/logs/http/export",
-        "summary": "导出 HTTP 访问日志 CSV",
+        "summary": "导出 HTTP 访问日志 CSV（流式）",
         "permission": [
           "log:http:export"
         ],
@@ -2408,34 +2408,6 @@ export const API_DOCS: ApiDocGroup[] = [
         "isPublic": false,
         "action": "",
         "params": [
-          {
-            "name": "username",
-            "in": "query",
-            "type": "string",
-            "required": false,
-            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
-          },
-          {
-            "name": "status",
-            "in": "query",
-            "type": "number",
-            "required": false,
-            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
-          },
-          {
-            "name": "startTime",
-            "in": "query",
-            "type": "string",
-            "required": false,
-            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
-          },
-          {
-            "name": "endTime",
-            "in": "query",
-            "type": "string",
-            "required": false,
-            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
-          },
           {
             "name": "page",
             "in": "query",
@@ -2464,7 +2436,7 @@ export const API_DOCS: ApiDocGroup[] = [
       {
         "method": "GET",
         "path": "/api/logs/login/export",
-        "summary": "导出登录日志 CSV",
+        "summary": "导出登录日志 CSV（流式：分批查、逐批写，内存不随行数增长）",
         "permission": [
           "log:login:export"
         ],
@@ -2485,41 +2457,6 @@ export const API_DOCS: ApiDocGroup[] = [
         "isPublic": false,
         "action": "",
         "params": [
-          {
-            "name": "module",
-            "in": "query",
-            "type": "string",
-            "required": false,
-            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
-          },
-          {
-            "name": "username",
-            "in": "query",
-            "type": "string",
-            "required": false,
-            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
-          },
-          {
-            "name": "result",
-            "in": "query",
-            "type": "number",
-            "required": false,
-            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
-          },
-          {
-            "name": "startTime",
-            "in": "query",
-            "type": "string",
-            "required": false,
-            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
-          },
-          {
-            "name": "endTime",
-            "in": "query",
-            "type": "string",
-            "required": false,
-            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
-          },
           {
             "name": "page",
             "in": "query",
@@ -2548,7 +2485,7 @@ export const API_DOCS: ApiDocGroup[] = [
       {
         "method": "GET",
         "path": "/api/logs/operation/export",
-        "summary": "导出操作日志 CSV",
+        "summary": "导出操作日志 CSV（流式）",
         "permission": [
           "log:operation:export"
         ],

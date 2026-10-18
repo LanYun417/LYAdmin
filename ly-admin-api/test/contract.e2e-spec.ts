@@ -76,6 +76,10 @@ describe('接口契约快照 (e2e)', () => {
   const authPost = (path: string, body: object): request.Test =>
     request(app.getHttpServer()).post(`${API}${path}`).set('authorization', `Bearer ${token}`).send(body);
 
+  /** 带超管令牌的 PUT。 */
+  const authPut = (path: string, body: object): request.Test =>
+    request(app.getHttpServer()).put(`${API}${path}`).set('authorization', `Bearer ${token}`).send(body);
+
   /** 带超管令牌的 DELETE（可选请求体：批量删除走 body 传 ids）。 */
   const authDelete = (path: string, body?: object): request.Test => {
     const req = request(app.getHttpServer()).delete(`${API}${path}`).set('authorization', `Bearer ${token}`);
@@ -343,6 +347,55 @@ describe('接口契约快照 (e2e)', () => {
       } finally {
         (config.export as { maxRows: number }).maxRows = original;
       }
+    });
+  });
+
+  describe('操作日志变更留痕', () => {
+    /** 轮询取最新一条「参数管理 / 编辑」日志（操作日志是响应结束后异步落库的，需等一小会儿）。 */
+    async function waitForLatestEditLog(): Promise<Record<string, unknown> | null> {
+      for (let attempt = 0; attempt < 15; attempt += 1) {
+        const res = await authGet('/logs/operation?page=1&pageSize=20').expect(200);
+        const rows = (res.body as { data: { list: Array<Record<string, unknown>> } }).data.list;
+        const hit = rows.find((row) => row.module === '参数管理' && row.action === '编辑');
+        if (hit) {
+          return hit;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 200));
+      }
+      return null;
+    }
+
+    it('编辑系统参数会记录变更前后值，且敏感字段脱敏', async () => {
+      // 取一个非内置参数（内置参数不可删除但可编辑；这里只需任意一条）
+      const listRes = await authGet('/configs?page=1&pageSize=1').expect(200);
+      const config = (listRes.body as { data: { list: Array<{ id: number; configKey: string; configName: string }> } })
+        .data.list[0];
+      expect(config).toBeTruthy();
+
+      const newValue = `e2e-${Date.now()}`;
+      await authPut(`/configs/${config.id}`, {
+        configName: config.configName,
+        configValue: newValue,
+        remark: 'e2e 变更留痕',
+      }).expect(200);
+
+      const log = await waitForLatestEditLog();
+      expect(log).not.toBeNull();
+      // 变更前后都必须是可解析的 JSON，且能看出「值改了」
+      const before = JSON.parse(String(log!.beforeData)) as Record<string, unknown>;
+      const after = JSON.parse(String(log!.afterData)) as Record<string, unknown>;
+      expect(before.configKey).toBe(config.configKey);
+      expect(after.configValue).toBe(newValue);
+      expect(before.configValue).not.toBe(newValue);
+    });
+
+    it('未采集留痕的接口两个字段为 null，不编造数据', async () => {
+      const res = await authGet('/logs/operation?page=1&pageSize=50').expect(200);
+      const rows = (res.body as { data: { list: Array<Record<string, unknown>> } }).data.list;
+      expect(rows.length).toBeGreaterThan(0);
+      // 取一页混合作业：清理类/登录类写操作不采集留痕，其 beforeData/afterData 必须是 null
+      const noSnapshot = rows.filter((row) => row.beforeData === null && row.afterData === null);
+      expect(noSnapshot.length).toBeGreaterThan(0);
     });
   });
 

@@ -8,6 +8,7 @@ import { AuthCacheService } from '../../common/auth/auth-cache.service.js';
 import { DataScope, Status, SUPER_ADMIN_ROLE } from '../../common/config/constants.js';
 import { buildPageResult, parsePagination, readNumber, readString } from '../../common/utils/utils.js';
 import type { PageResult } from '../../common/types.js';
+import { recordAfter, recordBefore } from '../../common/log/operation-snapshot.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import type { CreateRoleDto, UpdateRoleDto } from './dto/role.dto.js';
 
@@ -45,6 +46,12 @@ export class RoleService {
       dataScope: Number(role.dataScope ?? DataScope.ALL),
       deptIds,
     };
+  }
+
+  /** 取单个角色的自定义部门 id（变更留痕用，避免为此再写一段查询）。 */
+  private async listRoleDeptIds(roleId: number): Promise<number[]> {
+    const map = await this.loadDeptIdsByRoleIds([roleId]);
+    return map.get(roleId) ?? [];
   }
 
   /** 批量加载角色的自定义部门 id（按 roleId 分组）。 */
@@ -151,6 +158,16 @@ export class RoleService {
       throw AppException.conflict('内置超级管理员角色不可禁用');
     }
     const dataScope = input.dataScope ?? DataScope.ALL;
+    // 变更留痕：数据权限范围与部门集合一起记，方便追溯"某角色能看到哪些部门"
+    recordBefore({
+      roleName: role.roleName,
+      roleCode: role.roleCode,
+      sort: Number(role.sort),
+      status: Number(role.status),
+      dataScope: Number(role.dataScope),
+      remark: role.remark,
+      deptIds: await this.listRoleDeptIds(id),
+    });
     await this.prisma.role.update({
       where: { id: BigInt(id) },
       data: {
@@ -163,6 +180,15 @@ export class RoleService {
     });
     const deptIds = dataScope === DataScope.CUSTOM ? Array.from(new Set(input.deptIds ?? [])) : [];
     await this.syncRoleDepts(id, dataScope, deptIds);
+    recordAfter({
+      roleName: input.roleName,
+      roleCode: role.roleCode,
+      sort: input.sort ?? 0,
+      status: input.status ?? 1,
+      dataScope,
+      remark: input.remark || null,
+      deptIds,
+    });
     // 角色信息变更：清空鉴权缓存（角色可能被多个用户持有，影响面广）
     this.authCache.invalidate();
     return this.toRoleBrief(role, deptIds);

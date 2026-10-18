@@ -49,6 +49,8 @@ export type OperationLogMinAggregateOutputType = {
   method: string | null
   url: string | null
   params: string | null
+  beforeData: string | null
+  afterData: string | null
   duration: number | null
   result: number | null
   errorMessage: string | null
@@ -66,6 +68,8 @@ export type OperationLogMaxAggregateOutputType = {
   method: string | null
   url: string | null
   params: string | null
+  beforeData: string | null
+  afterData: string | null
   duration: number | null
   result: number | null
   errorMessage: string | null
@@ -83,6 +87,8 @@ export type OperationLogCountAggregateOutputType = {
   method: number
   url: number
   params: number
+  beforeData: number
+  afterData: number
   duration: number
   result: number
   errorMessage: number
@@ -116,6 +122,8 @@ export type OperationLogMinAggregateInputType = {
   method?: true
   url?: true
   params?: true
+  beforeData?: true
+  afterData?: true
   duration?: true
   result?: true
   errorMessage?: true
@@ -133,6 +141,8 @@ export type OperationLogMaxAggregateInputType = {
   method?: true
   url?: true
   params?: true
+  beforeData?: true
+  afterData?: true
   duration?: true
   result?: true
   errorMessage?: true
@@ -150,6 +160,8 @@ export type OperationLogCountAggregateInputType = {
   method?: true
   url?: true
   params?: true
+  beforeData?: true
+  afterData?: true
   duration?: true
   result?: true
   errorMessage?: true
@@ -254,6 +266,8 @@ export type OperationLogGroupByOutputType = {
   method: string
   url: string
   params: string | null
+  beforeData: string | null
+  afterData: string | null
   duration: number
   result: number
   errorMessage: string | null
@@ -294,6 +308,8 @@ export type OperationLogWhereInput = {
   method?: Prisma.StringFilter<"OperationLog"> | string
   url?: Prisma.StringFilter<"OperationLog"> | string
   params?: Prisma.StringNullableFilter<"OperationLog"> | string | null
+  beforeData?: Prisma.StringNullableFilter<"OperationLog"> | string | null
+  afterData?: Prisma.StringNullableFilter<"OperationLog"> | string | null
   duration?: Prisma.IntFilter<"OperationLog"> | number
   result?: Prisma.IntFilter<"OperationLog"> | number
   errorMessage?: Prisma.StringNullableFilter<"OperationLog"> | string | null
@@ -311,6 +327,8 @@ export type OperationLogOrderByWithRelationInput = {
   method?: Prisma.SortOrder
   url?: Prisma.SortOrder
   params?: Prisma.SortOrderInput | Prisma.SortOrder
+  beforeData?: Prisma.SortOrderInput | Prisma.SortOrder
+  afterData?: Prisma.SortOrderInput | Prisma.SortOrder
   duration?: Prisma.SortOrder
   result?: Prisma.SortOrder
   errorMessage?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -332,6 +350,8 @@ export type OperationLogWhereUniqueInput = Prisma.AtLeast<{
   method?: Prisma.StringFilter<"OperationLog"> | string
   url?: Prisma.StringFilter<"OperationLog"> | string
   params?: Prisma.StringNullableFilter<"OperationLog"> | string | null
+  beforeData?: Prisma.StringNullableFilter<"OperationLog"> | string | null
+  afterData?: Prisma.StringNullableFilter<"OperationLog"> | string | null
   duration?: Prisma.IntFilter<"OperationLog"> | number
   result?: Prisma.IntFilter<"OperationLog"> | number
   errorMessage?: Prisma.StringNullableFilter<"OperationLog"> | string | null
@@ -349,6 +369,8 @@ export type OperationLogOrderByWithAggregationInput = {
   method?: Prisma.SortOrder
   url?: Prisma.SortOrder
   params?: Prisma.SortOrderInput | Prisma.SortOrder
+  beforeData?: Prisma.SortOrderInput | Prisma.SortOrder
+  afterData?: Prisma.SortOrderInput | Prisma.SortOrder
   duration?: Prisma.SortOrder
   result?: Prisma.SortOrder
   errorMessage?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -374,6 +396,8 @@ export type OperationLogScalarWhereWithAggregatesInput = {
   method?: Prisma.StringWithAggregatesFilter<"OperationLog"> | string
   url?: Prisma.StringWithAggregatesFilter<"OperationLog"> | string
   params?: Prisma.StringNullableWithAggregatesFilter<"OperationLog"> | string | null
+  beforeData?: Prisma.StringNullableWithAggregatesFilter<"OperationLog"> | string | null
+  afterData?: Prisma.StringNullableWithAggregatesFilter<"OperationLog"> | string | null
   duration?: Prisma.IntWithAggregatesFilter<"OperationLog"> | number
   result?: Prisma.IntWithAggregatesFilter<"OperationLog"> | number
   errorMessage?: Prisma.StringNullableWithAggregatesFilter<"OperationLog"> | string | null
@@ -391,6 +415,8 @@ export type OperationLogCreateInput = {
   method: string
   url: string
   params?: string | null
+  beforeData?: string | null
+  afterData?: string | null
   duration?: number
   result: number
   errorMessage?: string | null
@@ -408,6 +434,8 @@ export type OperationLogUncheckedCreateInput = {
   method: string
   url: string
   params?: string | null
+  beforeData?: string | null
+  afterData?: string | null
   duration?: number
   result: number
   errorMessage?: string | null
@@ -425,6 +453,8 @@ export type OperationLogUpdateInput = {
   method?: Prisma.StringFieldUpdateOperationsInput | string
   url?: Prisma.StringFieldUpdateOperationsInput | string
   params?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  beforeData?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  afterData?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   duration?: Prisma.IntFieldUpdateOperationsInput | number
   result?: Prisma.IntFieldUpdateOperationsInput | number
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -442,6 +472,8 @@ export type OperationLogUncheckedUpdateInput = {
   method?: Prisma.StringFieldUpdateOperationsInput | string
   url?: Prisma.StringFieldUpdateOperationsInput | string
   params?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  beforeData?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  afterData?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   duration?: Prisma.IntFieldUpdateOperationsInput | number
   result?: Prisma.IntFieldUpdateOperationsInput | number
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -459,6 +491,8 @@ export type OperationLogCreateManyInput = {
   method: string
   url: string
   params?: string | null
+  beforeData?: string | null
+  afterData?: string | null
   duration?: number
   result: number
   errorMessage?: string | null
@@ -476,6 +510,8 @@ export type OperationLogUpdateManyMutationInput = {
   method?: Prisma.StringFieldUpdateOperationsInput | string
   url?: Prisma.StringFieldUpdateOperationsInput | string
   params?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  beforeData?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  afterData?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   duration?: Prisma.IntFieldUpdateOperationsInput | number
   result?: Prisma.IntFieldUpdateOperationsInput | number
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -493,6 +529,8 @@ export type OperationLogUncheckedUpdateManyInput = {
   method?: Prisma.StringFieldUpdateOperationsInput | string
   url?: Prisma.StringFieldUpdateOperationsInput | string
   params?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  beforeData?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  afterData?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   duration?: Prisma.IntFieldUpdateOperationsInput | number
   result?: Prisma.IntFieldUpdateOperationsInput | number
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -516,6 +554,8 @@ export type OperationLogCountOrderByAggregateInput = {
   method?: Prisma.SortOrder
   url?: Prisma.SortOrder
   params?: Prisma.SortOrder
+  beforeData?: Prisma.SortOrder
+  afterData?: Prisma.SortOrder
   duration?: Prisma.SortOrder
   result?: Prisma.SortOrder
   errorMessage?: Prisma.SortOrder
@@ -540,6 +580,8 @@ export type OperationLogMaxOrderByAggregateInput = {
   method?: Prisma.SortOrder
   url?: Prisma.SortOrder
   params?: Prisma.SortOrder
+  beforeData?: Prisma.SortOrder
+  afterData?: Prisma.SortOrder
   duration?: Prisma.SortOrder
   result?: Prisma.SortOrder
   errorMessage?: Prisma.SortOrder
@@ -557,6 +599,8 @@ export type OperationLogMinOrderByAggregateInput = {
   method?: Prisma.SortOrder
   url?: Prisma.SortOrder
   params?: Prisma.SortOrder
+  beforeData?: Prisma.SortOrder
+  afterData?: Prisma.SortOrder
   duration?: Prisma.SortOrder
   result?: Prisma.SortOrder
   errorMessage?: Prisma.SortOrder
@@ -583,6 +627,8 @@ export type OperationLogSelect<ExtArgs extends runtime.Types.Extensions.Internal
   method?: boolean
   url?: boolean
   params?: boolean
+  beforeData?: boolean
+  afterData?: boolean
   duration?: boolean
   result?: boolean
   errorMessage?: boolean
@@ -602,6 +648,8 @@ export type OperationLogSelectScalar = {
   method?: boolean
   url?: boolean
   params?: boolean
+  beforeData?: boolean
+  afterData?: boolean
   duration?: boolean
   result?: boolean
   errorMessage?: boolean
@@ -610,7 +658,7 @@ export type OperationLogSelectScalar = {
   createdAt?: boolean
 }
 
-export type OperationLogOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "username" | "module" | "action" | "method" | "url" | "params" | "duration" | "result" | "errorMessage" | "ip" | "location" | "createdAt", ExtArgs["result"]["operationLog"]>
+export type OperationLogOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "username" | "module" | "action" | "method" | "url" | "params" | "beforeData" | "afterData" | "duration" | "result" | "errorMessage" | "ip" | "location" | "createdAt", ExtArgs["result"]["operationLog"]>
 
 export type $OperationLogPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "OperationLog"
@@ -648,6 +696,14 @@ export type $OperationLogPayload<ExtArgs extends runtime.Types.Extensions.Intern
      * 请求参数（密码脱敏）
      */
     params: string | null
+    /**
+     * 变更前数据（JSON 文本；敏感字段已脱敏、超长已截断，仅支持的写操作会写）
+     */
+    beforeData: string | null
+    /**
+     * 变更后数据（JSON 文本；口径同 before_data）
+     */
+    afterData: string | null
     /**
      * 耗时 ms
      */
@@ -1049,6 +1105,8 @@ export interface OperationLogFieldRefs {
   readonly method: Prisma.FieldRef<"OperationLog", 'String'>
   readonly url: Prisma.FieldRef<"OperationLog", 'String'>
   readonly params: Prisma.FieldRef<"OperationLog", 'String'>
+  readonly beforeData: Prisma.FieldRef<"OperationLog", 'String'>
+  readonly afterData: Prisma.FieldRef<"OperationLog", 'String'>
   readonly duration: Prisma.FieldRef<"OperationLog", 'Int'>
   readonly result: Prisma.FieldRef<"OperationLog", 'Int'>
   readonly errorMessage: Prisma.FieldRef<"OperationLog", 'String'>

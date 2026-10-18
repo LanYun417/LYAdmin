@@ -7,6 +7,7 @@ import { AppException } from '../../common/exception/app.exception.js';
 import { DataScopeService } from '../../common/auth/data-scope.service.js';
 import { buildTree, readNumber, readString } from '../../common/utils/utils.js';
 import type { DeptNode } from '../../common/types.js';
+import { recordAfter, recordBefore } from '../../common/log/operation-snapshot.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import type { DeptUpsertDto } from './dto/dept.dto.js';
 
@@ -144,6 +145,18 @@ export class DeptService {
       }
     }
 
+    // 变更留痕
+    recordBefore({
+      deptName: dept.deptName,
+      parentId: Number(dept.parentId),
+      deptType: Number(dept.deptType),
+      sort: Number(dept.sort),
+      status: Number(dept.status),
+      leader: dept.leader,
+      phone: dept.phone,
+      email: dept.email,
+    });
+
     const updated = await this.prisma.dept.update({
       where: { id: BigInt(id) },
       data: {
@@ -156,6 +169,16 @@ export class DeptService {
         phone: input.phone || null,
         email: input.email || null,
       },
+    });
+    recordAfter({
+      deptName: updated.deptName,
+      parentId: Number(updated.parentId),
+      deptType: Number(updated.deptType),
+      sort: Number(updated.sort),
+      status: Number(updated.status),
+      leader: updated.leader,
+      phone: updated.phone,
+      email: updated.email,
     });
     this.dataScope.invalidateDeptCache();
     return this.toDeptNode(updated);

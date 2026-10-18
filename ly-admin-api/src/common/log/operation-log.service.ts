@@ -15,6 +15,10 @@ export interface OperationLogInput {
   method: string;
   url: string;
   params: string | null;
+  /** 变更前数据（JSON 文本，未采集为 null） */
+  beforeData?: string | null;
+  /** 变更后数据（JSON 文本，未采集为 null） */
+  afterData?: string | null;
   duration: number;
   result: number;
   errorMessage: string | null;
@@ -62,6 +66,8 @@ export class OperationLogService {
           method: input.method,
           url: input.url.slice(0, 255),
           params: input.params,
+          beforeData: input.beforeData ?? null,
+          afterData: input.afterData ?? null,
           duration: input.duration,
           result: input.result,
           errorMessage: input.errorMessage ? input.errorMessage.slice(0, 500) : null,

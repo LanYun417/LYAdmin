@@ -697,7 +697,7 @@ export type $HttpLogPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
      */
     location: string | null
     /**
-     * User-Agent
+     * User-Agent（用户代理）
      */
     userAgent: string | null
     /**

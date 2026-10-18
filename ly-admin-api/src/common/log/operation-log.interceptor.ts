@@ -14,6 +14,7 @@ import { OperationLogService } from './operation-log.service.js';
 import { getOperationMeta, inferAction, type OperationMeta } from './operation-log.decorator.js';
 import type { AuthenticatedRequest } from '../auth/auth.guard.js';
 import { IpRegionService } from '../ip/ip-region.service.js';
+import { buildSnapshotFields, runWithSnapshot, type OperationSnapshot } from './operation-snapshot.js';
 
 /** 读取客户端 IP（受 trust proxy 设置影响）。 */
 export function getClientIp(req: Request): string {
@@ -50,6 +51,9 @@ export class OperationLogInterceptor implements NestInterceptor {
 
     const startAt = Date.now();
     let errorMessage: string | null = null;
+    // 变更前后值容器：服务层通过 recordBefore/recordAfter 往里写，响应结束时统一落库。
+    // 必须在响应结束后仍可读，故这里持有对象引用（届时已脱离请求的 async 上下文）。
+    const snapshot: OperationSnapshot = {};
 
     // 劫持 json() 以捕获失败响应中的 message
     const originalJson = res.json.bind(res);
@@ -63,10 +67,10 @@ export class OperationLogInterceptor implements NestInterceptor {
 
     res.on('finish', () => {
       const statusCode = res.statusCode;
-      void this.recordOperationLog(req, meta, statusCode, errorMessage, Date.now() - startAt);
+      void this.recordOperationLog(req, meta, statusCode, errorMessage, Date.now() - startAt, snapshot);
     });
 
-    return next.handle();
+    return runWithSnapshot(snapshot, () => next.handle());
   }
 
   /** 解析 IP 归属地后异步写操作日志（fire-and-forget；解析失败不影响日志写入）。 */
@@ -76,9 +80,11 @@ export class OperationLogInterceptor implements NestInterceptor {
     statusCode: number,
     errorMessage: string | null,
     duration: number,
+    snapshot: OperationSnapshot,
   ): Promise<void> {
     const ip = getClientIp(req) || null;
     const location = (await this.ipRegion.locate(ip)) || null;
+    const { beforeData, afterData } = buildSnapshotFields(snapshot);
     await this.operationLogService.createOperationLog({
       userId: req.user?.userId ?? null,
       username: req.user?.username ?? null,
@@ -87,6 +93,8 @@ export class OperationLogInterceptor implements NestInterceptor {
       method: req.method.toUpperCase(),
       url: req.originalUrl ?? req.url ?? '',
       params: OperationLogService.serializeParams(req.body),
+      beforeData,
+      afterData,
       duration,
       result: statusCode < 400 ? 1 : 0,
       errorMessage: statusCode < 400 ? null : errorMessage || `HTTP ${statusCode}`,

@@ -531,7 +531,7 @@ export type $FilePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
      */
     originName: string
     /**
-     * 存储文件名
+     * 存储相对路径（扩展名分组/文件名）
      */
     fileName: string
     /**
@@ -543,7 +543,7 @@ export type $FilePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
      */
     fileUrl: string
     /**
-     * MIME
+     * MIME（媒体类型）
      */
     mimeType: string
     /**

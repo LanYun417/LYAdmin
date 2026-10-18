@@ -10,6 +10,7 @@ import { Status, SUPER_ADMIN_ROLE } from '../../common/config/constants.js';
 import { lookupDeptName, lookupDeptNames } from '../../common/utils/dept-lookup.js';
 import { buildPageResult, hashPassword, parsePagination, readNumber, readString } from '../../common/utils/utils.js';
 import { assertPasswordNotContainsAccount } from '../../common/auth/password-policy.js';
+import { recordAfter, recordBefore } from '../../common/log/operation-snapshot.js';
 import type { AuthUserContext, PageResult, UserDetail } from '../../common/types.js';
 import type { Prisma } from '../../generated/prisma/client.js';
 import type { CreateUserDto, UpdateUserDto } from './dto/users.dto.js';
@@ -246,6 +247,18 @@ export class UsersService {
       throw AppException.conflict('超级管理员不可禁用');
     }
 
+    // 变更留痕：记录改动前的关键字段（角色变化单独记，便于审计"谁把谁的权限改了"）
+    recordBefore({
+      nickname: user.nickname,
+      email: user.email,
+      phone: user.phone,
+      gender: user.gender,
+      status: Number(user.status),
+      deptId: Number(user.deptId),
+      remark: user.remark,
+      roleIds: user.roles.map((role) => role.id),
+    });
+
     await this.prisma.user.update({
       where: { id: BigInt(id) },
       data: {
@@ -260,6 +273,16 @@ export class UsersService {
     });
 
     await this.syncUserRoles(id, dto.roleIds ?? []);
+    recordAfter({
+      nickname: dto.nickname,
+      email: dto.email ?? null,
+      phone: dto.phone ?? null,
+      gender: dto.gender ?? null,
+      status,
+      deptId: dto.deptId ?? 0,
+      remark: dto.remark ?? null,
+      roleIds: dto.roleIds ?? [],
+    });
     // 角色 / 状态可能变更：立即失效该用户鉴权缓存，确保权限即时生效
     this.authCache.invalidate(id);
     return this.getUserDetail(id);

@@ -164,6 +164,8 @@ export const OperationLogScalarFieldEnum = {
   method: 'method',
   url: 'url',
   params: 'params',
+  beforeData: 'beforeData',
+  afterData: 'afterData',
   duration: 'duration',
   result: 'result',
   errorMessage: 'errorMessage',
@@ -381,6 +383,8 @@ export const OperationLogOrderByRelevanceFieldEnum = {
   method: 'method',
   url: 'url',
   params: 'params',
+  beforeData: 'beforeData',
+  afterData: 'afterData',
   errorMessage: 'errorMessage',
   ip: 'ip',
   location: 'location'

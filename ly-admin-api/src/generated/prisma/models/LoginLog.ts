@@ -473,7 +473,7 @@ export type $LoginLogPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
      */
     ip: string | null
     /**
-     * User-Agent
+     * User-Agent（用户代理）
      */
     userAgent: string | null
     /**
