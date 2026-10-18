@@ -12,8 +12,6 @@ import { OperationLogInterceptor } from './common/log/operation-log.interceptor.
 import { CommonModule } from './common/common.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { HttpAccessLoggerMiddleware } from './common/log/http-access-log.middleware.js';
-import { HotlinkGuardMiddleware, ImageScaleMiddleware } from './common/file/file-guards.js';
-import { StaticAuthMiddleware } from './common/http/static-auth.middleware.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { MenuModule } from './modules/menu/menu.module.js';
 import { UsersModule } from './modules/users/users.module.js';
@@ -77,8 +75,8 @@ export class AppModule implements NestModule {
     // 显式写等价形式即可消警，实际覆盖范围不变（仅 /api 下的请求；静态资源不计入访问日志）。
     consumer.apply(HttpAccessLoggerMiddleware).forRoutes('{*path}');
 
-    // 静态资源链：鉴权 → 防盗链 → 图片缩放 → 静态出图
-    // 顺序：未通过鉴权即短路，连文件都不必读
-    consumer.apply(StaticAuthMiddleware, HotlinkGuardMiddleware, ImageScaleMiddleware).forRoutes('static/{*path}');
+    // 静态资源链（鉴权 → 防盗链 → 图片缩放）不在这里挂：
+    // consumer.apply 的路由会被全局前缀改写成 /api/static/...，永远匹配不到真实的 /static/...，
+    // 且 useStaticAssets 注册更早会直接出图。改由 app.setup.ts 按顺序显式挂到 express。
   }
 }
