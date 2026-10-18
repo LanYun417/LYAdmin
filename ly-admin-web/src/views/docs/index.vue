@@ -208,6 +208,24 @@ async function downloadOpenApi(): Promise<void> {
   }
 }
 
+/** 参数位置（path / query / body）→ Element Plus Tag 类型 */
+function paramInType(loc: 'path' | 'query' | 'body'): 'warning' | 'primary' | 'success' {
+  return loc === 'path' ? 'warning' : loc === 'query' ? 'primary' : 'success';
+}
+
+/** 参数位置 → 展示标签 */
+function paramInLabel(loc: 'path' | 'query' | 'body'): string {
+  return loc === 'path' ? '路径' : loc === 'query' ? 'Query' : 'Body';
+}
+
+/** 示例值格式化：对象序列化为 JSON，其余转字符串；空值显示占位符 */
+function formatExample(val: unknown): string {
+  if (val === undefined || val === null) {
+    return '—';
+  }
+  return typeof val === 'object' ? JSON.stringify(val) : String(val);
+}
+
 onMounted(loadDocs);
 </script>
 
@@ -315,6 +333,33 @@ onMounted(loadDocs);
               show-icon
               title="所有成功响应恒为 HTTP 200，响应体统一为 { code, message, data }。"
             />
+
+            <!-- 请求参数明细：类型 / 位置 / 必填 / 说明 / 示例（上一版缺失的部分） -->
+            <div v-if="selected.endpoint.params?.length" class="flex flex-col gap-2">
+              <span class="text-sm font-semibold">请求参数</span>
+              <el-table :data="selected.endpoint.params" size="small" border>
+                <el-table-column prop="name" label="参数名" min-width="120" />
+                <el-table-column label="位置" width="88">
+                  <template #default="{ row }">
+                    <el-tag :type="paramInType(row.in)" size="small" effect="plain">{{ paramInLabel(row.in) }}</el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="type" label="类型" min-width="130" />
+                <el-table-column label="必填" width="64" align="center">
+                  <template #default="{ row }">
+                    <el-tag :type="row.required ? 'danger' : 'info'" size="small" effect="plain">
+                      {{ row.required ? '是' : '否' }}
+                    </el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column label="说明" min-width="160">
+                  <template #default="{ row }">{{ row.description || '—' }}</template>
+                </el-table-column>
+                <el-table-column label="示例" min-width="130">
+                  <template #default="{ row }">{{ formatExample(row.example) }}</template>
+                </el-table-column>
+              </el-table>
+            </div>
 
             <!-- 请求示例：curl（可直接执行）+ 请求参数（路径 / 查询 / 请求体） -->
             <div class="flex flex-col gap-2">

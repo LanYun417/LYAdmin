@@ -276,6 +276,26 @@ function sampleValue(field) {
   return '示例值';
 }
 
+/** 将 DTO 字段的 TS 类型映射为文档展示用的简短类型标签。 */
+function typeLabel(type) {
+  const t = (type || 'unknown').trim();
+  const arrBracket = t.match(/^(.+?)\[\]$/);
+  if (arrBracket) {
+    return `${typeLabel(arrBracket[1])}[]`;
+  }
+  const arrGeneric = t.match(/^Array<(.+)>$/);
+  if (arrGeneric) {
+    return `Array<${typeLabel(arrGeneric[1])}>`;
+  }
+  if (t === 'number' || t === 'float' || t === 'double' || t === 'decimal') return 'number';
+  if (t === 'bigint' || t === 'integer' || t === 'int') return 'integer';
+  if (t === 'boolean') return 'boolean';
+  if (t === 'Date') return 'string(date-time)';
+  if (t === 'string') return 'string';
+  // 未识别的视为嵌套对象类型（如 CreateRoleDto），保留原名，提示其为对象
+  return t;
+}
+
 /** DTO → 示例对象（列出全部字段，可选字段一并给出，便于看清可接受的形状）。 */
 function sampleFromDto(fields) {
   const out = {};
@@ -285,8 +305,8 @@ function sampleFromDto(fields) {
   return out;
 }
 
-/** 取出控制器方法上 `@Body()` / `@Query()` 使用的 DTO 类名。 */
-function methodDtoParams(sf, member) {
+/** 取出控制器方法上 `@Body()` / `@Query()` 使用的 DTO 类名（仅当该类型是已解析的 DTO 时登记）。 */
+function methodDtoParams(sf, member, dtoMap) {
   const out = { body: null, query: null };
   for (const param of member.parameters ?? []) {
     const names = getDecorators(param).map(decoratorName);
@@ -294,6 +314,10 @@ function methodDtoParams(sf, member) {
       continue;
     }
     const typeName = param.type.typeName.getText(sf);
+    // 仅登记已知 DTO（如 Record<string, unknown> 这类非 DTO 类型视为无结构、不走自动合成）
+    if (!dtoMap.has(typeName)) {
+      continue;
+    }
     if (names.includes('Body')) {
       out.body = typeName;
     } else if (names.includes('Query')) {
@@ -369,6 +393,258 @@ function buildExamples({ method, fullPath, isPublic, bodyDto, queryDto, dtoMap, 
   };
 }
 
+/**
+ * 组装单个接口的结构化参数明细（按 路径 / 查询 / 请求体 分类，含类型与备注）。
+ *
+ * 这是上一版文档缺失的部分——之前只有「示例值」（curl / 请求参数 JSON），没有
+ * 字段的类型、是否必填、备注说明，也没标注参数是 query 还是 body。
+ * 现在从已解析的 DTO 字段直接照实生成：类型来自字段声明，必填来自是否带 @IsOptional，
+ * 备注来自字段的 JSDoc，示例值复用 sampleValue（嵌套 DTO 字段给出一层对象示例）。
+ *
+ * @returns 参数数组（path / query / body 三类），无参数时返回 undefined
+ */
+function buildParams({ method, fullPath, bodyDto, queryDto, isRaw, dtoMap, dynamicQuery = [] }) {
+  const params = [];
+
+  // 1) 路径参数（:id → { name: 'id', in: 'path' }）
+  for (const name of pathParamNames(fullPath)) {
+    params.push({
+      name,
+      in: 'path',
+      type: 'string',
+      required: true,
+      description: '',
+      example: pathParamSample(name),
+    });
+  }
+
+  // 2) 查询参数（来自 @Query() 的 DTO；无 DTO 的列表类 GET 回溯 service 取动态字段 + 通用分页参数）
+  const queryFields = queryDto && dtoMap.has(queryDto) ? dtoMap.get(queryDto) : null;
+  if (queryFields) {
+    for (const f of queryFields) {
+      params.push({
+        name: f.name,
+        in: 'query',
+        type: typeLabel(f.type),
+        required: !f.optional,
+        description: f.comment,
+        example: fieldExample(f, dtoMap),
+      });
+    }
+  } else if (method === 'GET' && pathParamNames(fullPath).length === 0 && !isRaw) {
+    for (const qf of dynamicQuery) {
+      params.push({
+        name: qf.name,
+        in: 'query',
+        type: qf.type,
+        required: false,
+        description: '动态查询条件（运行时从 query 对象读取，类型依实现）',
+        example: undefined,
+      });
+    }
+    params.push({
+      name: 'page',
+      in: 'query',
+      type: 'integer',
+      required: false,
+      description: '页码，从 1 开始',
+      example: 1,
+    });
+    params.push({
+      name: 'pageSize',
+      in: 'query',
+      type: 'integer',
+      required: false,
+      description: '每页条数',
+      example: 10,
+    });
+  }
+
+  // 3) 请求体（来自 @Body() 的 DTO）
+  const bodyFields = bodyDto && dtoMap.has(bodyDto) ? dtoMap.get(bodyDto) : null;
+  if (bodyFields) {
+    for (const f of bodyFields) {
+      params.push({
+        name: f.name,
+        in: 'body',
+        type: typeLabel(f.type),
+        required: !f.optional,
+        description: f.comment,
+        example: fieldExample(f, dtoMap),
+      });
+    }
+  }
+
+  return params.length ? params : undefined;
+}
+
+/** 字段示例值：嵌套 DTO 字段给出一层对象示例，其余复用 sampleValue。 */
+function fieldExample(field, dtoMap) {
+  const base = field.type
+    .replace(/\[\]$/, '')
+    .replace(/^Array<(.+)>$/, '$1')
+    .trim();
+  if (dtoMap.has(base)) {
+    const obj = sampleFromDto(dtoMap.get(base));
+    return /\[\]$/.test(field.type) || /^Array</.test(field.type) ? [obj] : obj;
+  }
+  return sampleValue(field);
+}
+
+/**
+ * 解析控制器内的 service 导入，得到「service 类名 → 绝对文件路径」映射。
+ * 仅收集以 .service 结尾的模块导入（控制器对 service 的导入约定如此）。
+ */
+function buildServiceImportMap(sf, controllerFile) {
+  const map = {};
+  sf.forEachChild((node) => {
+    if (!ts.isImportDeclaration(node) || !ts.isStringLiteral(node.moduleSpecifier)) {
+      return;
+    }
+    const from = node.moduleSpecifier.text;
+    if (!from.includes('.service')) {
+      return;
+    }
+    const clause = node.importClause;
+    if (!clause?.namedBindings || !ts.isNamedImports(clause.namedBindings)) {
+      return;
+    }
+    const dir = dirname(controllerFile);
+    const resolved = resolve(dir, from);
+    const existing = [resolved, resolved.replace(/\.js$/, '.ts')].find((c) => existsSync(c));
+    if (!existing) {
+      return;
+    }
+    for (const el of clause.namedBindings.elements) {
+      map[el.name.text] = existing;
+    }
+  });
+  return map;
+}
+
+/** 解析控制器构造函数的注入字段 → 类型名（如 usersService → UsersService）。 */
+function buildFieldTypeMap(classNode) {
+  const map = {};
+  const ctor = classNode.members.find((m) => ts.isConstructorDeclaration(m));
+  if (!ctor) {
+    return map;
+  }
+  for (const p of ctor.parameters) {
+    if (!p.type || !ts.isTypeReferenceNode(p.type) || !ts.isIdentifier(p.name)) {
+      continue;
+    }
+    map[p.name.text] = p.type.typeName.getText();
+  }
+  return map;
+}
+
+/** 在方法体内寻找 `this.<field>.<method>(...)` 形式的 service 调用。 */
+function findServiceCall(member) {
+  let found = null;
+  const walk = (n) => {
+    if (found) return;
+    if (ts.isCallExpression(n) && ts.isPropertyAccessExpression(n.expression)) {
+      const pae = n.expression;
+      if (
+        ts.isPropertyAccessExpression(pae.expression) &&
+        pae.expression.expression.kind === ts.SyntaxKind.ThisKeyword
+      ) {
+        found = { field: pae.expression.name.getText(), method: pae.name.getText() };
+        return;
+      }
+    }
+    ts.forEachChild(n, walk);
+  };
+  walk(member);
+  return found;
+}
+
+/**
+ * 扫描被调用的 service 方法体，提取从 `query.<field>` 动态读取的查询字段。
+ *
+ * 背景：本项目的列表接口普遍用 `@Query() query: Record<string, unknown>`，字段无编译期类型，
+ * 故无法像 DTO 那样直接映射。这里退而求其次，从 service 实现里回溯 `query.xxx` 的读取，
+ * 并据 `readString/readNumber/readBoolean(...)` 推断其类型，作为文档里的「动态查询条件」。
+ * 这是尽力而为的推断，可能不全，但比只给 page/pageSize 更有用。
+ */
+function scanServiceQueryFields({ member, queryParamName, serviceImportMap, fieldTypeMap }) {
+  const call = findServiceCall(member);
+  if (!call) {
+    return [];
+  }
+  const svcType = fieldTypeMap[call.field];
+  if (!svcType) {
+    return [];
+  }
+  const svcFile = serviceImportMap[svcType];
+  if (!svcFile || !existsSync(svcFile)) {
+    return [];
+  }
+  const src = readFileSync(svcFile, 'utf8');
+  const ssf = ts.createSourceFile(svcFile, src, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+  let methodNode = null;
+  ssf.forEachChild((n) => {
+    if (methodNode || !ts.isClassDeclaration(n)) return;
+    for (const m of n.members) {
+      if (ts.isMethodDeclaration(m) && m.name?.getText(ssf) === call.method) {
+        methodNode = m;
+        break;
+      }
+    }
+  });
+  if (!methodNode) {
+    return [];
+  }
+  const types = {};
+  const walk = (n) => {
+    if (ts.isPropertyAccessExpression(n) && ts.isIdentifier(n.expression) && n.expression.text === queryParamName) {
+      const name = n.name.getText(ssf);
+      let t = 'unknown';
+      const parent = n.parent;
+      if (ts.isCallExpression(parent) && ts.isIdentifier(parent.expression)) {
+        // readString/readNumber/readBoolean(query.x) 与 Number(query.x) / String(query.x)
+        const fn = parent.expression.text;
+        if (fn === 'readNumber' || fn === 'Number') t = 'number';
+        else if (fn === 'readBoolean') t = 'boolean';
+        else if (fn === 'readString' || fn === 'String' || fn === 'readFilterDate') t = 'string';
+      } else if (ts.isTypeOfExpression(parent)) {
+        // typeof query.x === 'string' | 'number'
+        const gp = parent.parent;
+        if (ts.isBinaryExpression(gp) && ts.isStringLiteral(gp.right)) {
+          if (gp.right.text === 'string') t = 'string';
+          else if (gp.right.text === 'number') t = 'number';
+        }
+      } else if (ts.isAsExpression(parent)) {
+        // query.x as string | as number | as boolean
+        if (ts.isStringKeyword(parent.type)) t = 'string';
+        else if (ts.isNumberKeyword(parent.type)) t = 'number';
+        else if (ts.isBooleanKeyword(parent.type)) t = 'boolean';
+      }
+      // 同一字段可能被多处引用（如 typeof 判断后又 .trim()），只在尚未确定具体类型时才用 unknown 覆盖
+      if (!(name in types) || (t !== 'unknown' && types[name] === 'unknown')) {
+        types[name] = t;
+      }
+    }
+    ts.forEachChild(n, walk);
+  };
+  walk(methodNode);
+  const SKIP = new Set([
+    'page',
+    'pageSize',
+    'current',
+    'size',
+    'sortBy',
+    'orderBy',
+    'sort',
+    'order',
+    'limit',
+    'offset',
+  ]);
+  return Object.entries(types)
+    .filter(([name]) => !SKIP.has(name))
+    .map(([name, type]) => ({ name, type }));
+}
+
 /** 解析单个控制器源码文件为若干分组片段。 */
 function parseControllerFile(file, dtoMap) {
   const source = readFileSync(file, 'utf8');
@@ -387,6 +663,10 @@ function parseControllerFile(file, dtoMap) {
     const controllerPath = stringArgs(controllerDec)[0] ?? '';
     const classJsDoc = leadingJsDoc(source, node);
     const className = node.name?.text ?? '';
+
+    // 预构建：service 导入映射与构造函数字段→类型映射，供「动态查询字段」回溯使用
+    const serviceImportMap = buildServiceImportMap(sf, file);
+    const fieldTypeMap = buildFieldTypeMap(node);
 
     const endpoints = [];
     const moduleNames = [];
@@ -420,8 +700,20 @@ function parseControllerFile(file, dtoMap) {
       // 响应侧由运行时的契约示例库（src/modules/docs/api-examples.ts）补全。
       const isRaw = decorators.some((dec) => decoratorName(dec) === 'RawResponse');
       const fullPath = joinPath(controllerPath, methodPath);
-      const { body: bodyDto, query: queryDto } = methodDtoParams(sf, member);
+      const { body: bodyDto, query: queryDto } = methodDtoParams(sf, member, dtoMap);
+
+      // 动态查询字段：仅当没有显式 Query DTO 时，回溯 service 实现里的 query.<field> 读取
+      const queryParamName =
+        (member.parameters ?? [])
+          .find((p) => getDecorators(p).some((d) => decoratorName(d) === 'Query'))
+          ?.name?.getText(sf) ?? 'query';
+      const dynamicQuery =
+        !queryDto && method === 'GET' && pathParamNames(fullPath).length === 0 && !isRaw
+          ? scanServiceQueryFields({ member, queryParamName, serviceImportMap, fieldTypeMap })
+          : [];
+
       const examples = buildExamples({ method, fullPath, isPublic, bodyDto, queryDto, dtoMap, isRaw });
+      const params = buildParams({ method, fullPath, bodyDto, queryDto, isRaw, dtoMap, dynamicQuery });
 
       endpoints.push({
         method,
@@ -431,10 +723,12 @@ function parseControllerFile(file, dtoMap) {
         isPublic,
         action,
         examples,
+        params,
         // 以下为生成期内部字段，供 OpenAPI 导出重映射使用，不进入对外产物（buildSource 已剥离）
         bodyDto,
         queryDto,
         isRaw,
+        dynamicQuery,
       });
     }
 
@@ -481,6 +775,7 @@ function buildSource(groups) {
       permission: e.permission,
       isPublic: e.isPublic,
       action: e.action,
+      params: e.params,
       examples: e.examples,
     })),
   }));
@@ -605,6 +900,16 @@ function buildOpenApi(groups, dtoMap, version) {
           params.push(p);
         }
       } else if (ep.method === 'GET' && pathParamNames(ep.path).length === 0 && !ep.isRaw) {
+        for (const qf of ep.dynamicQuery || []) {
+          const qtype = qf.type === 'number' ? 'integer' : qf.type === 'boolean' ? 'boolean' : 'string';
+          params.push({
+            name: qf.name,
+            in: 'query',
+            required: false,
+            schema: { type: qtype },
+            description: '动态查询条件（运行时从 query 对象读取，类型依实现）',
+          });
+        }
         params.push({
           name: 'page',
           in: 'query',

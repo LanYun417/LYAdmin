@@ -17,6 +17,16 @@ export const API_DOCS: ApiDocGroup[] = [
         "permission": [],
         "isPublic": false,
         "action": "",
+        "params": [
+          {
+            "name": "days",
+            "in": "query",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 7
+          }
+        ],
         "examples": {
           "curl": "curl -X GET \"http://localhost:3000/api/dashboard/login-trend?days=7\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
@@ -31,6 +41,24 @@ export const API_DOCS: ApiDocGroup[] = [
         "permission": [],
         "isPublic": false,
         "action": "",
+        "params": [
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "页码，从 1 开始",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "每页条数",
+            "example": 10
+          }
+        ],
         "examples": {
           "curl": "curl -X GET \"http://localhost:3000/api/dashboard/operation-distribution?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
@@ -46,6 +74,24 @@ export const API_DOCS: ApiDocGroup[] = [
         "permission": [],
         "isPublic": false,
         "action": "",
+        "params": [
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "页码，从 1 开始",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "每页条数",
+            "example": 10
+          }
+        ],
         "examples": {
           "curl": "curl -X GET \"http://localhost:3000/api/dashboard/role-user-count?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
@@ -61,6 +107,24 @@ export const API_DOCS: ApiDocGroup[] = [
         "permission": [],
         "isPublic": false,
         "action": "",
+        "params": [
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "页码，从 1 开始",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "每页条数",
+            "example": 10
+          }
+        ],
         "examples": {
           "curl": "curl -X GET \"http://localhost:3000/api/dashboard/stats?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
@@ -81,6 +145,24 @@ export const API_DOCS: ApiDocGroup[] = [
         "permission": [],
         "isPublic": true,
         "action": "",
+        "params": [
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "页码，从 1 开始",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "每页条数",
+            "example": 10
+          }
+        ],
         "examples": {
           "curl": "curl -X GET \"http://localhost:3000/api/auth/captcha?page=1&pageSize=10\"",
           "query": {
@@ -96,6 +178,24 @@ export const API_DOCS: ApiDocGroup[] = [
         "permission": [],
         "isPublic": false,
         "action": "",
+        "params": [
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "页码，从 1 开始",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "每页条数",
+            "example": 10
+          }
+        ],
         "examples": {
           "curl": "curl -X GET \"http://localhost:3000/api/auth/menus?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
@@ -111,6 +211,24 @@ export const API_DOCS: ApiDocGroup[] = [
         "permission": [],
         "isPublic": false,
         "action": "",
+        "params": [
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "页码，从 1 开始",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "每页条数",
+            "example": 10
+          }
+        ],
         "examples": {
           "curl": "curl -X GET \"http://localhost:3000/api/auth/permissions?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
@@ -126,6 +244,24 @@ export const API_DOCS: ApiDocGroup[] = [
         "permission": [],
         "isPublic": false,
         "action": "",
+        "params": [
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "页码，从 1 开始",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "每页条数",
+            "example": 10
+          }
+        ],
         "examples": {
           "curl": "curl -X GET \"http://localhost:3000/api/auth/profile?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
@@ -141,6 +277,40 @@ export const API_DOCS: ApiDocGroup[] = [
         "permission": [],
         "isPublic": true,
         "action": "认证 · 登录",
+        "params": [
+          {
+            "name": "username",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "登录账号",
+            "example": "admin"
+          },
+          {
+            "name": "password",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "明文密码",
+            "example": "123456"
+          },
+          {
+            "name": "captchaId",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "验证码 id（验证码启用时必填，由前端从 /auth/captcha 获取）",
+            "example": "b7f3c1a2-0000-4a1b-9c3d-8e6f5a4b3c2d"
+          },
+          {
+            "name": "captchaCode",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "用户输入的验证码",
+            "example": "A1B2"
+          }
+        ],
         "examples": {
           "curl": "curl -X POST \"http://localhost:3000/api/auth/login\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"username\": \"admin\",\n      \"password\": \"123456\",\n      \"captchaId\": \"b7f3c1a2-0000-4a1b-9c3d-8e6f5a4b3c2d\",\n      \"captchaCode\": \"A1B2\"\n    }'",
           "requestBody": {
@@ -169,6 +339,16 @@ export const API_DOCS: ApiDocGroup[] = [
         "permission": [],
         "isPublic": true,
         "action": "",
+        "params": [
+          {
+            "name": "refreshToken",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "refreshToken",
+            "example": "<登录返回的 refreshToken>"
+          }
+        ],
         "examples": {
           "curl": "curl -X POST \"http://localhost:3000/api/auth/refresh\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"refreshToken\": \"<登录返回的 refreshToken>\"\n    }'",
           "requestBody": {
@@ -190,6 +370,45 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "",
+        "params": [
+          {
+            "name": "username",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "type": "number",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "deptId",
+            "in": "query",
+            "type": "number",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "页码，从 1 开始",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "每页条数",
+            "example": 10
+          }
+        ],
         "examples": {
           "curl": "curl -X GET \"http://localhost:3000/api/users?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
@@ -207,6 +426,16 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          }
+        ],
         "examples": {
           "curl": "curl -X GET \"http://localhost:3000/api/users/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
@@ -223,6 +452,90 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "用户管理 · 新增",
+        "params": [
+          {
+            "name": "username",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "登录账号：3~20 位字母/数字/下划线",
+            "example": "admin"
+          },
+          {
+            "name": "password",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "明文密码：6~20 位",
+            "example": "123456"
+          },
+          {
+            "name": "nickname",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "昵称",
+            "example": "示例用户"
+          },
+          {
+            "name": "email",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "邮箱（可空）",
+            "example": "demo@example.com"
+          },
+          {
+            "name": "phone",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "手机号（可空）",
+            "example": "13800138000"
+          },
+          {
+            "name": "gender",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "性别（字典 sys_user_sex 的值，可空）",
+            "example": "1"
+          },
+          {
+            "name": "status",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "状态：1 启用 / 0 禁用，默认 1",
+            "example": 1
+          },
+          {
+            "name": "roleIds",
+            "in": "body",
+            "type": "number[]",
+            "required": false,
+            "description": "角色 id 列表，默认空",
+            "example": [
+              1
+            ]
+          },
+          {
+            "name": "deptId",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "部门 id（0 表示未分配），默认 0",
+            "example": 1
+          },
+          {
+            "name": "remark",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "备注（可空）",
+            "example": "示例备注"
+          }
+        ],
         "examples": {
           "curl": "curl -X POST \"http://localhost:3000/api/users\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"username\": \"admin\",\n      \"password\": \"123456\",\n      \"nickname\": \"示例用户\",\n      \"email\": \"demo@example.com\",\n      \"phone\": \"13800138000\",\n      \"gender\": \"1\",\n      \"status\": 1,\n      \"roleIds\": [\n        1\n      ],\n      \"deptId\": 1,\n      \"remark\": \"示例备注\"\n    }'",
           "requestBody": {
@@ -250,6 +563,82 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "用户管理 · 编辑",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          },
+          {
+            "name": "nickname",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "昵称",
+            "example": "示例用户"
+          },
+          {
+            "name": "email",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "邮箱（可空）",
+            "example": "demo@example.com"
+          },
+          {
+            "name": "phone",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "手机号（可空）",
+            "example": "13800138000"
+          },
+          {
+            "name": "gender",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "性别（可空）",
+            "example": "1"
+          },
+          {
+            "name": "status",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "状态：1 启用 / 0 禁用，默认 1",
+            "example": 1
+          },
+          {
+            "name": "roleIds",
+            "in": "body",
+            "type": "number[]",
+            "required": false,
+            "description": "角色 id 列表，默认空",
+            "example": [
+              1
+            ]
+          },
+          {
+            "name": "deptId",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "部门 id（0 表示未分配），默认 0",
+            "example": 1
+          },
+          {
+            "name": "remark",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "备注（可空）",
+            "example": "示例备注"
+          }
+        ],
         "examples": {
           "curl": "curl -X PUT \"http://localhost:3000/api/users/1\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"nickname\": \"示例用户\",\n      \"email\": \"demo@example.com\",\n      \"phone\": \"13800138000\",\n      \"gender\": \"1\",\n      \"status\": 1,\n      \"roleIds\": [\n        1\n      ],\n      \"deptId\": 1,\n      \"remark\": \"示例备注\"\n    }'",
           "pathParams": {
@@ -278,6 +667,24 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "用户管理 · 重置密码",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          },
+          {
+            "name": "password",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "123456"
+          }
+        ],
         "examples": {
           "curl": "curl -X PUT \"http://localhost:3000/api/users/1/password\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"password\": \"123456\"\n    }'",
           "pathParams": {
@@ -297,6 +704,26 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "用户管理 · 分配角色",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          },
+          {
+            "name": "roleIds",
+            "in": "body",
+            "type": "number[]",
+            "required": false,
+            "description": "",
+            "example": [
+              1
+            ]
+          }
+        ],
         "examples": {
           "curl": "curl -X PUT \"http://localhost:3000/api/users/1/roles\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"roleIds\": [\n        1\n      ]\n    }'",
           "pathParams": {
@@ -318,6 +745,24 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "用户管理 · 状态变更",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          },
+          {
+            "name": "status",
+            "in": "body",
+            "type": "number",
+            "required": true,
+            "description": "",
+            "example": 1
+          }
+        ],
         "examples": {
           "curl": "curl -X PUT \"http://localhost:3000/api/users/1/status\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"status\": 1\n    }'",
           "pathParams": {
@@ -337,6 +782,16 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "用户管理 · 删除",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          }
+        ],
         "examples": {
           "curl": "curl -X DELETE \"http://localhost:3000/api/users/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
@@ -358,6 +813,38 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "",
+        "params": [
+          {
+            "name": "roleName",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "type": "number",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "页码，从 1 开始",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "每页条数",
+            "example": 10
+          }
+        ],
         "examples": {
           "curl": "curl -X GET \"http://localhost:3000/api/roles?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
@@ -375,6 +862,16 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          }
+        ],
         "examples": {
           "curl": "curl -X GET \"http://localhost:3000/api/roles/1/menus\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
@@ -391,6 +888,24 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "",
+        "params": [
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "页码，从 1 开始",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "每页条数",
+            "example": 10
+          }
+        ],
         "examples": {
           "curl": "curl -X GET \"http://localhost:3000/api/roles/all?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
@@ -408,6 +923,66 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "角色管理 · 新增",
+        "params": [
+          {
+            "name": "roleName",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "示例角色"
+          },
+          {
+            "name": "roleCode",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "demo_role"
+          },
+          {
+            "name": "sort",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 1
+          },
+          {
+            "name": "status",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 1
+          },
+          {
+            "name": "dataScope",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "数据权限范围：1 全部 / 2 自定义部门 / 3 本部门及以下 / 4 仅本人",
+            "example": 1
+          },
+          {
+            "name": "deptIds",
+            "in": "body",
+            "type": "number[]",
+            "required": false,
+            "description": "自定义部门 id 列表（dataScope=2 时生效）",
+            "example": [
+              1
+            ]
+          },
+          {
+            "name": "remark",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "示例备注"
+          }
+        ],
         "examples": {
           "curl": "curl -X POST \"http://localhost:3000/api/roles\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"roleName\": \"示例角色\",\n      \"roleCode\": \"demo_role\",\n      \"sort\": 1,\n      \"status\": 1,\n      \"dataScope\": 1,\n      \"deptIds\": [\n        1\n      ],\n      \"remark\": \"示例备注\"\n    }'",
           "requestBody": {
@@ -432,6 +1007,66 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "角色管理 · 编辑",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          },
+          {
+            "name": "roleName",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "示例角色"
+          },
+          {
+            "name": "sort",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 1
+          },
+          {
+            "name": "status",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 1
+          },
+          {
+            "name": "dataScope",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "数据权限范围：1 全部 / 2 自定义部门 / 3 本部门及以下 / 4 仅本人",
+            "example": 1
+          },
+          {
+            "name": "deptIds",
+            "in": "body",
+            "type": "number[]",
+            "required": false,
+            "description": "自定义部门 id 列表（dataScope=2 时生效）",
+            "example": [
+              1
+            ]
+          },
+          {
+            "name": "remark",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "示例备注"
+          }
+        ],
         "examples": {
           "curl": "curl -X PUT \"http://localhost:3000/api/roles/1\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"roleName\": \"示例角色\",\n      \"sort\": 1,\n      \"status\": 1,\n      \"dataScope\": 1,\n      \"deptIds\": [\n        1\n      ],\n      \"remark\": \"示例备注\"\n    }'",
           "pathParams": {
@@ -458,6 +1093,26 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "角色管理 · 授权菜单",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          },
+          {
+            "name": "menuIds",
+            "in": "body",
+            "type": "number[]",
+            "required": false,
+            "description": "",
+            "example": [
+              1
+            ]
+          }
+        ],
         "examples": {
           "curl": "curl -X PUT \"http://localhost:3000/api/roles/1/menus\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"menuIds\": [\n        1\n      ]\n    }'",
           "pathParams": {
@@ -479,6 +1134,16 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "角色管理 · 删除",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          }
+        ],
         "examples": {
           "curl": "curl -X DELETE \"http://localhost:3000/api/roles/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
@@ -500,6 +1165,45 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "",
+        "params": [
+          {
+            "name": "menuName",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "type": "number",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "tree",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "页码，从 1 开始",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "每页条数",
+            "example": 10
+          }
+        ],
         "examples": {
           "curl": "curl -X GET \"http://localhost:3000/api/menus?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
@@ -517,6 +1221,16 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          }
+        ],
         "examples": {
           "curl": "curl -X GET \"http://localhost:3000/api/menus/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
@@ -534,6 +1248,24 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "",
+        "params": [
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "页码，从 1 开始",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "每页条数",
+            "example": 10
+          }
+        ],
         "examples": {
           "curl": "curl -X GET \"http://localhost:3000/api/menus/tree?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
@@ -551,6 +1283,104 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "菜单管理 · 新增",
+        "params": [
+          {
+            "name": "parentId",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 1
+          },
+          {
+            "name": "menuName",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "示例菜单"
+          },
+          {
+            "name": "menuType",
+            "in": "body",
+            "type": "'M' | 'C' | 'F'",
+            "required": true,
+            "description": "",
+            "example": "C"
+          },
+          {
+            "name": "path",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "示例值"
+          },
+          {
+            "name": "component",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "示例值"
+          },
+          {
+            "name": "icon",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "示例值"
+          },
+          {
+            "name": "permission",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "示例值"
+          },
+          {
+            "name": "sort",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 1
+          },
+          {
+            "name": "visible",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 1
+          },
+          {
+            "name": "status",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 1
+          },
+          {
+            "name": "redirect",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "示例值"
+          },
+          {
+            "name": "keepAlive",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 1
+          }
+        ],
         "examples": {
           "curl": "curl -X POST \"http://localhost:3000/api/menus\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"parentId\": 1,\n      \"menuName\": \"示例菜单\",\n      \"menuType\": \"C\",\n      \"path\": \"示例值\",\n      \"component\": \"示例值\",\n      \"icon\": \"示例值\",\n      \"permission\": \"示例值\",\n      \"sort\": 1,\n      \"visible\": 1,\n      \"status\": 1,\n      \"redirect\": \"示例值\",\n      \"keepAlive\": 1\n    }'",
           "requestBody": {
@@ -578,6 +1408,112 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "菜单管理 · 编辑",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          },
+          {
+            "name": "parentId",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 1
+          },
+          {
+            "name": "menuName",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "示例菜单"
+          },
+          {
+            "name": "menuType",
+            "in": "body",
+            "type": "'M' | 'C' | 'F'",
+            "required": true,
+            "description": "",
+            "example": "C"
+          },
+          {
+            "name": "path",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "示例值"
+          },
+          {
+            "name": "component",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "示例值"
+          },
+          {
+            "name": "icon",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "示例值"
+          },
+          {
+            "name": "permission",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "示例值"
+          },
+          {
+            "name": "sort",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 1
+          },
+          {
+            "name": "visible",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 1
+          },
+          {
+            "name": "status",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 1
+          },
+          {
+            "name": "redirect",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "示例值"
+          },
+          {
+            "name": "keepAlive",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 1
+          }
+        ],
         "examples": {
           "curl": "curl -X PUT \"http://localhost:3000/api/menus/1\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"parentId\": 1,\n      \"menuName\": \"示例菜单\",\n      \"menuType\": \"C\",\n      \"path\": \"示例值\",\n      \"component\": \"示例值\",\n      \"icon\": \"示例值\",\n      \"permission\": \"示例值\",\n      \"sort\": 1,\n      \"visible\": 1,\n      \"status\": 1,\n      \"redirect\": \"示例值\",\n      \"keepAlive\": 1\n    }'",
           "pathParams": {
@@ -608,6 +1544,16 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "菜单管理 · 删除",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          }
+        ],
         "examples": {
           "curl": "curl -X DELETE \"http://localhost:3000/api/menus/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
@@ -629,6 +1575,45 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "",
+        "params": [
+          {
+            "name": "deptName",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "type": "number",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "tree",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "页码，从 1 开始",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "每页条数",
+            "example": 10
+          }
+        ],
         "examples": {
           "curl": "curl -X GET \"http://localhost:3000/api/depts?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
@@ -646,6 +1631,16 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          }
+        ],
         "examples": {
           "curl": "curl -X GET \"http://localhost:3000/api/depts/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
@@ -662,6 +1657,24 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "",
+        "params": [
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "页码，从 1 开始",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "每页条数",
+            "example": 10
+          }
+        ],
         "examples": {
           "curl": "curl -X GET \"http://localhost:3000/api/depts/tree?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
@@ -679,6 +1692,64 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "部门管理 · 新增",
+        "params": [
+          {
+            "name": "parentId",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 1
+          },
+          {
+            "name": "deptName",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "示例部门"
+          },
+          {
+            "name": "leader",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "张三"
+          },
+          {
+            "name": "phone",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "13800138000"
+          },
+          {
+            "name": "email",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "demo@example.com"
+          },
+          {
+            "name": "sort",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 1
+          },
+          {
+            "name": "status",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 1
+          }
+        ],
         "examples": {
           "curl": "curl -X POST \"http://localhost:3000/api/depts\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"parentId\": 1,\n      \"deptName\": \"示例部门\",\n      \"leader\": \"张三\",\n      \"phone\": \"13800138000\",\n      \"email\": \"demo@example.com\",\n      \"sort\": 1,\n      \"status\": 1\n    }'",
           "requestBody": {
@@ -701,6 +1772,72 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "部门管理 · 编辑",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          },
+          {
+            "name": "parentId",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 1
+          },
+          {
+            "name": "deptName",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "示例部门"
+          },
+          {
+            "name": "leader",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "张三"
+          },
+          {
+            "name": "phone",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "13800138000"
+          },
+          {
+            "name": "email",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "demo@example.com"
+          },
+          {
+            "name": "sort",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 1
+          },
+          {
+            "name": "status",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 1
+          }
+        ],
         "examples": {
           "curl": "curl -X PUT \"http://localhost:3000/api/depts/1\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"parentId\": 1,\n      \"deptName\": \"示例部门\",\n      \"leader\": \"张三\",\n      \"phone\": \"13800138000\",\n      \"email\": \"demo@example.com\",\n      \"sort\": 1,\n      \"status\": 1\n    }'",
           "pathParams": {
@@ -726,6 +1863,16 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "部门管理 · 删除",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          }
+        ],
         "examples": {
           "curl": "curl -X DELETE \"http://localhost:3000/api/depts/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
@@ -745,6 +1892,16 @@ export const API_DOCS: ApiDocGroup[] = [
         "permission": [],
         "isPublic": false,
         "action": "",
+        "params": [
+          {
+            "name": "dictType",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "sys_demo"
+          }
+        ],
         "examples": {
           "curl": "curl -X GET \"http://localhost:3000/api/dict/data/sys_demo\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
@@ -761,6 +1918,45 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "",
+        "params": [
+          {
+            "name": "dictType",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "dictLabel",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "type": "number",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "页码，从 1 开始",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "每页条数",
+            "example": 10
+          }
+        ],
         "examples": {
           "curl": "curl -X GET \"http://localhost:3000/api/dict/items?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
@@ -778,6 +1974,45 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "",
+        "params": [
+          {
+            "name": "dictName",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "dictType",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "type": "number",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "页码，从 1 开始",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "每页条数",
+            "example": 10
+          }
+        ],
         "examples": {
           "curl": "curl -X GET \"http://localhost:3000/api/dict/types?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
@@ -795,6 +2030,56 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "字典管理 · 新增",
+        "params": [
+          {
+            "name": "dictType",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "所属字典类型编码",
+            "example": "sys_demo"
+          },
+          {
+            "name": "dictLabel",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "字典标签（展示文案）",
+            "example": "示例标签"
+          },
+          {
+            "name": "dictValue",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "字典值（业务存储值）",
+            "example": "1"
+          },
+          {
+            "name": "sort",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "排序",
+            "example": 1
+          },
+          {
+            "name": "status",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "状态：1 启用 / 0 禁用",
+            "example": 1
+          },
+          {
+            "name": "remark",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "备注",
+            "example": "示例备注"
+          }
+        ],
         "examples": {
           "curl": "curl -X POST \"http://localhost:3000/api/dict/items\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"dictType\": \"sys_demo\",\n      \"dictLabel\": \"示例标签\",\n      \"dictValue\": \"1\",\n      \"sort\": 1,\n      \"status\": 1,\n      \"remark\": \"示例备注\"\n    }'",
           "requestBody": {
@@ -816,6 +2101,40 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "字典管理 · 新增",
+        "params": [
+          {
+            "name": "dictName",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "字典名称",
+            "example": "示例字典"
+          },
+          {
+            "name": "dictType",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "字典类型编码（业务引用键，创建后不可修改）",
+            "example": "sys_demo"
+          },
+          {
+            "name": "status",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "状态：1 启用 / 0 禁用",
+            "example": 1
+          },
+          {
+            "name": "remark",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "备注",
+            "example": "示例备注"
+          }
+        ],
         "examples": {
           "curl": "curl -X POST \"http://localhost:3000/api/dict/types\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"dictName\": \"示例字典\",\n      \"dictType\": \"sys_demo\",\n      \"status\": 1,\n      \"remark\": \"示例备注\"\n    }'",
           "requestBody": {
@@ -835,6 +2154,56 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "字典管理 · 编辑",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          },
+          {
+            "name": "dictLabel",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "字典标签（展示文案）",
+            "example": "示例标签"
+          },
+          {
+            "name": "dictValue",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "字典值（业务存储值）",
+            "example": "1"
+          },
+          {
+            "name": "sort",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "排序",
+            "example": 1
+          },
+          {
+            "name": "status",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "状态：1 启用 / 0 禁用",
+            "example": 1
+          },
+          {
+            "name": "remark",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "备注",
+            "example": "示例备注"
+          }
+        ],
         "examples": {
           "curl": "curl -X PUT \"http://localhost:3000/api/dict/items/1\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"dictLabel\": \"示例标签\",\n      \"dictValue\": \"1\",\n      \"sort\": 1,\n      \"status\": 1,\n      \"remark\": \"示例备注\"\n    }'",
           "pathParams": {
@@ -858,6 +2227,24 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "字典管理 · 编辑",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          },
+          {
+            "name": "status",
+            "in": "body",
+            "type": "number",
+            "required": true,
+            "description": "目标状态：1 启用 / 0 禁用",
+            "example": 1
+          }
+        ],
         "examples": {
           "curl": "curl -X PUT \"http://localhost:3000/api/dict/items/1/status\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"status\": 1\n    }'",
           "pathParams": {
@@ -877,6 +2264,40 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "字典管理 · 编辑",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          },
+          {
+            "name": "dictName",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "字典名称",
+            "example": "示例字典"
+          },
+          {
+            "name": "status",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "状态：1 启用 / 0 禁用",
+            "example": 1
+          },
+          {
+            "name": "remark",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "备注",
+            "example": "示例备注"
+          }
+        ],
         "examples": {
           "curl": "curl -X PUT \"http://localhost:3000/api/dict/types/1\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"dictName\": \"示例字典\",\n      \"status\": 1,\n      \"remark\": \"示例备注\"\n    }'",
           "pathParams": {
@@ -898,6 +2319,24 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "字典管理 · 编辑",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          },
+          {
+            "name": "status",
+            "in": "body",
+            "type": "number",
+            "required": true,
+            "description": "目标状态：1 启用 / 0 禁用",
+            "example": 1
+          }
+        ],
         "examples": {
           "curl": "curl -X PUT \"http://localhost:3000/api/dict/types/1/status\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"status\": 1\n    }'",
           "pathParams": {
@@ -917,6 +2356,16 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "字典管理 · 删除",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          }
+        ],
         "examples": {
           "curl": "curl -X DELETE \"http://localhost:3000/api/dict/items/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
@@ -933,6 +2382,16 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "字典管理 · 删除",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          }
+        ],
         "examples": {
           "curl": "curl -X DELETE \"http://localhost:3000/api/dict/types/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
@@ -954,6 +2413,38 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "",
+        "params": [
+          {
+            "name": "configName",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "configKey",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "页码，从 1 开始",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "每页条数",
+            "example": 10
+          }
+        ],
         "examples": {
           "curl": "curl -X GET \"http://localhost:3000/api/configs?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
@@ -971,6 +2462,16 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          }
+        ],
         "examples": {
           "curl": "curl -X GET \"http://localhost:3000/api/configs/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
@@ -985,6 +2486,16 @@ export const API_DOCS: ApiDocGroup[] = [
         "permission": [],
         "isPublic": false,
         "action": "",
+        "params": [
+          {
+            "name": "configKey",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "sys.demo.key"
+          }
+        ],
         "examples": {
           "curl": "curl -X GET \"http://localhost:3000/api/configs/data/sys.demo.key\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
@@ -1001,6 +2512,40 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "参数管理 · 新增",
+        "params": [
+          {
+            "name": "configName",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "参数名称",
+            "example": "示例参数"
+          },
+          {
+            "name": "configKey",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "参数键名（业务引用键，创建后不可修改）",
+            "example": "sys.demo.key"
+          },
+          {
+            "name": "configValue",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "参数值",
+            "example": "示例值"
+          },
+          {
+            "name": "remark",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "备注",
+            "example": "示例备注"
+          }
+        ],
         "examples": {
           "curl": "curl -X POST \"http://localhost:3000/api/configs\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"configName\": \"示例参数\",\n      \"configKey\": \"sys.demo.key\",\n      \"configValue\": \"示例值\",\n      \"remark\": \"示例备注\"\n    }'",
           "requestBody": {
@@ -1020,6 +2565,40 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "参数管理 · 编辑",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          },
+          {
+            "name": "configName",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "参数名称",
+            "example": "示例参数"
+          },
+          {
+            "name": "configValue",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "参数值",
+            "example": "示例值"
+          },
+          {
+            "name": "remark",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "备注",
+            "example": "示例备注"
+          }
+        ],
         "examples": {
           "curl": "curl -X PUT \"http://localhost:3000/api/configs/1\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"configName\": \"示例参数\",\n      \"configValue\": \"示例值\",\n      \"remark\": \"示例备注\"\n    }'",
           "pathParams": {
@@ -1041,6 +2620,16 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "参数管理 · 删除",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          }
+        ],
         "examples": {
           "curl": "curl -X DELETE \"http://localhost:3000/api/configs/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
@@ -1062,6 +2651,24 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "",
+        "params": [
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "页码，从 1 开始",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "每页条数",
+            "example": 10
+          }
+        ],
         "examples": {
           "curl": "curl -X GET \"http://localhost:3000/api/logs/http?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
@@ -1079,6 +2686,16 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          }
+        ],
         "examples": {
           "curl": "curl -X GET \"http://localhost:3000/api/logs/http/detail/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
@@ -1109,6 +2726,52 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "",
+        "params": [
+          {
+            "name": "username",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "type": "number",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "startTime",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "endTime",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "页码，从 1 开始",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "每页条数",
+            "example": 10
+          }
+        ],
         "examples": {
           "curl": "curl -X GET \"http://localhost:3000/api/logs/login?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
@@ -1140,6 +2803,59 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "",
+        "params": [
+          {
+            "name": "module",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "username",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "result",
+            "in": "query",
+            "type": "number",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "startTime",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "endTime",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "页码，从 1 开始",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "每页条数",
+            "example": 10
+          }
+        ],
         "examples": {
           "curl": "curl -X GET \"http://localhost:3000/api/logs/operation?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
@@ -1189,6 +2905,73 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "",
+        "params": [
+          {
+            "name": "originName",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "mimeType",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "uploaderId",
+            "in": "query",
+            "type": "unknown",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "startTime",
+            "in": "query",
+            "type": "unknown",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "endTime",
+            "in": "query",
+            "type": "unknown",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "minSize",
+            "in": "query",
+            "type": "unknown",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "maxSize",
+            "in": "query",
+            "type": "unknown",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "页码，从 1 开始",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "每页条数",
+            "example": 10
+          }
+        ],
         "examples": {
           "curl": "curl -X GET \"http://localhost:3000/api/files?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
@@ -1206,6 +2989,16 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          }
+        ],
         "examples": {
           "curl": "curl -X GET \"http://localhost:3000/api/files/1/download\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
@@ -1223,6 +3016,16 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "",
+        "params": [
+          {
+            "name": "hash",
+            "in": "query",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        ],
         "examples": {
           "curl": "curl -X GET \"http://localhost:3000/api/files/check?hash=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
@@ -1239,6 +3042,24 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "",
+        "params": [
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "页码，从 1 开始",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "每页条数",
+            "example": 10
+          }
+        ],
         "examples": {
           "curl": "curl -X GET \"http://localhost:3000/api/files/types?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
@@ -1256,6 +3077,24 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "",
+        "params": [
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "页码，从 1 开始",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "每页条数",
+            "example": 10
+          }
+        ],
         "examples": {
           "curl": "curl -X GET \"http://localhost:3000/api/files/uploaders?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
@@ -1286,6 +3125,16 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "文件管理 · 删除",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          }
+        ],
         "examples": {
           "curl": "curl -X DELETE \"http://localhost:3000/api/files/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
@@ -1307,6 +3156,24 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "",
+        "params": [
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "页码，从 1 开始",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "每页条数",
+            "example": 10
+          }
+        ],
         "examples": {
           "curl": "curl -X GET \"http://localhost:3000/api/gen/tables?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
@@ -1324,6 +3191,16 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "",
+        "params": [
+          {
+            "name": "tableName",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "sys_config"
+          }
+        ],
         "examples": {
           "curl": "curl -X GET \"http://localhost:3000/api/gen/tables/sys_config\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
@@ -1340,6 +3217,16 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "代码生成 · 写入项目",
+        "params": [
+          {
+            "name": "overwrite",
+            "in": "body",
+            "type": "boolean",
+            "required": false,
+            "description": "同名文件已存在时是否覆盖（默认 false → 409 冲突）",
+            "example": false
+          }
+        ],
         "examples": {
           "curl": "curl -X POST \"http://localhost:3000/api/gen/create\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"overwrite\": false\n    }'",
           "requestBody": {
@@ -1356,6 +3243,70 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "",
+        "params": [
+          {
+            "name": "tableName",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "数据库表名（必须真实存在）",
+            "example": "sys_config"
+          },
+          {
+            "name": "moduleName",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "模块名（如 system）：字母开头，仅字母数字",
+            "example": "demo"
+          },
+          {
+            "name": "businessName",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "业务名（如 user）：字母开头，仅字母数字，会拼进生成物路径",
+            "example": "demo"
+          },
+          {
+            "name": "author",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "作者（写入文件头注释）",
+            "example": "作者"
+          },
+          {
+            "name": "isTree",
+            "in": "body",
+            "type": "boolean",
+            "required": false,
+            "description": "是否树形表：列表返回整棵树、不生成分页",
+            "example": false
+          },
+          {
+            "name": "treeParentField",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "树形表父级字段名（默认 parentId）",
+            "example": "示例值"
+          },
+          {
+            "name": "columnOptions",
+            "in": "body",
+            "type": "GenColumnOptionDto[]",
+            "required": false,
+            "description": "各字段的控件类型 / 字典绑定（按 columnName 合并）",
+            "example": [
+              {
+                "columnName": "示例值",
+                "htmlType": "示例值",
+                "dictType": "sys_demo"
+              }
+            ]
+          }
+        ],
         "examples": {
           "curl": "curl -X POST \"http://localhost:3000/api/gen/download\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"tableName\": \"sys_config\",\n      \"moduleName\": \"demo\",\n      \"businessName\": \"demo\",\n      \"author\": \"作者\",\n      \"isTree\": false,\n      \"treeParentField\": \"示例值\",\n      \"columnOptions\": []\n    }'",
           "requestBody": {
@@ -1379,6 +3330,70 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "",
+        "params": [
+          {
+            "name": "tableName",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "数据库表名（必须真实存在）",
+            "example": "sys_config"
+          },
+          {
+            "name": "moduleName",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "模块名（如 system）：字母开头，仅字母数字",
+            "example": "demo"
+          },
+          {
+            "name": "businessName",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "业务名（如 user）：字母开头，仅字母数字，会拼进生成物路径",
+            "example": "demo"
+          },
+          {
+            "name": "author",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "作者（写入文件头注释）",
+            "example": "作者"
+          },
+          {
+            "name": "isTree",
+            "in": "body",
+            "type": "boolean",
+            "required": false,
+            "description": "是否树形表：列表返回整棵树、不生成分页",
+            "example": false
+          },
+          {
+            "name": "treeParentField",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "树形表父级字段名（默认 parentId）",
+            "example": "示例值"
+          },
+          {
+            "name": "columnOptions",
+            "in": "body",
+            "type": "GenColumnOptionDto[]",
+            "required": false,
+            "description": "各字段的控件类型 / 字典绑定（按 columnName 合并）",
+            "example": [
+              {
+                "columnName": "示例值",
+                "htmlType": "示例值",
+                "dictType": "sys_demo"
+              }
+            ]
+          }
+        ],
         "examples": {
           "curl": "curl -X POST \"http://localhost:3000/api/gen/preview\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"tableName\": \"sys_config\",\n      \"moduleName\": \"demo\",\n      \"businessName\": \"demo\",\n      \"author\": \"作者\",\n      \"isTree\": false,\n      \"treeParentField\": \"示例值\",\n      \"columnOptions\": []\n    }'",
           "requestBody": {
@@ -1415,6 +3430,48 @@ export const API_DOCS: ApiDocGroup[] = [
         "permission": [],
         "isPublic": false,
         "action": "个人中心 · 修改资料",
+        "params": [
+          {
+            "name": "nickname",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "示例用户"
+          },
+          {
+            "name": "email",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "邮箱：空串或合法邮箱（空串表示清空）。",
+            "example": "demo@example.com"
+          },
+          {
+            "name": "phone",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "手机号：空串或合法手机号。",
+            "example": "13800138000"
+          },
+          {
+            "name": "gender",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "性别：空串或最多 20 字符。",
+            "example": "1"
+          },
+          {
+            "name": "avatar",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "头像地址：最多 255 字符。",
+            "example": "/static/2026/avatar.png"
+          }
+        ],
         "examples": {
           "curl": "curl -X PUT \"http://localhost:3000/api/profile\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"nickname\": \"示例用户\",\n      \"email\": \"demo@example.com\",\n      \"phone\": \"13800138000\",\n      \"gender\": \"1\",\n      \"avatar\": \"/static/2026/avatar.png\"\n    }'",
           "requestBody": {
@@ -1433,6 +3490,24 @@ export const API_DOCS: ApiDocGroup[] = [
         "permission": [],
         "isPublic": false,
         "action": "个人中心 · 修改密码",
+        "params": [
+          {
+            "name": "oldPassword",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "123456"
+          },
+          {
+            "name": "newPassword",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "123456"
+          }
+        ],
         "examples": {
           "curl": "curl -X PUT \"http://localhost:3000/api/profile/password\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"oldPassword\": \"123456\",\n      \"newPassword\": \"123456\"\n    }'",
           "requestBody": {
@@ -1453,6 +3528,24 @@ export const API_DOCS: ApiDocGroup[] = [
         "permission": [],
         "isPublic": true,
         "action": "",
+        "params": [
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "页码，从 1 开始",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "每页条数",
+            "example": 10
+          }
+        ],
         "examples": {
           "curl": "curl -X GET \"http://localhost:3000/api/docs?page=1&pageSize=10\"",
           "query": {
@@ -1469,11 +3562,8 @@ export const API_DOCS: ApiDocGroup[] = [
         "isPublic": true,
         "action": "",
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/docs/openapi.json?page=1&pageSize=10\"",
-          "query": {
-            "page": 1,
-            "pageSize": 10
-          }
+          "curl": "curl -X GET \"http://localhost:3000/api/docs/openapi.json\"",
+          "isRawResponse": true
         }
       }
     ]
@@ -1488,6 +3578,24 @@ export const API_DOCS: ApiDocGroup[] = [
         "permission": [],
         "isPublic": true,
         "action": "",
+        "params": [
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "页码，从 1 开始",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "每页条数",
+            "example": 10
+          }
+        ],
         "examples": {
           "curl": "curl -X GET \"http://localhost:3000/api?page=1&pageSize=10\"",
           "query": {

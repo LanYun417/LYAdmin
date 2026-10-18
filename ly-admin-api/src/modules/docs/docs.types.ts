@@ -22,6 +22,22 @@ export interface ApiDocExamples {
   response?: unknown;
 }
 
+/** 单个请求参数的明细（结构化的参数说明，供前端参数表格渲染）。 */
+export interface ApiDocParam {
+  /** 参数名 */
+  name: string;
+  /** 参数位置：path（路径参数）/ query（查询参数）/ body（请求体字段） */
+  in: 'path' | 'query' | 'body';
+  /** 类型（如 string / number / string[] / CreateRoleDto） */
+  type: string;
+  /** 是否必填（字段带 @IsOptional 则为 false） */
+  required: boolean;
+  /** 备注说明（取自 DTO 字段的 JSDoc；无则为空串） */
+  description: string;
+  /** 示例值（嵌套 DTO 字段给出一层对象示例） */
+  example?: unknown;
+}
+
 /** 单个接口条目。 */
 export interface ApiDocEndpoint {
   /** HTTP 方法：GET / POST / PUT / PATCH / DELETE */
@@ -36,6 +52,8 @@ export interface ApiDocEndpoint {
   isPublic: boolean;
   /** 操作日志语义（`@OperationLog` 的「模块 · 动作」，无则为空串） */
   action: string;
+  /** 请求参数明细（按 path / query / body 分类，含类型与备注；无参数时为 undefined） */
+  params?: ApiDocParam[];
   /** 请求 / 响应示例 */
   examples: ApiDocExamples;
 }
