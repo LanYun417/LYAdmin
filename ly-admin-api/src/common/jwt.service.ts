@@ -67,7 +67,7 @@ export class JwtService {
 
   /**
    * 校验并解码 refreshToken。
-   * @throws jose.errors.JWTExpired / jose.errors.JWTInvalid
+   * @throws jose.errors.JWTExpired / jose.errors.JWTInvalid（已过期 / 无效）
    */
   async verifyRefreshToken(token: string): Promise<JwtPayload> {
     const { payload } = await jwtVerify(token, this.refreshKey);

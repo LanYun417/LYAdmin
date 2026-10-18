@@ -35,7 +35,7 @@ export class LoginDto {
 }
 
 export class RefreshDto {
-  /** refreshToken */
+  /** 刷新令牌（refreshToken） */
   @IsString({ message: '刷新令牌不能为空' })
   @IsNotEmpty({ message: '刷新令牌不能为空' })
   refreshToken!: string;

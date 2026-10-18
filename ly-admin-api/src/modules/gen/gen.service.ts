@@ -122,7 +122,7 @@ const HTML_TYPES: GenHtmlType[] = ['input', 'select', 'treeSelect'];
  * 2. 列名为 `parent_id` → 树形父级选择；
  * 3. 列名为 `status`/`state` 且是整型 → 字典下拉，直接复用内置的启用/禁用字典。
  * @param columnName 列名（下划线形式）
- * @param dataType MySQL DATA_TYPE
+ * @param dataType MySQL DATA_TYPE（列的数据类型）
  * @param comment 列注释
  */
 function suggestFieldControl(

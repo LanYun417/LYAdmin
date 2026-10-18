@@ -12,7 +12,7 @@ model LoginLog {
   username  String   @db.VarChar(50)
   /// 客户端 IP
   ip        String?  @db.VarChar(50)
-  /// User-Agent
+  /// User-Agent（用户代理）
   userAgent String?  @map("user_agent") @db.VarChar(500)
   /// IP 归属地（ip2region 离线解析：国家 省份 城市 运营商）
   location  String?  @db.VarChar(100)
@@ -80,7 +80,7 @@ model HttpLog {
   ip         String?  @db.VarChar(64)
   /// IP 归属地（ip2region 离线解析：国家 省份 城市 运营商）
   location   String?  @db.VarChar(100)
-  /// User-Agent
+  /// User-Agent（用户代理）
   userAgent  String?  @map("user_agent") @db.VarChar(500)
   /// 操作用户 id（0 为匿名/未登录）
   userId     BigInt   @default(0) @map("user_id") @db.BigInt

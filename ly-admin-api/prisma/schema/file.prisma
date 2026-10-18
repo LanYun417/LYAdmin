@@ -16,7 +16,7 @@ model File {
   filePath   String   @map("file_path") @db.VarChar(500)
   /// 访问 URL
   fileUrl    String   @map("file_url") @db.VarChar(500)
-  /// MIME
+  /// MIME（媒体类型）
   mimeType   String   @map("mime_type") @db.VarChar(100)
   /// 字节
   size       Int      @default(0) @db.Int

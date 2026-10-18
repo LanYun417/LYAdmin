@@ -608,14 +608,14 @@ function scanServiceQueryFields({ member, queryParamName, serviceImportMap, fiel
         else if (fn === 'readBoolean') t = 'boolean';
         else if (fn === 'readString' || fn === 'String' || fn === 'readFilterDate') t = 'string';
       } else if (ts.isTypeOfExpression(parent)) {
-        // typeof query.x === 'string' | 'number'
+        // typeof 判断：query.x === 'string' | 'number'
         const gp = parent.parent;
         if (ts.isBinaryExpression(gp) && ts.isStringLiteral(gp.right)) {
           if (gp.right.text === 'string') t = 'string';
           else if (gp.right.text === 'number') t = 'number';
         }
       } else if (ts.isAsExpression(parent)) {
-        // query.x as string | as number | as boolean
+        // as 断言：query.x as string | as number | as boolean
         if (ts.isStringKeyword(parent.type)) t = 'string';
         else if (ts.isNumberKeyword(parent.type)) t = 'number';
         else if (ts.isBooleanKeyword(parent.type)) t = 'boolean';

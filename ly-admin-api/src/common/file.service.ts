@@ -73,7 +73,7 @@ export class FileService {
    * 保存一个上传文件。
    *
    * @param originalName 原始文件名
-   * @param mimeType MIME
+   * @param mimeType MIME 类型（如 image/png）
    * @param buffer 文件内容
    * @param uploaderId 上传人 id（可为空，如种子数据）
    */
