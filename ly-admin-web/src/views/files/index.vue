@@ -24,7 +24,7 @@ import Pagination from '@/components/Pagination/index.vue';
 import SearchForm from '@/components/SearchForm/index.vue';
 import { withUploadToken } from '@/utils/uploadToken';
 
-defineOptions({ name: 'Upload' });
+defineOptions({ name: 'Files' });
 
 /** KB → 字节换算（表单按 KB 录入，接口按字节过滤） */
 const BYTES_PER_KB = 1024;
@@ -170,7 +170,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="upload-page">
+  <div class="files-page">
     <el-card shadow="never">
       <template #header>文件上传</template>
       <el-upload
