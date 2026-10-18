@@ -33,12 +33,21 @@ function beginThemeTransition(): void {
   }, THEME_TRANSITION_MS + 50);
 }
 
+/** useTheme 单例句柄：整个应用只创建一份，避免多实例的 useDark 各写各的 */
+let themeHandle: ThemeHandle | undefined;
+
+interface ThemeHandle {
+  isDark: ComputedRef<boolean>;
+  toggleTheme: () => void;
+  setDark: (value: boolean) => void;
+}
+
 /**
- * 暗黑模式切换封装。
+ * 真正创建主题实例（只在首次调用 useTheme 时执行一次）。
  * 通过 VueUse `useDark` 统一切换 `html.dark`（与 Element Plus 暗黑方案对齐），
  * 并持久化到 localStorage（key: `ly_admin_theme`）；切换时带颜色过渡。
  */
-export function useTheme() {
+function createThemeHandle(): ThemeHandle {
   const appStore = useAppStore();
 
   const isDark = useDark({
@@ -79,4 +88,16 @@ export function useTheme() {
   };
 
   return { isDark: isDarkRef, toggleTheme, setDark };
+}
+
+/**
+ * 暗黑模式切换封装（单例，任意组件调用拿到的都是同一份状态）。
+ *
+ * 由 App.vue 在**根组件**中首次调用：`useDark` 的初始化（读取 localStorage 并给
+ * `<html>` 应用 `dark` 类）随之发生在所有路由之前，无布局的登录页刷新后也能恢复
+ * 暗黑模式。布局内组件（如 Navbar 头像下拉）复用同一实例，无需重复初始化。
+ */
+export function useTheme(): ThemeHandle {
+  themeHandle ??= createThemeHandle();
+  return themeHandle;
 }
