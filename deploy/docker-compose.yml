@@ -1,0 +1,125 @@
+# LYAdmin 一键部署（MySQL + Redis + 迁移 + API/前端同源托管）
+#
+# 用法（在仓库根目录）：
+#   cp deploy/.env.example deploy/.env   # 首次：填 DB_PASSWORD 与两个 JWT 密钥
+#   docker compose -f deploy/docker-compose.yml up -d --build
+#   curl --noproxy '*' http://localhost:3000/api/health/ready
+#
+# 约定：
+# - 只有 api 对外暴露端口（3000）；数据库与 Redis 仅在 compose 内部网络可达。
+# - 迁移由一次性服务 `migrate` 执行（用 api-builder 阶段的镜像，含 prisma CLI），
+#   api 等它 **成功退出** 后再启动，避免「先起服务再补表」导致的 500。
+# - uploads / logs / cache 挂命名卷，容器重建不丢数据；MySQL 数据同理。
+
+name: ly-admin
+
+services:
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:?deploy/.env 必须设置 DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME:-ly_admin}
+      TZ: Asia/Shanghai
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      # 用 mysqladmin ping：容器内已自带，无需额外安装客户端
+      test: ['CMD', 'mysqladmin', 'ping', '-h', '127.0.0.1', '-p${DB_PASSWORD}']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    # 登出黑名单 / 登录限流 / 验证码都依赖 Redis，开启 AOF 以免重启后统计与黑名单全丢
+    command: ['redis-server', '--appendonly', 'yes']
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # 一次性任务：应用迁移后退出（api 依赖它成功完成）
+  migrate:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+      target: api-builder
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME:-ly_admin}
+      DB_USER: root
+      DB_PASSWORD: ${DB_PASSWORD:?}
+      TZ: Asia/Shanghai
+    command: ['npx', 'prisma', 'migrate', 'deploy']
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: 'no'
+
+  api:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+      target: runtime
+      args:
+        APP_VERSION: ${APP_VERSION:-dev}
+        GIT_COMMIT: ${GIT_COMMIT:-}
+    restart: unless-stopped
+    ports:
+      - '${HOST_PORT:-3000}:3000'
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      # 数据库 / Redis 走 compose 内部网络，宿主机名不生效
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME:-ly_admin}
+      DB_USER: root
+      DB_PASSWORD: ${DB_PASSWORD:?}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_DB: 0
+      # 反向代理后的真实客户端 IP：不设这一项，限流与审计日志拿到的是容器网关 IP
+      TRUST_PROXY: 1
+      # 密钥必填：config.ts 对 JWT 密钥无默认值，缺失会直接拒绝启动（刻意如此）
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?}
+      JWT_ACCESS_EXPIRES_IN: ${JWT_ACCESS_EXPIRES_IN:-2h}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+      # 首次部署务必设置，否则超管用默认弱口令
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-}
+      CORS_ORIGIN: ${CORS_ORIGIN:-*}
+      CAPTCHA_ENABLED: ${CAPTCHA_ENABLED:-true}
+      UPLOAD_MAX_SIZE: ${UPLOAD_MAX_SIZE:-10485760}
+      LOG_HTTP_RETENTION_DAYS: ${LOG_HTTP_RETENTION_DAYS:-7}
+      TZ: Asia/Shanghai
+    volumes:
+      - uploads:/app/uploads
+      - logs:/app/logs
+      - cache:/app/cache
+      # ip2region 离线库（约 10MB，不入库）：存在即生效，缺失则归属地静默降级为空
+      - ../ly-admin-api/data:/app/data:ro
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+volumes:
+  mysql-data:
+  redis-data:
+  uploads:
+  logs:
+  cache:

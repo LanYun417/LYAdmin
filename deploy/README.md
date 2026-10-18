@@ -1,0 +1,92 @@
+# LYAdmin 部署说明（Docker Compose）
+
+## 1. 前置要求
+
+- Docker 24+ 与 Docker Compose v2（`docker compose` 子命令）
+- 2GB 以上可用内存（MySQL 8 + Node 各占一份）
+
+## 2. 首次部署
+
+```bash
+# 1) 准备环境变量（模板见下方第 4 节；该文件已被 .gitignore 忽略，不会进仓库）
+cp deploy/.env.example deploy/.env
+vi deploy/.env
+
+# 2) 构建并启动（含一次性迁移服务）
+docker compose -f deploy/docker-compose.yml up -d --build
+
+# 3) 验证（注意本机 shell 可能走代理，curl 需加 --noproxy）
+curl --noproxy '*' http://localhost:3000/api/health/live
+curl --noproxy '*' http://localhost:3000/api/health/ready
+# 期望：live → status ok；ready → status ready 且 checks.db.status = up
+```
+
+启动顺序由 compose 的依赖条件保证：`mysql`/`redis` 健康 → `migrate` 执行
+`prisma migrate deploy` 并成功退出 → `api` 启动（启动时自动跑幂等种子，建出超管与菜单）。
+
+浏览器访问 `http://<host>:3000`（api 容器同时托管前端产物并做 history 回退）。
+
+## 3. 常用运维命令
+
+```bash
+# 查看迁移状态 / 手动补迁移
+docker compose -f deploy/docker-compose.yml run --rm migrate npx prisma migrate status
+docker compose -f deploy/docker-compose.yml run --rm migrate npx prisma migrate deploy
+
+# 重新构建并滚动重启（只重建 api，不动数据库）
+docker compose -f deploy/docker-compose.yml up -d --build api
+
+# 日志（容器内同时写文件到 logs 卷，便于归档）
+docker compose -f deploy/docker-compose.yml logs -f --tail=200 api
+
+# 备份数据库（卷内数据用 mysqldump）
+docker compose -f deploy/docker-compose.yml exec mysql \
+  sh -c 'mysqldump -uroot -p"$MYSQL_ROOT_PASSWORD" --databases "$MYSQL_DATABASE"' > backup.sql
+
+# 升级前端（改了 web 源码后必须重建镜像：产物是构建期烘焙进镜像的）
+docker compose -f deploy/docker-compose.yml up -d --build
+```
+
+## 4. 必需 / 关键环境变量（写入 `deploy/.env`）
+
+| 变量                                       | 必需 | 说明                                                                           |
+| ------------------------------------------ | ---- | ------------------------------------------------------------------------------ |
+| `DB_PASSWORD`                              | ✅   | MySQL root 口令；compose 里用 `${DB_PASSWORD:?}` 强制，缺失直接报错退出        |
+| `JWT_ACCESS_SECRET` / `JWT_REFRESH_SECRET` | ✅   | 两个密钥无默认值，缺失后端拒绝启动（刻意如此）；用 `openssl rand -hex 32` 生成 |
+| `SEED_ADMIN_PASSWORD`                      | 建议 | 超管初始口令。**不设置时用开发默认弱口令，并在 production 打 warn**            |
+| `DB_NAME`                                  | 否   | 默认 `ly_admin`                                                                |
+| `HOST_PORT`                                | 否   | 宿主机映射端口，默认 `3000`                                                    |
+| `CORS_ORIGIN`                              | 否   | 同源部署保持默认 `*`；分离部署必须写成前端域名白名单                           |
+| `APP_VERSION` / `GIT_COMMIT`               | 否   | 会出现在 `/api/health/live` 里，便于确认线上跑的是哪个提交                     |
+| `UPLOAD_MAX_SIZE`                          | 否   | 默认 10MB；改了要同步 nginx 的 `client_max_body_size`                          |
+| `CAPTCHA_ENABLED`                          | 否   | 默认开启登录图形验证码                                                         |
+| `SECURITY_HSTS` / `CSP_POLICY`             | 否   | HSTS 默认跟随 production 开启；CSP 默认不下发（SPA 需按实际配置）              |
+
+其余可调项见 `knowledge/后端开发规范/03-环境与配置.md`。
+
+## 5. 数据与备份
+
+| 卷           | 内容                       | 备份方式                                                 |
+| ------------ | -------------------------- | -------------------------------------------------------- |
+| `mysql-data` | 业务数据                   | `mysqldump`（见上）                                      |
+| `uploads`    | 上传文件（按扩展名分目录） | 归档卷目录或用 `docker cp` 拉出                          |
+| `logs`       | 应用日志与归档 `tar.gz`    | 保留期由 `LOG_*_RETENTION_DAYS` 控制，归档目录可定期转存 |
+| `cache`      | 图片缩略图缓存             | **无需备份**（可再生）                                   |
+| `redis-data` | 黑名单 / 限流计数 / 验证码 | 无需备份（AOF 只为平滑重启）                             |
+
+## 6. 反向代理与 HTTPS
+
+`deploy/nginx.conf` 是可直接套用的示例：nginx 托管前端产物、反代 `/api` 与 `/static`。
+两个必须注意的点：
+
+1. `/static/` 要**反代给 api**，不要把 uploads 目录映射成 nginx 静态目录 —— 否则绕过静态鉴权、防盗链与缩放；
+2. 反代后必须在 api 侧设置 `TRUST_PROXY=1`（compose 已内置），否则限流与审计日志记录的是网关 IP。
+
+## 7. 已知限制
+
+- **ip2region 离线库不进镜像**：`ly-admin-api/data/ip2region_v4.xdb`（约 10MB）未入库，
+  compose 以只读方式挂载宿主目录；缺失时归属地解析静默降级为空串（不影响登录与日志写入）。
+  需要时先在宿主机执行 `npm --prefix ly-admin-api run ip2region:update`。
+- **镜像不含 `prisma` CLI**：运行时阶段只装 `dependencies`，迁移由 `migrate` 服务
+  （`api-builder` 阶段镜像，含 devDependencies）执行，这也是它能用 `npx prisma` 的原因。
+- **前端产物是构建期烘焙的**：改了前端代码必须重新 `--build`，没有「挂载宿主 dist 热更」的用法。

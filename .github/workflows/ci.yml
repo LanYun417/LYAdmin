@@ -1,0 +1,146 @@
+# 持续集成（GitHub Actions 语法）
+#
+# 说明：本仓库主远端是 Gitee。若只在 Gitee 上跑 CI，把这里的 `npm` 命令序列原样搬进
+# Gitee Go / Jenkins 流水线即可（下面每个 step 都是自包含的命令行，不依赖 Actions 特性），
+# 只需自行提供 MySQL 8 与 Redis 7 作为构建机上的服务。
+#
+# 三道门禁分别对应三类「本地容易漏、线上会炸」的问题：
+#   guards → 规范漂移（格式 / 依赖基线 / 被 gitignore 吞掉的源码文件）
+#   api    → 后端编译、契约、真实数据库读写（含迁移可执行性）
+#   web    → 前端类型与产物可构建
+
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+
+# 同一分支只保留最新一次运行，避免连续 push 排队
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # 后端配置来自环境变量（仓库不放 .env）；缺失 JWT 密钥时后端会拒绝启动，故此处必须给值
+  NODE_ENV: test
+  DB_HOST: 127.0.0.1
+  DB_PORT: '3306'
+  DB_NAME: ly_admin
+  DB_USER: root
+  DB_PASSWORD: ci-root-password
+  REDIS_HOST: 127.0.0.1
+  REDIS_PORT: '6379'
+  JWT_ACCESS_SECRET: ci-access-secret-not-for-production
+  JWT_REFRESH_SECRET: ci-refresh-secret-not-for-production
+  SEED_ADMIN_PASSWORD: ci-Admin-2026
+  # 限流默认开启；CI 里并发请求多，放宽阈值避免门禁自己把自己限流
+  RATE_LIMIT_MAX: '100000'
+  # 单测/契约测试不需要图形验证码服务，保持开启也能跑（验证码存 Redis，此处有 Redis 服务）
+  CAPTCHA_ENABLED: 'true'
+
+jobs:
+  guards:
+    name: 工程门禁（格式 / 依赖基线 / 导入追踪）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: 安装根依赖
+        run: npm ci --no-audit --no-fund
+      - name: 代码格式
+        run: npm run format:check
+      - name: 前端 lint 与样式 lint
+        run: |
+          npm run lint
+          npm run stylelint
+      - name: 运行时依赖基线
+        run: npm run guard:deps
+      - name: 被忽略但仍被引用的源码文件
+        run: npm run guard:imports
+
+  api:
+    name: 后端（编译 / 单测 / 迁移 / 契约 e2e）
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: ci-root-password
+          MYSQL_DATABASE: ly_admin
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -pci-root-password"
+          --health-interval=10s --health-timeout=5s --health-retries=10
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s --health-timeout=5s --health-retries=5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: ly-admin-api/package-lock.json
+      - name: 安装后端依赖
+        working-directory: ly-admin-api
+        run: npm ci --no-audit --no-fund
+      - name: 类型检查
+        working-directory: ly-admin-api
+        run: npm run typecheck
+      - name: lint
+        working-directory: ly-admin-api
+        run: npm run lint
+      - name: 单测
+        working-directory: ly-admin-api
+        run: npm run test
+      - name: 应用迁移（同时验证迁移文件可执行）
+        working-directory: ly-admin-api
+        run: npm run migrate:deploy
+      - name: 表/字段注释与 schema 一致性
+        working-directory: ly-admin-api
+        run: npm run prisma:comments:check
+      - name: 契约 e2e（真实 MySQL + Redis）
+        working-directory: ly-admin-api
+        run: npm run test:e2e
+
+  web:
+    name: 前端（类型 / 构建）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: ly-admin-web/package-lock.json
+      - name: 安装前端依赖
+        working-directory: ly-admin-web
+        run: npm ci --no-audit --no-fund
+      - name: 类型检查
+        working-directory: ly-admin-web
+        run: npm run type-check
+      - name: 构建产物
+        working-directory: ly-admin-web
+        run: npm run build
+
+  docker:
+    name: 镜像可构建（仅 push 时跑）
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 构建镜像（含前端产物与后端编译，验证 Dockerfile 未腐化）
+        run: |
+          docker build \
+            -f deploy/Dockerfile \
+            --target runtime \
+            --build-arg APP_VERSION=ci \
+            --build-arg GIT_COMMIT=${GITHUB_SHA::8} \
+            -t ly-admin:ci .
