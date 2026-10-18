@@ -16,7 +16,7 @@
 
 import { ElMessage } from '@/utils/element';
 import { getApiDocsApi } from '@/api/docs';
-import type { ApiDocEndpoint, ApiDocGroup } from '@/types/docs';
+import type { ApiDocEndpoint, ApiDocGroup, ApiDocParam } from '@/types/docs';
 
 defineOptions({ name: 'Docs' });
 
@@ -55,8 +55,8 @@ const generatedAt = ref('');
 const loading = ref(false);
 /** 搜索关键字（匹配路径 / 说明 / 权限码） */
 const keyword = ref('');
-/** 左侧折叠面板展开的模块名 */
-const activeGroups = ref<string[]>([]);
+/** 左侧折叠面板当前展开的模块名（手风琴模式：同一时间仅展开一个，空串表示全部折叠） */
+const activeGroups = ref<string>('');
 /** 当前选中的接口 */
 const selected = ref<SelectedEndpoint | null>(null);
 
@@ -88,14 +88,25 @@ const generatedText = computed(() => {
   return Number.isNaN(date.getTime()) ? generatedAt.value : date.toLocaleString();
 });
 
-/** 默认展开全部模块（搜索时同样展开命中的模块），保证一眼能看到全部接口 */
-watch(
-  filteredGroups,
-  (list) => {
-    activeGroups.value = list.map((group) => group.group);
-  },
-  { immediate: true },
-);
+/**
+ * 按位置拆分的参数分组：用分组标题代替单独的「位置」列，
+ * 标题形如 路径参数 / 请求参数（Query）/ 请求体（Body），无该位置的接口不出现对应分组。
+ */
+const paramSections = computed(() => {
+  const all = selected.value?.endpoint.params ?? [];
+  return (['path', 'query', 'body'] as const)
+    .map((inType) => {
+      const items = all.filter((p) => p.in === inType);
+      if (items.length === 0) {
+        return null;
+      }
+      const title = inType === 'path' ? '路径参数' : inType === 'query' ? '请求参数（Query）' : '请求体（Body）';
+      return { title, items };
+    })
+    .filter((s): s is { title: string; items: ApiDocParam[] } => s !== null);
+});
+
+/** 左侧菜单默认折叠（activeGroups 初始为空），由用户点击模块名展开 */
 
 /** HTTP 方法 → Element Plus Tag 类型 */
 function methodTagType(method: string): 'primary' | 'success' | 'warning' | 'danger' | 'info' {
@@ -208,16 +219,6 @@ async function downloadOpenApi(): Promise<void> {
   }
 }
 
-/** 参数位置（path / query / body）→ Element Plus Tag 类型 */
-function paramInType(loc: 'path' | 'query' | 'body'): 'warning' | 'primary' | 'success' {
-  return loc === 'path' ? 'warning' : loc === 'query' ? 'primary' : 'success';
-}
-
-/** 参数位置 → 展示标签 */
-function paramInLabel(loc: 'path' | 'query' | 'body'): string {
-  return loc === 'path' ? '路径' : loc === 'query' ? 'Query' : 'Body';
-}
-
 /** 示例值格式化：对象序列化为 JSON，其余转字符串；空值显示占位符 */
 function formatExample(val: unknown): string {
   if (val === undefined || val === null) {
@@ -256,8 +257,8 @@ onMounted(loadDocs);
         class="h-[40vh] shrink-0 border-b border-line-lighter pb-2 lg:h-auto lg:w-[340px] lg:border-b-0 lg:border-r lg:pr-2 lg:pb-0"
       >
         <el-scrollbar v-if="filteredGroups.length">
-          <!-- 折叠面板去边框（见 collapseStyle 说明） -->
-          <el-collapse v-model="activeGroups" :style="collapseStyle">
+          <!-- 折叠面板去边框（见 collapseStyle 说明）；accordion：展开一个时其余自动收起 -->
+          <el-collapse v-model="activeGroups" accordion :style="collapseStyle">
             <el-collapse-item v-for="group in filteredGroups" :key="group.group" :name="group.group">
               <template #title>
                 <span class="mr-2 font-semibold">{{ group.group }}</span>
@@ -334,32 +335,29 @@ onMounted(loadDocs);
               title="所有成功响应恒为 HTTP 200，响应体统一为 { code, message, data }。"
             />
 
-            <!-- 请求参数明细：类型 / 位置 / 必填 / 说明 / 示例（上一版缺失的部分） -->
-            <div v-if="selected.endpoint.params?.length" class="flex flex-col gap-2">
-              <span class="text-sm font-semibold">请求参数</span>
-              <el-table :data="selected.endpoint.params" size="small" border>
-                <el-table-column prop="name" label="参数名" min-width="120" />
-                <el-table-column label="位置" width="88">
-                  <template #default="{ row }">
-                    <el-tag :type="paramInType(row.in)" size="small" effect="plain">{{ paramInLabel(row.in) }}</el-tag>
-                  </template>
-                </el-table-column>
-                <el-table-column prop="type" label="类型" min-width="130" />
-                <el-table-column label="必填" width="64" align="center">
-                  <template #default="{ row }">
-                    <el-tag :type="row.required ? 'danger' : 'info'" size="small" effect="plain">
-                      {{ row.required ? '是' : '否' }}
-                    </el-tag>
-                  </template>
-                </el-table-column>
-                <el-table-column label="说明" min-width="160">
-                  <template #default="{ row }">{{ row.description || '—' }}</template>
-                </el-table-column>
-                <el-table-column label="示例" min-width="130">
-                  <template #default="{ row }">{{ formatExample(row.example) }}</template>
-                </el-table-column>
-              </el-table>
-            </div>
+            <!-- 请求参数明细：按位置分组（路径参数 / 请求参数（Query）/ 请求体（Body）），去掉单独的「位置」列 -->
+            <template v-for="section in paramSections" :key="section.title">
+              <div v-if="section.items.length" class="flex flex-col gap-2">
+                <span class="text-sm font-semibold">{{ section.title }}</span>
+                <el-table :data="section.items" size="small" border>
+                  <el-table-column prop="name" label="参数名" min-width="120" />
+                  <el-table-column prop="type" label="类型" min-width="130" />
+                  <el-table-column label="必填" width="64" align="center">
+                    <template #default="{ row }">
+                      <el-tag :type="row.required ? 'danger' : 'info'" size="small" effect="plain">
+                        {{ row.required ? '是' : '否' }}
+                      </el-tag>
+                    </template>
+                  </el-table-column>
+                  <el-table-column label="说明" min-width="160">
+                    <template #default="{ row }">{{ row.description || '—' }}</template>
+                  </el-table-column>
+                  <el-table-column label="示例" min-width="130">
+                    <template #default="{ row }">{{ formatExample(row.example) }}</template>
+                  </el-table-column>
+                </el-table>
+              </div>
+            </template>
 
             <!-- 请求示例：curl（可直接执行）+ 请求参数（路径 / 查询 / 请求体） -->
             <div class="flex flex-col gap-2">
