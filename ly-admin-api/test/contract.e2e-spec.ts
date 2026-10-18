@@ -26,7 +26,7 @@ const API = '/api';
 /** 验证码在 Redis 中的键前缀（见 src/common/captcha.service.ts）。 */
 const CAPTCHA_KEY_PREFIX = 'auth:captcha:';
 /** 登录日志导出 CSV 的表头 —— 逐字固化，改动会破坏既有的下载/对账习惯。 */
-const LOGIN_CSV_HEADER = 'ID,账号,IP,结果,描述,User-Agent,登录时间';
+const LOGIN_CSV_HEADER = 'ID,账号,IP,归属地,结果,描述,User-Agent,登录时间';
 /** 代码生成器对 sys_config 的产物清单（路径与顺序固定）。 */
 const GEN_PREVIEW_PATHS = [
   'backend/modules/cfgDemo/cfgDemo.module.ts',

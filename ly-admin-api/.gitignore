@@ -56,5 +56,8 @@ pids
 *.seed
 *.pid.lock
 
+# ip2region 离线 IP 库数据文件（约 10MB，npm run ip2region:update 拉取，不入库）
+/data/*.xdb
+
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json

@@ -19,6 +19,7 @@ export interface OperationLogInput {
   result: number;
   errorMessage: string | null;
   ip: string | null;
+  location: string | null;
 }
 
 /**
@@ -65,6 +66,7 @@ export class OperationLogService {
           result: input.result,
           errorMessage: input.errorMessage ? input.errorMessage.slice(0, 500) : null,
           ip: input.ip ? input.ip.slice(0, 50) : null,
+          location: input.location ? input.location.slice(0, 100) : null,
         },
       });
     } catch (error) {

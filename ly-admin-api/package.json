@@ -26,7 +26,8 @@
     "prisma:comments:check": "tsx scripts/prisma-comments.ts --check",
     "prisma:studio": "prisma studio",
     "docs:gen": "node scripts/gen-api-docs.mjs",
-    "seed": "tsx prisma/seed.ts"
+    "seed": "tsx prisma/seed.ts",
+    "ip2region:update": "tsx scripts/update-ip2region.ts"
   },
   "dependencies": {
     "@nestjs/common": "^12.0.1",
@@ -39,6 +40,7 @@
     "class-validator": "^0.15.1",
     "compression": "^1.8.2",
     "dayjs": "^1.11.23",
+    "ip2region.js": "^3.1.8",
     "jose": "^6.2.12",
     "multer": "^2.4.0",
     "redis": "^6.3.0",

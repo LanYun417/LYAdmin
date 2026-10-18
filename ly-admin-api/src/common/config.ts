@@ -232,6 +232,11 @@ export const config = {
   },
   /** 跨域允许来源 */
   corsOrigin: process.env.CORS_ORIGIN ?? 'http://localhost:5173',
+  /** ip2region 离线 IP 库配置（IP 归属地解析；数据文件缺失时自动降级关闭，不影响启动） */
+  ip2region: {
+    /** xdb 数据文件路径（绝对路径），默认 <root>/data/ip2region_v4.xdb */
+    dbPath: path.resolve(ROOT_DIR, process.env.IP2REGION_DB_PATH ?? 'data/ip2region_v4.xdb'),
+  },
   /** 日志目录（绝对路径） */
   logDir: LOG_DIR,
   /** 日志系统配置（按天分文件 + 定时归档） */

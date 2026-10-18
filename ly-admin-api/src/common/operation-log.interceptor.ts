@@ -11,8 +11,9 @@ import { Reflector } from '@nestjs/core';
 import type { Request, Response } from 'express';
 import type { Observable } from 'rxjs';
 import { OperationLogService } from './operation-log.service.js';
-import { getOperationMeta, inferAction } from './operation-log.decorator.js';
+import { getOperationMeta, inferAction, type OperationMeta } from './operation-log.decorator.js';
 import type { AuthenticatedRequest } from './auth.guard.js';
+import { IpRegionService } from './ip-region.service.js';
 
 /** 读取客户端 IP（受 trust proxy 设置影响）。 */
 export function getClientIp(req: Request): string {
@@ -28,6 +29,7 @@ export class OperationLogInterceptor implements NestInterceptor {
   constructor(
     private readonly reflector: Reflector,
     private readonly operationLogService: OperationLogService,
+    private readonly ipRegion: IpRegionService,
   ) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
@@ -61,21 +63,35 @@ export class OperationLogInterceptor implements NestInterceptor {
 
     res.on('finish', () => {
       const statusCode = res.statusCode;
-      void this.operationLogService.createOperationLog({
-        userId: req.user?.userId ?? null,
-        username: req.user?.username ?? null,
-        module: meta.module,
-        action: meta.action && meta.action.length > 0 ? meta.action : inferAction(req.method),
-        method: req.method.toUpperCase(),
-        url: req.originalUrl ?? req.url ?? '',
-        params: OperationLogService.serializeParams(req.body),
-        duration: Date.now() - startAt,
-        result: statusCode < 400 ? 1 : 0,
-        errorMessage: statusCode < 400 ? null : errorMessage || `HTTP ${statusCode}`,
-        ip: getClientIp(req) || null,
-      });
+      void this.recordOperationLog(req, meta, statusCode, errorMessage, Date.now() - startAt);
     });
 
     return next.handle();
+  }
+
+  /** 解析 IP 归属地后异步写操作日志（fire-and-forget；解析失败不影响日志写入）。 */
+  private async recordOperationLog(
+    req: AuthenticatedRequest,
+    meta: OperationMeta,
+    statusCode: number,
+    errorMessage: string | null,
+    duration: number,
+  ): Promise<void> {
+    const ip = getClientIp(req) || null;
+    const location = (await this.ipRegion.locate(ip)) || null;
+    await this.operationLogService.createOperationLog({
+      userId: req.user?.userId ?? null,
+      username: req.user?.username ?? null,
+      module: meta.module,
+      action: meta.action && meta.action.length > 0 ? meta.action : inferAction(req.method),
+      method: req.method.toUpperCase(),
+      url: req.originalUrl ?? req.url ?? '',
+      params: OperationLogService.serializeParams(req.body),
+      duration,
+      result: statusCode < 400 ? 1 : 0,
+      errorMessage: statusCode < 400 ? null : errorMessage || `HTTP ${statusCode}`,
+      ip,
+      location,
+    });
   }
 }

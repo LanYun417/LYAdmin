@@ -8,6 +8,7 @@ import { AuthCacheService } from '../../common/auth-cache.service.js';
 import { CaptchaService } from '../../common/captcha.service.js';
 import { ERROR_MESSAGE, LogResult, Status } from '../../common/constants.js';
 import { lookupDeptName } from '../../common/dept-lookup.js';
+import { IpRegionService } from '../../common/ip-region.service.js';
 import { JwtService } from '../../common/jwt.service.js';
 import { TokenBlacklistService } from '../../common/token-blacklist.service.js';
 import { comparePassword } from '../../common/utils.js';
@@ -39,6 +40,7 @@ export class AuthService {
     private readonly blacklist: TokenBlacklistService,
     private readonly authCache: AuthCacheService,
     private readonly authUserService: AuthUserService,
+    private readonly ipRegion: IpRegionService,
   ) {}
 
   /** 将用户记录转换为对外简要信息。 */
@@ -90,12 +92,14 @@ export class AuthService {
     userAgent: string,
     status: LogResult,
     message: string,
+    location: string,
   ): Promise<void> {
     try {
       await this.prisma.loginLog.create({
         data: {
           username: username.slice(0, 50),
           ip: ip ? ip.slice(0, 50) : null,
+          location: location ? location.slice(0, 100) : null,
           userAgent: userAgent ? userAgent.slice(0, 500) : null,
           status,
           message: message.slice(0, 255),
@@ -123,25 +127,28 @@ export class AuthService {
       throw AppException.badRequest('验证码错误或已过期');
     }
 
+    // 归属地解析一次即可：登录成功/失败共用（解析失败返回空串，不影响登录流程）
+    const location = await this.ipRegion.locate(ip);
+
     const user = await this.prisma.user.findUnique({ where: { username } });
     if (!user) {
-      await this.writeLoginLog(username, ip, userAgent, LogResult.FAIL, ERROR_MESSAGE.LOGIN_FAILED);
+      await this.writeLoginLog(username, ip, userAgent, LogResult.FAIL, ERROR_MESSAGE.LOGIN_FAILED, location);
       throw AppException.unauthorized(ERROR_MESSAGE.LOGIN_FAILED);
     }
 
     const matched = await comparePassword(password, user.password);
     if (!matched) {
-      await this.writeLoginLog(username, ip, userAgent, LogResult.FAIL, ERROR_MESSAGE.LOGIN_FAILED);
+      await this.writeLoginLog(username, ip, userAgent, LogResult.FAIL, ERROR_MESSAGE.LOGIN_FAILED, location);
       throw AppException.unauthorized(ERROR_MESSAGE.LOGIN_FAILED);
     }
 
     if (Number(user.status) !== Status.ENABLED) {
-      await this.writeLoginLog(username, ip, userAgent, LogResult.FAIL, ERROR_MESSAGE.ACCOUNT_DISABLED);
+      await this.writeLoginLog(username, ip, userAgent, LogResult.FAIL, ERROR_MESSAGE.ACCOUNT_DISABLED, location);
       throw AppException.unauthorized(ERROR_MESSAGE.ACCOUNT_DISABLED);
     }
 
     await this.prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
-    await this.writeLoginLog(username, ip, userAgent, LogResult.SUCCESS, '登录成功');
+    await this.writeLoginLog(username, ip, userAgent, LogResult.SUCCESS, '登录成功', location);
     // 登录会更新 lastLoginAt：失效该用户鉴权缓存，避免 /auth/profile 在 TTL 内返回陈旧值
     this.authCache.invalidate(Number(user.id));
 

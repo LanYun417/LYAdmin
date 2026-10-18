@@ -230,6 +230,8 @@ export interface LoginLog {
   id: number;
   username: string;
   ip: string | null;
+  /** IP 归属地（ip2region 离线解析，如「中国 广东省 深圳市 电信」；未解析为空串/null） */
+  location: string | null;
   userAgent: string | null;
   status: number;
   message: string | null;
@@ -258,6 +260,8 @@ export interface OperationLog {
   result: number;
   errorMessage: string | null;
   ip: string | null;
+  /** IP 归属地（ip2region 离线解析） */
+  location: string | null;
   createdAt: string;
 }
 
@@ -278,6 +282,8 @@ export interface HttpLog {
   statusCode: number;
   duration: number;
   ip: string;
+  /** IP 归属地（ip2region 离线解析，如「中国 广东省 深圳市 电信」；未解析为空串） */
+  location?: string;
   time: string;
   /** 原始 User-Agent（列表 tooltip 展示） */
   userAgent?: string;

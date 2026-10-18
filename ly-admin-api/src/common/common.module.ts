@@ -17,6 +17,7 @@ import { FileLoggerService } from './file-logger.service.js';
 import { HttpLogQueueService } from './http-log-queue.service.js';
 import { FileService } from './file.service.js';
 import { ImageScaleService } from './file-guards.js';
+import { IpRegionService } from './ip-region.service.js';
 
 @Global()
 @Module({
@@ -34,6 +35,7 @@ import { ImageScaleService } from './file-guards.js';
     HttpLogQueueService,
     FileService,
     ImageScaleService,
+    IpRegionService,
   ],
   exports: [
     RedisService,
@@ -49,6 +51,7 @@ import { ImageScaleService } from './file-guards.js';
     HttpLogQueueService,
     FileService,
     ImageScaleService,
+    IpRegionService,
   ],
 })
 export class CommonModule {}

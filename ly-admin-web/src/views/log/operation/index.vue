@@ -135,6 +135,9 @@ function methodTag(method: string): EpTagType {
           </template>
         </el-table-column>
         <el-table-column prop="ip" label="IP" width="140" />
+        <el-table-column prop="location" label="归属地" width="160" show-overflow-tooltip>
+          <template #default="{ row }">{{ row.location || '-' }}</template>
+        </el-table-column>
         <el-table-column label="操作时间" width="180">
           <template #default="{ row }">{{ formatDateTime(row.createdAt) }}</template>
         </el-table-column>

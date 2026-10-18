@@ -26,6 +26,7 @@ interface HttpLogItem {
   statusCode: number;
   duration: number;
   ip: string;
+  location: string;
   userAgent: string;
   userId: number;
   deptId: number;
@@ -51,6 +52,7 @@ const HTTP_LOG_SUMMARY_SELECT = {
   statusCode: true,
   duration: true,
   ip: true,
+  location: true,
   userAgent: true,
   userId: true,
   username: true,
@@ -114,6 +116,7 @@ export class LogsService {
       id: Number(row.id),
       username: row.username,
       ip: row.ip,
+      location: row.location,
       userAgent: row.userAgent,
       status: Number(row.status),
       message: row.message,
@@ -168,6 +171,7 @@ export class LogsService {
       result: Number(row.result),
       errorMessage: row.errorMessage,
       ip: row.ip,
+      location: row.location,
       createdAt: row.createdAt,
     }));
     return buildPageResult(list, total, page, pageSize);
@@ -224,6 +228,7 @@ export class LogsService {
     statusCode: number;
     duration: number;
     ip: string | null;
+    location: string | null;
     userAgent: string | null;
     userId: bigint;
     username: string | null;
@@ -239,6 +244,7 @@ export class LogsService {
       statusCode: Number(row.statusCode),
       duration: Number(row.duration),
       ip: row.ip ?? '',
+      location: row.location ?? '',
       userAgent: row.userAgent ?? '',
       userId: Number(row.userId),
       username: row.username ?? '',
@@ -316,6 +322,7 @@ export class LogsService {
         id: number;
         username: string;
         ip: string | null;
+        location: string | null;
         status: number;
         message: string | null;
         userAgent: string | null;
@@ -326,12 +333,13 @@ export class LogsService {
       item.id,
       item.username,
       item.ip,
+      item.location,
       item.status === 1 ? '成功' : '失败',
       item.message,
       item.userAgent,
       formatDateTimeInZone(item.loginAt, timezoneOffset),
     ]);
-    return toCsv(['ID', '账号', 'IP', '结果', '描述', 'User-Agent', '登录时间'], rows);
+    return toCsv(['ID', '账号', 'IP', '归属地', '结果', '描述', 'User-Agent', '登录时间'], rows);
   }
 
   /** 导出操作日志 CSV。 */
@@ -349,6 +357,7 @@ export class LogsService {
         result: number;
         errorMessage: string | null;
         ip: string | null;
+        location: string | null;
         createdAt: Date;
       }>;
     };
@@ -364,10 +373,11 @@ export class LogsService {
       item.result === 1 ? '成功' : '失败',
       item.errorMessage,
       item.ip,
+      item.location,
       formatDateTimeInZone(item.createdAt, timezoneOffset),
     ]);
     return toCsv(
-      ['ID', '模块', '动作', '操作人', '方法', 'URL', '参数', '耗时', '结果', '错误信息', 'IP', '时间'],
+      ['ID', '模块', '动作', '操作人', '方法', 'URL', '参数', '耗时', '结果', '错误信息', 'IP', '归属地', '时间'],
       rows,
     );
   }
@@ -394,10 +404,25 @@ export class LogsService {
       item.browser || '-',
       item.os || '-',
       item.ip,
+      item.location || '-',
       item.userAgent,
     ]);
     return toCsv(
-      ['ID', '时间', '方法', 'URL', '状态码', '耗时', '操作人', '所属部门', '浏览器', '操作系统', 'IP', 'User-Agent'],
+      [
+        'ID',
+        '时间',
+        '方法',
+        'URL',
+        '状态码',
+        '耗时',
+        '操作人',
+        '所属部门',
+        '浏览器',
+        '操作系统',
+        'IP',
+        '归属地',
+        'User-Agent',
+      ],
       csvRows,
     );
   }

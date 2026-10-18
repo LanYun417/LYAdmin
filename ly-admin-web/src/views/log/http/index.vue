@@ -282,6 +282,9 @@ onMounted(() => {
           <template #default="{ row }">{{ row.os || '未知' }}</template>
         </el-table-column>
         <el-table-column prop="ip" label="IP" width="150" />
+        <el-table-column label="归属地" width="160" show-overflow-tooltip>
+          <template #default="{ row }">{{ row.location || '-' }}</template>
+        </el-table-column>
         <el-table-column label="时间" width="180">
           <template #default="{ row }">{{ formatDateTime(row.time) }}</template>
         </el-table-column>

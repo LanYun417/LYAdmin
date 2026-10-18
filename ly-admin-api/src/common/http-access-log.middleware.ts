@@ -10,6 +10,7 @@ import type { Prisma } from '../generated/prisma/client.js';
 import { FileLoggerService } from './file-logger.service.js';
 import type { AuthenticatedRequest } from './auth.guard.js';
 import { getClientIp } from './operation-log.interceptor.js';
+import { IpRegionService } from './ip-region.service.js';
 
 /** 单条日志体上限（2KB），超出截断。 */
 const BODY_LIMIT = 2048;
@@ -90,6 +91,7 @@ export class HttpAccessLoggerMiddleware implements NestMiddleware {
   constructor(
     private readonly fileLogger: FileLoggerService,
     private readonly httpLogs: HttpLogQueueService,
+    private readonly ipRegion: IpRegionService,
   ) {}
 
   use(req: Request, res: Response, next: NextFunction): void {
@@ -139,32 +141,36 @@ export class HttpAccessLoggerMiddleware implements NestMiddleware {
         resBody: serializeResponse(responseBody),
       };
 
-      // 1) 写文件（留痕）
-      this.fileLogger.access({
-        method: record.method,
-        url: record.url,
-        statusCode: record.statusCode,
-        duration: record.duration,
-        ip: record.ip,
-        username: record.username,
-      });
+      // 归属地解析为异步：先解析再落库，解析失败不影响访问日志写入
+      void this.ipRegion.locate(ip).then((location) => {
+        // 1) 写文件（留痕）
+        this.fileLogger.access({
+          method: record.method,
+          url: record.url,
+          statusCode: record.statusCode,
+          duration: record.duration,
+          ip: record.ip,
+          username: record.username,
+        });
 
-      // 2) 入队批量落库（页面查询用），不阻塞响应
-      this.httpLogs.enqueue({
-        time: record.time,
-        method: record.method,
-        url: record.url,
-        statusCode: record.statusCode,
-        duration: record.duration,
-        ip: record.ip,
-        userAgent: record.userAgent,
-        userId: BigInt(record.userId),
-        username: record.username,
-        deptId: BigInt(record.deptId),
-        deptName: record.deptName,
-        query: record.query,
-        reqBody: record.reqBody,
-        resBody: record.resBody,
+        // 2) 入队批量落库（页面查询用），不阻塞响应
+        this.httpLogs.enqueue({
+          time: record.time,
+          method: record.method,
+          url: record.url,
+          statusCode: record.statusCode,
+          duration: record.duration,
+          ip: record.ip,
+          location: location || null,
+          userAgent: record.userAgent,
+          userId: BigInt(record.userId),
+          username: record.username,
+          deptId: BigInt(record.deptId),
+          deptName: record.deptName,
+          query: record.query,
+          reqBody: record.reqBody,
+          resBody: record.resBody,
+        });
       });
     });
 
