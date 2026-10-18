@@ -2,10 +2,12 @@
 /** 操作日志页。模块职责：按模块、操作人、结果与时间范围查询操作记录并导出 CSV。 */
 
 import { ElMessage } from '@/utils/element';
-import { exportOperationLogsApi, getOperationLogsApi } from '@/api/log';
+import { deleteOperationLogApi, deleteOperationLogsApi, exportOperationLogsApi, getOperationLogsApi } from '@/api/log';
 import { useTable } from '@/composables/useTable';
+import { useLogDelete } from '@/composables/useLogDelete';
 import { formatDate, formatDateTime, formatDuration } from '@/utils/format';
 import { downloadBlob } from '@/utils/download';
+import type { OperationLog } from '@/types/api';
 import Pagination from '@/components/Pagination/index.vue';
 import SearchForm from '@/components/SearchForm/index.vue';
 
@@ -27,6 +29,15 @@ const { loading, list, total, query, getList, search, reset, changePage, changeP
     }),
   { module: '', username: '', result: undefined as number | undefined },
 );
+
+/** 单条 / 多选删除（二次确认、删除后回退空页） */
+const { selected, deleting, handleSelectionChange, removeOne, removeSelected } = useLogDelete<OperationLog>({
+  batchApi: deleteOperationLogsApi,
+  singleApi: deleteOperationLogApi,
+  list,
+  query,
+  getList,
+});
 
 /** 导出操作日志（P2）：按当前筛选条件导出，不带分页参数 */
 async function handleExport(): Promise<void> {
@@ -107,13 +118,25 @@ function methodTag(method: string): EpTagType {
             <template #icon><i class="bi bi-download" /></template>
             导出
           </el-button>
+          <el-button
+            v-permission="'log:operation:remove'"
+            type="danger"
+            plain
+            :loading="deleting"
+            :disabled="selected.length === 0"
+            @click="removeSelected"
+          >
+            <template #icon><i class="bi bi-trash" /></template>
+            删除{{ selected.length > 0 ? `（${selected.length}）` : '' }}
+          </el-button>
           <el-button @click="getList">
             <template #icon><i class="bi bi-arrow-clockwise" /></template>刷新</el-button
           >
         </div>
       </div>
 
-      <el-table v-loading="loading" :data="list">
+      <el-table v-loading="loading" :data="list" @selection-change="handleSelectionChange">
+        <el-table-column type="selection" width="48" align="center" />
         <el-table-column prop="module" label="模块" width="120" />
         <el-table-column prop="action" label="动作" width="110" />
         <el-table-column prop="username" label="操作人" width="120" />
@@ -140,6 +163,13 @@ function methodTag(method: string): EpTagType {
         </el-table-column>
         <el-table-column label="操作时间" width="180">
           <template #default="{ row }">{{ formatDateTime(row.createdAt) }}</template>
+        </el-table-column>
+        <el-table-column label="操作" width="80" fixed="right" align="center">
+          <template #default="{ row }">
+            <el-button v-permission="'log:operation:remove'" type="danger" link @click="removeOne(row as OperationLog)">
+              删除
+            </el-button>
+          </template>
         </el-table-column>
       </el-table>
 

@@ -6,9 +6,17 @@
  */
 
 import { ElMessage, ElMessageBox } from '@/utils/element';
-import { clearHttpLogsApi, exportHttpLogsApi, getHttpLogDetailApi, getHttpLogsApi } from '@/api/log';
+import {
+  clearHttpLogsApi,
+  deleteHttpLogApi,
+  deleteHttpLogsApi,
+  exportHttpLogsApi,
+  getHttpLogDetailApi,
+  getHttpLogsApi,
+} from '@/api/log';
 import { getDeptTreeApi } from '@/api/dept';
 import { useTable } from '@/composables/useTable';
+import { useLogDelete } from '@/composables/useLogDelete';
 import { downloadBlob } from '@/utils/download';
 import { formatDate, formatDateTime, formatDuration } from '@/utils/format';
 import type { DeptNode, HttpLog } from '@/types/api';
@@ -38,6 +46,21 @@ const { loading, list, total, query, getList, search, reset, changePage, changeP
     }),
   { method: '', statusCode: undefined as number | undefined, username: '', deptId: undefined as number | undefined },
 );
+
+/** 单条 / 多选删除（删除后一并清掉展开行详情缓存） */
+const { selected, deleting, handleSelectionChange, removeOne, removeSelected } = useLogDelete<HttpLog>({
+  batchApi: deleteHttpLogsApi,
+  singleApi: deleteHttpLogApi,
+  list,
+  query,
+  getList,
+  onDeleted: (ids) => {
+    for (const id of ids) {
+      delete detailMap.value[id];
+      delete detailLoading.value[id];
+    }
+  },
+});
 
 /** 兜底文案：空值统一展示为短横线 */
 function displayOrDash(value?: string | null): string {
@@ -225,6 +248,17 @@ onMounted(() => {
             <template #icon><i class="bi bi-download" /></template>
             导出
           </el-button>
+          <el-button
+            v-permission="'log:http:remove'"
+            type="danger"
+            plain
+            :loading="deleting"
+            :disabled="selected.length === 0"
+            @click="removeSelected"
+          >
+            <template #icon><i class="bi bi-trash" /></template>
+            删除{{ selected.length > 0 ? `（${selected.length}）` : '' }}
+          </el-button>
           <el-button @click="getList">
             <template #icon><i class="bi bi-arrow-clockwise" /></template>刷新</el-button
           >
@@ -234,7 +268,13 @@ onMounted(() => {
         </div>
       </div>
 
-      <el-table v-loading="loading" :data="list" @expand-change="handleExpand">
+      <el-table
+        v-loading="loading"
+        :data="list"
+        @expand-change="handleExpand"
+        @selection-change="handleSelectionChange"
+      >
+        <el-table-column type="selection" width="48" align="center" />
         <el-table-column type="expand">
           <template #default="{ row }">
             <div v-loading="detailLoading[row.id]" class="py-2 px-4">
@@ -287,6 +327,13 @@ onMounted(() => {
         </el-table-column>
         <el-table-column label="时间" width="180">
           <template #default="{ row }">{{ formatDateTime(row.time) }}</template>
+        </el-table-column>
+        <el-table-column label="操作" width="80" fixed="right" align="center">
+          <template #default="{ row }">
+            <el-button v-permission="'log:http:remove'" type="danger" link @click="removeOne(row as HttpLog)">
+              删除
+            </el-button>
+          </template>
         </el-table-column>
       </el-table>
 

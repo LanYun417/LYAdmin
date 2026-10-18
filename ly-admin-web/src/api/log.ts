@@ -37,6 +37,36 @@ export function clearHttpLogsApi(): Promise<null> {
   return del<null>('/logs/http');
 }
 
+/** 删除单条登录日志 */
+export function deleteLoginLogApi(id: number): Promise<null> {
+  return del<null>(`/logs/login/${id}`);
+}
+
+/** 批量删除登录日志（多选） */
+export function deleteLoginLogsApi(ids: number[]): Promise<null> {
+  return request<null>({ url: '/logs/login/batch', method: 'DELETE', data: { ids } });
+}
+
+/** 删除单条操作日志 */
+export function deleteOperationLogApi(id: number): Promise<null> {
+  return del<null>(`/logs/operation/${id}`);
+}
+
+/** 批量删除操作日志（多选） */
+export function deleteOperationLogsApi(ids: number[]): Promise<null> {
+  return request<null>({ url: '/logs/operation/batch', method: 'DELETE', data: { ids } });
+}
+
+/** 删除单条 HTTP 访问日志 */
+export function deleteHttpLogApi(id: number): Promise<null> {
+  return del<null>(`/logs/http/${id}`);
+}
+
+/** 批量删除 HTTP 访问日志（多选） */
+export function deleteHttpLogsApi(ids: number[]): Promise<null> {
+  return request<null>({ url: '/logs/http/batch', method: 'DELETE', data: { ids } });
+}
+
 /** 导出 HTTP 访问日志（CSV） */
 export function exportHttpLogsApi(params: Omit<HttpLogQuery, 'page' | 'pageSize'>): Promise<Blob> {
   return request<Blob>({

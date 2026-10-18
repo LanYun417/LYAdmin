@@ -2,10 +2,12 @@
 /** 登录日志页。模块职责：按账号、结果与时间范围查询登录记录并导出 CSV。 */
 
 import { ElMessage } from '@/utils/element';
-import { exportLoginLogsApi, getLoginLogsApi } from '@/api/log';
+import { deleteLoginLogApi, deleteLoginLogsApi, exportLoginLogsApi, getLoginLogsApi } from '@/api/log';
 import { useTable } from '@/composables/useTable';
+import { useLogDelete } from '@/composables/useLogDelete';
 import { formatDate, formatDateTime } from '@/utils/format';
 import { downloadBlob } from '@/utils/download';
+import type { LoginLog } from '@/types/api';
 import Pagination from '@/components/Pagination/index.vue';
 import SearchForm from '@/components/SearchForm/index.vue';
 
@@ -26,6 +28,15 @@ const { loading, list, total, query, getList, search, reset, changePage, changeP
     }),
   { username: '', status: undefined as number | undefined },
 );
+
+/** 单条 / 多选删除（二次确认、删除后回退空页） */
+const { selected, deleting, handleSelectionChange, removeOne, removeSelected } = useLogDelete<LoginLog>({
+  batchApi: deleteLoginLogsApi,
+  singleApi: deleteLoginLogApi,
+  list,
+  query,
+  getList,
+});
 
 /** 导出登录日志（P2）：按当前筛选条件导出，不带分页参数 */
 async function handleExport(): Promise<void> {
@@ -84,13 +95,25 @@ async function handleExport(): Promise<void> {
             <template #icon><i class="bi bi-download" /></template>
             导出
           </el-button>
+          <el-button
+            v-permission="'log:login:remove'"
+            type="danger"
+            plain
+            :loading="deleting"
+            :disabled="selected.length === 0"
+            @click="removeSelected"
+          >
+            <template #icon><i class="bi bi-trash" /></template>
+            删除{{ selected.length > 0 ? `（${selected.length}）` : '' }}
+          </el-button>
           <el-button @click="getList">
             <template #icon><i class="bi bi-arrow-clockwise" /></template>刷新</el-button
           >
         </div>
       </div>
 
-      <el-table v-loading="loading" :data="list">
+      <el-table v-loading="loading" :data="list" @selection-change="handleSelectionChange">
+        <el-table-column type="selection" width="48" align="center" />
         <el-table-column prop="username" label="账号" min-width="120" />
         <el-table-column prop="ip" label="IP 地址" width="140" />
         <el-table-column prop="location" label="归属地" min-width="160" show-overflow-tooltip>
@@ -107,6 +130,13 @@ async function handleExport(): Promise<void> {
         <el-table-column prop="message" label="描述" min-width="160" show-overflow-tooltip />
         <el-table-column label="登录时间" width="180">
           <template #default="{ row }">{{ formatDateTime(row.loginAt) }}</template>
+        </el-table-column>
+        <el-table-column label="操作" width="80" fixed="right" align="center">
+          <template #default="{ row }">
+            <el-button v-permission="'log:login:remove'" type="danger" link @click="removeOne(row as LoginLog)">
+              删除
+            </el-button>
+          </template>
         </el-table-column>
       </el-table>
 
