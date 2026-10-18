@@ -35,9 +35,6 @@ export const OPENAPI_DOC: Record<string, unknown> = {
       "name": "菜单管理"
     },
     {
-      "name": "部门管理"
-    },
-    {
       "name": "字典管理"
     },
     {
@@ -60,6 +57,9 @@ export const OPENAPI_DOC: Record<string, unknown> = {
     },
     {
       "name": "系统"
+    },
+    {
+      "name": "部门/岗位管理"
     }
   ],
   "paths": {
@@ -2282,446 +2282,6 @@ export const OPENAPI_DOC: Record<string, unknown> = {
         ],
         "summary": "全量菜单树（含按钮，供角色授权）",
         "operationId": "get__api_menus_tree",
-        "parameters": [
-          {
-            "name": "page",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 1
-            },
-            "description": "页码"
-          },
-          {
-            "name": "pageSize",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 10
-            },
-            "description": "每页条数"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "成功（统一信封 { code, message, data }）",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "integer",
-                      "example": 0,
-                      "description": "业务码，0 表示成功"
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "success"
-                    },
-                    "data": {
-                      "type": "object",
-                      "properties": {
-                        "list": {
-                          "type": "array",
-                          "items": {}
-                        },
-                        "total": {
-                          "type": "integer",
-                          "example": 0
-                        },
-                        "page": {
-                          "type": "integer",
-                          "example": 1
-                        },
-                        "pageSize": {
-                          "type": "integer",
-                          "example": 10
-                        }
-                      }
-                    }
-                  },
-                  "required": [
-                    "code",
-                    "message",
-                    "data"
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
-    "/api/depts": {
-      "get": {
-        "tags": [
-          "部门管理"
-        ],
-        "summary": "部门列表（tree=1 时返回树）",
-        "operationId": "get__api_depts",
-        "parameters": [
-          {
-            "name": "deptName",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            },
-            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
-          },
-          {
-            "name": "status",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer"
-            },
-            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
-          },
-          {
-            "name": "tree",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            },
-            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 1
-            },
-            "description": "页码"
-          },
-          {
-            "name": "pageSize",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 10
-            },
-            "description": "每页条数"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "成功（统一信封 { code, message, data }）",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "integer",
-                      "example": 0,
-                      "description": "业务码，0 表示成功"
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "success"
-                    },
-                    "data": {
-                      "type": "object",
-                      "properties": {
-                        "list": {
-                          "type": "array",
-                          "items": {}
-                        },
-                        "total": {
-                          "type": "integer",
-                          "example": 0
-                        },
-                        "page": {
-                          "type": "integer",
-                          "example": 1
-                        },
-                        "pageSize": {
-                          "type": "integer",
-                          "example": 10
-                        }
-                      }
-                    }
-                  },
-                  "required": [
-                    "code",
-                    "message",
-                    "data"
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      },
-      "post": {
-        "tags": [
-          "部门管理"
-        ],
-        "summary": "新增部门",
-        "operationId": "post__api_depts",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/DeptUpsertDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "成功（统一信封 { code, message, data }）",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "integer",
-                      "example": 0,
-                      "description": "业务码，0 表示成功"
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "success"
-                    },
-                    "data": {
-                      "$ref": "#/components/schemas/DeptUpsertDto"
-                    }
-                  },
-                  "required": [
-                    "code",
-                    "message",
-                    "data"
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
-    "/api/depts/{id}": {
-      "get": {
-        "tags": [
-          "部门管理"
-        ],
-        "summary": "部门详情",
-        "operationId": "get__api_depts__id",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "路径参数 id"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "成功（统一信封 { code, message, data }）",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "integer",
-                      "example": 0,
-                      "description": "业务码，0 表示成功"
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "success"
-                    },
-                    "data": {
-                      "type": "object",
-                      "properties": {
-                        "list": {
-                          "type": "array",
-                          "items": {}
-                        },
-                        "total": {
-                          "type": "integer",
-                          "example": 0
-                        },
-                        "page": {
-                          "type": "integer",
-                          "example": 1
-                        },
-                        "pageSize": {
-                          "type": "integer",
-                          "example": 10
-                        }
-                      }
-                    }
-                  },
-                  "required": [
-                    "code",
-                    "message",
-                    "data"
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      },
-      "put": {
-        "tags": [
-          "部门管理"
-        ],
-        "summary": "编辑部门",
-        "operationId": "put__api_depts__id",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "路径参数 id"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/DeptUpsertDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "成功（统一信封 { code, message, data }）",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "integer",
-                      "example": 0,
-                      "description": "业务码，0 表示成功"
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "success"
-                    },
-                    "data": {
-                      "$ref": "#/components/schemas/DeptUpsertDto"
-                    }
-                  },
-                  "required": [
-                    "code",
-                    "message",
-                    "data"
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      },
-      "delete": {
-        "tags": [
-          "部门管理"
-        ],
-        "summary": "删除部门",
-        "operationId": "delete__api_depts__id",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "路径参数 id"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "成功（统一信封 { code, message, data }）",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "integer",
-                      "example": 0,
-                      "description": "业务码，0 表示成功"
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "success"
-                    },
-                    "data": {}
-                  },
-                  "required": [
-                    "code",
-                    "message",
-                    "data"
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
-    "/api/depts/tree": {
-      "get": {
-        "tags": [
-          "部门管理"
-        ],
-        "summary": "完整部门树（上级选择）",
-        "operationId": "get__api_depts_tree",
         "parameters": [
           {
             "name": "page",
@@ -5691,6 +5251,446 @@ export const OPENAPI_DOC: Record<string, unknown> = {
           }
         }
       }
+    },
+    "/api/depts": {
+      "get": {
+        "tags": [
+          "部门/岗位管理"
+        ],
+        "summary": "部门列表（tree=1 时返回树）",
+        "operationId": "get__api_depts",
+        "parameters": [
+          {
+            "name": "deptName",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "tree",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "description": "页码"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 10
+            },
+            "description": "每页条数"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功（统一信封 { code, message, data }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "业务码，0 表示成功"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "list": {
+                          "type": "array",
+                          "items": {}
+                        },
+                        "total": {
+                          "type": "integer",
+                          "example": 0
+                        },
+                        "page": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "pageSize": {
+                          "type": "integer",
+                          "example": 10
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "部门/岗位管理"
+        ],
+        "summary": "新增部门",
+        "operationId": "post__api_depts",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeptUpsertDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功（统一信封 { code, message, data }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "业务码，0 表示成功"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/DeptUpsertDto"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/depts/{id}": {
+      "get": {
+        "tags": [
+          "部门/岗位管理"
+        ],
+        "summary": "部门详情",
+        "operationId": "get__api_depts__id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "路径参数 id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功（统一信封 { code, message, data }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "业务码，0 表示成功"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "list": {
+                          "type": "array",
+                          "items": {}
+                        },
+                        "total": {
+                          "type": "integer",
+                          "example": 0
+                        },
+                        "page": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "pageSize": {
+                          "type": "integer",
+                          "example": 10
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "部门/岗位管理"
+        ],
+        "summary": "编辑部门",
+        "operationId": "put__api_depts__id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "路径参数 id"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeptUpsertDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功（统一信封 { code, message, data }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "业务码，0 表示成功"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/DeptUpsertDto"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "部门/岗位管理"
+        ],
+        "summary": "删除部门",
+        "operationId": "delete__api_depts__id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "路径参数 id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功（统一信封 { code, message, data }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "业务码，0 表示成功"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {}
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/depts/tree": {
+      "get": {
+        "tags": [
+          "部门/岗位管理"
+        ],
+        "summary": "完整部门树（上级选择）",
+        "operationId": "get__api_depts_tree",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "description": "页码"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 10
+            },
+            "description": "每页条数"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功（统一信封 { code, message, data }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "业务码，0 表示成功"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "list": {
+                          "type": "array",
+                          "items": {}
+                        },
+                        "total": {
+                          "type": "integer",
+                          "example": 0
+                        },
+                        "page": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "pageSize": {
+                          "type": "integer",
+                          "example": 10
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -6054,42 +6054,6 @@ export const OPENAPI_DOC: Record<string, unknown> = {
           "menuType"
         ]
       },
-      "DeptUpsertDto": {
-        "type": "object",
-        "properties": {
-          "parentId": {
-            "type": "number",
-            "example": 1
-          },
-          "deptName": {
-            "type": "string",
-            "example": "示例部门"
-          },
-          "leader": {
-            "type": "string",
-            "example": "张三"
-          },
-          "phone": {
-            "type": "string",
-            "example": "13800138000"
-          },
-          "email": {
-            "type": "string",
-            "example": "demo@example.com"
-          },
-          "sort": {
-            "type": "number",
-            "example": 1
-          },
-          "status": {
-            "type": "number",
-            "example": 1
-          }
-        },
-        "required": [
-          "deptName"
-        ]
-      },
       "CreateDictItemDto": {
         "type": "object",
         "properties": {
@@ -6410,6 +6374,48 @@ export const OPENAPI_DOC: Record<string, unknown> = {
         "required": [
           "oldPassword",
           "newPassword"
+        ]
+      },
+      "DeptUpsertDto": {
+        "type": "object",
+        "properties": {
+          "parentId": {
+            "type": "number",
+            "example": 1
+          },
+          "deptType": {
+            "type": "number",
+            "description": "类型：1 部门 / 2 岗位（岗位为叶子节点，不能再挂下级）",
+            "example": 1
+          },
+          "deptName": {
+            "type": "string",
+            "example": "示例部门"
+          },
+          "leader": {
+            "type": "string",
+            "example": "张三"
+          },
+          "phone": {
+            "type": "string",
+            "example": "13800138000"
+          },
+          "email": {
+            "type": "string",
+            "example": "demo@example.com"
+          },
+          "sort": {
+            "type": "number",
+            "example": 1
+          },
+          "status": {
+            "type": "number",
+            "example": 1
+          }
+        },
+        "required": [
+          "deptType",
+          "deptName"
         ]
       }
     }

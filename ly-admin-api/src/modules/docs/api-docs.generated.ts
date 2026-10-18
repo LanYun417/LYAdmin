@@ -1564,325 +1564,6 @@ export const API_DOCS: ApiDocGroup[] = [
     ]
   },
   {
-    "group": "部门管理",
-    "endpoints": [
-      {
-        "method": "GET",
-        "path": "/api/depts",
-        "summary": "部门列表（tree=1 时返回树）",
-        "permission": [
-          "system:dept:list"
-        ],
-        "isPublic": false,
-        "action": "",
-        "params": [
-          {
-            "name": "deptName",
-            "in": "query",
-            "type": "string",
-            "required": false,
-            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
-          },
-          {
-            "name": "status",
-            "in": "query",
-            "type": "number",
-            "required": false,
-            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
-          },
-          {
-            "name": "tree",
-            "in": "query",
-            "type": "string",
-            "required": false,
-            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "type": "integer",
-            "required": false,
-            "description": "页码，从 1 开始",
-            "example": 1
-          },
-          {
-            "name": "pageSize",
-            "in": "query",
-            "type": "integer",
-            "required": false,
-            "description": "每页条数",
-            "example": 10
-          }
-        ],
-        "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/depts?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
-          "query": {
-            "page": 1,
-            "pageSize": 10
-          }
-        }
-      },
-      {
-        "method": "GET",
-        "path": "/api/depts/:id",
-        "summary": "部门详情",
-        "permission": [
-          "system:dept:query"
-        ],
-        "isPublic": false,
-        "action": "",
-        "params": [
-          {
-            "name": "id",
-            "in": "path",
-            "type": "string",
-            "required": true,
-            "description": "",
-            "example": "1"
-          }
-        ],
-        "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/depts/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
-          "pathParams": {
-            "id": "1"
-          }
-        }
-      },
-      {
-        "method": "GET",
-        "path": "/api/depts/tree",
-        "summary": "完整部门树（上级选择）",
-        "permission": [
-          "system:dept:list"
-        ],
-        "isPublic": false,
-        "action": "",
-        "params": [
-          {
-            "name": "page",
-            "in": "query",
-            "type": "integer",
-            "required": false,
-            "description": "页码，从 1 开始",
-            "example": 1
-          },
-          {
-            "name": "pageSize",
-            "in": "query",
-            "type": "integer",
-            "required": false,
-            "description": "每页条数",
-            "example": 10
-          }
-        ],
-        "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/depts/tree?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
-          "query": {
-            "page": 1,
-            "pageSize": 10
-          }
-        }
-      },
-      {
-        "method": "POST",
-        "path": "/api/depts",
-        "summary": "新增部门",
-        "permission": [
-          "system:dept:add"
-        ],
-        "isPublic": false,
-        "action": "部门管理 · 新增",
-        "params": [
-          {
-            "name": "parentId",
-            "in": "body",
-            "type": "number",
-            "required": false,
-            "description": "",
-            "example": 1
-          },
-          {
-            "name": "deptName",
-            "in": "body",
-            "type": "string",
-            "required": true,
-            "description": "",
-            "example": "示例部门"
-          },
-          {
-            "name": "leader",
-            "in": "body",
-            "type": "string",
-            "required": false,
-            "description": "",
-            "example": "张三"
-          },
-          {
-            "name": "phone",
-            "in": "body",
-            "type": "string",
-            "required": false,
-            "description": "",
-            "example": "13800138000"
-          },
-          {
-            "name": "email",
-            "in": "body",
-            "type": "string",
-            "required": false,
-            "description": "",
-            "example": "demo@example.com"
-          },
-          {
-            "name": "sort",
-            "in": "body",
-            "type": "number",
-            "required": false,
-            "description": "",
-            "example": 1
-          },
-          {
-            "name": "status",
-            "in": "body",
-            "type": "number",
-            "required": false,
-            "description": "",
-            "example": 1
-          }
-        ],
-        "examples": {
-          "curl": "curl -X POST \"http://localhost:3000/api/depts\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"parentId\": 1,\n      \"deptName\": \"示例部门\",\n      \"leader\": \"张三\",\n      \"phone\": \"13800138000\",\n      \"email\": \"demo@example.com\",\n      \"sort\": 1,\n      \"status\": 1\n    }'",
-          "requestBody": {
-            "parentId": 1,
-            "deptName": "示例部门",
-            "leader": "张三",
-            "phone": "13800138000",
-            "email": "demo@example.com",
-            "sort": 1,
-            "status": 1
-          }
-        }
-      },
-      {
-        "method": "PUT",
-        "path": "/api/depts/:id",
-        "summary": "编辑部门",
-        "permission": [
-          "system:dept:edit"
-        ],
-        "isPublic": false,
-        "action": "部门管理 · 编辑",
-        "params": [
-          {
-            "name": "id",
-            "in": "path",
-            "type": "string",
-            "required": true,
-            "description": "",
-            "example": "1"
-          },
-          {
-            "name": "parentId",
-            "in": "body",
-            "type": "number",
-            "required": false,
-            "description": "",
-            "example": 1
-          },
-          {
-            "name": "deptName",
-            "in": "body",
-            "type": "string",
-            "required": true,
-            "description": "",
-            "example": "示例部门"
-          },
-          {
-            "name": "leader",
-            "in": "body",
-            "type": "string",
-            "required": false,
-            "description": "",
-            "example": "张三"
-          },
-          {
-            "name": "phone",
-            "in": "body",
-            "type": "string",
-            "required": false,
-            "description": "",
-            "example": "13800138000"
-          },
-          {
-            "name": "email",
-            "in": "body",
-            "type": "string",
-            "required": false,
-            "description": "",
-            "example": "demo@example.com"
-          },
-          {
-            "name": "sort",
-            "in": "body",
-            "type": "number",
-            "required": false,
-            "description": "",
-            "example": 1
-          },
-          {
-            "name": "status",
-            "in": "body",
-            "type": "number",
-            "required": false,
-            "description": "",
-            "example": 1
-          }
-        ],
-        "examples": {
-          "curl": "curl -X PUT \"http://localhost:3000/api/depts/1\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"parentId\": 1,\n      \"deptName\": \"示例部门\",\n      \"leader\": \"张三\",\n      \"phone\": \"13800138000\",\n      \"email\": \"demo@example.com\",\n      \"sort\": 1,\n      \"status\": 1\n    }'",
-          "pathParams": {
-            "id": "1"
-          },
-          "requestBody": {
-            "parentId": 1,
-            "deptName": "示例部门",
-            "leader": "张三",
-            "phone": "13800138000",
-            "email": "demo@example.com",
-            "sort": 1,
-            "status": 1
-          }
-        }
-      },
-      {
-        "method": "DELETE",
-        "path": "/api/depts/:id",
-        "summary": "删除部门",
-        "permission": [
-          "system:dept:remove"
-        ],
-        "isPublic": false,
-        "action": "部门管理 · 删除",
-        "params": [
-          {
-            "name": "id",
-            "in": "path",
-            "type": "string",
-            "required": true,
-            "description": "",
-            "example": "1"
-          }
-        ],
-        "examples": {
-          "curl": "curl -X DELETE \"http://localhost:3000/api/depts/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
-          "pathParams": {
-            "id": "1"
-          }
-        }
-      }
-    ]
-  },
-  {
     "group": "字典管理",
     "endpoints": [
       {
@@ -3601,6 +3282,343 @@ export const API_DOCS: ApiDocGroup[] = [
           "query": {
             "page": 1,
             "pageSize": 10
+          }
+        }
+      }
+    ]
+  },
+  {
+    "group": "部门/岗位管理",
+    "endpoints": [
+      {
+        "method": "GET",
+        "path": "/api/depts",
+        "summary": "部门列表（tree=1 时返回树）",
+        "permission": [
+          "system:dept:list"
+        ],
+        "isPublic": false,
+        "action": "",
+        "params": [
+          {
+            "name": "deptName",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "type": "number",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "tree",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "页码，从 1 开始",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "每页条数",
+            "example": 10
+          }
+        ],
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/depts?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "page": 1,
+            "pageSize": 10
+          }
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/api/depts/:id",
+        "summary": "部门详情",
+        "permission": [
+          "system:dept:query"
+        ],
+        "isPublic": false,
+        "action": "",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/depts/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "id": "1"
+          }
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/api/depts/tree",
+        "summary": "完整部门树（上级选择）",
+        "permission": [
+          "system:dept:list"
+        ],
+        "isPublic": false,
+        "action": "",
+        "params": [
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "页码，从 1 开始",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "每页条数",
+            "example": 10
+          }
+        ],
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/depts/tree?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "page": 1,
+            "pageSize": 10
+          }
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/api/depts",
+        "summary": "新增部门",
+        "permission": [
+          "system:dept:add"
+        ],
+        "isPublic": false,
+        "action": "部门/岗位管理 · 新增",
+        "params": [
+          {
+            "name": "parentId",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 1
+          },
+          {
+            "name": "deptType",
+            "in": "body",
+            "type": "number",
+            "required": true,
+            "description": "类型：1 部门 / 2 岗位（岗位为叶子节点，不能再挂下级）",
+            "example": 1
+          },
+          {
+            "name": "deptName",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "示例部门"
+          },
+          {
+            "name": "leader",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "张三"
+          },
+          {
+            "name": "phone",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "13800138000"
+          },
+          {
+            "name": "email",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "demo@example.com"
+          },
+          {
+            "name": "sort",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 1
+          },
+          {
+            "name": "status",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 1
+          }
+        ],
+        "examples": {
+          "curl": "curl -X POST \"http://localhost:3000/api/depts\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"parentId\": 1,\n      \"deptType\": 1,\n      \"deptName\": \"示例部门\",\n      \"leader\": \"张三\",\n      \"phone\": \"13800138000\",\n      \"email\": \"demo@example.com\",\n      \"sort\": 1,\n      \"status\": 1\n    }'",
+          "requestBody": {
+            "parentId": 1,
+            "deptType": 1,
+            "deptName": "示例部门",
+            "leader": "张三",
+            "phone": "13800138000",
+            "email": "demo@example.com",
+            "sort": 1,
+            "status": 1
+          }
+        }
+      },
+      {
+        "method": "PUT",
+        "path": "/api/depts/:id",
+        "summary": "编辑部门",
+        "permission": [
+          "system:dept:edit"
+        ],
+        "isPublic": false,
+        "action": "部门/岗位管理 · 编辑",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          },
+          {
+            "name": "parentId",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 1
+          },
+          {
+            "name": "deptType",
+            "in": "body",
+            "type": "number",
+            "required": true,
+            "description": "类型：1 部门 / 2 岗位（岗位为叶子节点，不能再挂下级）",
+            "example": 1
+          },
+          {
+            "name": "deptName",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "示例部门"
+          },
+          {
+            "name": "leader",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "张三"
+          },
+          {
+            "name": "phone",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "13800138000"
+          },
+          {
+            "name": "email",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "demo@example.com"
+          },
+          {
+            "name": "sort",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 1
+          },
+          {
+            "name": "status",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 1
+          }
+        ],
+        "examples": {
+          "curl": "curl -X PUT \"http://localhost:3000/api/depts/1\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"parentId\": 1,\n      \"deptType\": 1,\n      \"deptName\": \"示例部门\",\n      \"leader\": \"张三\",\n      \"phone\": \"13800138000\",\n      \"email\": \"demo@example.com\",\n      \"sort\": 1,\n      \"status\": 1\n    }'",
+          "pathParams": {
+            "id": "1"
+          },
+          "requestBody": {
+            "parentId": 1,
+            "deptType": 1,
+            "deptName": "示例部门",
+            "leader": "张三",
+            "phone": "13800138000",
+            "email": "demo@example.com",
+            "sort": 1,
+            "status": 1
+          }
+        }
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/depts/:id",
+        "summary": "删除部门",
+        "permission": [
+          "system:dept:remove"
+        ],
+        "isPublic": false,
+        "action": "部门/岗位管理 · 删除",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X DELETE \"http://localhost:3000/api/depts/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "id": "1"
           }
         }
       }
