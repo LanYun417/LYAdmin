@@ -75,6 +75,12 @@ describe('接口契约快照 (e2e)', () => {
   const authPost = (path: string, body: object): request.Test =>
     request(app.getHttpServer()).post(`${API}${path}`).set('authorization', `Bearer ${token}`).send(body);
 
+  /** 带超管令牌的 DELETE（可选请求体：批量删除走 body 传 ids）。 */
+  const authDelete = (path: string, body?: object): request.Test => {
+    const req = request(app.getHttpServer()).delete(`${API}${path}`).set('authorization', `Bearer ${token}`);
+    return body === undefined ? req : req.send(body);
+  };
+
   /** 导出日志 CSV（二进制接收）。 */
   const exportCsv = async (path: string, timezoneOffset?: string): Promise<request.Response> => {
     let req = request(app.getHttpServer())
@@ -334,6 +340,38 @@ describe('接口契约快照 (e2e)', () => {
 
       const notMatched = await authGet('/logs/http?username=dmin&page=1&pageSize=1').expect(200);
       expect((notMatched.body.data as { total: number }).total).toBe(0);
+    });
+  });
+
+  describe('日志删除', () => {
+    /** 取最新一条登录日志 id：只删本条，避免影响其它用例依赖的数据量。 */
+    async function latestLoginLogId(): Promise<number> {
+      const res = await authGet('/logs/login?page=1&pageSize=1').expect(200);
+      const rows = (res.body.data as { list: Array<{ id: number }> }).list;
+      expect(rows.length).toBeGreaterThan(0);
+      return rows[0].id;
+    }
+
+    it('DELETE /logs/login/batch → 按 ids 删除，message 回显实际命中条数', async () => {
+      const id = await latestLoginLogId();
+      const res = await authDelete('/logs/login/batch', { ids: [id] }).expect(200);
+      expect(res.body).toMatchObject({ code: 200 });
+      expect(String((res.body as { message: string }).message)).toBe('已删除 1 条日志');
+
+      const after = await authGet('/logs/login?page=1&pageSize=50').expect(200);
+      const ids = (after.body.data as { list: Array<{ id: number }> }).list.map((row) => row.id);
+      expect(ids).not.toContain(id);
+    });
+
+    it('DELETE /logs/login/:id → 单条删除返回固定文案', async () => {
+      const id = await latestLoginLogId();
+      const res = await authDelete(`/logs/login/${id}`).expect(200);
+      expect(String((res.body as { message: string }).message)).toBe('删除成功');
+    });
+
+    it('DELETE /logs/login/batch 传空数组 → 400（护栏：不允许无 id 的全量删除）', async () => {
+      const res = await authDelete('/logs/login/batch', { ids: [] }).expect(400);
+      expect(String((res.body as { message: string }).message)).toContain('请至少选择一条记录');
     });
   });
 

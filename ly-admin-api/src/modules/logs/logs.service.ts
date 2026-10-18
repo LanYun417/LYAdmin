@@ -299,6 +299,33 @@ export class LogsService {
     countCache.clear();
   }
 
+  /** 删除登录日志（按 id 批量，返回实际删除条数；单条删除传单元素数组）。 */
+  async deleteLoginLogs(ids: number[]): Promise<number> {
+    const { count } = await this.prisma.loginLog.deleteMany({
+      where: { id: { in: ids.map((id) => BigInt(id)) } },
+    });
+    return count;
+  }
+
+  /** 删除操作日志（按 id 批量，返回实际删除条数）。 */
+  async deleteOperationLogs(ids: number[]): Promise<number> {
+    const { count } = await this.prisma.operationLog.deleteMany({
+      where: { id: { in: ids.map((id) => BigInt(id)) } },
+    });
+    return count;
+  }
+
+  /** 删除 HTTP 访问日志（按 id 批量，返回实际删除条数；count 缓存一并失效）。 */
+  async deleteHttpLogs(ids: number[]): Promise<number> {
+    const { count } = await this.prisma.httpLog.deleteMany({
+      where: { id: { in: ids.map((id) => BigInt(id)) } },
+    });
+    if (count > 0) {
+      countCache.clear();
+    }
+    return count;
+  }
+
   private readCachedCount(key: string): number | null {
     const entry = countCache.get(key);
     if (!entry) {
