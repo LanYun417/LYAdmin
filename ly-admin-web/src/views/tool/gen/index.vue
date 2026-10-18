@@ -369,7 +369,7 @@ onMounted(() => {
 
     <div class="flex flex-col gap-3 lg:flex-row">
       <!-- 左：数据表列表 -->
-      <el-card shadow="never" class="w-full lg:w-[480px] lg:flex-none">
+      <el-card shadow="never" class="w-full lg:w-120 lg:flex-none">
         <div class="flex flex-wrap items-center justify-between gap-y-2 mb-3">
           <span class="text-[15px] font-semibold text-ink">数据表（{{ filteredTables.length }}）</span>
           <el-button @click="loadTables">

@@ -15,9 +15,7 @@ defineProps<{
 
 <template>
   <router-link to="/home" class="block">
-    <div
-      class="h-[50px] flex items-center justify-center gap-2.5 border-b border-line-light overflow-hidden select-none"
-    >
+    <div class="h-12.5 flex items-center justify-center gap-2.5 border-b border-line-light overflow-hidden select-none">
       <img class="w-6 h-6 shrink-0" :src="logoUrl" alt="logo" />
       <span
         v-show="!collapsed"

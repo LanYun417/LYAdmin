@@ -22,7 +22,7 @@ function handleToggle(): void {
 </script>
 
 <template>
-  <div class="h-[50px] px-4 border-b border-line-light flex items-center justify-between shadow">
+  <div class="h-12.5 px-4 border-b border-line-light flex items-center justify-between shadow">
     <div class="flex items-center gap-3">
       <el-icon
         class="text-lg text-ink cursor-pointer"

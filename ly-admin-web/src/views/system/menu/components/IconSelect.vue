@@ -95,7 +95,7 @@ function handleSelect(name: string): void {
           <div
             v-for="name in renderedIcons"
             :key="name"
-            class="w-[42px] h-[42px] cursor-pointer border border-line-light rounded flex-center"
+            class="w-10.5 h-10.5 cursor-pointer border border-line-light rounded flex-center"
             :class="
               name === modelValue
                 ? 'text-primary border-primary bg-[var(--el-color-primary-light-9)]'

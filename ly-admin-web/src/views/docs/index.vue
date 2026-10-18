@@ -238,7 +238,7 @@ onMounted(loadDocs);
         <!-- 外层定宽：el-input 自身 width:100%，由这层 Tailwind 盒子控制实际宽度（窄屏铺满） -->
         <div class="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto">
           <el-button size="small" @click="downloadOpenApi">下载 OpenAPI</el-button>
-          <div class="w-full sm:w-[260px]">
+          <div class="w-full sm:w-65">
             <el-input v-model="keyword" clearable placeholder="搜索路径 / 说明 / 权限码" />
           </div>
         </div>
@@ -246,10 +246,10 @@ onMounted(loadDocs);
     </template>
 
     <!-- 桌面（≥ lg）左右两栏、各自滚动；窄屏纵向堆叠（导航在上、限高独立滚动，详情在下） -->
-    <div class="flex flex-col gap-4 lg:h-[calc(100vh-220px)] lg:min-h-[420px] lg:flex-row">
+    <div class="flex flex-col gap-4 lg:h-[calc(100vh-220px)] lg:min-h-105 lg:flex-row">
       <!-- 左侧：按模块折叠的接口导航 -->
       <aside
-        class="h-[40vh] shrink-0 border-b border-line-lighter pb-2 lg:h-auto lg:w-[340px] lg:border-b-0 lg:border-r lg:pr-2 lg:pb-0"
+        class="h-[40vh] shrink-0 border-b border-line-lighter pb-2 lg:h-auto lg:w-85 lg:border-b-0 lg:border-r lg:pr-2 lg:pb-0"
       >
         <el-scrollbar v-if="filteredGroups.length">
           <!-- 折叠面板去边框（见 collapseStyle 说明）；accordion：展开一个时其余自动收起 -->
@@ -268,7 +268,7 @@ onMounted(loadDocs);
                 :title="`${ep.method} ${ep.path}`"
                 @click="select(group.group, ep)"
               >
-                <el-tag :type="methodTagType(ep.method)" effect="dark" class="w-[58px]">{{ ep.method }}</el-tag>
+                <el-tag :type="methodTagType(ep.method)" effect="dark" class="w-14.5">{{ ep.method }}</el-tag>
                 <span class="min-w-0 flex-1 truncate text-[13px]">{{ endpointLabel(ep) }}</span>
                 <el-tag v-if="ep.isPublic" type="success" size="small" effect="plain">公开</el-tag>
               </button>
@@ -283,7 +283,7 @@ onMounted(loadDocs);
         <el-scrollbar v-if="selected">
           <div class="flex flex-col gap-4 pr-2">
             <div class="flex items-center gap-2">
-              <el-tag :type="methodTagType(selected.endpoint.method)" effect="dark" size="large" class="w-[68px]">
+              <el-tag :type="methodTagType(selected.endpoint.method)" effect="dark" size="large" class="w-17">
                 {{ selected.endpoint.method }}
               </el-tag>
               <el-input :model-value="selected.endpoint.path" readonly class="flex-1">
