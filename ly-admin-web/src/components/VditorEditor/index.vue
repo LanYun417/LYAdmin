@@ -15,6 +15,7 @@ import { ElMessage } from '@/utils/element';
 import type VditorType from 'vditor';
 import { useAppStore } from '@/store/modules/app';
 import { getAccessToken } from '@/utils/auth';
+import { withUploadToken } from '@/utils/uploadToken';
 
 defineOptions({ name: 'VditorEditor' });
 
@@ -85,7 +86,8 @@ const VDITOR_UPLOAD = {
       const succMap: Record<string, string> = {};
       for (const item of items) {
         if (item?.fileUrl) {
-          succMap[item.originName || item.fileName || ''] = item.fileUrl;
+          // /static 需要令牌：编辑器预览用 <img> 直连，带不上 Authorization 头，改走 ?token=
+          succMap[item.originName || item.fileName || ''] = withUploadToken(item.fileUrl);
         }
       }
       return JSON.stringify({ code: 0, msg: '', data: { errFiles: [], succMap } });
