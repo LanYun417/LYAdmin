@@ -29,6 +29,7 @@ export type AggregateDept = {
 export type DeptAvgAggregateOutputType = {
   id: number | null
   parentId: number | null
+  deptType: number | null
   sort: number | null
   status: number | null
 }
@@ -36,6 +37,7 @@ export type DeptAvgAggregateOutputType = {
 export type DeptSumAggregateOutputType = {
   id: bigint | null
   parentId: bigint | null
+  deptType: number | null
   sort: number | null
   status: number | null
 }
@@ -43,6 +45,7 @@ export type DeptSumAggregateOutputType = {
 export type DeptMinAggregateOutputType = {
   id: bigint | null
   parentId: bigint | null
+  deptType: number | null
   deptName: string | null
   sort: number | null
   status: number | null
@@ -56,6 +59,7 @@ export type DeptMinAggregateOutputType = {
 export type DeptMaxAggregateOutputType = {
   id: bigint | null
   parentId: bigint | null
+  deptType: number | null
   deptName: string | null
   sort: number | null
   status: number | null
@@ -69,6 +73,7 @@ export type DeptMaxAggregateOutputType = {
 export type DeptCountAggregateOutputType = {
   id: number
   parentId: number
+  deptType: number
   deptName: number
   sort: number
   status: number
@@ -84,6 +89,7 @@ export type DeptCountAggregateOutputType = {
 export type DeptAvgAggregateInputType = {
   id?: true
   parentId?: true
+  deptType?: true
   sort?: true
   status?: true
 }
@@ -91,6 +97,7 @@ export type DeptAvgAggregateInputType = {
 export type DeptSumAggregateInputType = {
   id?: true
   parentId?: true
+  deptType?: true
   sort?: true
   status?: true
 }
@@ -98,6 +105,7 @@ export type DeptSumAggregateInputType = {
 export type DeptMinAggregateInputType = {
   id?: true
   parentId?: true
+  deptType?: true
   deptName?: true
   sort?: true
   status?: true
@@ -111,6 +119,7 @@ export type DeptMinAggregateInputType = {
 export type DeptMaxAggregateInputType = {
   id?: true
   parentId?: true
+  deptType?: true
   deptName?: true
   sort?: true
   status?: true
@@ -124,6 +133,7 @@ export type DeptMaxAggregateInputType = {
 export type DeptCountAggregateInputType = {
   id?: true
   parentId?: true
+  deptType?: true
   deptName?: true
   sort?: true
   status?: true
@@ -224,6 +234,7 @@ export type DeptGroupByArgs<ExtArgs extends runtime.Types.Extensions.InternalArg
 export type DeptGroupByOutputType = {
   id: bigint
   parentId: bigint
+  deptType: number
   deptName: string
   sort: number
   status: number
@@ -260,6 +271,7 @@ export type DeptWhereInput = {
   NOT?: Prisma.DeptWhereInput | Prisma.DeptWhereInput[]
   id?: Prisma.BigIntFilter<"Dept"> | bigint | number
   parentId?: Prisma.BigIntFilter<"Dept"> | bigint | number
+  deptType?: Prisma.IntFilter<"Dept"> | number
   deptName?: Prisma.StringFilter<"Dept"> | string
   sort?: Prisma.IntFilter<"Dept"> | number
   status?: Prisma.IntFilter<"Dept"> | number
@@ -274,6 +286,7 @@ export type DeptWhereInput = {
 export type DeptOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   parentId?: Prisma.SortOrder
+  deptType?: Prisma.SortOrder
   deptName?: Prisma.SortOrder
   sort?: Prisma.SortOrder
   status?: Prisma.SortOrder
@@ -292,6 +305,7 @@ export type DeptWhereUniqueInput = Prisma.AtLeast<{
   OR?: Prisma.DeptWhereInput[]
   NOT?: Prisma.DeptWhereInput | Prisma.DeptWhereInput[]
   parentId?: Prisma.BigIntFilter<"Dept"> | bigint | number
+  deptType?: Prisma.IntFilter<"Dept"> | number
   deptName?: Prisma.StringFilter<"Dept"> | string
   sort?: Prisma.IntFilter<"Dept"> | number
   status?: Prisma.IntFilter<"Dept"> | number
@@ -306,6 +320,7 @@ export type DeptWhereUniqueInput = Prisma.AtLeast<{
 export type DeptOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   parentId?: Prisma.SortOrder
+  deptType?: Prisma.SortOrder
   deptName?: Prisma.SortOrder
   sort?: Prisma.SortOrder
   status?: Prisma.SortOrder
@@ -327,6 +342,7 @@ export type DeptScalarWhereWithAggregatesInput = {
   NOT?: Prisma.DeptScalarWhereWithAggregatesInput | Prisma.DeptScalarWhereWithAggregatesInput[]
   id?: Prisma.BigIntWithAggregatesFilter<"Dept"> | bigint | number
   parentId?: Prisma.BigIntWithAggregatesFilter<"Dept"> | bigint | number
+  deptType?: Prisma.IntWithAggregatesFilter<"Dept"> | number
   deptName?: Prisma.StringWithAggregatesFilter<"Dept"> | string
   sort?: Prisma.IntWithAggregatesFilter<"Dept"> | number
   status?: Prisma.IntWithAggregatesFilter<"Dept"> | number
@@ -340,6 +356,7 @@ export type DeptScalarWhereWithAggregatesInput = {
 export type DeptCreateInput = {
   id?: bigint | number
   parentId?: bigint | number
+  deptType?: number
   deptName: string
   sort?: number
   status?: number
@@ -354,6 +371,7 @@ export type DeptCreateInput = {
 export type DeptUncheckedCreateInput = {
   id?: bigint | number
   parentId?: bigint | number
+  deptType?: number
   deptName: string
   sort?: number
   status?: number
@@ -368,6 +386,7 @@ export type DeptUncheckedCreateInput = {
 export type DeptUpdateInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   parentId?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  deptType?: Prisma.IntFieldUpdateOperationsInput | number
   deptName?: Prisma.StringFieldUpdateOperationsInput | string
   sort?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.IntFieldUpdateOperationsInput | number
@@ -382,6 +401,7 @@ export type DeptUpdateInput = {
 export type DeptUncheckedUpdateInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   parentId?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  deptType?: Prisma.IntFieldUpdateOperationsInput | number
   deptName?: Prisma.StringFieldUpdateOperationsInput | string
   sort?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.IntFieldUpdateOperationsInput | number
@@ -396,6 +416,7 @@ export type DeptUncheckedUpdateInput = {
 export type DeptCreateManyInput = {
   id?: bigint | number
   parentId?: bigint | number
+  deptType?: number
   deptName: string
   sort?: number
   status?: number
@@ -409,6 +430,7 @@ export type DeptCreateManyInput = {
 export type DeptUpdateManyMutationInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   parentId?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  deptType?: Prisma.IntFieldUpdateOperationsInput | number
   deptName?: Prisma.StringFieldUpdateOperationsInput | string
   sort?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.IntFieldUpdateOperationsInput | number
@@ -422,6 +444,7 @@ export type DeptUpdateManyMutationInput = {
 export type DeptUncheckedUpdateManyInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   parentId?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  deptType?: Prisma.IntFieldUpdateOperationsInput | number
   deptName?: Prisma.StringFieldUpdateOperationsInput | string
   sort?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.IntFieldUpdateOperationsInput | number
@@ -441,6 +464,7 @@ export type DeptOrderByRelevanceInput = {
 export type DeptCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   parentId?: Prisma.SortOrder
+  deptType?: Prisma.SortOrder
   deptName?: Prisma.SortOrder
   sort?: Prisma.SortOrder
   status?: Prisma.SortOrder
@@ -454,6 +478,7 @@ export type DeptCountOrderByAggregateInput = {
 export type DeptAvgOrderByAggregateInput = {
   id?: Prisma.SortOrder
   parentId?: Prisma.SortOrder
+  deptType?: Prisma.SortOrder
   sort?: Prisma.SortOrder
   status?: Prisma.SortOrder
 }
@@ -461,6 +486,7 @@ export type DeptAvgOrderByAggregateInput = {
 export type DeptMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   parentId?: Prisma.SortOrder
+  deptType?: Prisma.SortOrder
   deptName?: Prisma.SortOrder
   sort?: Prisma.SortOrder
   status?: Prisma.SortOrder
@@ -474,6 +500,7 @@ export type DeptMaxOrderByAggregateInput = {
 export type DeptMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   parentId?: Prisma.SortOrder
+  deptType?: Prisma.SortOrder
   deptName?: Prisma.SortOrder
   sort?: Prisma.SortOrder
   status?: Prisma.SortOrder
@@ -487,6 +514,7 @@ export type DeptMinOrderByAggregateInput = {
 export type DeptSumOrderByAggregateInput = {
   id?: Prisma.SortOrder
   parentId?: Prisma.SortOrder
+  deptType?: Prisma.SortOrder
   sort?: Prisma.SortOrder
   status?: Prisma.SortOrder
 }
@@ -513,6 +541,7 @@ export type DeptUpdateOneRequiredWithoutRoleDeptsNestedInput = {
 export type DeptCreateWithoutRoleDeptsInput = {
   id?: bigint | number
   parentId?: bigint | number
+  deptType?: number
   deptName: string
   sort?: number
   status?: number
@@ -526,6 +555,7 @@ export type DeptCreateWithoutRoleDeptsInput = {
 export type DeptUncheckedCreateWithoutRoleDeptsInput = {
   id?: bigint | number
   parentId?: bigint | number
+  deptType?: number
   deptName: string
   sort?: number
   status?: number
@@ -555,6 +585,7 @@ export type DeptUpdateToOneWithWhereWithoutRoleDeptsInput = {
 export type DeptUpdateWithoutRoleDeptsInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   parentId?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  deptType?: Prisma.IntFieldUpdateOperationsInput | number
   deptName?: Prisma.StringFieldUpdateOperationsInput | string
   sort?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.IntFieldUpdateOperationsInput | number
@@ -568,6 +599,7 @@ export type DeptUpdateWithoutRoleDeptsInput = {
 export type DeptUncheckedUpdateWithoutRoleDeptsInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   parentId?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  deptType?: Prisma.IntFieldUpdateOperationsInput | number
   deptName?: Prisma.StringFieldUpdateOperationsInput | string
   sort?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.IntFieldUpdateOperationsInput | number
@@ -612,6 +644,7 @@ export type DeptCountOutputTypeCountRoleDeptsArgs<ExtArgs extends runtime.Types.
 export type DeptSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   parentId?: boolean
+  deptType?: boolean
   deptName?: boolean
   sort?: boolean
   status?: boolean
@@ -629,6 +662,7 @@ export type DeptSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
 export type DeptSelectScalar = {
   id?: boolean
   parentId?: boolean
+  deptType?: boolean
   deptName?: boolean
   sort?: boolean
   status?: boolean
@@ -639,7 +673,7 @@ export type DeptSelectScalar = {
   updatedAt?: boolean
 }
 
-export type DeptOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "parentId" | "deptName" | "sort" | "status" | "leader" | "phone" | "email" | "createdAt" | "updatedAt", ExtArgs["result"]["dept"]>
+export type DeptOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "parentId" | "deptType" | "deptName" | "sort" | "status" | "leader" | "phone" | "email" | "createdAt" | "updatedAt", ExtArgs["result"]["dept"]>
 export type DeptInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   roleDepts?: boolean | Prisma.Dept$roleDeptsArgs<ExtArgs>
   _count?: boolean | Prisma.DeptCountOutputTypeDefaultArgs<ExtArgs>
@@ -659,6 +693,10 @@ export type $DeptPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
      * 父级 id（0 表示顶级，故不建外键、也不声明 Prisma 自关联）
      */
     parentId: bigint
+    /**
+     * 类型：1 部门 / 2 岗位（岗位为叶子节点，不能再挂下级）
+     */
+    deptType: number
     /**
      * 部门名称
      */
@@ -1063,6 +1101,7 @@ export interface Prisma__DeptClient<T, Null = never, ExtArgs extends runtime.Typ
 export interface DeptFieldRefs {
   readonly id: Prisma.FieldRef<"Dept", 'BigInt'>
   readonly parentId: Prisma.FieldRef<"Dept", 'BigInt'>
+  readonly deptType: Prisma.FieldRef<"Dept", 'Int'>
   readonly deptName: Prisma.FieldRef<"Dept", 'String'>
   readonly sort: Prisma.FieldRef<"Dept", 'Int'>
   readonly status: Prisma.FieldRef<"Dept", 'Int'>

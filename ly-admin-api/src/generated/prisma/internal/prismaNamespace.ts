@@ -1456,6 +1456,7 @@ export const LoginLogScalarFieldEnum = {
   username: 'username',
   ip: 'ip',
   userAgent: 'userAgent',
+  location: 'location',
   status: 'status',
   message: 'message',
   loginAt: 'loginAt'
@@ -1477,6 +1478,7 @@ export const OperationLogScalarFieldEnum = {
   result: 'result',
   errorMessage: 'errorMessage',
   ip: 'ip',
+  location: 'location',
   createdAt: 'createdAt'
 } as const
 
@@ -1491,6 +1493,7 @@ export const HttpLogScalarFieldEnum = {
   statusCode: 'statusCode',
   duration: 'duration',
   ip: 'ip',
+  location: 'location',
   userAgent: 'userAgent',
   userId: 'userId',
   username: 'username',
@@ -1564,6 +1567,7 @@ export type MenuScalarFieldEnum = (typeof MenuScalarFieldEnum)[keyof typeof Menu
 export const DeptScalarFieldEnum = {
   id: 'id',
   parentId: 'parentId',
+  deptType: 'deptType',
   deptName: 'deptName',
   sort: 'sort',
   status: 'status',
@@ -1673,6 +1677,7 @@ export const LoginLogOrderByRelevanceFieldEnum = {
   username: 'username',
   ip: 'ip',
   userAgent: 'userAgent',
+  location: 'location',
   message: 'message'
 } as const
 
@@ -1687,7 +1692,8 @@ export const OperationLogOrderByRelevanceFieldEnum = {
   url: 'url',
   params: 'params',
   errorMessage: 'errorMessage',
-  ip: 'ip'
+  ip: 'ip',
+  location: 'location'
 } as const
 
 export type OperationLogOrderByRelevanceFieldEnum = (typeof OperationLogOrderByRelevanceFieldEnum)[keyof typeof OperationLogOrderByRelevanceFieldEnum]
@@ -1714,6 +1720,7 @@ export const HttpLogOrderByRelevanceFieldEnum = {
   method: 'method',
   url: 'url',
   ip: 'ip',
+  location: 'location',
   userAgent: 'userAgent',
   username: 'username',
   deptName: 'deptName',

@@ -50,6 +50,7 @@ export type HttpLogMinAggregateOutputType = {
   statusCode: number | null
   duration: number | null
   ip: string | null
+  location: string | null
   userAgent: string | null
   userId: bigint | null
   username: string | null
@@ -67,6 +68,7 @@ export type HttpLogMaxAggregateOutputType = {
   statusCode: number | null
   duration: number | null
   ip: string | null
+  location: string | null
   userAgent: string | null
   userId: bigint | null
   username: string | null
@@ -84,6 +86,7 @@ export type HttpLogCountAggregateOutputType = {
   statusCode: number
   duration: number
   ip: number
+  location: number
   userAgent: number
   userId: number
   username: number
@@ -120,6 +123,7 @@ export type HttpLogMinAggregateInputType = {
   statusCode?: true
   duration?: true
   ip?: true
+  location?: true
   userAgent?: true
   userId?: true
   username?: true
@@ -137,6 +141,7 @@ export type HttpLogMaxAggregateInputType = {
   statusCode?: true
   duration?: true
   ip?: true
+  location?: true
   userAgent?: true
   userId?: true
   username?: true
@@ -154,6 +159,7 @@ export type HttpLogCountAggregateInputType = {
   statusCode?: true
   duration?: true
   ip?: true
+  location?: true
   userAgent?: true
   userId?: true
   username?: true
@@ -259,6 +265,7 @@ export type HttpLogGroupByOutputType = {
   statusCode: number
   duration: number
   ip: string | null
+  location: string | null
   userAgent: string | null
   userId: bigint
   username: string | null
@@ -300,6 +307,7 @@ export type HttpLogWhereInput = {
   statusCode?: Prisma.IntFilter<"HttpLog"> | number
   duration?: Prisma.IntFilter<"HttpLog"> | number
   ip?: Prisma.StringNullableFilter<"HttpLog"> | string | null
+  location?: Prisma.StringNullableFilter<"HttpLog"> | string | null
   userAgent?: Prisma.StringNullableFilter<"HttpLog"> | string | null
   userId?: Prisma.BigIntFilter<"HttpLog"> | bigint | number
   username?: Prisma.StringNullableFilter<"HttpLog"> | string | null
@@ -318,6 +326,7 @@ export type HttpLogOrderByWithRelationInput = {
   statusCode?: Prisma.SortOrder
   duration?: Prisma.SortOrder
   ip?: Prisma.SortOrderInput | Prisma.SortOrder
+  location?: Prisma.SortOrderInput | Prisma.SortOrder
   userAgent?: Prisma.SortOrderInput | Prisma.SortOrder
   userId?: Prisma.SortOrder
   username?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -340,6 +349,7 @@ export type HttpLogWhereUniqueInput = Prisma.AtLeast<{
   statusCode?: Prisma.IntFilter<"HttpLog"> | number
   duration?: Prisma.IntFilter<"HttpLog"> | number
   ip?: Prisma.StringNullableFilter<"HttpLog"> | string | null
+  location?: Prisma.StringNullableFilter<"HttpLog"> | string | null
   userAgent?: Prisma.StringNullableFilter<"HttpLog"> | string | null
   userId?: Prisma.BigIntFilter<"HttpLog"> | bigint | number
   username?: Prisma.StringNullableFilter<"HttpLog"> | string | null
@@ -358,6 +368,7 @@ export type HttpLogOrderByWithAggregationInput = {
   statusCode?: Prisma.SortOrder
   duration?: Prisma.SortOrder
   ip?: Prisma.SortOrderInput | Prisma.SortOrder
+  location?: Prisma.SortOrderInput | Prisma.SortOrder
   userAgent?: Prisma.SortOrderInput | Prisma.SortOrder
   userId?: Prisma.SortOrder
   username?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -384,6 +395,7 @@ export type HttpLogScalarWhereWithAggregatesInput = {
   statusCode?: Prisma.IntWithAggregatesFilter<"HttpLog"> | number
   duration?: Prisma.IntWithAggregatesFilter<"HttpLog"> | number
   ip?: Prisma.StringNullableWithAggregatesFilter<"HttpLog"> | string | null
+  location?: Prisma.StringNullableWithAggregatesFilter<"HttpLog"> | string | null
   userAgent?: Prisma.StringNullableWithAggregatesFilter<"HttpLog"> | string | null
   userId?: Prisma.BigIntWithAggregatesFilter<"HttpLog"> | bigint | number
   username?: Prisma.StringNullableWithAggregatesFilter<"HttpLog"> | string | null
@@ -402,6 +414,7 @@ export type HttpLogCreateInput = {
   statusCode: number
   duration?: number
   ip?: string | null
+  location?: string | null
   userAgent?: string | null
   userId?: bigint | number
   username?: string | null
@@ -420,6 +433,7 @@ export type HttpLogUncheckedCreateInput = {
   statusCode: number
   duration?: number
   ip?: string | null
+  location?: string | null
   userAgent?: string | null
   userId?: bigint | number
   username?: string | null
@@ -438,6 +452,7 @@ export type HttpLogUpdateInput = {
   statusCode?: Prisma.IntFieldUpdateOperationsInput | number
   duration?: Prisma.IntFieldUpdateOperationsInput | number
   ip?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userAgent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userId?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -456,6 +471,7 @@ export type HttpLogUncheckedUpdateInput = {
   statusCode?: Prisma.IntFieldUpdateOperationsInput | number
   duration?: Prisma.IntFieldUpdateOperationsInput | number
   ip?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userAgent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userId?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -474,6 +490,7 @@ export type HttpLogCreateManyInput = {
   statusCode: number
   duration?: number
   ip?: string | null
+  location?: string | null
   userAgent?: string | null
   userId?: bigint | number
   username?: string | null
@@ -492,6 +509,7 @@ export type HttpLogUpdateManyMutationInput = {
   statusCode?: Prisma.IntFieldUpdateOperationsInput | number
   duration?: Prisma.IntFieldUpdateOperationsInput | number
   ip?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userAgent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userId?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -510,6 +528,7 @@ export type HttpLogUncheckedUpdateManyInput = {
   statusCode?: Prisma.IntFieldUpdateOperationsInput | number
   duration?: Prisma.IntFieldUpdateOperationsInput | number
   ip?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userAgent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userId?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -534,6 +553,7 @@ export type HttpLogCountOrderByAggregateInput = {
   statusCode?: Prisma.SortOrder
   duration?: Prisma.SortOrder
   ip?: Prisma.SortOrder
+  location?: Prisma.SortOrder
   userAgent?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   username?: Prisma.SortOrder
@@ -560,6 +580,7 @@ export type HttpLogMaxOrderByAggregateInput = {
   statusCode?: Prisma.SortOrder
   duration?: Prisma.SortOrder
   ip?: Prisma.SortOrder
+  location?: Prisma.SortOrder
   userAgent?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   username?: Prisma.SortOrder
@@ -577,6 +598,7 @@ export type HttpLogMinOrderByAggregateInput = {
   statusCode?: Prisma.SortOrder
   duration?: Prisma.SortOrder
   ip?: Prisma.SortOrder
+  location?: Prisma.SortOrder
   userAgent?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   username?: Prisma.SortOrder
@@ -604,6 +626,7 @@ export type HttpLogSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   statusCode?: boolean
   duration?: boolean
   ip?: boolean
+  location?: boolean
   userAgent?: boolean
   userId?: boolean
   username?: boolean
@@ -624,6 +647,7 @@ export type HttpLogSelectScalar = {
   statusCode?: boolean
   duration?: boolean
   ip?: boolean
+  location?: boolean
   userAgent?: boolean
   userId?: boolean
   username?: boolean
@@ -634,7 +658,7 @@ export type HttpLogSelectScalar = {
   resBody?: boolean
 }
 
-export type HttpLogOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "time" | "method" | "url" | "statusCode" | "duration" | "ip" | "userAgent" | "userId" | "username" | "deptId" | "deptName" | "query" | "reqBody" | "resBody", ExtArgs["result"]["httpLog"]>
+export type HttpLogOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "time" | "method" | "url" | "statusCode" | "duration" | "ip" | "location" | "userAgent" | "userId" | "username" | "deptId" | "deptName" | "query" | "reqBody" | "resBody", ExtArgs["result"]["httpLog"]>
 
 export type $HttpLogPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "HttpLog"
@@ -668,6 +692,10 @@ export type $HttpLogPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
      * 客户端 IP
      */
     ip: string | null
+    /**
+     * IP 归属地（ip2region 离线解析：国家 省份 城市 运营商）
+     */
+    location: string | null
     /**
      * User-Agent
      */
@@ -1076,6 +1104,7 @@ export interface HttpLogFieldRefs {
   readonly statusCode: Prisma.FieldRef<"HttpLog", 'Int'>
   readonly duration: Prisma.FieldRef<"HttpLog", 'Int'>
   readonly ip: Prisma.FieldRef<"HttpLog", 'String'>
+  readonly location: Prisma.FieldRef<"HttpLog", 'String'>
   readonly userAgent: Prisma.FieldRef<"HttpLog", 'String'>
   readonly userId: Prisma.FieldRef<"HttpLog", 'BigInt'>
   readonly username: Prisma.FieldRef<"HttpLog", 'String'>

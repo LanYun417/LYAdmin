@@ -41,6 +41,7 @@ export type LoginLogMinAggregateOutputType = {
   username: string | null
   ip: string | null
   userAgent: string | null
+  location: string | null
   status: number | null
   message: string | null
   loginAt: Date | null
@@ -51,6 +52,7 @@ export type LoginLogMaxAggregateOutputType = {
   username: string | null
   ip: string | null
   userAgent: string | null
+  location: string | null
   status: number | null
   message: string | null
   loginAt: Date | null
@@ -61,6 +63,7 @@ export type LoginLogCountAggregateOutputType = {
   username: number
   ip: number
   userAgent: number
+  location: number
   status: number
   message: number
   loginAt: number
@@ -83,6 +86,7 @@ export type LoginLogMinAggregateInputType = {
   username?: true
   ip?: true
   userAgent?: true
+  location?: true
   status?: true
   message?: true
   loginAt?: true
@@ -93,6 +97,7 @@ export type LoginLogMaxAggregateInputType = {
   username?: true
   ip?: true
   userAgent?: true
+  location?: true
   status?: true
   message?: true
   loginAt?: true
@@ -103,6 +108,7 @@ export type LoginLogCountAggregateInputType = {
   username?: true
   ip?: true
   userAgent?: true
+  location?: true
   status?: true
   message?: true
   loginAt?: true
@@ -200,6 +206,7 @@ export type LoginLogGroupByOutputType = {
   username: string
   ip: string | null
   userAgent: string | null
+  location: string | null
   status: number
   message: string | null
   loginAt: Date
@@ -233,6 +240,7 @@ export type LoginLogWhereInput = {
   username?: Prisma.StringFilter<"LoginLog"> | string
   ip?: Prisma.StringNullableFilter<"LoginLog"> | string | null
   userAgent?: Prisma.StringNullableFilter<"LoginLog"> | string | null
+  location?: Prisma.StringNullableFilter<"LoginLog"> | string | null
   status?: Prisma.IntFilter<"LoginLog"> | number
   message?: Prisma.StringNullableFilter<"LoginLog"> | string | null
   loginAt?: Prisma.DateTimeFilter<"LoginLog"> | Date | string
@@ -243,6 +251,7 @@ export type LoginLogOrderByWithRelationInput = {
   username?: Prisma.SortOrder
   ip?: Prisma.SortOrderInput | Prisma.SortOrder
   userAgent?: Prisma.SortOrderInput | Prisma.SortOrder
+  location?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
   message?: Prisma.SortOrderInput | Prisma.SortOrder
   loginAt?: Prisma.SortOrder
@@ -257,6 +266,7 @@ export type LoginLogWhereUniqueInput = Prisma.AtLeast<{
   username?: Prisma.StringFilter<"LoginLog"> | string
   ip?: Prisma.StringNullableFilter<"LoginLog"> | string | null
   userAgent?: Prisma.StringNullableFilter<"LoginLog"> | string | null
+  location?: Prisma.StringNullableFilter<"LoginLog"> | string | null
   status?: Prisma.IntFilter<"LoginLog"> | number
   message?: Prisma.StringNullableFilter<"LoginLog"> | string | null
   loginAt?: Prisma.DateTimeFilter<"LoginLog"> | Date | string
@@ -267,6 +277,7 @@ export type LoginLogOrderByWithAggregationInput = {
   username?: Prisma.SortOrder
   ip?: Prisma.SortOrderInput | Prisma.SortOrder
   userAgent?: Prisma.SortOrderInput | Prisma.SortOrder
+  location?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
   message?: Prisma.SortOrderInput | Prisma.SortOrder
   loginAt?: Prisma.SortOrder
@@ -285,6 +296,7 @@ export type LoginLogScalarWhereWithAggregatesInput = {
   username?: Prisma.StringWithAggregatesFilter<"LoginLog"> | string
   ip?: Prisma.StringNullableWithAggregatesFilter<"LoginLog"> | string | null
   userAgent?: Prisma.StringNullableWithAggregatesFilter<"LoginLog"> | string | null
+  location?: Prisma.StringNullableWithAggregatesFilter<"LoginLog"> | string | null
   status?: Prisma.IntWithAggregatesFilter<"LoginLog"> | number
   message?: Prisma.StringNullableWithAggregatesFilter<"LoginLog"> | string | null
   loginAt?: Prisma.DateTimeWithAggregatesFilter<"LoginLog"> | Date | string
@@ -295,6 +307,7 @@ export type LoginLogCreateInput = {
   username: string
   ip?: string | null
   userAgent?: string | null
+  location?: string | null
   status: number
   message?: string | null
   loginAt?: Date | string
@@ -305,6 +318,7 @@ export type LoginLogUncheckedCreateInput = {
   username: string
   ip?: string | null
   userAgent?: string | null
+  location?: string | null
   status: number
   message?: string | null
   loginAt?: Date | string
@@ -315,6 +329,7 @@ export type LoginLogUpdateInput = {
   username?: Prisma.StringFieldUpdateOperationsInput | string
   ip?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userAgent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.IntFieldUpdateOperationsInput | number
   message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   loginAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -325,6 +340,7 @@ export type LoginLogUncheckedUpdateInput = {
   username?: Prisma.StringFieldUpdateOperationsInput | string
   ip?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userAgent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.IntFieldUpdateOperationsInput | number
   message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   loginAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -335,6 +351,7 @@ export type LoginLogCreateManyInput = {
   username: string
   ip?: string | null
   userAgent?: string | null
+  location?: string | null
   status: number
   message?: string | null
   loginAt?: Date | string
@@ -345,6 +362,7 @@ export type LoginLogUpdateManyMutationInput = {
   username?: Prisma.StringFieldUpdateOperationsInput | string
   ip?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userAgent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.IntFieldUpdateOperationsInput | number
   message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   loginAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -355,6 +373,7 @@ export type LoginLogUncheckedUpdateManyInput = {
   username?: Prisma.StringFieldUpdateOperationsInput | string
   ip?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userAgent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.IntFieldUpdateOperationsInput | number
   message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   loginAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -371,6 +390,7 @@ export type LoginLogCountOrderByAggregateInput = {
   username?: Prisma.SortOrder
   ip?: Prisma.SortOrder
   userAgent?: Prisma.SortOrder
+  location?: Prisma.SortOrder
   status?: Prisma.SortOrder
   message?: Prisma.SortOrder
   loginAt?: Prisma.SortOrder
@@ -386,6 +406,7 @@ export type LoginLogMaxOrderByAggregateInput = {
   username?: Prisma.SortOrder
   ip?: Prisma.SortOrder
   userAgent?: Prisma.SortOrder
+  location?: Prisma.SortOrder
   status?: Prisma.SortOrder
   message?: Prisma.SortOrder
   loginAt?: Prisma.SortOrder
@@ -396,6 +417,7 @@ export type LoginLogMinOrderByAggregateInput = {
   username?: Prisma.SortOrder
   ip?: Prisma.SortOrder
   userAgent?: Prisma.SortOrder
+  location?: Prisma.SortOrder
   status?: Prisma.SortOrder
   message?: Prisma.SortOrder
   loginAt?: Prisma.SortOrder
@@ -413,6 +435,7 @@ export type LoginLogSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   username?: boolean
   ip?: boolean
   userAgent?: boolean
+  location?: boolean
   status?: boolean
   message?: boolean
   loginAt?: boolean
@@ -425,12 +448,13 @@ export type LoginLogSelectScalar = {
   username?: boolean
   ip?: boolean
   userAgent?: boolean
+  location?: boolean
   status?: boolean
   message?: boolean
   loginAt?: boolean
 }
 
-export type LoginLogOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "username" | "ip" | "userAgent" | "status" | "message" | "loginAt", ExtArgs["result"]["loginLog"]>
+export type LoginLogOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "username" | "ip" | "userAgent" | "location" | "status" | "message" | "loginAt", ExtArgs["result"]["loginLog"]>
 
 export type $LoginLogPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "LoginLog"
@@ -452,6 +476,10 @@ export type $LoginLogPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
      * User-Agent
      */
     userAgent: string | null
+    /**
+     * IP 归属地（ip2region 离线解析：国家 省份 城市 运营商）
+     */
+    location: string | null
     /**
      * 1 成功 / 0 失败
      */
@@ -837,6 +865,7 @@ export interface LoginLogFieldRefs {
   readonly username: Prisma.FieldRef<"LoginLog", 'String'>
   readonly ip: Prisma.FieldRef<"LoginLog", 'String'>
   readonly userAgent: Prisma.FieldRef<"LoginLog", 'String'>
+  readonly location: Prisma.FieldRef<"LoginLog", 'String'>
   readonly status: Prisma.FieldRef<"LoginLog", 'Int'>
   readonly message: Prisma.FieldRef<"LoginLog", 'String'>
   readonly loginAt: Prisma.FieldRef<"LoginLog", 'DateTime'>

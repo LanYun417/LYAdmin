@@ -121,6 +121,8 @@ model Dept {
   id        BigInt   @id @default(autoincrement()) @db.BigInt
   /// 父级 id（0 表示顶级，故不建外键、也不声明 Prisma 自关联）
   parentId  BigInt   @default(0) @map("parent_id") @db.BigInt
+  /// 类型：1 部门 / 2 岗位（岗位为叶子节点，不能再挂下级）
+  deptType  Int      @default(1) @map("dept_type") @db.TinyInt
   /// 部门名称
   deptName  String   @map("dept_name") @db.VarChar(50)
   /// 排序
