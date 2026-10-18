@@ -375,6 +375,45 @@ describe('接口契约快照 (e2e)', () => {
     });
   });
 
+  describe('文件上传与存储布局', () => {
+    /** 以 multipart 上传一段文本内容，返回接口给出的文件项。 */
+    async function uploadText(
+      filename: string,
+      content: string,
+    ): Promise<{ id: number; originName: string; fileName: string; fileUrl: string }> {
+      const res = await request(app.getHttpServer())
+        .post(`${API}/files/upload`)
+        .set('authorization', `Bearer ${token}`)
+        .attach('file', Buffer.from(content), { filename, contentType: 'text/plain' })
+        .expect(200);
+      return (res.body.data as Array<{ id: number; originName: string; fileName: string; fileUrl: string }>)[0];
+    }
+
+    it('上传按扩展名分组存储：fileName 与 fileUrl 均带 <ext>/ 前缀', async () => {
+      const file = await uploadText('布局校验.txt', `storage-layout-${Date.now()}`);
+      // 目录名 = 小写扩展名；URL 与 DB 相对路径必须一致，否则静态访问 404
+      expect(file.fileName.startsWith('txt/')).toBe(true);
+      expect(file.fileUrl).toBe(`/static/${file.fileName}`);
+      expect(file.fileUrl).toMatch(/^\/static\/txt\/[^/]+\.txt$/);
+      // 中文文件名不能被 multipart 的 latin1 解析弄成乱码
+      expect(file.originName).toBe('布局校验.txt');
+
+      // 清理：删除记录 + 磁盘文件，避免污染后续断言
+      await authDelete(`/files/${file.id}`).expect(200);
+    });
+
+    it('同内容重复上传命中秒传：复用既有记录且标 deduplicated', async () => {
+      const content = `dedupe-${Date.now()}`;
+      const first = await uploadText('秒传-1.txt', content);
+      const second = await uploadText('秒传-2.txt', content);
+
+      expect(second.id).toBe(first.id);
+      expect((second as { deduplicated?: boolean }).deduplicated).toBe(true);
+
+      await authDelete(`/files/${first.id}`).expect(200);
+    });
+  });
+
   describe('接口文档', () => {
     it('GET /api/docs 公开可访问，返回按模块分组的接口清单', async () => {
       // @Public() 接口：不带令牌也应 200（供前端文档页与外部消费）

@@ -10,6 +10,7 @@ import { AppException } from '../../common/exception/app.exception.js';
 import { config } from '../../common/config/config.js';
 import { UPLOAD_ALLOWED_EXT, UPLOAD_ALLOWED_MIME } from '../../common/config/constants.js';
 import { sha256 } from '../../common/utils/utils.js';
+import { resolveStoredPath, storageRelativePath, toPosixPath } from '../../common/file/storage-layout.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 
 /** 文件列表项（对外返回，含前端契约字段）。 */
@@ -112,6 +113,17 @@ async function assertFileMagic(absolutePath: string, ext: string): Promise<void>
   }
 }
 
+/**
+ * 修正 multipart 文件名编码。
+ *
+ * busboy 默认按 latin1 解析 `filename=`，中文文件名会变成「ä¸‹è½½」式乱码并原样入库。
+ * 若按 UTF-8 重新解码能得到合法字符串（不含替换符），就采用解码结果；纯 ASCII 不受影响。
+ */
+function decodeMultipartName(name: string): string {
+  const decoded = Buffer.from(name, 'latin1').toString('utf8');
+  return decoded.includes('\uFFFD') ? name : decoded;
+}
+
 /** 入参数值归一（空值/非法值返回 undefined，表示该条件不参与过滤）。 */
 function toFilterNumber(value: unknown): number | undefined {
   if (value === undefined || value === null || value === '') {
@@ -183,18 +195,22 @@ export class FilesService {
   /**
    * 校验一个已落盘（diskStorage）的 multer 文件：类型白名单 + 幻数校验。
    * 校验失败清理本文件并向上抛出，避免磁盘残留。
-   * @returns 标准文件名与扩展名
+   * @returns 相对存储路径（`<扩展名分组>/<文件名>`）、扩展名与绝对路径
    */
-  private async persist(file: Express.Multer.File): Promise<{ fileName: string; ext: string; absPath: string }> {
-    const ext = this.validateUpload(file.originalname, file.mimetype);
-    const absPath = file.path; // diskStorage 已落盘到 config.upload.dir
+  private async persist(
+    file: Express.Multer.File,
+    originalName: string,
+  ): Promise<{ relPath: string; ext: string; absPath: string }> {
+    const ext = this.validateUpload(originalName, file.mimetype);
+    const absPath = file.path; // diskStorage 已落盘到 config.upload.dir/<扩展名分组>/
     try {
       await assertFileMagic(absPath, ext);
     } catch (error) {
       await fsp.unlink(absPath).catch(() => undefined);
       throw error;
     }
-    return { fileName: path.basename(absPath), ext, absPath };
+    const relPath = storageRelativePath(ext, path.basename(absPath));
+    return { relPath, ext, absPath };
   }
 
   /**
@@ -208,7 +224,7 @@ export class FilesService {
 
     // 第一阶段：逐文件落盘并幻数校验（失败即清理本批）
     const prepared: Array<{
-      fileName: string;
+      relPath: string;
       ext: string;
       absPath: string;
       originName: string;
@@ -217,12 +233,14 @@ export class FilesService {
     }> = [];
     try {
       for (const file of files) {
-        const { fileName, ext } = await this.persist(file);
+        // multipart 的 filename 默认按 latin1 解析，中文名需按 UTF-8 回正后再入库
+        const originalName = decodeMultipartName(file.originalname);
+        const { relPath, ext, absPath } = await this.persist(file, originalName);
         prepared.push({
-          fileName,
+          relPath,
           ext,
-          absPath: path.join(config.upload.dir, fileName),
-          originName: file.originalname,
+          absPath,
+          originName: originalName,
           mimeType: file.mimetype,
           size: file.size,
         });
@@ -246,12 +264,13 @@ export class FilesService {
         items.push({ ...this.toFileItem(existing), deduplicated: true });
         continue;
       }
-      const fileUrl = `/${config.upload.route}/${item.fileName}`;
+      const fileUrl = `/${config.upload.route}/${item.relPath}`;
       const record = await this.prisma.file.create({
         data: {
           originName: item.originName.slice(0, 255),
-          fileName: item.fileName,
-          filePath: path.join(config.upload.dirName, item.fileName).replace(/\\/g, '/'),
+          // fileName 存相对路径（含扩展名分组），单条记录自带定位信息
+          fileName: item.relPath,
+          filePath: toPosixPath(path.join(config.upload.dirName, item.relPath)),
           fileUrl,
           mimeType: item.mimeType.slice(0, 100),
           size: item.size,
@@ -361,8 +380,9 @@ export class FilesService {
     if (!record) {
       throw AppException.notFound('文件不存在');
     }
-    const absolutePath = path.join(config.upload.dir, record.fileName);
-    if (!existsSync(absolutePath)) {
+    // fileName 为相对路径（新数据含扩展名分组，历史数据为平铺文件名），统一经安全解析
+    const absolutePath = resolveStoredPath(record.fileName);
+    if (absolutePath === null || !existsSync(absolutePath)) {
       throw AppException.notFound('文件已丢失');
     }
     return {
@@ -384,8 +404,8 @@ export class FilesService {
     if (sameRefCount > 1) {
       return;
     }
-    const absolutePath = path.join(config.upload.dir, record.fileName);
-    if (existsSync(absolutePath)) {
+    const absolutePath = resolveStoredPath(record.fileName);
+    if (absolutePath !== null && existsSync(absolutePath)) {
       await fsp.unlink(absolutePath).catch(() => undefined);
     }
   }

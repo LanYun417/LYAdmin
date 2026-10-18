@@ -10,6 +10,7 @@ import { AppException } from '../exception/app.exception.js';
 import { config } from '../config/config.js';
 import { UPLOAD_ALLOWED_EXT, UPLOAD_ALLOWED_MIME } from '../config/constants.js';
 import { sha256 } from '../utils/utils.js';
+import { extensionFolder, resolveStoredPath, storageRelativePath, toPosixPath } from './storage-layout.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 
 /** 文件记录（对外返回，不含内部路径细节）。 */
@@ -94,15 +95,18 @@ export class FileService {
 
     this.ensureUploadDir();
     const fileName = `${base}${ext}`;
-    const filePath = path.join(config.upload.dir, fileName);
-    await fsp.writeFile(filePath, buffer);
+    // 按扩展名分组落盘（与 multer 存储布局一致）：uploads/<ext>/<fileName>
+    const relativePath = storageRelativePath(ext, fileName);
+    const targetDir = path.join(config.upload.dir, extensionFolder(ext));
+    mkdirSync(targetDir, { recursive: true });
+    await fsp.writeFile(path.join(targetDir, fileName), buffer);
 
-    const fileUrl = `/${config.upload.route}/${fileName}`;
+    const fileUrl = `/${config.upload.route}/${relativePath}`;
     const record = await this.prisma.file.create({
       data: {
         originName: originalName.slice(0, 255),
-        fileName,
-        filePath: path.join(config.upload.dirName, fileName),
+        fileName: relativePath,
+        filePath: toPosixPath(path.join(config.upload.dirName, relativePath)),
         fileUrl,
         mimeType: mimeType.slice(0, 100),
         size: buffer.length,
@@ -140,8 +144,10 @@ export class FileService {
       throw AppException.notFound('文件不存在');
     }
     // 删除磁盘文件（失败不阻断：记录已删即可）
-    const diskPath = path.join(config.upload.dir, record.fileName);
-    await fsp.unlink(diskPath).catch(() => undefined);
+    const diskPath = resolveStoredPath(record.fileName);
+    if (diskPath !== null) {
+      await fsp.unlink(diskPath).catch(() => undefined);
+    }
     await this.prisma.file.delete({ where: { id: BigInt(id) } });
   }
 

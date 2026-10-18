@@ -13,6 +13,7 @@ import path from 'node:path';
 import sharp from 'sharp';
 import { config } from '../config/config.js';
 import { AppException } from '../exception/app.exception.js';
+import { resolveStoredPath } from './storage-layout.js';
 
 /**
  * 防盗链守卫：外站请求直接 403，连文件都不必读。
@@ -65,25 +66,24 @@ export class ImageScaleService {
   /**
    * 生成缩略图并返回文件 Buffer。
    *
-   * 缓存键：`原文件名 + 宽度` 的 SHA-256，落在 UPLOAD_CACHE_DIR
+   * 缓存键：`相对路径 + 宽度` 的 SHA-256，落在 UPLOAD_CACHE_DIR
    * （必须在静态服务根目录之外，否则缓存文件会被公开访问）。
    *
-   * @param fileName 原始文件名（位于上传目录内）
+   * @param relativePath 上传目录内的相对路径（形如 `png/173xxx_ab12cd34.png`）
    * @param width 目标宽度（高度按比例）
    * @returns 缩放后的图片 Buffer；失败抛 AppException
    */
-  async scale(fileName: string, width: number): Promise<Buffer> {
-    const srcPath = path.join(config.upload.dir, fileName);
+  async scale(relativePath: string, width: number): Promise<Buffer> {
+    // 统一经安全解析：越界（`..`、绝对路径）直接判为非法，而非拼出目录外的路径
+    const srcPath = resolveStoredPath(relativePath);
+    if (srcPath === null) {
+      throw AppException.badRequest('非法的文件名');
+    }
     if (!existsSync(srcPath)) {
       throw AppException.notFound('文件不存在');
     }
 
-    // 防止路径穿越（文件名不应包含目录分隔符）
-    if (fileName.includes('/') || fileName.includes('\\') || fileName.includes('..')) {
-      throw AppException.badRequest('非法的文件名');
-    }
-
-    const cacheName = `${createHash('sha256').update(`${fileName}:${width}`).digest('hex')}.jpg`;
+    const cacheName = `${createHash('sha256').update(`${relativePath}:${width}`).digest('hex')}.jpg`;
     const cachePath = path.join(config.upload.cacheDir, cacheName);
 
     // 命中缓存直接返回
@@ -122,15 +122,21 @@ export class ImageScaleMiddleware implements NestMiddleware {
       return;
     }
 
-    const fileName = path.basename(req.path);
+    // 去掉静态路由前缀，得到「扩展名分组/文件名」的相对路径（分组后不能再取 basename）
+    const prefix = `/${config.upload.route}/`;
+    const decodedPath = decodeURIComponent(req.path);
+    const relativePath = decodedPath.startsWith(prefix)
+      ? decodedPath.slice(prefix.length)
+      : decodedPath.replace(/^\/+/, '');
+
     // 仅处理常见图片扩展名
-    if (!/\.(jpe?g|png|gif|webp|bmp)$/i.test(fileName)) {
+    if (!/\.(jpe?g|png|gif|webp|bmp)$/i.test(relativePath)) {
       next();
       return;
     }
 
     try {
-      const buffer = await this.imageScaleService.scale(fileName, Math.floor(width));
+      const buffer = await this.imageScaleService.scale(relativePath, Math.floor(width));
       res.setHeader('Content-Type', 'image/jpeg');
       res.setHeader('Cache-Control', 'public, max-age=86400');
       res.status(200).send(buffer);

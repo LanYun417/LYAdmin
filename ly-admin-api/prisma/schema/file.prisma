@@ -10,7 +10,7 @@ model File {
   id         BigInt   @id @default(autoincrement()) @db.BigInt
   /// 原始文件名
   originName String   @map("origin_name") @db.VarChar(255)
-  /// 存储文件名
+  /// 存储相对路径（扩展名分组/文件名）
   fileName   String   @map("file_name") @db.VarChar(255)
   /// 磁盘相对路径
   filePath   String   @map("file_path") @db.VarChar(500)
