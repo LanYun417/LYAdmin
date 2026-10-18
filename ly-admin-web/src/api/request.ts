@@ -68,6 +68,33 @@ function notifyError(config: RequestConfig | undefined, message: string): void {
   }
 }
 
+/**
+ * 取出错误响应里的业务载荷。
+ *
+ * 普通 JSON 请求直接返回 `response.data`；但导出 CSV / 下载附件这类请求的 `responseType` 是
+ * `blob`，此时后端返回的错误体也是一个 Blob，`data.code` 恒为 undefined ——
+ * 若不还原，像「导出条数超上限」这种带具体指引的 400 会被显示成笼统的"请求失败（400）"。
+ *
+ * 只在必要时（Blob 且 content-type 为 JSON）异步读文本并解析，其他情况零开销。
+ */
+async function resolveErrorPayload(response: AxiosResponse<ApiResponse> | undefined): Promise<ApiResponse | undefined> {
+  const data: unknown = response?.data;
+  if (!data) {
+    return undefined;
+  }
+  if (!(data instanceof Blob)) {
+    return data as ApiResponse;
+  }
+  if (!data.type.includes('json')) {
+    return undefined;
+  }
+  try {
+    return JSON.parse(await data.text()) as ApiResponse;
+  } catch {
+    return undefined;
+  }
+}
+
 /* --------------------------- 顶部进度条（由请求驱动） --------------------------- */
 
 /**
@@ -285,11 +312,14 @@ service.interceptors.response.use(
     }
 
     const status = response.status;
-    const businessCode = response.data?.code;
+    // 文件流请求（导出 CSV / 下载）的错误响应体是 Blob：直接读 data.code 拿到的是 undefined，
+    // 会把「导出条数超上限」这类业务错误显示成笼统的失败提示。这里按需把 JSON Blob 解析回对象。
+    const errorPayload = await resolveErrorPayload(response);
+    const businessCode = errorPayload?.code;
 
     // 403：跳转无权限页
     if (status === FORBIDDEN_CODE || businessCode === FORBIDDEN_CODE) {
-      notifyError(originalConfig, response.data?.message || '无访问权限');
+      notifyError(originalConfig, errorPayload?.message || '无访问权限');
       if (!isOnForbiddenPage()) {
         redirectTo('/403');
       }
@@ -342,7 +372,7 @@ service.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    notifyError(originalConfig, response.data?.message || `请求失败（${status}）`);
+    notifyError(originalConfig, errorPayload?.message || `请求失败（${status}）`);
     return Promise.reject(error);
   },
 );

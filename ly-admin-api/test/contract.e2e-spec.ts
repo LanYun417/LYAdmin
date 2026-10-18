@@ -18,6 +18,7 @@
  */
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import request from 'supertest';
+import { config } from '../src/common/config/config.js';
 import { RedisService } from '../src/common/redis/redis.service.js';
 import { createTestApp } from './setup-app.js';
 
@@ -323,6 +324,24 @@ describe('接口契约快照 (e2e)', () => {
       expect(beijingTimes).toHaveLength(utcTimes.length);
       for (const [index, time] of utcTimes.entries()) {
         expect(wallClockMs(beijingTimes[index]) - wallClockMs(time)).toBe(8 * 60 * 60 * 1000);
+      }
+    });
+
+    it('导出超过行数上限时返回 400（而不是给出半截 CSV）', async () => {
+      // 直接把上限压到 1：库里必然有多于 1 条登录日志
+      const original = config.export.maxRows;
+      (config.export as { maxRows: number }).maxRows = 1;
+      try {
+        const res = await request(app.getHttpServer())
+          .get(`${API}/logs/login/export`)
+          .set('authorization', `Bearer ${token}`)
+          .expect(400);
+        const message = String((res.body as { message: string }).message);
+        expect(message).toContain('超过单次导出上限');
+        // 关键：此时必须尚未开始写 CSV（响应是 JSON 而不是被截断的文件流）
+        expect(res.headers['content-type']).toContain('application/json');
+      } finally {
+        (config.export as { maxRows: number }).maxRows = original;
       }
     });
   });

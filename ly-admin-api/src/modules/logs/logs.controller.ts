@@ -8,6 +8,7 @@ import { OperationLog } from '../../common/log/operation-log.decorator.js';
 import { RequirePermissions, TimezoneOffset } from '../../common/auth/permission.guard.js';
 import { RawResponse } from '../../common/http/response.interceptor.js';
 import type { ResponseEnvelope } from '../../common/http/response.interceptor.js';
+import { writeCsvStream } from '../../common/utils/csv-stream.js';
 import { IdParamDto } from '../../common/dto/id-param.dto.js';
 import { IdsBodyDto } from '../../common/dto/ids-body.dto.js';
 import { LogsService } from './logs.service.js';
@@ -115,7 +116,7 @@ export class LogsController {
     return { __raw: true, data: null, message: '已清空所有 HTTP 日志' };
   }
 
-  /** 导出登录日志 CSV。 */
+  /** 导出登录日志 CSV（流式：分批查、逐批写，内存不随行数增长）。 */
   @Get('login/export')
   @RequirePermissions('log:login:export')
   @RawResponse()
@@ -124,13 +125,12 @@ export class LogsController {
     @TimezoneOffset() timezoneOffset: number | undefined,
     @Res() res: Response,
   ): Promise<void> {
-    const csv = await this.logsService.exportLoginLogs(query, timezoneOffset);
-    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-    res.setHeader('Content-Disposition', `attachment; filename="login-logs-${Date.now()}.csv"`);
-    res.send(csv);
+    // 注意：任务构造阶段可能抛 400（超出导出行数上限）——此时还没写响应头，前端能拿到 JSON 错误
+    const task = await this.logsService.createLoginLogExport(query, timezoneOffset);
+    await writeCsvStream(res, task.filename, task.header, task.rows);
   }
 
-  /** 导出操作日志 CSV。 */
+  /** 导出操作日志 CSV（流式）。 */
   @Get('operation/export')
   @RequirePermissions('log:operation:export')
   @RawResponse()
@@ -139,13 +139,11 @@ export class LogsController {
     @TimezoneOffset() timezoneOffset: number | undefined,
     @Res() res: Response,
   ): Promise<void> {
-    const csv = await this.logsService.exportOperationLogs(query, timezoneOffset);
-    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-    res.setHeader('Content-Disposition', `attachment; filename="operation-logs-${Date.now()}.csv"`);
-    res.send(csv);
+    const task = await this.logsService.createOperationLogExport(query, timezoneOffset);
+    await writeCsvStream(res, task.filename, task.header, task.rows);
   }
 
-  /** 导出 HTTP 访问日志 CSV。 */
+  /** 导出 HTTP 访问日志 CSV（流式）。 */
   @Get('http/export')
   @RequirePermissions('log:http:export')
   @RawResponse()
@@ -154,9 +152,7 @@ export class LogsController {
     @TimezoneOffset() timezoneOffset: number | undefined,
     @Res() res: Response,
   ): Promise<void> {
-    const csv = await this.logsService.exportHttpLogs(query, timezoneOffset);
-    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-    res.setHeader('Content-Disposition', `attachment; filename="http-logs-${Date.now()}.csv"`);
-    res.send(csv);
+    const task = await this.logsService.createHttpLogExport(query, timezoneOffset);
+    await writeCsvStream(res, task.filename, task.header, task.rows);
   }
 }

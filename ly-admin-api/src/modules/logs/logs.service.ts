@@ -3,9 +3,10 @@
  * 模块职责：登录/操作/HTTP 访问日志查询与导出（CSV），HTTP 日志浏览器/操作系统由 UA 解析。
  */
 import { Injectable } from '@nestjs/common';
+import { config } from '../../common/config/config.js';
 import { AppException } from '../../common/exception/app.exception.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
-import { buildPageResult, formatDateTimeInZone, parsePagination, readString, toCsv } from '../../common/utils/utils.js';
+import { buildPageResult, formatDateTimeInZone, parsePagination, readString } from '../../common/utils/utils.js';
 import { parseUserAgent } from '../../common/utils/user-agent.js';
 
 /** HTTP 日志 count 缓存 TTL（毫秒）。 */
@@ -79,6 +80,197 @@ function readFilterDate(value: unknown): Date | undefined {
   return Number.isNaN(date.getTime()) ? undefined : date;
 }
 
+/**
+ * 构造登录日志查询条件。
+ * 抽成模块函数而非类内私有方法：列表分页与 CSV 导出必须用**同一套**条件，
+ * 否则会出现「列表看到 20 条、导出少了几条」这类无法自查的偏差。
+ */
+function buildLoginWhere(query: Record<string, unknown>): Record<string, unknown> {
+  const where: Record<string, unknown> = {};
+  const username = typeof query.username === 'string' ? query.username.trim() : '';
+  if (username) {
+    where.username = { contains: username };
+  }
+  if (query.status !== undefined && query.status !== '') {
+    where.status = Number(query.status);
+  }
+  const startTime = readFilterDate(query.startTime);
+  const endTime = readFilterDate(query.endTime);
+  if (startTime || endTime) {
+    const range: Record<string, Date> = {};
+    if (startTime) range.gte = startTime;
+    if (endTime) range.lte = endTime;
+    where.loginAt = range;
+  }
+  return where;
+}
+
+/** 构造操作日志查询条件（与列表共用）。 */
+function buildOperationWhere(query: Record<string, unknown>): Record<string, unknown> {
+  const where: Record<string, unknown> = {};
+  const moduleName = typeof query.module === 'string' ? query.module.trim() : '';
+  if (moduleName) {
+    where.module = { contains: moduleName };
+  }
+  const username = typeof query.username === 'string' ? query.username.trim() : '';
+  if (username) {
+    where.username = { contains: username };
+  }
+  if (query.result !== undefined && query.result !== '') {
+    where.result = Number(query.result);
+  }
+  const startTime = readFilterDate(query.startTime);
+  const endTime = readFilterDate(query.endTime);
+  if (startTime || endTime) {
+    const range: Record<string, Date> = {};
+    if (startTime) range.gte = startTime;
+    if (endTime) range.lte = endTime;
+    where.createdAt = range;
+  }
+  return where;
+}
+
+/** 登录日志行 → 对外结构（列表与导出共用）。 */
+function mapLoginRow(row: {
+  id: bigint;
+  username: string;
+  ip: string | null;
+  location: string | null;
+  userAgent: string | null;
+  status: number;
+  message: string | null;
+  loginAt: Date;
+}): {
+  id: number;
+  username: string;
+  ip: string | null;
+  location: string | null;
+  userAgent: string | null;
+  status: number;
+  message: string | null;
+  loginAt: Date;
+} {
+  return {
+    id: Number(row.id),
+    username: row.username,
+    ip: row.ip,
+    location: row.location,
+    userAgent: row.userAgent,
+    status: Number(row.status),
+    message: row.message,
+    loginAt: row.loginAt,
+  };
+}
+
+/** 操作日志行 → 对外结构（列表与导出共用）。 */
+function mapOperationRow(row: {
+  id: bigint;
+  userId: bigint | null;
+  username: string | null;
+  module: string;
+  action: string;
+  method: string;
+  url: string;
+  params: string | null;
+  duration: number;
+  result: number;
+  errorMessage: string | null;
+  ip: string | null;
+  location: string | null;
+  createdAt: Date;
+}): {
+  id: number;
+  userId: number | null;
+  username: string | null;
+  module: string;
+  action: string;
+  method: string;
+  url: string;
+  params: string | null;
+  duration: number;
+  result: number;
+  errorMessage: string | null;
+  ip: string | null;
+  location: string | null;
+  createdAt: Date;
+} {
+  return {
+    id: Number(row.id),
+    userId: row.userId === null ? null : Number(row.userId),
+    username: row.username,
+    module: row.module,
+    action: row.action,
+    method: row.method,
+    url: row.url,
+    params: row.params,
+    duration: Number(row.duration),
+    result: Number(row.result),
+    errorMessage: row.errorMessage,
+    ip: row.ip,
+    location: row.location,
+    createdAt: row.createdAt,
+  };
+}
+
+/** 导出任务描述：控制器据此流式写出，服务层不接触响应对象。 */
+export interface CsvExportTask {
+  /** 下载文件名 */
+  filename: string;
+  /** 表头 */
+  header: string[];
+  /** 行数（已通过上限预检） */
+  total: number;
+  /** 分批行数据（每批为二维数组） */
+  rows: AsyncGenerator<unknown[][]>;
+}
+
+/** 三类日志的 CSV 表头（列表展示与导出列顺序一致）。 */
+const LOGIN_LOG_CSV_HEADER = ['ID', '账号', 'IP', '归属地', '结果', '描述', 'User-Agent', '登录时间'];
+const OPERATION_LOG_CSV_HEADER = [
+  'ID',
+  '模块',
+  '动作',
+  '操作人',
+  '方法',
+  'URL',
+  '参数',
+  '耗时',
+  '结果',
+  '错误信息',
+  'IP',
+  '归属地',
+  '时间',
+];
+const HTTP_LOG_CSV_HEADER = [
+  'ID',
+  '时间',
+  '方法',
+  'URL',
+  '状态码',
+  '耗时',
+  '操作人',
+  '所属部门',
+  '浏览器',
+  '操作系统',
+  'IP',
+  '归属地',
+  'User-Agent',
+];
+
+/**
+ * 导出行数上限预检。
+ * 超限时抛 400 而不是「截断后照常导出」：半截 CSV 会被当成完整数据使用，比报错更危险。
+ * `EXPORT_MAX_ROWS=0` 表示不限制（不建议）。
+ */
+function assertExportable(total: number, label: string): void {
+  const max = config.export.maxRows;
+  if (max > 0 && total > max) {
+    throw AppException.badRequest(
+      `待导出的${label}共 ${total} 条，超过单次导出上限 ${max} 条；请缩小时间范围或补充筛选条件`,
+    );
+  }
+}
+
 @Injectable()
 export class LogsService {
   constructor(private readonly prisma: PrismaService) {}
@@ -86,22 +278,7 @@ export class LogsService {
   /** 分页查询登录日志。 */
   async listLoginLogs(query: Record<string, unknown>): Promise<unknown> {
     const { page, pageSize, offset, limit } = parsePagination(query);
-    const where: Record<string, unknown> = {};
-    const username = typeof query.username === 'string' ? query.username.trim() : '';
-    if (username) {
-      where.username = { contains: username };
-    }
-    if (query.status !== undefined && query.status !== '') {
-      where.status = Number(query.status);
-    }
-    const startTime = readFilterDate(query.startTime);
-    const endTime = readFilterDate(query.endTime);
-    if (startTime || endTime) {
-      const range: Record<string, Date> = {};
-      if (startTime) range.gte = startTime;
-      if (endTime) range.lte = endTime;
-      where.loginAt = range;
-    }
+    const where = buildLoginWhere(query);
 
     const [rows, total] = await Promise.all([
       this.prisma.loginLog.findMany({
@@ -112,42 +289,18 @@ export class LogsService {
       }),
       this.prisma.loginLog.count({ where }),
     ]);
-    const list = rows.map((row) => ({
-      id: Number(row.id),
-      username: row.username,
-      ip: row.ip,
-      location: row.location,
-      userAgent: row.userAgent,
-      status: Number(row.status),
-      message: row.message,
-      loginAt: row.loginAt,
-    }));
-    return buildPageResult(list, total, page, pageSize);
+    return buildPageResult(
+      rows.map((row) => mapLoginRow(row)),
+      total,
+      page,
+      pageSize,
+    );
   }
 
   /** 分页查询操作日志。 */
   async listOperationLogs(query: Record<string, unknown>): Promise<unknown> {
     const { page, pageSize, offset, limit } = parsePagination(query);
-    const where: Record<string, unknown> = {};
-    const moduleName = typeof query.module === 'string' ? query.module.trim() : '';
-    if (moduleName) {
-      where.module = { contains: moduleName };
-    }
-    const username = typeof query.username === 'string' ? query.username.trim() : '';
-    if (username) {
-      where.username = { contains: username };
-    }
-    if (query.result !== undefined && query.result !== '') {
-      where.result = Number(query.result);
-    }
-    const startTime = readFilterDate(query.startTime);
-    const endTime = readFilterDate(query.endTime);
-    if (startTime || endTime) {
-      const range: Record<string, Date> = {};
-      if (startTime) range.gte = startTime;
-      if (endTime) range.lte = endTime;
-      where.createdAt = range;
-    }
+    const where = buildOperationWhere(query);
 
     const [rows, total] = await Promise.all([
       this.prisma.operationLog.findMany({
@@ -158,23 +311,12 @@ export class LogsService {
       }),
       this.prisma.operationLog.count({ where }),
     ]);
-    const list = rows.map((row) => ({
-      id: Number(row.id),
-      userId: row.userId === null ? null : Number(row.userId),
-      username: row.username,
-      module: row.module,
-      action: row.action,
-      method: row.method,
-      url: row.url,
-      params: row.params,
-      duration: Number(row.duration),
-      result: Number(row.result),
-      errorMessage: row.errorMessage,
-      ip: row.ip,
-      location: row.location,
-      createdAt: row.createdAt,
-    }));
-    return buildPageResult(list, total, page, pageSize);
+    return buildPageResult(
+      rows.map((row) => mapOperationRow(row)),
+      total,
+      page,
+      pageSize,
+    );
   }
 
   /** 构造 HTTP 日志查询条件。 */
@@ -342,115 +484,172 @@ export class LogsService {
     countCache.set(key, { total, expiresAt: Date.now() + COUNT_CACHE_TTL_MS });
   }
 
-  /** 导出登录日志 CSV。 */
-  async exportLoginLogs(query: Record<string, unknown>, timezoneOffset?: number): Promise<string> {
-    const { list } = (await this.listLoginLogs({ ...query, page: 1, pageSize: 10000 })) as {
-      list: Array<{
-        id: number;
-        username: string;
-        ip: string | null;
-        location: string | null;
-        status: number;
-        message: string | null;
-        userAgent: string | null;
-        loginAt: Date;
-      }>;
+  /**
+   * 构造登录日志导出任务（流式）。
+   * 先按筛选条件 count：超上限直接抛 400——此时尚未写响应头，前端能拿到正常的 JSON 错误，
+   * 而不是「下载了一个只有一半数据的 CSV」。
+   */
+  async createLoginLogExport(query: Record<string, unknown>, timezoneOffset?: number): Promise<CsvExportTask> {
+    const where = buildLoginWhere(query);
+    const total = await this.prisma.loginLog.count({ where });
+    assertExportable(total, '登录日志');
+    return {
+      filename: `login-logs-${Date.now()}.csv`,
+      header: LOGIN_LOG_CSV_HEADER,
+      total,
+      rows: this.loginLogBatches(where, config.export.batchSize, timezoneOffset),
     };
-    const rows = list.map((item) => [
-      item.id,
-      item.username,
-      item.ip,
-      item.location,
-      item.status === 1 ? '成功' : '失败',
-      item.message,
-      item.userAgent,
-      formatDateTimeInZone(item.loginAt, timezoneOffset),
-    ]);
-    return toCsv(['ID', '账号', 'IP', '归属地', '结果', '描述', 'User-Agent', '登录时间'], rows);
   }
 
-  /** 导出操作日志 CSV。 */
-  async exportOperationLogs(query: Record<string, unknown>, timezoneOffset?: number): Promise<string> {
-    const { list } = (await this.listOperationLogs({ ...query, page: 1, pageSize: 10000 })) as {
-      list: Array<{
-        id: number;
-        module: string;
-        action: string;
-        username: string | null;
-        method: string;
-        url: string;
-        params: string | null;
-        duration: number;
-        result: number;
-        errorMessage: string | null;
-        ip: string | null;
-        location: string | null;
-        createdAt: Date;
-      }>;
-    };
-    const rows = list.map((item) => [
-      item.id,
-      item.module,
-      item.action,
-      item.username,
-      item.method,
-      item.url,
-      item.params,
-      `${item.duration}ms`,
-      item.result === 1 ? '成功' : '失败',
-      item.errorMessage,
-      item.ip,
-      item.location,
-      formatDateTimeInZone(item.createdAt, timezoneOffset),
-    ]);
-    return toCsv(
-      ['ID', '模块', '动作', '操作人', '方法', 'URL', '参数', '耗时', '结果', '错误信息', 'IP', '归属地', '时间'],
-      rows,
-    );
+  /**
+   * 登录日志分批取数。
+   * 用游标（`cursor: { id }` + `skip: 1`）而非 offset 深分页：日志表下 offset 越大越慢，
+   * 且导出期间新写入会导致 offset 分页重复/漏行；游标按主键推进则稳定。
+   */
+  private async *loginLogBatches(
+    where: Record<string, unknown>,
+    batchSize: number,
+    timezoneOffset?: number,
+  ): AsyncGenerator<unknown[][]> {
+    let cursorId: bigint | undefined;
+    for (;;) {
+      const rows = await this.prisma.loginLog.findMany({
+        where,
+        orderBy: { id: 'desc' },
+        take: batchSize,
+        ...(cursorId === undefined ? {} : { cursor: { id: cursorId }, skip: 1 }),
+      });
+      if (rows.length === 0) {
+        return;
+      }
+      cursorId = rows[rows.length - 1]!.id;
+      yield rows.map((row) => {
+        const item = mapLoginRow(row);
+        return [
+          item.id,
+          item.username,
+          item.ip,
+          item.location,
+          item.status === 1 ? '成功' : '失败',
+          item.message,
+          item.userAgent,
+          formatDateTimeInZone(item.loginAt, timezoneOffset),
+        ];
+      });
+      if (rows.length < batchSize) {
+        return;
+      }
+    }
   }
 
-  /** 导出 HTTP 访问日志 CSV（不走列表分页，直接取 10000 行以保证完整）。 */
-  async exportHttpLogs(query: Record<string, unknown>, timezoneOffset?: number): Promise<string> {
+  /** 构造操作日志导出任务（流式，上限预检同登录日志）。 */
+  async createOperationLogExport(query: Record<string, unknown>, timezoneOffset?: number): Promise<CsvExportTask> {
+    const where = buildOperationWhere(query);
+    const total = await this.prisma.operationLog.count({ where });
+    assertExportable(total, '操作日志');
+    return {
+      filename: `operation-logs-${Date.now()}.csv`,
+      header: OPERATION_LOG_CSV_HEADER,
+      total,
+      rows: this.operationLogBatches(where, config.export.batchSize, timezoneOffset),
+    };
+  }
+
+  /** 操作日志分批取数（游标分页，理由见 loginLogBatches）。 */
+  private async *operationLogBatches(
+    where: Record<string, unknown>,
+    batchSize: number,
+    timezoneOffset?: number,
+  ): AsyncGenerator<unknown[][]> {
+    let cursorId: bigint | undefined;
+    for (;;) {
+      const rows = await this.prisma.operationLog.findMany({
+        where,
+        orderBy: { id: 'desc' },
+        take: batchSize,
+        ...(cursorId === undefined ? {} : { cursor: { id: cursorId }, skip: 1 }),
+      });
+      if (rows.length === 0) {
+        return;
+      }
+      cursorId = rows[rows.length - 1]!.id;
+      yield rows.map((row) => {
+        const item = mapOperationRow(row);
+        return [
+          item.id,
+          item.module,
+          item.action,
+          item.username,
+          item.method,
+          item.url,
+          item.params,
+          `${item.duration}ms`,
+          item.result === 1 ? '成功' : '失败',
+          item.errorMessage,
+          item.ip,
+          item.location,
+          formatDateTimeInZone(item.createdAt, timezoneOffset),
+        ];
+      });
+      if (rows.length < batchSize) {
+        return;
+      }
+    }
+  }
+
+  /** 构造 HTTP 访问日志导出任务（流式；上限预检同其它日志）。 */
+  async createHttpLogExport(query: Record<string, unknown>, timezoneOffset?: number): Promise<CsvExportTask> {
     const where = this.buildHttpWhere(query);
-    const rows = await this.prisma.httpLog.findMany({
-      where,
-      select: HTTP_LOG_SUMMARY_SELECT,
-      orderBy: [{ time: 'desc' }, { id: 'desc' }],
-      take: 10000,
-    });
-    const list = rows.map((row) => this.mapHttpLogSummary(row));
-    const csvRows = list.map((item) => [
-      item.id,
-      formatDateTimeInZone(item.time, timezoneOffset),
-      item.method,
-      item.url,
-      item.statusCode,
-      `${item.duration}ms`,
-      item.username || '-',
-      item.deptName || '-',
-      item.browser || '-',
-      item.os || '-',
-      item.ip,
-      item.location || '-',
-      item.userAgent,
-    ]);
-    return toCsv(
-      [
-        'ID',
-        '时间',
-        '方法',
-        'URL',
-        '状态码',
-        '耗时',
-        '操作人',
-        '所属部门',
-        '浏览器',
-        '操作系统',
-        'IP',
-        '归属地',
-        'User-Agent',
-      ],
-      csvRows,
-    );
+    const total = await this.prisma.httpLog.count({ where });
+    assertExportable(total, 'HTTP 访问日志');
+    return {
+      filename: `http-logs-${Date.now()}.csv`,
+      header: HTTP_LOG_CSV_HEADER,
+      total,
+      rows: this.httpLogBatches(where, config.export.batchSize, timezoneOffset),
+    };
+  }
+
+  /** HTTP 日志分批取数（游标分页；UA 解析逐行做，不额外占内存）。 */
+  private async *httpLogBatches(
+    where: Record<string, unknown>,
+    batchSize: number,
+    timezoneOffset?: number,
+  ): AsyncGenerator<unknown[][]> {
+    let cursorId: bigint | undefined;
+    for (;;) {
+      const rows = await this.prisma.httpLog.findMany({
+        where,
+        select: HTTP_LOG_SUMMARY_SELECT,
+        orderBy: { id: 'desc' },
+        take: batchSize,
+        ...(cursorId === undefined ? {} : { cursor: { id: cursorId }, skip: 1 }),
+      });
+      if (rows.length === 0) {
+        return;
+      }
+      cursorId = rows[rows.length - 1]!.id;
+      yield rows.map((row) => {
+        const item = this.mapHttpLogSummary(row);
+        return [
+          item.id,
+          formatDateTimeInZone(item.time, timezoneOffset),
+          item.method,
+          item.url,
+          item.statusCode,
+          `${item.duration}ms`,
+          item.username || '-',
+          item.deptName || '-',
+          item.browser || '-',
+          item.os || '-',
+          item.ip,
+          item.location || '-',
+          item.userAgent,
+        ];
+      });
+      if (rows.length < batchSize) {
+        return;
+      }
+    }
   }
 }

@@ -214,6 +214,14 @@ export const config = {
      * 必须位于静态服务根目录（upload.dir）之外，避免缓存文件被公开访问。
      */
     cacheDir: path.resolve(ROOT_DIR, process.env.UPLOAD_CACHE_DIR ?? 'cache/images'),
+    /** 缩略图缓存保留天数（默认 30；0 表示不按时间清理） */
+    cacheTtlDays: toNumber(process.env.UPLOAD_CACHE_TTL_DAYS, 30),
+    /** 缩略图缓存体积上限（MB，默认 512；超出按最久未访问淘汰；0 表示不限） */
+    cacheMaxMb: toNumber(process.env.UPLOAD_CACHE_MAX_MB, 512),
+    /** 是否启用缓存清理任务（false 为紧急刹车；删除上传文件时的联动清理不受此开关影响） */
+    cacheSweepEnabled: toBoolean(process.env.UPLOAD_CACHE_SWEEP_ENABLED, true),
+    /** 缓存清理间隔（小时，默认 6） */
+    cacheSweepIntervalHours: toNumber(process.env.UPLOAD_CACHE_SWEEP_INTERVAL_HOURS, 6),
     /** 单文件大小上限（字节） */
     maxSize: toNumber(process.env.UPLOAD_MAX_SIZE, 10 * 1024 * 1024),
     /** 单次最多文件数 */
@@ -313,6 +321,13 @@ export const config = {
     maxLength: PASSWORD_MAX_LENGTH,
     /** 是否要求「字母 + 数字」组合（默认要求；纯数字弱口令是最常见的撞库起点） */
     requireComplexity: toBoolean(process.env.PASSWORD_REQUIRE_COMPLEXITY, true),
+  },
+  /** CSV 导出（流式写出；超上限先拒后导，避免生成半截文件） */
+  export: {
+    /** 单次导出行数上限（默认 5 万，0 表示不限制——不建议，超大导出会长时间占用连接） */
+    maxRows: toNumber(process.env.EXPORT_MAX_ROWS, 50_000),
+    /** 分批取数大小（默认 1000，兼顾查询次数与单批内存） */
+    batchSize: Math.min(Math.max(toNumber(process.env.EXPORT_BATCH_SIZE, 1000), 100), 5000),
   },
 } as const;
 

@@ -11,6 +11,7 @@ import { config } from '../../common/config/config.js';
 import { UPLOAD_ALLOWED_EXT, UPLOAD_ALLOWED_MIME } from '../../common/config/constants.js';
 import { sha256 } from '../../common/utils/utils.js';
 import { resolveStoredPath, storageRelativePath, toPosixPath } from '../../common/file/storage-layout.js';
+import { ImageScaleService } from '../../common/file/file-guards.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 
 /** 文件列表项（对外返回，含前端契约字段）。 */
@@ -144,7 +145,10 @@ function toFilterDate(value: unknown): Date | undefined {
 
 @Injectable()
 export class FilesService {
-  constructor(private readonly prisma: PrismaService) {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly imageScaleService: ImageScaleService,
+  ) {
     if (!existsSync(config.upload.dir)) {
       mkdirSync(config.upload.dir, { recursive: true });
     }
@@ -407,6 +411,8 @@ export class FilesService {
     const absolutePath = resolveStoredPath(record.fileName);
     if (absolutePath !== null && existsSync(absolutePath)) {
       await fsp.unlink(absolutePath).catch(() => undefined);
+      // 原文件真的删掉了 → 顺手清掉它的缩略图缓存（否则缓存会随删除操作只增不减）
+      await this.imageScaleService.clearFor(record.fileName);
     }
   }
 }
