@@ -69,19 +69,6 @@ function handlePrimaryColorChange(color: string | null): void {
 
 <template>
   <div class="navbar-avatar flex items-center gap-4">
-    <el-tooltip :content="appStore.isFullscreen ? '退出全屏' : '全屏'" placement="bottom">
-      <el-icon
-        class="text-lg text-ink cursor-pointer"
-        role="button"
-        tabindex="0"
-        :aria-label="appStore.isFullscreen ? '退出全屏' : '全屏'"
-        @click="handleToggleFullscreen"
-      >
-        <i v-if="!appStore.isFullscreen" class="bi bi-fullscreen" />
-        <i v-else class="bi bi-fullscreen-exit" />
-      </el-icon>
-    </el-tooltip>
-
     <el-tooltip :content="isDark ? '切换亮色' : '切换暗黑'" placement="bottom">
       <el-icon
         class="text-lg text-ink cursor-pointer"
@@ -92,6 +79,19 @@ function handlePrimaryColorChange(color: string | null): void {
       >
         <i v-if="!isDark" class="bi bi-moon" />
         <i v-else class="bi bi-sun" />
+      </el-icon>
+    </el-tooltip>
+
+    <el-tooltip :content="appStore.isFullscreen ? '退出全屏' : '全屏'" placement="bottom">
+      <el-icon
+        class="text-lg text-ink cursor-pointer"
+        role="button"
+        tabindex="0"
+        :aria-label="appStore.isFullscreen ? '退出全屏' : '全屏'"
+        @click="handleToggleFullscreen"
+      >
+        <i v-if="!appStore.isFullscreen" class="bi bi-fullscreen" />
+        <i v-else class="bi bi-fullscreen-exit" />
       </el-icon>
     </el-tooltip>
 
