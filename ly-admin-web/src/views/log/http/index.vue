@@ -269,13 +269,13 @@ onMounted(() => {
       <div class="flex items-center justify-between mb-3">
         <span class="text-[15px] font-semibold text-ink">HTTP 访问日志</span>
         <div class="flex flex-wrap items-center gap-2">
+          <el-button @click="getList">
+            <template #icon><i class="bi bi-arrow-clockwise" /></template>刷新</el-button
+          >
           <el-button v-permission="'log:http:export'" type="primary" :loading="exporting" @click="handleExport">
             <template #icon><i class="bi bi-download" /></template>
             导出
           </el-button>
-          <el-button @click="getList">
-            <template #icon><i class="bi bi-arrow-clockwise" /></template>刷新</el-button
-          >
           <el-button
             v-permission="'log:http:remove'"
             type="danger"
