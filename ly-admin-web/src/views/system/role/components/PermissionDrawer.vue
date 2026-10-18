@@ -83,9 +83,10 @@ async function handleSubmit(): Promise<void> {
 
 <template>
   <el-drawer :model-value="modelValue" :title="`分配权限 - ${roleName}`" :size="drawerSize" @close="handleClose">
-    <div v-loading="loading" class="h-full overflow-auto">
+    <!-- 滚动交给 el-scrollbar（与全局内容区一致），避免抽屉里出现原生滚动条 -->
+    <el-scrollbar v-loading="loading" class="h-full">
       <MenuTree ref="treeRef" :data="menuTree" :default-checked-keys="checkedKeys" />
-    </div>
+    </el-scrollbar>
 
     <template #footer>
       <el-button @click="handleClose">取消</el-button>
