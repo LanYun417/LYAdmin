@@ -60,7 +60,32 @@ Prisma 7 禁止在 schema 写 `datasource.url`：
 > 改表结构或字段说明 → 改 `///` → `prisma:push` → `prisma:comments`。
 > `db push --force-reset` 会清空 COMMENT，重建后必须补跑 `prisma:comments`。
 
-## 5. 查询约定
+## 5. 迁移（migrate）与 db push 的分工
+
+| 场景                                  | 用法                                                      |
+| ------------------------------------- | --------------------------------------------------------- |
+| 生产 / 共享环境（必须可审计、可回滚） | `npm run migrate:deploy`（只应用已有迁移，不改 schema）   |
+| 本地开发改表                          | `npm run migrate:dev -- --name <语义名>` → 生成迁移并应用 |
+| 查看迁移是否落后库                    | `npm run migrate:status`                                  |
+| 本地一次性试错（不产生迁移文件）      | `npm run prisma:push`（**仅限本地**，勿用于生产）         |
+| 同步表/字段 COMMENT                   | `npm run prisma:comments`（与迁移无关，独立执行）         |
+
+- 迁移目录固定为 `prisma/migrations`，在 `prisma.config.ts` 的 `migrations.path` **显式指定**：
+  schema 指向的是目录（`prisma/schema`），不显式指定时默认迁移目录会跟着 schema 走，
+  导致 `migrate status` 报「找不到迁移」。
+- 初始迁移 `20261018210000_init` 是**基线**：它是用
+  `prisma migrate diff --from-empty --to-schema prisma/schema --script` 从当前 schema 生成的，
+  并已通过 `prisma migrate resolve --applied` 标记为「已在存量库执行」——
+  存量库不会被重复建表，新库则能从零跑出完整结构。
+- `migrate:dev` 需要**影子库**权限（Prisma 自动创建/删除临时库）：MySQL 账号需有
+  `CREATE DATABASE` 权限，否则报 P3014；生产部署只用 `migrate:deploy`，不需要影子库。
+- 迁移 SQL 只含**结构**（Prisma 不建模 COMMENT）；COMMENT 仍由 `prisma:comments` 负责，
+  两条流水线互不影响。
+- ⚠️ 本地用 `db push` 改过结构后，`migrate:dev` 可能会提示漂移（drift）：此时用
+  `migrate:dev` 生成迁移会先要求 `migrate reset`（清库）。**试错期就用 push，定稿时再走 migrate**，
+  或直接 `migrate:dev --name xxx` 让 Prisma 记录结构变更。
+
+## 6. 查询约定
 
 - 列表分页：`skip: offset` / `take: limit`，与 `parsePagination` 对齐；`total` 单独 `count`。
 - 只取需要的列：`select` 明确字段；大文本 / 二进制列必须排除。
@@ -71,7 +96,7 @@ Prisma 7 禁止在 schema 写 `datasource.url`：
 - 慢 SQL 日志：`DB_LOGGING=true` 时 Prisma 发出查询事件，超过 `LOG_SLOW_SQL_MS`（默认 200ms）写
   `logs/db-YYYY-MM-DD.log`。
 
-## 6. 生成物
+## 7. 生成物
 
 - `src/generated/prisma/` **提交入库**，保证未跑 `prisma generate` 的机器也能编译。
 - 不要手改生成物；schema 变更后执行 `npm run prisma:generate` 并单独提交（`chore(api):`）。

@@ -1,0 +1,3 @@
+# 迁移锁：锁定该目录内迁移所面向的数据库提供方。
+# 由 Prisma Migrate 读取，勿手改（改成别的 provider 会让已有迁移无法应用）。
+provider = "mysql"

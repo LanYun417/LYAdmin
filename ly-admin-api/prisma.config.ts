@@ -62,7 +62,13 @@ export default defineConfig({
   // 注意：文件内 generator 的 output 是**相对 schema 目录**解析的，故为 ../../src/generated/prisma
   schema: path.join('prisma', 'schema'),
   migrations: {
-    /** 手动种子入口（表结构同步用 `npm run prisma:push`） */
+    /**
+     * 迁移目录。**必须显式指定**：schema 指向的是目录（`prisma/schema`），
+     * 默认迁移目录会跟着 schema 走（`prisma/schema/migrations`），
+     * 与团队约定的 `prisma/migrations` 不一致，会导致 `migrate status` 报「找不到迁移」。
+     */
+    path: path.join('prisma', 'migrations'),
+    /** 手动种子入口（表结构同步见下方 `npm run migrate:*` / `prisma:push` 说明） */
     seed: 'tsx prisma/seed.ts',
   },
   datasource: {
