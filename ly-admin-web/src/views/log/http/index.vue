@@ -5,7 +5,7 @@
  * 展开行展示请求参数、User-Agent 与响应内容。
  */
 
-import { ElMessage, ElMessageBox } from '@/utils/element';
+import { ElMessage } from '@/utils/element';
 import {
   clearHttpLogsApi,
   deleteHttpLogApi,
@@ -20,6 +20,7 @@ import { useLogDelete } from '@/composables/useLogDelete';
 import { downloadBlob } from '@/utils/download';
 import { formatDate, formatDateTime, formatDuration } from '@/utils/format';
 import type { DeptNode, HttpLog } from '@/types/api';
+import BasicDialog from '@/components/BasicDialog/index.vue';
 import Pagination from '@/components/Pagination/index.vue';
 import SearchForm from '@/components/SearchForm/index.vue';
 
@@ -164,22 +165,46 @@ function formatParams(row: HttpLog | undefined): string {
   return parts.length > 0 ? parts.join('\n\n') : '（无请求参数）';
 }
 
-/** 清空所有 HTTP 日志 */
+/** 清空确认文案：必须逐字手动输入（粘贴被禁用），防止手滑清空全表。 */
+const CLEAR_CONFIRM_TEXT = '清空所有日志';
+const clearVisible = ref(false);
+const clearInput = ref('');
+const clearSubmitting = ref(false);
+
+/** 输入内容是否逐字匹配确认文案（不匹配时确定按钮不可用） */
+const canClear = computed(() => clearInput.value.trim() === CLEAR_CONFIRM_TEXT);
+
+/** 打开清空确认弹窗（每次重置输入） */
+function openClearDialog(): void {
+  clearInput.value = '';
+  clearVisible.value = true;
+}
+
+/** 拦截粘贴 / 拖放：要求手动逐字输入，避免复制粘贴一路点到底 */
+function blockPaste(event: Event): void {
+  event.preventDefault();
+  ElMessage.warning('请手动输入确认文字');
+}
+
+/** 确认清空（canClear 为假时双保险直接返回） */
 async function handleClear(): Promise<void> {
-  try {
-    await ElMessageBox.confirm('确定清空所有 HTTP 日志吗？此操作不可恢复。', '清空确认', {
-      type: 'warning',
-      confirmButtonText: '确定清空',
-      cancelButtonText: '取消',
-    });
-  } catch {
+  if (!canClear.value || clearSubmitting.value) {
     return;
   }
-  await clearHttpLogsApi();
-  detailMap.value = {};
-  ElMessage.success('已清空所有 HTTP 日志');
-  query.page = 1;
-  await getList();
+  clearSubmitting.value = true;
+  try {
+    await clearHttpLogsApi();
+    detailMap.value = {};
+    detailLoading.value = {};
+    ElMessage.success('已清空所有 HTTP 日志');
+    clearVisible.value = false;
+    query.page = 1;
+    await getList();
+  } catch {
+    // 失败提示由请求层统一弹出，保持弹窗不关闭便于重试
+  } finally {
+    clearSubmitting.value = false;
+  }
 }
 
 onMounted(() => {
@@ -262,7 +287,7 @@ onMounted(() => {
             <template #icon><i class="bi bi-trash" /></template>
             删除{{ selected.length > 0 ? `（${selected.length}）` : '' }}
           </el-button>
-          <el-button v-permission="'log:http:clear'" type="danger" plain @click="handleClear">
+          <el-button v-permission="'log:http:clear'" type="danger" plain @click="openClearDialog">
             <template #icon><i class="bi bi-trash" /></template>清空所有日志</el-button
           >
         </div>
@@ -345,5 +370,31 @@ onMounted(() => {
         @current-change="changePage"
       />
     </el-card>
+
+    <!-- 清空确认：必须逐字手动输入确认文案，确定按钮才可用；输入框禁用粘贴 -->
+    <BasicDialog
+      v-model="clearVisible"
+      title="清空确认"
+      width="440px"
+      confirm-text="确认清空"
+      :confirm-disabled="!canClear"
+      :confirm-loading="clearSubmitting"
+      @confirm="handleClear"
+    >
+      <el-alert type="error" :closable="false" show-icon title="将删除全部 HTTP 访问日志，删除后无法恢复。" />
+      <p class="mt-4 mb-2 text-sm text-ink-regular">
+        请手动输入
+        <span class="font-semibold text-danger">{{ CLEAR_CONFIRM_TEXT }}</span>
+        以确认（不支持粘贴）：
+      </p>
+      <el-input
+        v-model="clearInput"
+        :placeholder="CLEAR_CONFIRM_TEXT"
+        clearable
+        autocomplete="off"
+        @paste="blockPaste"
+        @drop="blockPaste"
+      />
+    </BasicDialog>
   </div>
 </template>
