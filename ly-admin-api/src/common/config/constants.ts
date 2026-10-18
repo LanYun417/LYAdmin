@@ -13,6 +13,7 @@ export const ERROR_CODE = {
   CONFLICT: 409,
   TOO_MANY_REQUESTS: 429,
   INTERNAL: 500,
+  SERVICE_UNAVAILABLE: 503,
 } as const;
 
 export type ErrorCode = (typeof ERROR_CODE)[keyof typeof ERROR_CODE];
@@ -31,6 +32,7 @@ export const ERROR_MESSAGE = {
   CONFLICT: '数据已存在',
   TOO_MANY_REQUESTS: '请求过于频繁，请稍后再试',
   INTERNAL: '服务器内部错误',
+  SERVICE_UNAVAILABLE: '服务暂不可用',
 } as const;
 
 /** 通用状态枚举：1 启用/成功，0 禁用/失败。 */

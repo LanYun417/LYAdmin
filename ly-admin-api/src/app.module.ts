@@ -2,9 +2,9 @@
  * 应用根模块。
  * 模块职责：装配全局模块（数据库/基础设施/守卫/拦截器/过滤器）与各业务模块。
  */
-import { MiddlewareConsumer, Module, Controller, Get, type NestModule } from '@nestjs/common';
+import { MiddlewareConsumer, Module, type NestModule } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
-import { AuthGuard, Public } from './common/auth/auth.guard.js';
+import { AuthGuard } from './common/auth/auth.guard.js';
 import { PermissionGuard } from './common/auth/permission.guard.js';
 import { AllExceptionsFilter } from './common/exception/all-exceptions.filter.js';
 import { ResponseInterceptor } from './common/http/response.interceptor.js';
@@ -25,21 +25,13 @@ import { FilesModule } from './modules/files/files.module.js';
 import { ProfileModule } from './modules/profile/profile.module.js';
 import { LogsModule } from './modules/logs/logs.module.js';
 import { DocsModule } from './modules/docs/docs.module.js';
-
-/** 健康检查：全局前缀下即 GET /api。 */
-@Controller()
-export class HealthController {
-  @Public()
-  @Get()
-  health(): { name: string; status: string; time: string } {
-    return { name: 'ly-admin-api', status: 'ok', time: new Date().toISOString() };
-  }
-}
+import { HealthModule } from './modules/health/health.module.js';
 
 @Module({
   imports: [
     PrismaModule,
     CommonModule,
+    HealthModule,
     AuthModule,
     MenuModule,
     UsersModule,
@@ -54,7 +46,6 @@ export class HealthController {
     LogsModule,
     DocsModule,
   ],
-  controllers: [HealthController],
   providers: [
     // 守卫顺序：先鉴权（挂 req.user），再校验权限码
     { provide: APP_GUARD, useClass: AuthGuard },

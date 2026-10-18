@@ -62,4 +62,9 @@ export class AppException extends HttpException {
   static tooManyRequests(message: string = ERROR_MESSAGE.TOO_MANY_REQUESTS): AppException {
     return new AppException(message, ERROR_CODE.TOO_MANY_REQUESTS, HttpStatus.TOO_MANY_REQUESTS);
   }
+
+  /** 503 依赖未就绪（健康检查 ready 探针用；容器编排据此判定不接流量） */
+  static serviceUnavailable(message: string = ERROR_MESSAGE.SERVICE_UNAVAILABLE): AppException {
+    return new AppException(message, ERROR_CODE.SERVICE_UNAVAILABLE, HttpStatus.SERVICE_UNAVAILABLE);
+  }
 }

@@ -184,7 +184,32 @@ const FILE_ITEM = {
 /** `METHOD /path` → 响应示例。未命中的接口走 {@link responseExampleOf} 的兜底。 */
 export const RESPONSE_EXAMPLES: Record<string, unknown> = {
   /* 健康检查与接口文档 */
-  'GET /api': envelope({ name: 'ly-admin-api', status: 'ok', time: '2026-10-18T01:30:00.000Z' }),
+  'GET /api': envelope({
+    name: 'ly-admin-api',
+    status: 'ok',
+    time: '2026-10-18T01:30:00.000Z',
+    version: '1.0.0',
+    uptime: 3600,
+  }),
+  'GET /api/health/live': envelope({
+    name: 'ly-admin-api',
+    status: 'ok',
+    version: '1.0.0',
+    commit: 'fc52757',
+    env: 'production',
+    uptime: 3600,
+    time: '2026-10-18T01:30:00.000Z',
+  }),
+  'GET /api/health/ready': envelope({
+    name: 'ly-admin-api',
+    status: 'ready',
+    version: '1.0.0',
+    commit: 'fc52757',
+    env: 'production',
+    uptime: 3600,
+    time: '2026-10-18T01:30:00.000Z',
+    checks: { db: { status: 'up', latencyMs: 2 }, redis: { status: 'up', latencyMs: 1 } },
+  }),
 
   /* 认证 */
   'GET /api/auth/captcha': envelope({

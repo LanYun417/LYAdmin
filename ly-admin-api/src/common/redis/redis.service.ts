@@ -55,6 +55,22 @@ export class RedisService implements OnModuleDestroy {
     return this.ready && this.client !== null;
   }
 
+  /**
+   * 连通性探测（健康检查用）。
+   * 与其它方法一致：未启用 / 异常时返回 false，不抛出。
+   */
+  async ping(): Promise<boolean> {
+    if (!this.isReady()) {
+      return false;
+    }
+    try {
+      const reply = await this.client!.ping();
+      return reply === 'PONG';
+    } catch {
+      return false;
+    }
+  }
+
   /** 写入键值并设置毫秒级过期时间。 */
   async set(key: string, value: string, ttlMs?: number): Promise<boolean> {
     if (!this.isReady()) {

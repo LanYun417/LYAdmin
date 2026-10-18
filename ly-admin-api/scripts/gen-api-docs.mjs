@@ -56,6 +56,8 @@ const GROUP_OVERRIDES = {
 /** 个别方法的说明覆盖（键为 `类名.方法名`）。 */
 const SUMMARY_OVERRIDES = {
   'HealthController.health': '健康检查：返回服务名称、状态与服务器时间',
+  'HealthController.live': '存活探针：仅证明进程可响应，不探测任何依赖（供 livenessProbe）',
+  'HealthController.ready': '就绪探针：探测 MySQL 与 Redis；MySQL 不可用返回 503，Redis 不可用标记 degraded（仍 200）',
 };
 
 /** 模块展示顺序（未列出的模块排在最后，按名称排序）。 */

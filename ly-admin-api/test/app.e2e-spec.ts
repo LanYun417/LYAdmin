@@ -41,6 +41,32 @@ describe('应用装配冒烟 (e2e)', () => {
     const res = await request(app.getHttpServer()).get('/api/not-exist-xyz').expect(404);
     expect(res.body.code).toBe(404);
   });
+
+  it('存活探针 GET /api/health/live 公开可访问且不依赖外部组件', async () => {
+    const res = await request(app.getHttpServer()).get('/api/health/live').expect(200);
+    expect(res.body).toMatchObject({ code: 200, data: { name: 'ly-admin-api', status: 'ok' } });
+    // 进程元信息：版本与环境由构建注入，缺失时为 dev，故只断言存在与类型
+    expect(typeof res.body.data.version).toBe('string');
+    expect(typeof res.body.data.uptime).toBe('number');
+    expect(res.body.data.uptime).toBeGreaterThanOrEqual(0);
+  });
+
+  it('就绪探针 GET /api/health/ready 探测 MySQL 与 Redis 并回报延迟', async () => {
+    const res = await request(app.getHttpServer()).get('/api/health/ready').expect(200);
+    const { status, checks } = res.body.data as {
+      status: string;
+      checks: { db: { status: string; latencyMs: number }; redis: { status: string; latencyMs: number } };
+    };
+    // 测试环境 MySQL 必须可用；Redis 可能没配置（disabled）或已连接（up）
+    expect(checks.db.status).toBe('up');
+    expect(checks.db.latencyMs).toBeGreaterThanOrEqual(0);
+    expect(['up', 'down', 'disabled']).toContain(checks.redis.status);
+    expect(['ready', 'degraded']).toContain(status);
+    // Redis 未降级时整体必须是 ready（护栏：别把 disabled 误判成降级）
+    if (checks.redis.status !== 'down') {
+      expect(status).toBe('ready');
+    }
+  });
 });
 
 /**
