@@ -3957,5 +3957,111 @@ export const API_DOCS: ApiDocGroup[] = [
         }
       }
     ]
+  },
+  {
+    "group": "在线用户",
+    "endpoints": [
+      {
+        "method": "GET",
+        "path": "/api/monitor/online",
+        "summary": "在线会话列表",
+        "permission": [
+          "monitor:online:list"
+        ],
+        "isPublic": false,
+        "action": "",
+        "params": [
+          {
+            "name": "username",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "ip",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "页码，从 1 开始",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "每页条数",
+            "example": 10
+          }
+        ],
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/monitor/online?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "page": 1,
+            "pageSize": 10
+          }
+        }
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/monitor/online/:sid",
+        "summary": "强制下线单个会话",
+        "permission": [
+          "monitor:online:forceLogout"
+        ],
+        "isPublic": false,
+        "action": "在线用户 · 强制下线",
+        "params": [
+          {
+            "name": "sid",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X DELETE \"http://localhost:3000/api/monitor/online/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "sid": "1"
+          }
+        }
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/monitor/online/user/:userId",
+        "summary": "强制下线某用户的全部会话",
+        "permission": [
+          "monitor:online:forceLogout"
+        ],
+        "isPublic": false,
+        "action": "在线用户 · 强制下线全部会话",
+        "params": [
+          {
+            "name": "userId",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X DELETE \"http://localhost:3000/api/monitor/online/user/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "userId": "1"
+          }
+        }
+      }
+    ]
   }
 ];

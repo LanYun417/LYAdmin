@@ -27,12 +27,14 @@ import { ProfileModule } from './modules/profile/profile.module.js';
 import { LogsModule } from './modules/logs/logs.module.js';
 import { DocsModule } from './modules/docs/docs.module.js';
 import { HealthModule } from './modules/health/health.module.js';
+import { MonitorModule } from './modules/monitor/monitor.module.js';
 
 @Module({
   imports: [
     PrismaModule,
     CommonModule,
     HealthModule,
+    MonitorModule,
     AuthModule,
     MenuModule,
     UsersModule,

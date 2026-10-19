@@ -9,7 +9,9 @@ import { Injectable, type NestMiddleware } from '@nestjs/common';
 import type { NextFunction, Request, Response } from 'express';
 import { AppException } from '../exception/app.exception.js';
 import { JwtService } from '../auth/jwt.service.js';
+import { SessionService } from '../auth/session.service.js';
 import { TokenBlacklistService } from '../auth/token-blacklist.service.js';
+import { RedisService } from '../redis/redis.service.js';
 import { AuthUserService } from '../auth/auth-user.service.js';
 import { authenticateRequest, type AuthenticatedRequest } from '../auth/auth.guard.js';
 
@@ -19,12 +21,21 @@ export class StaticAuthMiddleware implements NestMiddleware {
     private readonly jwtService: JwtService,
     private readonly blacklist: TokenBlacklistService,
     private readonly authUserService: AuthUserService,
+    private readonly sessionService: SessionService,
+    private readonly redis: RedisService,
   ) {}
 
   async use(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       // authenticateRequest 已内置 `?token=` 回退（浏览器 img/avatar 无法带 Authorization 头）
-      const { user, context } = await authenticateRequest(req, this.jwtService, this.blacklist, this.authUserService);
+      const { user, context } = await authenticateRequest(
+        req,
+        this.jwtService,
+        this.blacklist,
+        this.authUserService,
+        this.sessionService,
+        this.redis,
+      );
       const authReq = req as AuthenticatedRequest;
       authReq.user = user;
       authReq.authContext = context;

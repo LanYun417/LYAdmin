@@ -31,23 +31,29 @@ export class JwtService {
    * 签发 accessToken（默认 2h）。
    *
    * 载荷形状：顶层直接放 `userId` / `username`，
-   * 外加 jose 自动写入的 `iat` / `exp`（鉴权判定依赖 `iat`）。
+   * 外加 jose 自动写入的 `iat` / `exp`（鉴权判定依赖 `iat`）；
+   * `sid` 存在时会话可被在线用户页强制下线，缺省表示该令牌不参与会话管理。
    */
-  async signAccessToken(payload: JwtUserPayload): Promise<string> {
-    return new SignJWT({ userId: payload.userId, username: payload.username })
-      .setProtectedHeader({ alg: 'HS256' })
-      .setIssuedAt()
-      .setExpirationTime(config.jwt.accessExpiresIn)
-      .sign(this.accessKey);
+  async signAccessToken(payload: JwtUserPayload, sid?: string): Promise<string> {
+    return this.sign(payload, this.accessKey, config.jwt.accessExpiresIn, sid);
   }
 
   /** 签发 refreshToken（默认 7d）。 */
-  async signRefreshToken(payload: JwtUserPayload): Promise<string> {
-    return new SignJWT({ userId: payload.userId, username: payload.username })
+  async signRefreshToken(payload: JwtUserPayload, sid?: string): Promise<string> {
+    return this.sign(payload, this.refreshKey, config.jwt.refreshExpiresIn, sid);
+  }
+
+  /** 统一签发：三处（access / refresh）只有密钥与有效期不同，抽出来避免各写一遍 sid 处理。 */
+  private async sign(payload: JwtUserPayload, key: Uint8Array, expiresIn: string, sid?: string): Promise<string> {
+    const claims: Record<string, unknown> = { userId: payload.userId, username: payload.username };
+    if (sid) {
+      claims.sid = sid;
+    }
+    return new SignJWT(claims)
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
-      .setExpirationTime(config.jwt.refreshExpiresIn)
-      .sign(this.refreshKey);
+      .setExpirationTime(expiresIn)
+      .sign(key);
   }
 
   /**
@@ -62,6 +68,7 @@ export class JwtService {
       username: typeof payload.username === 'string' ? payload.username : '',
       iat: Number(payload.iat ?? 0),
       exp: Number(payload.exp ?? 0),
+      sid: typeof payload.sid === 'string' ? payload.sid : undefined,
     };
   }
 
@@ -76,6 +83,7 @@ export class JwtService {
       username: typeof payload.username === 'string' ? payload.username : '',
       iat: Number(payload.iat ?? 0),
       exp: Number(payload.exp ?? 0),
+      sid: typeof payload.sid === 'string' ? payload.sid : undefined,
     };
   }
 

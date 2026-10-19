@@ -6,6 +6,7 @@
 import { Global, Module } from '@nestjs/common';
 import { JwtService } from './auth/jwt.service.js';
 import { RedisService } from './redis/redis.service.js';
+import { SessionService } from './auth/session.service.js';
 import { TokenBlacklistService } from './auth/token-blacklist.service.js';
 import { AuthCacheService } from './auth/auth-cache.service.js';
 import { AuthUserService } from './auth/auth-user.service.js';
@@ -26,6 +27,7 @@ import { IpRegionService } from './ip/ip-region.service.js';
     RedisService,
     JwtService,
     TokenBlacklistService,
+    SessionService,
     AuthCacheService,
     AuthUserService,
     CaptchaService,
@@ -46,6 +48,7 @@ import { IpRegionService } from './ip/ip-region.service.js';
     RedisService,
     JwtService,
     TokenBlacklistService,
+    SessionService,
     AuthCacheService,
     AuthUserService,
     CaptchaService,

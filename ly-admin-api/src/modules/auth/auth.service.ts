@@ -10,7 +10,9 @@ import { ERROR_MESSAGE, LogResult, Status } from '../../common/config/constants.
 import { lookupDeptName } from '../../common/utils/dept-lookup.js';
 import { IpRegionService } from '../../common/ip/ip-region.service.js';
 import { JwtService } from '../../common/auth/jwt.service.js';
+import { SessionService } from '../../common/auth/session.service.js';
 import { TokenBlacklistService } from '../../common/auth/token-blacklist.service.js';
+import { RedisService } from '../../common/redis/redis.service.js';
 import { comparePassword } from '../../common/utils/utils.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { AuthUserService } from '../../common/auth/auth-user.service.js';
@@ -41,6 +43,8 @@ export class AuthService {
     private readonly authCache: AuthCacheService,
     private readonly authUserService: AuthUserService,
     private readonly ipRegion: IpRegionService,
+    private readonly sessionService: SessionService,
+    private readonly redis: RedisService,
   ) {}
 
   /** 将用户记录转换为对外简要信息。 */
@@ -147,15 +151,32 @@ export class AuthService {
       throw AppException.unauthorized(ERROR_MESSAGE.ACCOUNT_DISABLED);
     }
 
+    // 登录成功即重新建立会话：清掉上一次登出的时间标记，
+    // 否则同秒内签发的令牌会被判为"登出前签发"而立刻失效（iat 精度是秒）
+    await this.blacklist.clearLogout(Number(user.id));
+
     await this.prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
     await this.writeLoginLog(username, ip, userAgent, LogResult.SUCCESS, '登录成功', location);
     // 登录会更新 lastLoginAt：失效该用户鉴权缓存，避免 /auth/profile 在 TTL 内返回陈旧值
     this.authCache.invalidate(Number(user.id));
 
     const payload = { userId: Number(user.id), username: user.username };
+    // 登记在线会话：成功后令牌带上 sid（可被在线用户页强制下线）；
+    // Redis 不可用时 create 返回 null，此时签发不带 sid 的令牌——宁可失去会话管理能力，
+    // 也不能出现「令牌带着 sid 但会话没登记 → 拿回 Redis 后立刻 401」。
+    const sid =
+      (await this.sessionService.create({
+        userId: Number(user.id),
+        username: user.username,
+        nickname: user.nickname,
+        ip,
+        location,
+        userAgent: userAgent.slice(0, 500),
+      })) ?? undefined;
+
     return {
-      accessToken: await this.jwtService.signAccessToken(payload),
-      refreshToken: await this.jwtService.signRefreshToken(payload),
+      accessToken: await this.jwtService.signAccessToken(payload, sid),
+      refreshToken: await this.jwtService.signRefreshToken(payload, sid),
       user: this.toUserBrief({ ...user, dept: await this.deptRef(user.deptId) }),
     };
   }
@@ -185,10 +206,20 @@ export class AuthService {
       throw AppException.unauthorized(ERROR_MESSAGE.PASSWORD_CHANGED);
     }
 
+    // 会话已被强制下线：连刷新也不放行（否则下线只挡住了 access，客户端刷新即可复活）
+    if (payload.sid && this.redis.isReady() && !(await this.sessionService.isAlive(payload.sid))) {
+      throw AppException.unauthorized(ERROR_MESSAGE.SESSION_REVOKED);
+    }
+    if (payload.sid) {
+      // 刷新即活跃：顺带延长会话 TTL，让长期在用的会话不会「令牌还能刷、会话却过期」
+      await this.sessionService.touch(payload.sid);
+    }
+
     const nextPayload = { userId: Number(user.id), username: user.username };
+    // 刷新沿用同一个会话 id：会话身份是"一次登录"，不因刷新而分裂
     return {
-      accessToken: await this.jwtService.signAccessToken(nextPayload),
-      refreshToken: await this.jwtService.signRefreshToken(nextPayload),
+      accessToken: await this.jwtService.signAccessToken(nextPayload, payload.sid),
+      refreshToken: await this.jwtService.signRefreshToken(nextPayload, payload.sid),
     };
   }
 
@@ -230,7 +261,11 @@ export class AuthService {
   }
 
   /** 登出：记录登出时间，使旧令牌立即失效（依赖 Redis，不可用时静默降级）。 */
-  async logout(userId: number): Promise<void> {
+  async logout(userId: number, sid?: string): Promise<void> {
     await this.blacklist.recordLogout(userId);
+    // 主动登出：把会话记录一并摘掉，在线用户列表立即少一条（用户级黑名单负责令牌失效）
+    if (sid) {
+      await this.sessionService.remove(sid, userId);
+    }
   }
 }

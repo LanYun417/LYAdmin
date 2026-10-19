@@ -381,6 +381,38 @@ export interface FileQuery extends PageQuery {
   bizId?: number;
 }
 
+/* ------------------------------- 在线用户 ------------------------------- */
+
+/** 在线会话（GET /monitor/online） */
+export interface OnlineSession {
+  /** 会话 id（强制下线的入参） */
+  sid: string;
+  userId: number;
+  username: string;
+  nickname: string;
+  ip: string;
+  /** IP 归属地（ip2region 离线解析，失败为空串） */
+  location: string;
+  /** 原始 User-Agent */
+  userAgent: string;
+  /** 解析后的浏览器 */
+  browser: string;
+  /** 解析后的操作系统 */
+  os: string;
+  /** 登录时间（ISO 8601） */
+  loginAt: string;
+  /** 最后活跃时间（令牌最近一次刷新的时间） */
+  lastSeenAt: string;
+}
+
+/** 在线用户查询参数 */
+export interface OnlineQuery extends PageQuery {
+  /** 账号（包含匹配） */
+  username?: string;
+  /** 登录 IP（精确匹配） */
+  ip?: string;
+}
+
 /** 上传配额（GET /files/quota） */
 export interface FileQuota {
   /** 已用字节 */

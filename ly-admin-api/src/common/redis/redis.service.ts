@@ -144,6 +144,70 @@ export class RedisService implements OnModuleDestroy {
     }
   }
 
+  /** 集合：添加成员（在线会话索引等需要"去重且可枚举"的场景）。 */
+  async sAdd(key: string, member: string): Promise<boolean> {
+    if (!this.isReady()) {
+      return false;
+    }
+    try {
+      await this.client!.sAdd(key, member);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /** 集合：移除成员。 */
+  async sRem(key: string, member: string): Promise<boolean> {
+    if (!this.isReady()) {
+      return false;
+    }
+    try {
+      await this.client!.sRem(key, member);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /** 集合：全部成员（键不存在返回空数组）。 */
+  async sMembers(key: string): Promise<string[]> {
+    if (!this.isReady()) {
+      return [];
+    }
+    try {
+      return await this.client!.sMembers(key);
+    } catch {
+      return [];
+    }
+  }
+
+  /** 设置键的过期时间（毫秒）。 */
+  async expire(key: string, ttlMs: number): Promise<boolean> {
+    if (!this.isReady()) {
+      return false;
+    }
+    try {
+      await this.client!.pExpire(key, ttlMs);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /** 删除多个键（会话索引里批量清理失效会话时用）。 */
+  async delMany(keys: string[]): Promise<boolean> {
+    if (!this.isReady() || keys.length === 0) {
+      return false;
+    }
+    try {
+      await this.client!.del(keys);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   async onModuleDestroy(): Promise<void> {
     if (this.client) {
       try {

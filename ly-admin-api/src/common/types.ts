@@ -13,6 +13,15 @@ export interface JwtUserPayload {
 export interface JwtPayload extends JwtUserPayload {
   iat: number;
   exp: number;
+  /**
+   * 会话 id（登录时生成，access / refresh 共用同一个值）。
+   *
+   * 用途：在线会话列表把「一次登录」聚合成一条记录，强制下线即删除该会话记录，
+   * 携带同一 sid 的令牌随后会被鉴权守卫判定为已失效——比按 jti（每次刷新都会变）
+   * 精确，也不用给每个令牌单独维护黑名单。
+   * 旧令牌没有该字段，守卫会跳过会话校验（向后兼容）。
+   */
+  sid?: string;
 }
 
 /** 鉴权后挂载到请求上下文的用户信息。 */

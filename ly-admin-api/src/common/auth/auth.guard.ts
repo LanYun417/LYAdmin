@@ -9,7 +9,9 @@ import type { Request } from 'express';
 import { AppException } from '../exception/app.exception.js';
 import { ERROR_MESSAGE, Status } from '../config/constants.js';
 import { JwtService } from './jwt.service.js';
+import { SessionService } from './session.service.js';
 import { TokenBlacklistService } from './token-blacklist.service.js';
+import { RedisService } from '../redis/redis.service.js';
 // 必须为**值导入**（非 import type）：Nest 依赖注入需要运行时的构造函数引用，
 // 用 import type 会在 emitDecoratorMetadata 下退化为 Function，导致无法解析依赖。
 import { AuthUserService } from './auth-user.service.js';
@@ -21,6 +23,8 @@ export interface AuthenticatedRequest extends Request {
   /** 已加载的完整鉴权上下文，供控制器复用避免重复查库 */
   authContext?: AuthContext | null;
   tokenIat?: number;
+  /** 当前令牌所属会话 id（供「登出」摘除会话记录；旧令牌无此字段） */
+  tokenSid?: string;
 }
 
 /** 公开接口标记：跳过鉴权。 */
@@ -53,6 +57,9 @@ export async function authenticateRequest(
   jwtService: JwtService,
   blacklist: TokenBlacklistService,
   authUserService: AuthUserService,
+  sessionService: SessionService,
+  redis: RedisService,
+  sidHolder: { value?: string } = {},
 ): Promise<{ user: AuthUserContext; context: AuthContext | null }> {
   const token = extractToken(req);
   if (!token) {
@@ -98,6 +105,18 @@ export async function authenticateRequest(
     throw AppException.unauthorized(ERROR_MESSAGE.LOGOUT_INVALIDATED);
   }
 
+  // 会话已被强制下线 / 已登出：令牌携带的 sid 在 Redis 中已无对应记录
+  // 注意「只在 Redis 可用时才判定」——否则 Redis 一挂，全体用户会被立刻登出，
+  // 与项目对 Redis 的整体降级策略（可用则增强、不可用则放行）相违背。
+  if (payload.sid && redis.isReady()) {
+    if (!(await sessionService.isAlive(payload.sid))) {
+      throw AppException.unauthorized(ERROR_MESSAGE.SESSION_REVOKED);
+    }
+  }
+
+  // sid 需要挂到请求上供登出使用；通过闭包返回避免改 AuthUserContext 结构
+  sidHolder.value = payload.sid;
+
   const user: AuthUserContext = {
     userId: context.userId,
     username: context.username,
@@ -122,6 +141,8 @@ export class AuthGuard implements CanActivate {
     private readonly jwtService: JwtService,
     private readonly blacklist: TokenBlacklistService,
     private readonly authUserService: AuthUserService,
+    private readonly sessionService: SessionService,
+    private readonly redis: RedisService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -134,14 +155,19 @@ export class AuthGuard implements CanActivate {
     }
 
     const req = context.switchToHttp().getRequest<AuthenticatedRequest>();
+    const sidHolder: { value?: string } = {};
     const { user, context: authContext } = await authenticateRequest(
       req,
       this.jwtService,
       this.blacklist,
       this.authUserService,
+      this.sessionService,
+      this.redis,
+      sidHolder,
     );
     req.user = user;
     req.tokenIat = user.tokenIat;
+    req.tokenSid = sidHolder.value;
     req.authContext = authContext;
     return true;
   }

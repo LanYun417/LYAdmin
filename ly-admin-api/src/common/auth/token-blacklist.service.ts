@@ -35,6 +35,18 @@ export class TokenBlacklistService {
   }
 
   /**
+   * 清除登出标记（登录成功时调用）。
+   *
+   * 为什么必须有这一步：判定式是 `iat * 1000 <= 登出时间`，而 JWT 的 `iat` 精度是**秒**。
+   * 用户「登出后立刻重新登录」时，新令牌的 `iat` 与登出时间落在同一秒，
+   * 新令牌会被判定为已失效——用户刚登录就被踢，且现象难以复现（只在同一秒内发生）。
+   * 登录成功即代表该用户重新建立了会话，清掉旧标记即可。
+   */
+  async clearLogout(userId: number): Promise<void> {
+    await this.redis.del(`${LOGOUT_KEY_PREFIX}${userId}`);
+  }
+
+  /**
    * 判定令牌是否已被登出失效。
    *
    * @param userId 用户 ID

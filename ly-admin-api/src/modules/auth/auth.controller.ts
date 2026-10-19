@@ -74,8 +74,9 @@ export class AuthController {
 
   /** 登出。 */
   @Post('logout')
-  async logout(@CurrentUser() user: AuthUserContext): Promise<null> {
-    await this.authService.logout(user.userId);
+  async logout(@CurrentUser() user: AuthUserContext, @Req() req: AuthenticatedRequest): Promise<null> {
+    // 带上当前会话 id：登出后在线用户列表要立即少一条（会话记录与令牌黑名单是两件事）
+    await this.authService.logout(user.userId, req.tokenSid);
     return null;
   }
 

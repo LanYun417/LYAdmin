@@ -27,6 +27,7 @@ export const ERROR_MESSAGE = {
   ACCOUNT_DISABLED: '账号已被禁用',
   PASSWORD_CHANGED: '密码已变更，请重新登录',
   LOGOUT_INVALIDATED: '您已退出登录，请重新登录',
+  SESSION_REVOKED: '该登录会话已被强制下线，请重新登录',
   FORBIDDEN: '无访问权限',
   NOT_FOUND: '资源不存在',
   CONFLICT: '数据已存在',

@@ -99,6 +99,33 @@ describe('接口契约快照 (e2e)', () => {
     return req.expect(200);
   };
 
+  /**
+   * 再登录一次，拿到一个**独立的会话**（用于会话管理用例）。
+   * 与 beforeAll 里的首次登录完全同构：验证码答案从 Redis 取回填。
+   */
+  const loginFreshSession = async (): Promise<string> => {
+    const captcha = await request(app.getHttpServer()).get(`${API}/auth/captcha`).expect(200);
+    const { enabled, captchaId } = captcha.body.data as { enabled: boolean; captchaId: string | null };
+    let captchaCode = '';
+    if (enabled && captchaId) {
+      captchaCode = (await redis.get(`${CAPTCHA_KEY_PREFIX}${captchaId}`)) ?? '';
+    }
+    const login = await request(app.getHttpServer())
+      .post(`${API}/auth/login`)
+      .send({ username: 'admin', password: '123456', captchaId, captchaCode })
+      .expect(200);
+    return (login.body.data as { accessToken: string }).accessToken;
+  };
+
+  /** 从 JWT 载荷里取 sid（不验签，仅供测试定位会话）。 */
+  const sidOf = (accessToken: string): string => {
+    const payload = JSON.parse(Buffer.from(accessToken.split('.')[1] ?? '', 'base64url').toString()) as {
+      sid?: string;
+    };
+    expect(typeof payload.sid).toBe('string');
+    return String(payload.sid);
+  };
+
   beforeAll(async () => {
     app = await createTestApp();
     redis = app.get(RedisService);
@@ -396,6 +423,77 @@ describe('接口契约快照 (e2e)', () => {
       // 取一页混合作业：清理类/登录类写操作不采集留痕，其 beforeData/afterData 必须是 null
       const noSnapshot = rows.filter((row) => row.beforeData === null && row.afterData === null);
       expect(noSnapshot.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('在线会话与强制下线', () => {
+    it('登录即产生会话：列表可见且带 sid / 客户端信息', async () => {
+      const res = await authGet('/monitor/online?page=1&pageSize=50').expect(200);
+      const data = (res.body as { data: { list: Array<Record<string, unknown>>; total: number } }).data;
+      expect(data.total).toBeGreaterThanOrEqual(1);
+      const mine = data.list.find((item) => item.sid === sidOf(token));
+      expect(mine).toBeTruthy();
+      expect(mine?.username).toBe('admin');
+      // 登录时间 / 最后活跃时间都应是 ISO 字符串
+      expect(String(mine?.loginAt)).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+      expect(String(mine?.lastSeenAt)).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+    });
+
+    it('强制下线指定会话：该令牌立即 401，其它会话不受影响', async () => {
+      const otherToken = await loginFreshSession();
+      const otherSid = sidOf(otherToken);
+
+      // 被踢之前：这个会话的令牌可用
+      await request(app.getHttpServer())
+        .get(`${API}/auth/profile`)
+        .set('authorization', `Bearer ${otherToken}`)
+        .expect(200);
+
+      await authDelete(`/monitor/online/${otherSid}`).expect(200);
+
+      // 被踢之后：该令牌立即失效（守卫发现会话记录已不存在）
+      const revoked = await request(app.getHttpServer())
+        .get(`${API}/auth/profile`)
+        .set('authorization', `Bearer ${otherToken}`)
+        .expect(401);
+      expect(String((revoked.body as { message: string }).message)).toContain('强制下线');
+
+      // 主会话（本文件其余用例使用的 token）必须仍然有效
+      await authGet('/auth/profile').expect(200);
+
+      // 列表里也不应再有该会话
+      const list = await authGet('/monitor/online?page=1&pageSize=50').expect(200);
+      const sids = (list.body as { data: { list: Array<{ sid: string }> } }).data.list.map((item) => item.sid);
+      expect(sids).not.toContain(otherSid);
+    });
+
+    it('强制下线不存在的会话 → 404（避免误以为已踢掉）', async () => {
+      await authDelete('/monitor/online/00000000-0000-4000-8000-000000000000').expect(404);
+    });
+
+    it('会话 id 格式非法 → 400（路径参数经 DTO 校验，不做模糊匹配）', async () => {
+      await authDelete('/monitor/online/not-a-uuid').expect(400);
+    });
+
+    it('强制下线用户全部会话：本人全部令牌失效（含无法定位 sid 的旧令牌）', async () => {
+      const first = await loginFreshSession();
+      const second = await loginFreshSession();
+      const userId = Number(
+        ((await authGet('/auth/profile').expect(200)).body as { data: { user: { id: number } } }).data.user.id,
+      );
+
+      await authDelete(`/monitor/online/user/${userId}`).expect(200);
+
+      // 两个新会话都被踢掉
+      for (const revokedToken of [first, second]) {
+        await request(app.getHttpServer())
+          .get(`${API}/auth/profile`)
+          .set('authorization', `Bearer ${revokedToken}`)
+          .expect(401);
+      }
+      // 主会话同样已被用户级登出，后续用例需要重新登录——因此本用例放在该 describe 的最后
+      token = await loginFreshSession();
+      await authGet('/auth/profile').expect(200);
     });
   });
 
