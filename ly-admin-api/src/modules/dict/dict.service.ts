@@ -15,6 +15,7 @@ import { Status } from '../../common/config/constants.js';
 import { buildPageResult, parsePagination, readNumber, readString } from '../../common/utils/utils.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import type { PageResult } from '../../common/types.js';
+import { runBatchDelete, type BatchDeleteResult } from '../../common/utils/batch.js';
 import type { CreateDictItemDto, CreateDictTypeDto, UpdateDictItemDto, UpdateDictTypeDto } from './dto/dict.dto.js';
 
 /**
@@ -216,6 +217,20 @@ export class DictService {
     ]);
   }
 
+  /** 批量删除字典类型（逐条复用单条删除，继承内置类型保护；连带删除其下字典项）。 */
+  async batchDeleteDictTypes(ids: number[]): Promise<BatchDeleteResult> {
+    const rows = await this.prisma.dictType.findMany({
+      where: { id: { in: ids.map((id) => BigInt(id)) } },
+      select: { id: true, dictName: true },
+    });
+    const nameMap = new Map(rows.map((row) => [Number(row.id), row.dictName]));
+    return runBatchDelete(
+      ids,
+      (id) => this.deleteDictType(id),
+      (id) => nameMap.get(id) ?? `#${id}`,
+    );
+  }
+
   /**
    * 分页查询某类型下的字典项。
    * @param query 查询参数（dictType 必填；page/pageSize/dictLabel/status）
@@ -333,6 +348,20 @@ export class DictService {
       throw AppException.notFound('字典项不存在');
     }
     await this.prisma.dictItem.delete({ where: { id: BigInt(id) } });
+  }
+
+  /** 批量删除字典项（逐条复用单条删除）。 */
+  async batchDeleteDictItems(ids: number[]): Promise<BatchDeleteResult> {
+    const rows = await this.prisma.dictItem.findMany({
+      where: { id: { in: ids.map((id) => BigInt(id)) } },
+      select: { id: true, dictLabel: true },
+    });
+    const nameMap = new Map(rows.map((row) => [Number(row.id), row.dictLabel]));
+    return runBatchDelete(
+      ids,
+      (id) => this.deleteDictItem(id),
+      (id) => nameMap.get(id) ?? `#${id}`,
+    );
   }
 
   /**

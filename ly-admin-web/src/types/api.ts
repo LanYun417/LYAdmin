@@ -29,6 +29,17 @@ export interface PageQuery {
   pageSize: number;
 }
 
+/**
+ * 批量删除结果（与后端 common/utils/batch.ts 的 BatchDeleteResult 对齐）。
+ * 刻意不是「全成功/全失败」：批量里被业务护栏挡下的条目要能说清原因。
+ */
+export interface BatchDeleteSummary {
+  /** 实际删除条数 */
+  deleted: number;
+  /** 被跳过的记录及原因 */
+  skipped: Array<{ id: number; name: string; reason: string }>;
+}
+
 /* ------------------------------- 用户 ------------------------------- */
 
 /** 用户简要信息 */

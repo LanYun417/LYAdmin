@@ -1,8 +1,9 @@
 /**
  * 字典接口：字典类型与字典项的增删改查、状态切换，以及业务侧按类型取数。
  */
-import { del, get, post, put } from './request';
+import { del, get, post, put, request } from './request';
 import type {
+  BatchDeleteSummary,
   DictDataItem,
   DictItem,
   DictItemQuery,
@@ -40,6 +41,11 @@ export function deleteDictTypeApi(id: number): Promise<null> {
   return del<null>(`/dict/types/${id}`);
 }
 
+/** 批量删除字典类型（内置类型会被跳过并回传原因；连带删除各自字典项） */
+export function batchDeleteDictTypesApi(ids: number[]): Promise<BatchDeleteSummary> {
+  return request<BatchDeleteSummary>({ url: '/dict/types', method: 'DELETE', data: { ids } });
+}
+
 /* ------------------------------ 字典项 ------------------------------ */
 
 /** 字典项分页列表（dictType 必填） */
@@ -65,6 +71,11 @@ export function setDictItemStatusApi(id: number, status: number): Promise<DictIt
 /** 删除字典项 */
 export function deleteDictItemApi(id: number): Promise<null> {
   return del<null>(`/dict/items/${id}`);
+}
+
+/** 批量删除字典项 */
+export function batchDeleteDictItemsApi(ids: number[]): Promise<BatchDeleteSummary> {
+  return request<BatchDeleteSummary>({ url: '/dict/items', method: 'DELETE', data: { ids } });
 }
 
 /* ------------------------------ 业务取数 ------------------------------ */

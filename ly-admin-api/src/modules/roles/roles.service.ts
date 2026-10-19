@@ -9,6 +9,7 @@ import { DataScope, Status, SUPER_ADMIN_ROLE } from '../../common/config/constan
 import { buildPageResult, parsePagination, readNumber, readString } from '../../common/utils/utils.js';
 import type { PageResult } from '../../common/types.js';
 import { recordAfter, recordBefore } from '../../common/log/operation-snapshot.js';
+import { runBatchDelete, type BatchDeleteResult } from '../../common/utils/batch.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import type { CreateRoleDto, UpdateRoleDto } from './dto/role.dto.js';
 
@@ -212,6 +213,23 @@ export class RoleService {
     await this.prisma.role.delete({ where: { id: BigInt(id) } });
     // 角色删除：清空鉴权缓存（防御性，确保不再残留该角色相关权限）
     this.authCache.invalidate();
+  }
+
+  /**
+   * 批量删除角色。
+   * 逐条复用 `deleteRole`（继承内置角色保护、「角色下有用户不可删」两条护栏），失败只记原因不中断。
+   */
+  async batchDeleteRoles(ids: number[]): Promise<BatchDeleteResult> {
+    const rows = await this.prisma.role.findMany({
+      where: { id: { in: ids.map((id) => BigInt(id)) } },
+      select: { id: true, roleName: true },
+    });
+    const nameMap = new Map(rows.map((row) => [Number(row.id), row.roleName]));
+    return runBatchDelete(
+      ids,
+      (id) => this.deleteRole(id),
+      (id) => nameMap.get(id) ?? `#${id}`,
+    );
   }
 
   /** 查询角色已授权菜单 id 列表。 */

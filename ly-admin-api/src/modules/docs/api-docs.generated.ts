@@ -775,6 +775,32 @@ export const API_DOCS: ApiDocGroup[] = [
       },
       {
         "method": "DELETE",
+        "path": "/api/users",
+        "summary": "批量删除用户。 复用单条删除的权限码（这是同一个能力，不该再拆一个权限出来）； 返回明细而非「全成功/全失败」：批量里被超管保护或自身账号挡下的条目要能说清原因",
+        "permission": [
+          "system:user:remove"
+        ],
+        "isPublic": false,
+        "action": "用户管理 · 批量删除",
+        "params": [
+          {
+            "name": "ids",
+            "in": "body",
+            "type": "number[]",
+            "required": true,
+            "description": "",
+            "example": []
+          }
+        ],
+        "examples": {
+          "curl": "curl -X DELETE \"http://localhost:3000/api/users\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"ids\": []\n    }'",
+          "requestBody": {
+            "ids": []
+          }
+        }
+      },
+      {
+        "method": "DELETE",
         "path": "/api/users/:id",
         "summary": "删除用户",
         "permission": [
@@ -1122,6 +1148,32 @@ export const API_DOCS: ApiDocGroup[] = [
             "menuIds": [
               1
             ]
+          }
+        }
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/roles",
+        "summary": "批量删除角色（复用单条删除的权限码；逐条执行并返回被跳过明细）",
+        "permission": [
+          "system:role:remove"
+        ],
+        "isPublic": false,
+        "action": "角色管理 · 批量删除",
+        "params": [
+          {
+            "name": "ids",
+            "in": "body",
+            "type": "number[]",
+            "required": true,
+            "description": "",
+            "example": []
+          }
+        ],
+        "examples": {
+          "curl": "curl -X DELETE \"http://localhost:3000/api/roles\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"ids\": []\n    }'",
+          "requestBody": {
+            "ids": []
           }
         }
       },
@@ -2030,6 +2082,32 @@ export const API_DOCS: ApiDocGroup[] = [
       },
       {
         "method": "DELETE",
+        "path": "/api/dict/items",
+        "summary": "批量删除字典项（逐条执行并返回被跳过明细）",
+        "permission": [
+          "system:dict:remove"
+        ],
+        "isPublic": false,
+        "action": "字典管理 · 批量删除",
+        "params": [
+          {
+            "name": "ids",
+            "in": "body",
+            "type": "number[]",
+            "required": true,
+            "description": "",
+            "example": []
+          }
+        ],
+        "examples": {
+          "curl": "curl -X DELETE \"http://localhost:3000/api/dict/items\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"ids\": []\n    }'",
+          "requestBody": {
+            "ids": []
+          }
+        }
+      },
+      {
+        "method": "DELETE",
         "path": "/api/dict/items/:id",
         "summary": "删除字典项",
         "permission": [
@@ -2051,6 +2129,32 @@ export const API_DOCS: ApiDocGroup[] = [
           "curl": "curl -X DELETE \"http://localhost:3000/api/dict/items/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
             "id": "1"
+          }
+        }
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/dict/types",
+        "summary": "批量删除字典类型（连带删除各自字典项；逐条执行并返回被跳过明细）",
+        "permission": [
+          "system:dict:remove"
+        ],
+        "isPublic": false,
+        "action": "字典管理 · 批量删除",
+        "params": [
+          {
+            "name": "ids",
+            "in": "body",
+            "type": "number[]",
+            "required": true,
+            "description": "",
+            "example": []
+          }
+        ],
+        "examples": {
+          "curl": "curl -X DELETE \"http://localhost:3000/api/dict/types\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"ids\": []\n    }'",
+          "requestBody": {
+            "ids": []
           }
         }
       },

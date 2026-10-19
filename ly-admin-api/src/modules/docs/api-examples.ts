@@ -255,6 +255,14 @@ export const RESPONSE_EXAMPLES: Record<string, unknown> = {
   'POST /api/users': envelope(USER_BRIEF, '新增成功'),
   'PUT /api/users/:id': envelope(USER_BRIEF, '编辑成功'),
   'DELETE /api/users/:id': envelope(null, '删除成功'),
+  // 批量删除返回「成功条数 + 被跳过明细」，不是全成功/全失败
+  'DELETE /api/users': envelope(
+    {
+      deleted: 3,
+      skipped: [{ id: 1, name: 'admin', reason: '不能删除当前登录账号' }],
+    },
+    '已删除 3 条',
+  ),
   'PUT /api/users/:id/status': envelope(null, '状态更新成功'),
   'PUT /api/users/:id/password': envelope(null, '密码重置成功'),
   'PUT /api/users/:id/roles': envelope(null, '角色分配成功'),
@@ -266,6 +274,13 @@ export const RESPONSE_EXAMPLES: Record<string, unknown> = {
   'POST /api/roles': envelope(ROLE_BRIEF, '新增成功'),
   'PUT /api/roles/:id': envelope(ROLE_BRIEF, '编辑成功'),
   'DELETE /api/roles/:id': envelope(null, '删除成功'),
+  'DELETE /api/roles': envelope(
+    {
+      deleted: 3,
+      skipped: [{ id: 1, name: 'admin', reason: '不能删除当前登录账号' }],
+    },
+    '已删除 3 条',
+  ),
   'PUT /api/roles/:id/menus': envelope(null, '授权成功'),
 
   /* 菜单管理 */
@@ -295,10 +310,24 @@ export const RESPONSE_EXAMPLES: Record<string, unknown> = {
   'PUT /api/dict/types/:id': envelope(DICT_TYPE, '编辑成功'),
   'PUT /api/dict/types/:id/status': envelope(DICT_TYPE, '已启用'),
   'DELETE /api/dict/types/:id': envelope(null, '删除成功'),
+  'DELETE /api/dict/types': envelope(
+    {
+      deleted: 3,
+      skipped: [{ id: 1, name: 'admin', reason: '不能删除当前登录账号' }],
+    },
+    '已删除 3 条',
+  ),
   'POST /api/dict/items': envelope(DICT_ITEM, '新增成功'),
   'PUT /api/dict/items/:id': envelope(DICT_ITEM, '编辑成功'),
   'PUT /api/dict/items/:id/status': envelope(DICT_ITEM, '已启用'),
   'DELETE /api/dict/items/:id': envelope(null, '删除成功'),
+  'DELETE /api/dict/items': envelope(
+    {
+      deleted: 3,
+      skipped: [{ id: 1, name: 'admin', reason: '不能删除当前登录账号' }],
+    },
+    '已删除 3 条',
+  ),
 
   /* 系统参数 */
   'GET /api/configs': paged([SYS_CONFIG]),

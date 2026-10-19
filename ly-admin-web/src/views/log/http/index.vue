@@ -16,7 +16,7 @@ import {
 } from '@/api/log';
 import { getDeptTreeApi } from '@/api/dept';
 import { useTable } from '@/composables/useTable';
-import { useLogDelete } from '@/composables/useLogDelete';
+import { useBatchDelete } from '@/composables/useBatchDelete';
 import { downloadBlob } from '@/utils/download';
 import { formatDate, formatDateTime, formatDuration } from '@/utils/format';
 import type { DeptNode, HttpLog } from '@/types/api';
@@ -49,9 +49,11 @@ const { loading, list, total, query, getList, search, reset, changePage, changeP
 );
 
 /** 单条 / 多选删除（删除后一并清掉展开行详情缓存） */
-const { selected, deleting, handleSelectionChange, removeOne, removeSelected } = useLogDelete<HttpLog>({
+const { selected, deleting, handleSelectionChange, removeOne, removeSelected } = useBatchDelete<HttpLog>({
   batchApi: deleteHttpLogsApi,
   singleApi: deleteHttpLogApi,
+  // 批量删除的确认与跳过大小时按业务名词提示
+  noun: '日志',
   list,
   query,
   getList,

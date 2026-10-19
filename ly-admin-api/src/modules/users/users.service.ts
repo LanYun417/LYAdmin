@@ -11,6 +11,7 @@ import { lookupDeptName, lookupDeptNames } from '../../common/utils/dept-lookup.
 import { buildPageResult, hashPassword, parsePagination, readNumber, readString } from '../../common/utils/utils.js';
 import { assertPasswordNotContainsAccount } from '../../common/auth/password-policy.js';
 import { recordAfter, recordBefore } from '../../common/log/operation-snapshot.js';
+import { runBatchDelete, type BatchDeleteResult } from '../../common/utils/batch.js';
 import type { AuthUserContext, PageResult, UserDetail } from '../../common/types.js';
 import type { Prisma } from '../../generated/prisma/client.js';
 import type { CreateUserDto, UpdateUserDto } from './dto/users.dto.js';
@@ -301,6 +302,35 @@ export class UsersService {
     await this.prisma.userRole.deleteMany({ where: { userId: BigInt(id) } });
     await this.prisma.user.delete({ where: { id: BigInt(id) } });
     this.authCache.invalidate(id);
+  }
+
+  /**
+   * 批量删除用户。
+   *
+   * 逐条复用 `deleteUser`（继承超管保护 / 中间表清理 / 缓存失效），单条失败只记原因不中断；
+   * 额外拦「删除当前登录账号」——把自己删掉会立刻失去会话，属误操作而非正常诉求。
+   *
+   * @param ids 待删除的用户 id
+   * @param currentUserId 当前登录用户 id
+   */
+  async batchDeleteUsers(ids: number[], currentUserId: number): Promise<BatchDeleteResult> {
+    // 预取账号名：失败明细要能显示「哪个账号为什么没删掉」，而不是只给一个 id
+    const rows = await this.prisma.user.findMany({
+      where: { id: { in: ids.map((id) => BigInt(id)) } },
+      select: { id: true, username: true },
+    });
+    const nameMap = new Map(rows.map((row) => [Number(row.id), row.username]));
+
+    return runBatchDelete(
+      ids,
+      async (id) => {
+        if (id === currentUserId) {
+          throw AppException.badRequest('不能删除当前登录账号');
+        }
+        await this.deleteUser(id);
+      },
+      (id) => nameMap.get(id) ?? `#${id}`,
+    );
   }
 
   /** 启用/禁用：超级管理员不可禁用。 */

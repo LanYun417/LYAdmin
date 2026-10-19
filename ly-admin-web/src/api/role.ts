@@ -1,8 +1,8 @@
 /**
  * 角色接口：角色分页列表、下拉选项、增删改与菜单授权。
  */
-import { del, get, post, put } from './request';
-import type { PageResult, Role, RoleBrief, RoleQuery, RoleUpsert } from '@/types/api';
+import { del, get, post, put, request } from './request';
+import type { BatchDeleteSummary, PageResult, Role, RoleBrief, RoleQuery, RoleUpsert } from '@/types/api';
 
 /** 角色分页列表 */
 export function getRoleListApi(params: RoleQuery): Promise<PageResult<Role>> {
@@ -27,6 +27,11 @@ export function updateRoleApi(id: number, data: Partial<RoleUpsert>): Promise<Ro
 /** 删除角色 */
 export function deleteRoleApi(id: number): Promise<null> {
   return del<null>(`/roles/${id}`);
+}
+
+/** 批量删除角色（内置超管角色 / 仍有用户持有的角色会被跳过并回传原因） */
+export function batchDeleteRolesApi(ids: number[]): Promise<BatchDeleteSummary> {
+  return request<BatchDeleteSummary>({ url: '/roles', method: 'DELETE', data: { ids } });
 }
 
 /** 角色已授权菜单 id 列表 */

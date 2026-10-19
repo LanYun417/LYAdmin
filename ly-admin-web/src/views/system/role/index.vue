@@ -2,8 +2,9 @@
 /** 角色管理页。模块职责：角色列表查询与增删改，并进入菜单权限分配抽屉。 */
 
 import { ElMessage, ElMessageBox } from '@/utils/element';
-import { deleteRoleApi, getRoleListApi } from '@/api/role';
+import { batchDeleteRolesApi, deleteRoleApi, getRoleListApi } from '@/api/role';
 import { useStatusDict } from '@/composables/useDict';
+import { useBatchDelete } from '@/composables/useBatchDelete';
 import { useTable } from '@/composables/useTable';
 import { formatDateTime } from '@/utils/format';
 import { DATA_SCOPE_OPTIONS, type Role } from '@/types/api';
@@ -52,6 +53,21 @@ function handleEdit(row: Role): void {
 }
 
 /** 删除 */
+/**
+ * 批量删除。
+ * 角色页不做「不可勾选」的前置过滤（前端没有内置角色编码常量），
+ * 而是让后端返回被跳过原因并展示——「内置超级管理员角色不可删除」「该角色下存在用户」
+ * 这两条护栏的解释比"按钮点不动"更有用。
+ */
+const { selected, deleting, handleSelectionChange, removeSelected } = useBatchDelete<Role>({
+  batchApi: batchDeleteRolesApi,
+  singleApi: deleteRoleApi,
+  list,
+  query,
+  getList,
+  noun: '角色',
+});
+
 async function handleDelete(row: Role): Promise<void> {
   try {
     await ElMessageBox.confirm(`确定删除角色「${row.roleName}」吗？`, '提示', { type: 'warning' });
@@ -87,13 +103,26 @@ function handlePermission(row: Role): void {
     <el-card shadow="never">
       <div class="flex items-center justify-between mb-3">
         <span class="text-[15px] font-semibold text-ink">角色列表</span>
-        <el-button v-permission="'system:role:add'" type="primary" @click="handleAdd">
-          <template #icon><i class="bi bi-plus" /></template>
-          新增角色
-        </el-button>
+        <div class="flex items-center gap-2">
+          <el-button
+            v-permission="'system:role:remove'"
+            type="danger"
+            plain
+            :disabled="selected.length === 0"
+            :loading="deleting"
+            @click="removeSelected"
+          >
+            批量删除{{ selected.length > 0 ? `（${selected.length}）` : '' }}
+          </el-button>
+          <el-button v-permission="'system:role:add'" type="primary" @click="handleAdd">
+            <template #icon><i class="bi bi-plus" /></template>
+            新增角色
+          </el-button>
+        </div>
       </div>
 
-      <el-table v-loading="loading" :data="list">
+      <el-table v-loading="loading" :data="list" @selection-change="handleSelectionChange">
+        <el-table-column type="selection" width="48" align="center" />
         <el-table-column prop="roleName" label="角色名称" min-width="140" />
         <el-table-column prop="roleCode" label="角色编码" min-width="140" />
         <el-table-column prop="sort" label="排序" width="80" align="center" />

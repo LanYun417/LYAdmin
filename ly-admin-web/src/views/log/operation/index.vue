@@ -4,7 +4,7 @@
 import { ElMessage } from '@/utils/element';
 import { deleteOperationLogApi, deleteOperationLogsApi, exportOperationLogsApi, getOperationLogsApi } from '@/api/log';
 import { useTable } from '@/composables/useTable';
-import { useLogDelete } from '@/composables/useLogDelete';
+import { useBatchDelete } from '@/composables/useBatchDelete';
 import { formatDate, formatDateTime, formatDuration } from '@/utils/format';
 import { downloadBlob } from '@/utils/download';
 import type { OperationLog } from '@/types/api';
@@ -93,9 +93,11 @@ const { loading, list, total, query, getList, search, reset, changePage, changeP
 );
 
 /** 单条 / 多选删除（二次确认、删除后回退空页） */
-const { selected, deleting, handleSelectionChange, removeOne, removeSelected } = useLogDelete<OperationLog>({
+const { selected, deleting, handleSelectionChange, removeOne, removeSelected } = useBatchDelete<OperationLog>({
   batchApi: deleteOperationLogsApi,
   singleApi: deleteOperationLogApi,
+  // 批量删除的确认与跳过大小时按业务名词提示
+  noun: '日志',
   list,
   query,
   getList,

@@ -10,6 +10,8 @@ import type { AuthUserContext } from '../../common/types.js';
 import { type ResponseEnvelope } from '../../common/http/response.interceptor.js';
 import { UsersService } from './users.service.js';
 import { IdParamDto } from '../../common/dto/id-param.dto.js';
+import { IdsBodyDto } from '../../common/dto/ids-body.dto.js';
+import type { BatchDeleteResult } from '../../common/utils/batch.js';
 import { AssignRoleDto, CreateUserDto, ResetPasswordDto, StatusDto, UpdateUserDto } from './dto/users.dto.js';
 
 @Controller('users')
@@ -55,6 +57,22 @@ export class UsersController {
   async remove(@Param() params: IdParamDto): Promise<ResponseEnvelope<null>> {
     await this.usersService.deleteUser(params.id);
     return { __raw: true, data: null, message: '删除成功' };
+  }
+
+  /**
+   * 批量删除用户。
+   * 复用单条删除的权限码（这是同一个能力，不该再拆一个权限出来）；
+   * 返回明细而非「全成功/全失败」：批量里被超管保护或自身账号挡下的条目要能说清原因。
+   */
+  @Delete()
+  @RequirePermissions('system:user:remove')
+  @OperationLog('用户管理', '批量删除')
+  async removeBatch(
+    @Body() body: IdsBodyDto,
+    @CurrentUser() user: AuthUserContext,
+  ): Promise<ResponseEnvelope<BatchDeleteResult>> {
+    const result = await this.usersService.batchDeleteUsers(body.ids, user.userId);
+    return { __raw: true, data: result, message: `已删除 ${result.deleted} 条` };
   }
 
   /** 启用/禁用。 */

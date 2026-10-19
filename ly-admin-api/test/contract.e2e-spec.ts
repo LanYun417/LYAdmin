@@ -399,6 +399,77 @@ describe('接口契约快照 (e2e)', () => {
     });
   });
 
+  describe('批量删除（逐条执行 + 跳过明细）', () => {
+    it('DELETE /users 命中超管保护时返回明细而不是整体失败', async () => {
+      // 取超管账号 id：它是唯一必然不可删的用户
+      const me = await authGet('/auth/profile').expect(200);
+      const superAdminId = Number((me.body as { data: { user: { id: number } } }).data.user.id);
+
+      const res = await authDelete('/users', { ids: [superAdminId, 999_999_999] }).expect(200);
+      const data = (res.body as { data: { deleted: number; skipped: Array<{ id: number; reason: string }> } }).data;
+      expect(data.deleted).toBe(0);
+      expect(data.skipped).toHaveLength(2);
+      expect(data.skipped.map((item) => item.id)).toEqual([superAdminId, 999_999_999]);
+      // 超管那条应给出"不可删除"的业务原因（不是笼统的失败）。
+      // 注意：当前登录者就是超管本人，命中「不能删除当前登录账号」这条更靠前的护栏也属预期。
+      expect(data.skipped[0]!.reason).toMatch(/不可删除|不能删除当前登录账号/);
+      expect(data.skipped[1]!.reason).toContain('用户不存在');
+    });
+
+    it('DELETE /roles 内置超管角色被跳过并给出原因', async () => {
+      const list = await authGet('/roles?page=1&pageSize=50').expect(200);
+      const roles = (list.body as { data: { list: Array<{ id: number; roleCode: string }> } }).data.list;
+      const superRole = roles.find((role) => role.roleCode === 'super_admin');
+      expect(superRole).toBeTruthy();
+
+      const res = await authDelete('/roles', { ids: [superRole!.id] }).expect(200);
+      const data = (res.body as { data: { deleted: number; skipped: Array<{ reason: string }> } }).data;
+      expect(data.deleted).toBe(0);
+      expect(data.skipped[0]!.reason).toContain('不可删除');
+    });
+
+    it('DELETE /dict/items 能真正批量删除（创建 → 批量删 → 查不到）', async () => {
+      // 建在已有字典类型下，随后删除，避免污染
+      const types = await authGet('/dict/types?page=1&pageSize=1').expect(200);
+      const dictType = (types.body as { data: { list: Array<{ dictType: string }> } }).data.list[0]!.dictType;
+
+      const created: number[] = [];
+      for (const suffix of ['A', 'B']) {
+        const res = await authPost('/dict/items', {
+          dictType,
+          dictLabel: `e2e批量${suffix}${Date.now()}`,
+          dictValue: `e2e_${suffix}_${Date.now()}`,
+          sort: 999,
+          status: 1,
+        }).expect(200);
+        created.push(Number((res.body as { data: { id: number } }).data.id));
+      }
+
+      const res = await authDelete('/dict/items', { ids: created }).expect(200);
+      const data = (res.body as { data: { deleted: number; skipped: unknown[] } }).data;
+      expect(data.deleted).toBe(2);
+      expect(data.skipped).toHaveLength(0);
+
+      // 再删一次：应全部落到 skipped（记录不存在），deleted 为 0
+      const again = await authDelete('/dict/items', { ids: created }).expect(200);
+      expect((again.body as { data: { deleted: number } }).data.deleted).toBe(0);
+    });
+
+    it('批量删除请求体校验：空数组与非法 id 返回 400', async () => {
+      await authDelete('/users', { ids: [] }).expect(400);
+      await authDelete('/users', { ids: [0] }).expect(400);
+      await authDelete('/users', { ids: [1.5] }).expect(400);
+    });
+
+    it('批量删除与单条删除共用权限码，未授权角色不可调用', async () => {
+      // 无令牌：401（与单条删除一致，说明复用同一套鉴权）
+      await request(app.getHttpServer())
+        .delete(`${API}/users`)
+        .send({ ids: [1] })
+        .expect(401);
+    });
+  });
+
   describe('访问日志', () => {
     it('HTTP 日志列表带出操作者与解析后的浏览器字段', async () => {
       const res = await authGet('/logs/http?username=admin&page=1&pageSize=1').expect(200);

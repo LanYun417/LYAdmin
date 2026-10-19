@@ -7,6 +7,8 @@ import { OperationLog } from '../../common/log/operation-log.decorator.js';
 import { RequirePermissions } from '../../common/auth/permission.guard.js';
 import type { ResponseEnvelope } from '../../common/http/response.interceptor.js';
 import { IdParamDto } from '../../common/dto/id-param.dto.js';
+import { IdsBodyDto } from '../../common/dto/ids-body.dto.js';
+import type { BatchDeleteResult } from '../../common/utils/batch.js';
 import { RoleService } from './roles.service.js';
 import { AssignMenuDto, CreateRoleDto, UpdateRoleDto } from './dto/role.dto.js';
 
@@ -61,6 +63,15 @@ export class RoleController {
     return this.roleService
       .deleteRole(params.id)
       .then(() => ({ __raw: true, data: null, message: '删除成功' }) as ResponseEnvelope<null>);
+  }
+
+  /** 批量删除角色（复用单条删除的权限码；逐条执行并返回被跳过明细）。 */
+  @Delete()
+  @RequirePermissions('system:role:remove')
+  @OperationLog('角色管理', '批量删除')
+  async removeBatch(@Body() body: IdsBodyDto): Promise<ResponseEnvelope<BatchDeleteResult>> {
+    const result = await this.roleService.batchDeleteRoles(body.ids);
+    return { __raw: true, data: result, message: `已删除 ${result.deleted} 条` };
   }
 
   /** 角色已授权菜单 id。 */

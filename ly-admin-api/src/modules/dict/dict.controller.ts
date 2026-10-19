@@ -8,6 +8,8 @@ import { OperationLog } from '../../common/log/operation-log.decorator.js';
 import { RequirePermissions } from '../../common/auth/permission.guard.js';
 import type { ResponseEnvelope } from '../../common/http/response.interceptor.js';
 import { IdParamDto } from '../../common/dto/id-param.dto.js';
+import { IdsBodyDto } from '../../common/dto/ids-body.dto.js';
+import type { BatchDeleteResult } from '../../common/utils/batch.js';
 import { DictService } from './dict.service.js';
 import {
   CreateDictItemDto,
@@ -66,6 +68,15 @@ export class DictController {
     return { __raw: true, data: null, message: '删除成功' };
   }
 
+  /** 批量删除字典类型（连带删除各自字典项；逐条执行并返回被跳过明细）。 */
+  @Delete('types')
+  @RequirePermissions('system:dict:remove')
+  @OperationLog('字典管理', '批量删除')
+  async removeTypesBatch(@Body() body: IdsBodyDto): Promise<ResponseEnvelope<BatchDeleteResult>> {
+    const result = await this.dictService.batchDeleteDictTypes(body.ids);
+    return { __raw: true, data: result, message: `已删除 ${result.deleted} 条` };
+  }
+
   /* ------------------------------ 字典项 ------------------------------ */
 
   /** 字典项分页列表（按 dictType 过滤）。 */
@@ -109,6 +120,15 @@ export class DictController {
   async removeItem(@Param() params: IdParamDto): Promise<ResponseEnvelope<unknown>> {
     await this.dictService.deleteDictItem(params.id);
     return { __raw: true, data: null, message: '删除成功' };
+  }
+
+  /** 批量删除字典项（逐条执行并返回被跳过明细）。 */
+  @Delete('items')
+  @RequirePermissions('system:dict:remove')
+  @OperationLog('字典管理', '批量删除')
+  async removeItemsBatch(@Body() body: IdsBodyDto): Promise<ResponseEnvelope<BatchDeleteResult>> {
+    const result = await this.dictService.batchDeleteDictItems(body.ids);
+    return { __raw: true, data: result, message: `已删除 ${result.deleted} 条` };
   }
 
   /* ------------------------------ 业务取数 ------------------------------ */

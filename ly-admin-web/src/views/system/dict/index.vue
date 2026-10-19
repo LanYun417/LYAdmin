@@ -2,8 +2,9 @@
 /** 字典类型管理页。模块职责：字典类型查询与增删改、启停，并进入字典项抽屉。 */
 
 import { ElMessage, ElMessageBox } from '@/utils/element';
-import { deleteDictTypeApi, getDictTypeListApi, setDictTypeStatusApi } from '@/api/dict';
+import { batchDeleteDictTypesApi, deleteDictTypeApi, getDictTypeListApi, setDictTypeStatusApi } from '@/api/dict';
 import { useTable } from '@/composables/useTable';
+import { useBatchDelete } from '@/composables/useBatchDelete';
 import { clearDictCache, useStatusDict } from '@/composables/useDict';
 import { formatDateTime } from '@/utils/format';
 import { hasPermission } from '@/utils/permission';
@@ -38,6 +39,25 @@ const editingRow = ref<DictType | null>(null);
 const itemVisible = ref(false);
 const itemDictType = ref('');
 const itemDictName = ref('');
+
+/**
+ * 批量删除字典类型。
+ * 批量删成功后需要清字典缓存：被删类型的下拉数据可能还挂在缓存里。
+ */
+const { selected, deleting, handleSelectionChange, removeSelected } = useBatchDelete<DictType>({
+  batchApi: async (ids) => {
+    const result = await batchDeleteDictTypesApi(ids);
+    if (result.deleted > 0) {
+      clearDictCache();
+    }
+    return result;
+  },
+  singleApi: deleteDictTypeApi,
+  list,
+  query,
+  getList,
+  noun: '字典类型',
+});
 
 /** 新增 */
 function handleAdd(): void {
@@ -117,13 +137,26 @@ async function handleDelete(row: DictType): Promise<void> {
     <el-card shadow="never">
       <div class="flex flex-wrap items-center justify-between gap-y-2 mb-3">
         <span class="text-[15px] font-semibold text-ink">字典类型</span>
-        <el-button v-permission="'system:dict:add'" type="primary" @click="handleAdd">
-          <template #icon><i class="bi bi-plus" /></template>
-          新增字典类型
-        </el-button>
+        <div class="flex items-center gap-2">
+          <el-button
+            v-permission="'system:dict:remove'"
+            type="danger"
+            plain
+            :disabled="selected.length === 0"
+            :loading="deleting"
+            @click="removeSelected"
+          >
+            批量删除{{ selected.length > 0 ? `（${selected.length}）` : '' }}
+          </el-button>
+          <el-button v-permission="'system:dict:add'" type="primary" @click="handleAdd">
+            <template #icon><i class="bi bi-plus" /></template>
+            新增字典类型
+          </el-button>
+        </div>
       </div>
 
-      <el-table v-loading="loading" :data="list">
+      <el-table v-loading="loading" :data="list" @selection-change="handleSelectionChange">
+        <el-table-column type="selection" width="48" align="center" />
         <el-table-column prop="dictName" label="字典名称" min-width="150" show-overflow-tooltip />
         <el-table-column prop="dictType" label="类型编码" min-width="180" show-overflow-tooltip />
         <el-table-column label="状态" width="100" align="center">
