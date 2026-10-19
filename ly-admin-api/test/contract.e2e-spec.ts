@@ -211,11 +211,16 @@ describe('接口契约快照 (e2e)', () => {
     });
 
     it('/users/:id 的 roles 只含 {id,roleName}（对外不暴露 roleCode）', async () => {
-      const list = await authGet('/users?page=1&pageSize=1').expect(200);
-      const admin = (list.body.data.list as Array<{ id: number; username: string }>)[0];
-      expect(admin.username).toBe('admin');
+      // 按用户名精确定位 admin：不依赖"列表第一条就是 admin"——
+      // 列表按 id 倒序，任何一条用例新建了用户（哪怕清理失败或运行被中断）都会把它顶下去，
+      // 让这条与被测点无关的断言变成随机失败。
+      const list = await authGet('/users?page=1&pageSize=10&username=admin').expect(200);
+      const admin = (list.body.data.list as Array<{ id: number; username: string }>).find(
+        (item) => item.username === 'admin',
+      );
+      expect(admin).toBeTruthy();
 
-      const res = await authGet(`/users/${admin.id}`).expect(200);
+      const res = await authGet(`/users/${admin!.id}`).expect(200);
       const roles = (res.body.data as { roles: Array<Record<string, unknown>> }).roles;
       expect(roles).toHaveLength(1);
       expect(Object.keys(roles[0]).sort()).toEqual(['id', 'roleName']);
