@@ -9,6 +9,8 @@
 # - 只有 api 对外暴露端口（3000）；数据库与 Redis 仅在 compose 内部网络可达。
 # - 迁移由一次性服务 `migrate` 执行（用 api-builder 阶段的镜像，含 prisma CLI），
 #   api 等它 **成功退出** 后再启动，避免「先起服务再补表」导致的 500。
+# - 该服务迁移完还会补一遍表/字段注释：Prisma 的 migration.sql 不含 COMMENT 语句，
+#   不补的话线上库一条注释都没有，`npm run prisma:comments:check` 也会报差异。
 # - uploads / logs / cache 挂命名卷，容器重建不丢数据；MySQL 数据同理。
 
 name: ly-admin
@@ -60,7 +62,8 @@ services:
       DB_USER: root
       DB_PASSWORD: ${DB_PASSWORD:?}
       TZ: Asia/Shanghai
-    command: ['npx', 'prisma', 'migrate', 'deploy']
+    # migrate 后补注释（api-builder 阶段带 devDependencies，tsx 可用）
+    command: ['sh', '-c', 'npx prisma migrate deploy && npm run prisma:comments']
     depends_on:
       mysql:
         condition: service_healthy
@@ -101,6 +104,8 @@ services:
       CORS_ORIGIN: ${CORS_ORIGIN:-*}
       CAPTCHA_ENABLED: ${CAPTCHA_ENABLED:-true}
       UPLOAD_MAX_SIZE: ${UPLOAD_MAX_SIZE:-10485760}
+      # 单用户累计上传配额（MB，0 = 不限）：防止单个账号塞满磁盘
+      UPLOAD_USER_QUOTA_MB: ${UPLOAD_USER_QUOTA_MB:-512}
       LOG_HTTP_RETENTION_DAYS: ${LOG_HTTP_RETENTION_DAYS:-7}
       TZ: Asia/Shanghai
     volumes:

@@ -105,6 +105,12 @@ jobs:
       - name: 应用迁移（同时验证迁移文件可执行）
         working-directory: ly-admin-api
         run: npm run migrate:deploy
+      # 必须先应用再检查：Prisma 生成的 migration.sql **不含 COMMENT 语句**
+      # （注释由 scripts/prisma-comments.ts 单独维护），全新库里一条注释都没有，
+      # 直接 check 必然报差异 —— 这一步等价于"部署后补齐注释"。
+      - name: 应用表/字段注释
+        working-directory: ly-admin-api
+        run: npm run prisma:comments
       - name: 表/字段注释与 schema 一致性
         working-directory: ly-admin-api
         run: npm run prisma:comments:check

@@ -22,16 +22,25 @@ curl --noproxy '*' http://localhost:3000/api/health/ready
 ```
 
 启动顺序由 compose 的依赖条件保证：`mysql`/`redis` 健康 → `migrate` 执行
-`prisma migrate deploy` 并成功退出 → `api` 启动（启动时自动跑幂等种子，建出超管与菜单）。
+`prisma migrate deploy` **并补齐表/字段注释**后成功退出 → `api` 启动
+（启动时自动跑幂等种子，建出超管与菜单）。
+
+> 为什么迁移后还要补注释：Prisma 生成的 `migration.sql` **不含 `COMMENT` 语句**
+> （列注释是本项目用 `scripts/prisma-comments.ts` 单独维护的，见 `prisma/schema/*.prisma` 里的
+> `///` 注释）。若只跑 `migrate deploy`，线上库一条注释都没有，
+> `npm run prisma:comments:check` 也会报差异——所以 compose 的 `migrate` 服务把两件事串在一起做。
 
 浏览器访问 `http://<host>:3000`（api 容器同时托管前端产物并做 history 回退）。
 
 ## 3. 常用运维命令
 
 ```bash
-# 查看迁移状态 / 手动补迁移
+# 查看迁移状态 / 手动补迁移（手动执行时记得把注释一起补上，与 compose 内的默认流程保持一致）
 docker compose -f deploy/docker-compose.yml run --rm migrate npx prisma migrate status
-docker compose -f deploy/docker-compose.yml run --rm migrate npx prisma migrate deploy
+docker compose -f deploy/docker-compose.yml run --rm migrate sh -c   'npx prisma migrate deploy && npm run prisma:comments'
+
+# 部署后自检：注释与 schema 是否一致（无输出即一致，有差异时退出码非 0）
+docker compose -f deploy/docker-compose.yml run --rm migrate npm run prisma:comments:check
 
 # 重新构建并滚动重启（只重建 api，不动数据库）
 docker compose -f deploy/docker-compose.yml up -d --build api
@@ -59,6 +68,7 @@ docker compose -f deploy/docker-compose.yml up -d --build
 | `CORS_ORIGIN`                              | 否   | 同源部署保持默认 `*`；分离部署必须写成前端域名白名单                           |
 | `APP_VERSION` / `GIT_COMMIT`               | 否   | 会出现在 `/api/health/live` 里，便于确认线上跑的是哪个提交                     |
 | `UPLOAD_MAX_SIZE`                          | 否   | 默认 10MB；改了要同步 nginx 的 `client_max_body_size`                          |
+| `UPLOAD_USER_QUOTA_MB`                     | 否   | 单用户累计上传配额（MB），默认 512，`0` = 不限；防止单个账号塞满磁盘           |
 | `CAPTCHA_ENABLED`                          | 否   | 默认开启登录图形验证码                                                         |
 | `SECURITY_HSTS` / `CSP_POLICY`             | 否   | HSTS 默认跟随 production 开启；CSP 默认不下发（SPA 需按实际配置）              |
 
@@ -90,3 +100,7 @@ docker compose -f deploy/docker-compose.yml up -d --build
 - **镜像不含 `prisma` CLI**：运行时阶段只装 `dependencies`，迁移由 `migrate` 服务
   （`api-builder` 阶段镜像，含 devDependencies）执行，这也是它能用 `npx prisma` 的原因。
 - **前端产物是构建期烘焙的**：改了前端代码必须重新 `--build`，没有「挂载宿主 dist 热更」的用法。
+- **镜像构建只在 CI 验证**：`docker` job 会在每次 push 时构建 `--target runtime`，
+  用来证明 Dockerfile 没腐化；本地 `docker build` 需自行执行（本项目开发机未装 Docker）。
+- **`deploy/.env.example` 是唯一模板**：仓库根没有 `.env.example`，
+  本地开发用的模板在 `ly-admin-api/.env.example`（后端 `cp .env.example .env`）。
