@@ -2702,6 +2702,20 @@ export const API_DOCS: ApiDocGroup[] = [
             "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
           },
           {
+            "name": "bizType",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "bizId",
+            "in": "query",
+            "type": "unknown",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
             "name": "startTime",
             "in": "query",
             "type": "unknown",
@@ -2809,6 +2823,41 @@ export const API_DOCS: ApiDocGroup[] = [
       },
       {
         "method": "GET",
+        "path": "/api/files/quota",
+        "summary": "当前用户的上传配额使用情况（供前端展示「已用 / 上限」）",
+        "permission": [
+          "file:upload"
+        ],
+        "isPublic": false,
+        "action": "",
+        "params": [
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "页码，从 1 开始",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "每页条数",
+            "example": 10
+          }
+        ],
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/files/quota?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "page": 1,
+            "pageSize": 10
+          }
+        }
+      },
+      {
+        "method": "GET",
         "path": "/api/files/types",
         "summary": "文件类型选项（对库内已有文件去重，供筛选下拉使用）",
         "permission": [
@@ -2886,8 +2935,30 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "isPublic": false,
         "action": "文件管理 · 上传",
+        "params": [
+          {
+            "name": "bizType",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "业务类型：模块标识，只允许字母/数字/下划线/连字符（避免塞入任意文本污染筛选）",
+            "example": "示例值"
+          },
+          {
+            "name": "bizId",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "业务主键：表单里是字符串，需显式转数字后校验",
+            "example": 1
+          }
+        ],
         "examples": {
-          "curl": "curl -X POST \"http://localhost:3000/api/files/upload\" \\\n  -H \"Authorization: Bearer <accessToken>\""
+          "curl": "curl -X POST \"http://localhost:3000/api/files/upload\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"bizType\": \"示例值\",\n      \"bizId\": 1\n    }'",
+          "requestBody": {
+            "bizType": "示例值",
+            "bizId": 1
+          }
         }
       },
       {

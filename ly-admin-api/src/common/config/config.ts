@@ -226,6 +226,11 @@ export const config = {
     maxSize: toNumber(process.env.UPLOAD_MAX_SIZE, 10 * 1024 * 1024),
     /** 单次最多文件数 */
     maxCount: toNumber(process.env.UPLOAD_MAX_COUNT, 10),
+    /**
+     * 单个用户的累计上传配额（MB，默认 512；0 表示不限）。
+     * 只统计**实际落盘**的字节：命中秒传（内容已存在）的文件不计入。
+     */
+    userQuotaMb: Math.max(toNumber(process.env.UPLOAD_USER_QUOTA_MB, 512), 0),
     /** 防盗链 Referer 白名单（host 列表，已归一为小写）。 */
     allowedReferers: parseRefererHosts(process.env.UPLOAD_ALLOWED_REFERERS),
   },

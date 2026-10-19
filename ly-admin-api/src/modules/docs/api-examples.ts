@@ -330,6 +330,7 @@ export const RESPONSE_EXAMPLES: Record<string, unknown> = {
   'GET /api/files/check': envelope({ exists: false, file: null }),
   'GET /api/files': paged([FILE_ITEM]),
   'GET /api/files/types': envelope(['image/png', 'application/pdf']),
+  'GET /api/files/quota': envelope({ usedBytes: 12_582_912, quotaBytes: 536_870_912, unlimited: false }),
   'GET /api/files/uploaders': envelope([{ id: 1, username: 'admin', nickname: '超级管理员' }]),
   'GET /api/files/:id/download': stream('附件下载（Content-Disposition: attachment）'),
   'DELETE /api/files/:id': envelope(null, '删除成功'),

@@ -25,6 +25,10 @@ export interface FileItem {
   size: number;
   hash: string | null;
   uploaderId: number | null;
+  /** 业务类型（空 = 无业务归属） */
+  bizType: string | null;
+  /** 业务主键（空 = 未指定） */
+  bizId: number | null;
   createdAt: Date;
   /** 本次保存是否复用了既有物理文件（秒传/去重），仅响应时携带 */
   deduplicated?: boolean;
@@ -32,6 +36,27 @@ export interface FileItem {
 
 /** 上传返回的精简结果（前端上传接口返回 FileItem[]）。 */
 export type UploadResult = FileItem[];
+
+/**
+ * 上传时的业务归属入参。
+ * 由调用方（业务模块）在 multipart 表单里带 `bizType` / `bizId`，便于日后按业务反查附件。
+ */
+export interface FileBizInput {
+  /** 业务类型（模块标识，如 avatar / notice / contract） */
+  bizType?: string;
+  /** 业务主键 */
+  bizId?: number;
+}
+
+/** 字节 → MB 文本（1 位小数，用于配额提示）。 */
+function formatMb(bytes: number): string {
+  return `${(bytes / 1024 / 1024).toFixed(1)}MB`;
+}
+
+/** 可选数字 → BigInt（未传视为 null，而不是 0：0 会被误读成"关联到 id=0 的业务"）。 */
+function toOptionalBigInt(value: number | undefined | null): bigint | null {
+  return value === undefined || value === null ? null : BigInt(value);
+}
 
 /** 上传人选项（id + 账号 + 昵称）。 */
 export interface FileUploaderOption {
@@ -165,6 +190,8 @@ export class FilesService {
     size: number;
     hash: string | null;
     uploaderId: bigint | null;
+    bizType: string | null;
+    bizId: bigint | null;
     createdAt: Date;
   }): FileItem {
     return {
@@ -177,6 +204,8 @@ export class FilesService {
       size: Number(row.size),
       hash: row.hash,
       uploaderId: row.uploaderId === null ? null : Number(row.uploaderId),
+      bizType: row.bizType,
+      bizId: row.bizId === null ? null : Number(row.bizId),
       createdAt: row.createdAt,
     };
   }
@@ -221,7 +250,11 @@ export class FilesService {
    * 保存上传文件（多文件）。先逐文件落盘 + 幻数校验，再按内容哈希秒传去重。
    * 任一文件内容与扩展名不匹配 → 清理本批全部已落盘文件并抛 400。
    */
-  async saveFiles(files: Express.Multer.File[], uploaderId: number | null): Promise<FileItem[]> {
+  async saveFiles(
+    files: Express.Multer.File[],
+    uploaderId: number | null,
+    biz: FileBizInput = {},
+  ): Promise<FileItem[]> {
     if (!files || files.length === 0) {
       throw AppException.badRequest('未接收到文件');
     }
@@ -256,8 +289,18 @@ export class FilesService {
       throw error;
     }
 
-    // 第二阶段：内容哈希 → 秒传去重
+    // 第二阶段：内容哈希 → 秒传去重（先把「秒传命中」筛掉，再对真正要落盘的做配额预检）
     const items: FileItem[] = [];
+    const pending: Array<{
+      relPath: string;
+      absPath: string;
+      originName: string;
+      mimeType: string;
+      size: number;
+      hash: string;
+      fileUrl: string;
+    }> = [];
+
     for (const item of prepared) {
       const buffer = await fsp.readFile(item.absPath);
       const hash = sha256(buffer);
@@ -265,26 +308,106 @@ export class FilesService {
       if (existing) {
         // 命中秒传：删除本次落盘的物理文件，复用既有记录
         await fsp.unlink(item.absPath).catch(() => undefined);
+        // 已有业务归属时不覆盖（同一份内容可能被多个业务引用，先来先得）；
+        // 既有无归属而本次带了归属 → 补写一次，避免「先上传后关联」的调用拿不到归属
+        if (existing.bizType === null && biz.bizType) {
+          const bound = await this.prisma.file.update({
+            where: { id: existing.id },
+            data: { bizType: biz.bizType, bizId: toOptionalBigInt(biz.bizId) },
+          });
+          items.push({ ...this.toFileItem(bound), deduplicated: true });
+          continue;
+        }
         items.push({ ...this.toFileItem(existing), deduplicated: true });
         continue;
       }
-      const fileUrl = `/${config.upload.route}/${item.relPath}`;
+      pending.push({
+        relPath: item.relPath,
+        absPath: item.absPath,
+        originName: item.originName,
+        mimeType: item.mimeType,
+        size: item.size,
+        hash,
+        fileUrl: `/${config.upload.route}/${item.relPath}`,
+      });
+    }
+
+    // 配额预检：只统计真正要落盘的字节（秒传命中的不占新空间，不该因此被拒）
+    const incomingBytes = pending.reduce((sum, item) => sum + item.size, 0);
+    try {
+      await this.assertWithinQuota(uploaderId, incomingBytes);
+    } catch (error) {
+      // 预检失败必须清掉本批已落盘的物理文件，否则会留下无记录可寻的孤儿文件
+      for (const item of pending) {
+        await fsp.unlink(item.absPath).catch(() => undefined);
+      }
+      throw error;
+    }
+
+    for (const item of pending) {
       const record = await this.prisma.file.create({
         data: {
           originName: item.originName.slice(0, 255),
           // fileName 存相对路径（含扩展名分组），单条记录自带定位信息
           fileName: item.relPath,
           filePath: toPosixPath(path.join(config.upload.dirName, item.relPath)),
-          fileUrl,
+          fileUrl: item.fileUrl,
           mimeType: item.mimeType.slice(0, 100),
           size: item.size,
-          hash,
+          hash: item.hash,
           uploaderId: uploaderId === null ? null : BigInt(uploaderId),
+          bizType: biz.bizType ?? null,
+          bizId: toOptionalBigInt(biz.bizId),
         },
       });
       items.push(this.toFileItem(record));
     }
     return items;
+  }
+
+  /**
+   * 查询上传配额使用情况（供 /files/quota 与上传预检共用）。
+   * @param uploaderId 上传人 id（null = 匿名/无归属，按 0 计）
+   */
+  async getQuota(uploaderId: number | null): Promise<{ usedBytes: number; quotaBytes: number; unlimited: boolean }> {
+    const quotaBytes = Math.round(config.upload.userQuotaMb * 1024 * 1024);
+    return {
+      usedBytes: await this.usageBytesOf(uploaderId),
+      quotaBytes,
+      unlimited: quotaBytes <= 0,
+    };
+  }
+
+  /** 单用户已占用字节数（按 uploader_id 聚合，走 uploader_id 索引）。 */
+  private async usageBytesOf(uploaderId: number | null): Promise<number> {
+    if (uploaderId === null) {
+      return 0;
+    }
+    const aggregated = await this.prisma.file.aggregate({
+      _sum: { size: true },
+      where: { uploaderId: BigInt(uploaderId) },
+    });
+    return Number(aggregated._sum.size ?? 0);
+  }
+
+  /**
+   * 配额断言：`UPLOAD_USER_QUOTA_MB` 为 0 时表示不限，直接放行。
+   * @param uploaderId 上传人 id
+   * @param incomingBytes 本批将要落盘的字节数
+   * @throws AppException 400 配额不足（消息里带上已用/本次/上限，便于用户自助处理）
+   */
+  private async assertWithinQuota(uploaderId: number | null, incomingBytes: number): Promise<void> {
+    const quotaBytes = Math.round(config.upload.userQuotaMb * 1024 * 1024);
+    if (quotaBytes <= 0) {
+      return;
+    }
+    const usedBytes = await this.usageBytesOf(uploaderId);
+    if (usedBytes + incomingBytes <= quotaBytes) {
+      return;
+    }
+    throw AppException.badRequest(
+      `上传配额不足：已用 ${formatMb(usedBytes)}，本次需 ${formatMb(incomingBytes)}，上限 ${formatMb(quotaBytes)}；请先删除不再使用的文件，或调整 UPLOAD_USER_QUOTA_MB`,
+    );
   }
 
   /** 按内容哈希查询已存在的文件（秒传预检）。入参统一转小写后再匹配。 */
@@ -318,6 +441,15 @@ export class FilesService {
     const uploaderId = toFilterNumber(query.uploaderId);
     if (uploaderId !== undefined && uploaderId > 0) {
       where.uploaderId = BigInt(uploaderId);
+    }
+    // 业务归属筛选：bizType 精确匹配（模块标识是枚举式取值，不做模糊），bizId 可选（>0 才参与）
+    const bizType = typeof query.bizType === 'string' ? query.bizType.trim() : '';
+    if (bizType) {
+      where.bizType = bizType;
+      const bizId = toFilterNumber(query.bizId);
+      if (bizId !== undefined && bizId > 0) {
+        where.bizId = BigInt(bizId);
+      }
     }
     const startTime = toFilterDate(query.startTime);
     const endTime = toFilterDate(query.endTime);

@@ -30,12 +30,14 @@ export type FileAvgAggregateOutputType = {
   id: number | null
   size: number | null
   uploaderId: number | null
+  bizId: number | null
 }
 
 export type FileSumAggregateOutputType = {
   id: bigint | null
   size: number | null
   uploaderId: bigint | null
+  bizId: bigint | null
 }
 
 export type FileMinAggregateOutputType = {
@@ -48,6 +50,8 @@ export type FileMinAggregateOutputType = {
   size: number | null
   hash: string | null
   uploaderId: bigint | null
+  bizType: string | null
+  bizId: bigint | null
   createdAt: Date | null
 }
 
@@ -61,6 +65,8 @@ export type FileMaxAggregateOutputType = {
   size: number | null
   hash: string | null
   uploaderId: bigint | null
+  bizType: string | null
+  bizId: bigint | null
   createdAt: Date | null
 }
 
@@ -74,6 +80,8 @@ export type FileCountAggregateOutputType = {
   size: number
   hash: number
   uploaderId: number
+  bizType: number
+  bizId: number
   createdAt: number
   _all: number
 }
@@ -83,12 +91,14 @@ export type FileAvgAggregateInputType = {
   id?: true
   size?: true
   uploaderId?: true
+  bizId?: true
 }
 
 export type FileSumAggregateInputType = {
   id?: true
   size?: true
   uploaderId?: true
+  bizId?: true
 }
 
 export type FileMinAggregateInputType = {
@@ -101,6 +111,8 @@ export type FileMinAggregateInputType = {
   size?: true
   hash?: true
   uploaderId?: true
+  bizType?: true
+  bizId?: true
   createdAt?: true
 }
 
@@ -114,6 +126,8 @@ export type FileMaxAggregateInputType = {
   size?: true
   hash?: true
   uploaderId?: true
+  bizType?: true
+  bizId?: true
   createdAt?: true
 }
 
@@ -127,6 +141,8 @@ export type FileCountAggregateInputType = {
   size?: true
   hash?: true
   uploaderId?: true
+  bizType?: true
+  bizId?: true
   createdAt?: true
   _all?: true
 }
@@ -227,6 +243,8 @@ export type FileGroupByOutputType = {
   size: number
   hash: string | null
   uploaderId: bigint | null
+  bizType: string | null
+  bizId: bigint | null
   createdAt: Date
   _count: FileCountAggregateOutputType | null
   _avg: FileAvgAggregateOutputType | null
@@ -263,6 +281,8 @@ export type FileWhereInput = {
   size?: Prisma.IntFilter<"File"> | number
   hash?: Prisma.StringNullableFilter<"File"> | string | null
   uploaderId?: Prisma.BigIntNullableFilter<"File"> | bigint | number | null
+  bizType?: Prisma.StringNullableFilter<"File"> | string | null
+  bizId?: Prisma.BigIntNullableFilter<"File"> | bigint | number | null
   createdAt?: Prisma.DateTimeFilter<"File"> | Date | string
 }
 
@@ -276,6 +296,8 @@ export type FileOrderByWithRelationInput = {
   size?: Prisma.SortOrder
   hash?: Prisma.SortOrderInput | Prisma.SortOrder
   uploaderId?: Prisma.SortOrderInput | Prisma.SortOrder
+  bizType?: Prisma.SortOrderInput | Prisma.SortOrder
+  bizId?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   _relevance?: Prisma.FileOrderByRelevanceInput
 }
@@ -293,6 +315,8 @@ export type FileWhereUniqueInput = Prisma.AtLeast<{
   size?: Prisma.IntFilter<"File"> | number
   hash?: Prisma.StringNullableFilter<"File"> | string | null
   uploaderId?: Prisma.BigIntNullableFilter<"File"> | bigint | number | null
+  bizType?: Prisma.StringNullableFilter<"File"> | string | null
+  bizId?: Prisma.BigIntNullableFilter<"File"> | bigint | number | null
   createdAt?: Prisma.DateTimeFilter<"File"> | Date | string
 }, "id">
 
@@ -306,6 +330,8 @@ export type FileOrderByWithAggregationInput = {
   size?: Prisma.SortOrder
   hash?: Prisma.SortOrderInput | Prisma.SortOrder
   uploaderId?: Prisma.SortOrderInput | Prisma.SortOrder
+  bizType?: Prisma.SortOrderInput | Prisma.SortOrder
+  bizId?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   _count?: Prisma.FileCountOrderByAggregateInput
   _avg?: Prisma.FileAvgOrderByAggregateInput
@@ -327,6 +353,8 @@ export type FileScalarWhereWithAggregatesInput = {
   size?: Prisma.IntWithAggregatesFilter<"File"> | number
   hash?: Prisma.StringNullableWithAggregatesFilter<"File"> | string | null
   uploaderId?: Prisma.BigIntNullableWithAggregatesFilter<"File"> | bigint | number | null
+  bizType?: Prisma.StringNullableWithAggregatesFilter<"File"> | string | null
+  bizId?: Prisma.BigIntNullableWithAggregatesFilter<"File"> | bigint | number | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"File"> | Date | string
 }
 
@@ -340,6 +368,8 @@ export type FileCreateInput = {
   size?: number
   hash?: string | null
   uploaderId?: bigint | number | null
+  bizType?: string | null
+  bizId?: bigint | number | null
   createdAt?: Date | string
 }
 
@@ -353,6 +383,8 @@ export type FileUncheckedCreateInput = {
   size?: number
   hash?: string | null
   uploaderId?: bigint | number | null
+  bizType?: string | null
+  bizId?: bigint | number | null
   createdAt?: Date | string
 }
 
@@ -366,6 +398,8 @@ export type FileUpdateInput = {
   size?: Prisma.IntFieldUpdateOperationsInput | number
   hash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uploaderId?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  bizType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bizId?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -379,6 +413,8 @@ export type FileUncheckedUpdateInput = {
   size?: Prisma.IntFieldUpdateOperationsInput | number
   hash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uploaderId?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  bizType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bizId?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -392,6 +428,8 @@ export type FileCreateManyInput = {
   size?: number
   hash?: string | null
   uploaderId?: bigint | number | null
+  bizType?: string | null
+  bizId?: bigint | number | null
   createdAt?: Date | string
 }
 
@@ -405,6 +443,8 @@ export type FileUpdateManyMutationInput = {
   size?: Prisma.IntFieldUpdateOperationsInput | number
   hash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uploaderId?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  bizType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bizId?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -418,6 +458,8 @@ export type FileUncheckedUpdateManyInput = {
   size?: Prisma.IntFieldUpdateOperationsInput | number
   hash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uploaderId?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  bizType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bizId?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -437,6 +479,8 @@ export type FileCountOrderByAggregateInput = {
   size?: Prisma.SortOrder
   hash?: Prisma.SortOrder
   uploaderId?: Prisma.SortOrder
+  bizType?: Prisma.SortOrder
+  bizId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -444,6 +488,7 @@ export type FileAvgOrderByAggregateInput = {
   id?: Prisma.SortOrder
   size?: Prisma.SortOrder
   uploaderId?: Prisma.SortOrder
+  bizId?: Prisma.SortOrder
 }
 
 export type FileMaxOrderByAggregateInput = {
@@ -456,6 +501,8 @@ export type FileMaxOrderByAggregateInput = {
   size?: Prisma.SortOrder
   hash?: Prisma.SortOrder
   uploaderId?: Prisma.SortOrder
+  bizType?: Prisma.SortOrder
+  bizId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -469,6 +516,8 @@ export type FileMinOrderByAggregateInput = {
   size?: Prisma.SortOrder
   hash?: Prisma.SortOrder
   uploaderId?: Prisma.SortOrder
+  bizType?: Prisma.SortOrder
+  bizId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -476,6 +525,7 @@ export type FileSumOrderByAggregateInput = {
   id?: Prisma.SortOrder
   size?: Prisma.SortOrder
   uploaderId?: Prisma.SortOrder
+  bizId?: Prisma.SortOrder
 }
 
 export type NullableBigIntFieldUpdateOperationsInput = {
@@ -498,6 +548,8 @@ export type FileSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   size?: boolean
   hash?: boolean
   uploaderId?: boolean
+  bizType?: boolean
+  bizId?: boolean
   createdAt?: boolean
 }, ExtArgs["result"]["file"]>
 
@@ -513,10 +565,12 @@ export type FileSelectScalar = {
   size?: boolean
   hash?: boolean
   uploaderId?: boolean
+  bizType?: boolean
+  bizId?: boolean
   createdAt?: boolean
 }
 
-export type FileOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "originName" | "fileName" | "filePath" | "fileUrl" | "mimeType" | "size" | "hash" | "uploaderId" | "createdAt", ExtArgs["result"]["file"]>
+export type FileOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "originName" | "fileName" | "filePath" | "fileUrl" | "mimeType" | "size" | "hash" | "uploaderId" | "bizType" | "bizId" | "createdAt", ExtArgs["result"]["file"]>
 
 export type $FilePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "File"
@@ -558,6 +612,14 @@ export type $FilePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
      * 上传人 id
      */
     uploaderId: bigint | null
+    /**
+     * 业务类型（归属模块，如 avatar / notice / contract；空 = 无业务归属）
+     */
+    bizType: string | null
+    /**
+     * 业务主键（关联业务表 id；空 = 未指定）
+     */
+    bizId: bigint | null
     /**
      * 创建时间
      */
@@ -940,6 +1002,8 @@ export interface FileFieldRefs {
   readonly size: Prisma.FieldRef<"File", 'Int'>
   readonly hash: Prisma.FieldRef<"File", 'String'>
   readonly uploaderId: Prisma.FieldRef<"File", 'BigInt'>
+  readonly bizType: Prisma.FieldRef<"File", 'String'>
+  readonly bizId: Prisma.FieldRef<"File", 'BigInt'>
   readonly createdAt: Prisma.FieldRef<"File", 'DateTime'>
 }
     

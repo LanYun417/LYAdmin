@@ -11,6 +11,7 @@ import {
   deleteFileApi,
   downloadFileApi,
   getFileListApi,
+  getFileQuotaApi,
   getFileTypesApi,
   getFileUploadersApi,
   uploadFilesApi,
@@ -19,7 +20,7 @@ import { useTable } from '@/composables/useTable';
 import { downloadBlob } from '@/utils/download';
 import { sha256Hex } from '@/utils/hash';
 import { formatFileSize, formatDateTime } from '@/utils/format';
-import type { FileItem, FileUploaderOption } from '@/types/api';
+import type { FileItem, FileQuota, FileUploaderOption } from '@/types/api';
 import Pagination from '@/components/Pagination/index.vue';
 import SearchForm from '@/components/SearchForm/index.vue';
 import { withUploadToken } from '@/utils/uploadToken';
@@ -35,6 +36,13 @@ const typeOptions = ref<string[]>([]);
 const uploaderOptions = ref<FileUploaderOption[]>([]);
 /** 上传时间范围（与日志模块一致：value-format 直接产出字符串） */
 const dateRange = ref<string[]>([]);
+/** 当前用户的上传配额（null = 尚未取到，不渲染，避免闪出 0/0） */
+const quota = ref<FileQuota | null>(null);
+
+/** 读取配额使用情况（上传/删除后调用） */
+async function loadQuota(): Promise<void> {
+  quota.value = await getFileQuotaApi();
+}
 
 const {
   loading,
@@ -58,6 +66,8 @@ const {
       endTime: dateRange.value[1] || undefined,
       minSize: p.minSizeKB === undefined ? undefined : Math.round(p.minSizeKB * BYTES_PER_KB),
       maxSize: p.maxSizeKB === undefined ? undefined : Math.round(p.maxSizeKB * BYTES_PER_KB),
+      bizType: p.bizType.trim() || undefined,
+      bizId: p.bizId,
     }),
   {
     originName: '',
@@ -65,6 +75,8 @@ const {
     uploaderId: undefined as number | undefined,
     minSizeKB: undefined as number | undefined,
     maxSizeKB: undefined as number | undefined,
+    bizType: '',
+    bizId: undefined as number | undefined,
   },
 );
 
@@ -118,6 +130,8 @@ async function doUpload(options: UploadRequestOptions, file: File): Promise<void
   await getList();
   // 新文件可能带来新的 MIME 类型 / 上传人，同步刷新下拉，保证选项与库中数据一致
   await loadFilterOptions();
+  // 上传成功后已用配额必然变化（秒传不算）
+  await loadQuota();
 }
 
 /**
@@ -140,6 +154,7 @@ async function customUpload(options: UploadRequestOptions): Promise<void> {
 
     await doUpload(options, file);
   } catch (error) {
+    // 配额不足等业务错误由响应拦截器统一提示，这里只保证上传组件回到可交互状态
     options.onError?.(error as Parameters<NonNullable<UploadRequestOptions['onError']>>[0]);
   }
 }
@@ -162,17 +177,29 @@ async function handleDelete(row: FileItem): Promise<void> {
   await deleteFileApi(row.id);
   ElMessage.success('删除成功');
   await getList();
+  // 删除会释放配额，同步刷新展示
+  await loadQuota();
 }
 
 onMounted(() => {
   void loadFilterOptions();
+  void loadQuota();
 });
 </script>
 
 <template>
   <div class="files-page">
     <el-card shadow="never">
-      <template #header>文件上传</template>
+      <template #header>
+        <div class="flex items-center justify-between">
+          <span>文件上传</span>
+          <span v-if="quota" class="text-sm text-muted">
+            已用 {{ formatFileSize(quota.usedBytes) }}
+            <template v-if="quota.unlimited">（不限量）</template>
+            <template v-else>/ {{ formatFileSize(quota.quotaBytes) }}</template>
+          </span>
+        </div>
+      </template>
       <el-upload
         v-permission="'file:upload'"
         drag
@@ -214,6 +241,18 @@ onMounted(() => {
             :value="item.id"
           />
         </el-select>
+      </el-form-item>
+      <el-form-item label="业务类型">
+        <el-input
+          v-model="query.bizType"
+          placeholder="如 avatar / notice"
+          clearable
+          style="width: 160px"
+          @keyup.enter="search"
+        />
+      </el-form-item>
+      <el-form-item label="业务ID">
+        <el-input-number v-model="query.bizId" :min="1" :controls="false" placeholder="业务主键" style="width: 130px" />
       </el-form-item>
       <el-form-item label="上传时间">
         <el-date-picker
@@ -285,6 +324,14 @@ onMounted(() => {
         <el-table-column prop="mimeType" label="类型" width="160" show-overflow-tooltip />
         <el-table-column label="大小" width="110">
           <template #default="{ row }">{{ formatFileSize(row.size) }}</template>
+        </el-table-column>
+        <el-table-column label="业务归属" width="180" show-overflow-tooltip>
+          <template #default="{ row }">
+            <span v-if="row.bizType"
+              >{{ row.bizType }}<span v-if="row.bizId"> / #{{ row.bizId }}</span></span
+            >
+            <span v-else class="text-faint">-</span>
+          </template>
         </el-table-column>
         <el-table-column label="上传时间" width="180">
           <template #default="{ row }">{{ formatDateTime(row.createdAt) }}</template>

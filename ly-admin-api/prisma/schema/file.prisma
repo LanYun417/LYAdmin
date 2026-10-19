@@ -24,9 +24,16 @@ model File {
   hash       String?  @db.VarChar(64)
   /// 上传人 id
   uploaderId BigInt?  @map("uploader_id") @db.BigInt
+  /// 业务类型（归属模块，如 avatar / notice / contract；空 = 无业务归属）
+  bizType    String?  @map("biz_type") @db.VarChar(50)
+  /// 业务主键（关联业务表 id；空 = 未指定）
+  bizId      BigInt?  @map("biz_id") @db.BigInt
   /// 创建时间
   createdAt  DateTime @default(now()) @map("created_at")
 
   @@index([hash])
+  @@index([uploaderId])
+  /// 按业务归属查询（如"某公告的全部附件"）
+  @@index([bizType, bizId])
   @@map("sys_file")
 }

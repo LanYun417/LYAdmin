@@ -473,12 +473,19 @@ describe('接口契约快照 (e2e)', () => {
     async function uploadText(
       filename: string,
       content: string,
+      biz?: { bizType?: string; bizId?: string },
     ): Promise<{ id: number; originName: string; fileName: string; fileUrl: string }> {
-      const res = await request(app.getHttpServer())
+      let req = request(app.getHttpServer())
         .post(`${API}/files/upload`)
         .set('authorization', `Bearer ${token}`)
-        .attach('file', Buffer.from(content), { filename, contentType: 'text/plain' })
-        .expect(200);
+        .attach('file', Buffer.from(content), { filename, contentType: 'text/plain' });
+      if (biz?.bizType !== undefined) {
+        req = req.field('bizType', biz.bizType);
+      }
+      if (biz?.bizId !== undefined) {
+        req = req.field('bizId', biz.bizId);
+      }
+      const res = await req.expect(200);
       return (res.body.data as Array<{ id: number; originName: string; fileName: string; fileUrl: string }>)[0];
     }
 
@@ -504,6 +511,69 @@ describe('接口契约快照 (e2e)', () => {
       expect((second as { deduplicated?: boolean }).deduplicated).toBe(true);
 
       await authDelete(`/files/${first.id}`).expect(200);
+    });
+
+    it('上传可带业务归属，且能按 bizType 反查', async () => {
+      const bizType = `e2ebiz${Date.now().toString().slice(-6)}`;
+      const file = await uploadText('归属校验.txt', `biz-${Date.now()}`, { bizType, bizId: '42' });
+
+      // 列表按业务类型过滤应能命中这一条
+      const res = await authGet(`/files?page=1&pageSize=50&bizType=${bizType}`).expect(200);
+      const rows = (res.body as { data: { list: Array<Record<string, unknown>> } }).data.list;
+      expect(rows.length).toBeGreaterThan(0);
+      expect(rows[0]!.bizType).toBe(bizType);
+      expect(Number(rows[0]!.bizId)).toBe(42);
+
+      // 再叠加 bizId 过滤（不同 bizId 不应命中）
+      const miss = await authGet(`/files?page=1&pageSize=50&bizType=${bizType}&bizId=43`).expect(200);
+      expect((miss.body as { data: { total: number } }).data.total).toBe(0);
+
+      await authDelete(`/files/${file.id}`).expect(200);
+    });
+
+    it('非法业务归属被拒：bizType 含非法字符 / bizId 非正整数', async () => {
+      const bad = await request(app.getHttpServer())
+        .post(`${API}/files/upload`)
+        .set('authorization', `Bearer ${token}`)
+        .field('bizType', 'notice/../etc')
+        .field('bizId', '0')
+        .attach('file', Buffer.from(`biz-invalid-${Date.now()}`), {
+          filename: '非法归属.txt',
+          contentType: 'text/plain',
+        })
+        .expect(400);
+      expect((bad.body as { code: number }).code).toBe(400);
+    });
+
+    it('超出用户上传配额时返回 400 且不留下孤儿文件', async () => {
+      const originalQuota = config.upload.userQuotaMb;
+      // 配额压到 1e-6 MB（约 1 字节），必然放不下任何内容
+      (config.upload as { userQuotaMb: number }).userQuotaMb = 0.000001;
+      try {
+        const res = await request(app.getHttpServer())
+          .post(`${API}/files/upload`)
+          .set('authorization', `Bearer ${token}`)
+          .attach('file', Buffer.from(`quota-${Date.now()}`), { filename: '配额.txt', contentType: 'text/plain' })
+          .expect(400);
+        const message = String((res.body as { message: string }).message);
+        expect(message).toContain('上传配额不足');
+        // 消息里带出可自助处理的信息（上限）
+        expect(message).toContain('上限');
+      } finally {
+        (config.upload as { userQuotaMb: number }).userQuotaMb = originalQuota;
+      }
+    });
+
+    it('GET /files/quota 返回当前用户用量与上限（0 表示不限量）', async () => {
+      const res = await authGet('/files/quota').expect(200);
+      const data = (res.body as { data: { usedBytes: number; quotaBytes: number; unlimited: boolean } }).data;
+      expect(typeof data.usedBytes).toBe('number');
+      expect(data.usedBytes).toBeGreaterThanOrEqual(0);
+      // 默认 512MB 配额：不是不限量，且上限应为 512*1024*1024
+      expect(data.unlimited).toBe(config.upload.userQuotaMb <= 0);
+      if (!data.unlimited) {
+        expect(data.quotaBytes).toBe(Math.round(config.upload.userQuotaMb * 1024 * 1024));
+      }
     });
   });
 

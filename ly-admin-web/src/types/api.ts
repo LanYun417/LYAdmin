@@ -340,6 +340,10 @@ export interface FileItem {
   size: number;
   hash?: string | null;
   uploaderId: number | null;
+  /** 业务类型（归属模块标识，如 avatar / notice；null = 无业务归属） */
+  bizType: string | null;
+  /** 业务主键（关联业务表 id；null = 未指定） */
+  bizId: number | null;
   createdAt: string;
   /** 本次保存是否复用了既有物理文件（秒传/去重） */
   deduplicated?: boolean;
@@ -360,6 +364,20 @@ export interface FileQuery extends PageQuery {
   minSize?: number;
   /** 最大文件大小（字节） */
   maxSize?: number;
+  /** 业务类型（精确匹配；带该条件时才允许叠加 bizId） */
+  bizType?: string;
+  /** 业务主键 */
+  bizId?: number;
+}
+
+/** 上传配额（GET /files/quota） */
+export interface FileQuota {
+  /** 已用字节 */
+  usedBytes: number;
+  /** 配额字节（unlimited 为 true 时该值无意义） */
+  quotaBytes: number;
+  /** 是否不限量（UPLOAD_USER_QUOTA_MB=0） */
+  unlimited: boolean;
 }
 
 /** 上传人选项（库内去重 + 关联用户表，动态生成） */

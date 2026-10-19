@@ -2,7 +2,7 @@
  * 文件控制器。
  * 模块职责：解析文件模块请求参数、调用服务、组装统一响应（含上传/删除的自定义提示语）。
  */
-import { Controller, Delete, Get, Param, Post, Query, Res, UploadedFiles, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Query, Res, UploadedFiles, UseInterceptors } from '@nestjs/common';
 import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
 import { OperationLog } from '../../common/log/operation-log.decorator.js';
@@ -14,7 +14,7 @@ import { type ResponseEnvelope, RawResponse } from '../../common/http/response.i
 import { UPLOAD_MULTER_OPTIONS } from '../../common/file/upload.config.js';
 import { FilesService, type FileItem } from './files.service.js';
 import { IdParamDto } from '../../common/dto/id-param.dto.js';
-import { CheckQueryDto } from './dto/files.dto.js';
+import { CheckQueryDto, UploadBizDto } from './dto/files.dto.js';
 
 @Controller('files')
 export class FilesController {
@@ -28,9 +28,20 @@ export class FilesController {
   async upload(
     @UploadedFiles() files: Express.Multer.File[],
     @CurrentUser() user: AuthUserContext,
+    @Body() biz: UploadBizDto,
   ): Promise<ResponseEnvelope<{ id: number; originName: string; fileUrl: string }[]>> {
-    const result = await this.filesService.saveFiles(files ?? [], user.userId);
+    const result = await this.filesService.saveFiles(files ?? [], user.userId, {
+      bizType: biz.bizType,
+      bizId: biz.bizId,
+    });
     return { __raw: true, data: result, message: '上传成功' };
+  }
+
+  /** 当前用户的上传配额使用情况（供前端展示「已用 / 上限」）。 */
+  @Get('quota')
+  @RequirePermissions('file:upload')
+  quota(@CurrentUser() user: AuthUserContext): Promise<{ usedBytes: number; quotaBytes: number; unlimited: boolean }> {
+    return this.filesService.getQuota(user.userId);
   }
 
   /** 秒传预检：按内容哈希查询库内是否已存在相同文件。 */

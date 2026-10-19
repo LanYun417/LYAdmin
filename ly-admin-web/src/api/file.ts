@@ -2,17 +2,32 @@
  * 文件接口：上传、列表、下载与删除，以及类型 / 上传人筛选项和秒传预检。
  */
 import { del, get, request } from './request';
-import type { FileItem, FileQuery, FileUploaderOption, PageResult } from '@/types/api';
+import type { FileItem, FileQuota, FileQuery, FileUploaderOption, PageResult } from '@/types/api';
 
-/** 上传文件（支持 1~10 个） */
-export function uploadFilesApi(files: File[]): Promise<FileItem[]> {
+/**
+ * 上传文件（支持 1~10 个）。
+ * @param files 文件列表
+ * @param biz 可选业务归属（如 { bizType: 'notice', bizId: 12 }），便于日后按业务反查附件
+ */
+export function uploadFilesApi(files: File[], biz?: { bizType?: string; bizId?: number }): Promise<FileItem[]> {
   const formData = new FormData();
   files.forEach((file) => formData.append('files', file));
+  if (biz?.bizType) {
+    formData.append('bizType', biz.bizType);
+  }
+  if (biz?.bizId !== undefined) {
+    formData.append('bizId', String(biz.bizId));
+  }
   return request<FileItem[]>({
     url: '/files/upload',
     method: 'POST',
     data: formData,
   });
+}
+
+/** 当前用户的上传配额使用情况 */
+export function getFileQuotaApi(): Promise<FileQuota> {
+  return get<FileQuota>('/files/quota');
 }
 
 /** 文件列表（P2） */

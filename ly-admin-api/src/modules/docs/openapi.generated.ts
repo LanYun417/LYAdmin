@@ -4360,6 +4360,24 @@ export const OPENAPI_DOC: Record<string, unknown> = {
             "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
           },
           {
+            "name": "bizType",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "bizId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
             "name": "startTime",
             "in": "query",
             "required": false,
@@ -4526,6 +4544,91 @@ export const OPENAPI_DOC: Record<string, unknown> = {
               "type": "string",
               "example": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
             }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功（统一信封 { code, message, data }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "业务码，0 表示成功"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "list": {
+                          "type": "array",
+                          "items": {}
+                        },
+                        "total": {
+                          "type": "integer",
+                          "example": 0
+                        },
+                        "page": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "pageSize": {
+                          "type": "integer",
+                          "example": 10
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/files/quota": {
+      "get": {
+        "tags": [
+          "文件管理"
+        ],
+        "summary": "当前用户的上传配额使用情况（供前端展示「已用 / 上限」）",
+        "operationId": "get__api_files_quota",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "description": "页码"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 10
+            },
+            "description": "每页条数"
           }
         ],
         "responses": {
@@ -4761,6 +4864,16 @@ export const OPENAPI_DOC: Record<string, unknown> = {
         ],
         "summary": "上传（单/多文件，兼容任意字段名）",
         "operationId": "post__api_files_upload",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadBizDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "成功（统一信封 { code, message, data }）",
@@ -4778,7 +4891,9 @@ export const OPENAPI_DOC: Record<string, unknown> = {
                       "type": "string",
                       "example": "success"
                     },
-                    "data": {}
+                    "data": {
+                      "$ref": "#/components/schemas/UploadBizDto"
+                    }
                   },
                   "required": [
                     "code",
@@ -6659,6 +6774,21 @@ export const OPENAPI_DOC: Record<string, unknown> = {
         "required": [
           "ids"
         ]
+      },
+      "UploadBizDto": {
+        "type": "object",
+        "properties": {
+          "bizType": {
+            "type": "string",
+            "description": "业务类型：模块标识，只允许字母/数字/下划线/连字符（避免塞入任意文本污染筛选）",
+            "example": "示例值"
+          },
+          "bizId": {
+            "type": "number",
+            "description": "业务主键：表单里是字符串，需显式转数字后校验",
+            "example": 1
+          }
+        }
       },
       "GenCreateDto": {
         "type": "object",

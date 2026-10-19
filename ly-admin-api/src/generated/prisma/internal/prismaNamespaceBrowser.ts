@@ -135,6 +135,8 @@ export const FileScalarFieldEnum = {
   size: 'size',
   hash: 'hash',
   uploaderId: 'uploaderId',
+  bizType: 'bizType',
+  bizId: 'bizId',
   createdAt: 'createdAt'
 } as const
 
@@ -359,7 +361,8 @@ export const FileOrderByRelevanceFieldEnum = {
   filePath: 'filePath',
   fileUrl: 'fileUrl',
   mimeType: 'mimeType',
-  hash: 'hash'
+  hash: 'hash',
+  bizType: 'bizType'
 } as const
 
 export type FileOrderByRelevanceFieldEnum = (typeof FileOrderByRelevanceFieldEnum)[keyof typeof FileOrderByRelevanceFieldEnum]
