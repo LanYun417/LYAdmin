@@ -449,7 +449,7 @@ NODE_ENV=production node dist/main.js
 欢迎提交 Issue 与 Pull Request。
 
 1. **环境**：按[快速开始](#快速开始)拉起项目；根目录 `npm install` 以装配 husky 钩子。
-2. **分支**：从 `master` 切出特性分支（命名 `feature/*` / `fix/*` / `hotfix/*`）。
+2. **分支**：从 `main` 切出特性分支（命名 `feature/*` / `fix/*` / `hotfix/*`）。
 3. **编码**：遵循 [前端开发规范](./knowledge/前端开发规范/00-导读.md)、[后端开发规范](./knowledge/后端开发规范/00-导读.md) 与 [Git 提交规范](./knowledge/Git提交规范/00-导读.md)；提交信息使用 Conventional Commits（`npm run commit` 可交互生成）。
 4. **提交前自检**（务必全绿）：
 
@@ -464,6 +464,9 @@ NODE_ENV=production node dist/main.js
    ```
 
 5. **PR**：说明背景与改动点，关联相关 Issue，并确保上述检查通过。
+6. **推送**：本仓库是**双远端**（`origin` = Gitee，主远端；`github` = GitHub 镜像），
+   用 `git pushall` 一次推两边；fetch / pull 只走 `origin`。细节见
+   [Git 提交规范/02-分支与发布](./knowledge/Git提交规范/02-分支与发布.md)。
 
 > 新增后端业务模块请遵循 NestJS 分层（module → controller → service → dto），数据访问统一走 `PrismaService`；
 > 表结构变更改 `prisma/schema/` 下对应的模型文件（按域分文件，见 base.prisma 的「文件划分」）后，

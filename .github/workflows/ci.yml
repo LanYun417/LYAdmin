@@ -13,7 +13,8 @@ name: CI
 
 on:
   push:
-    branches: [master, main]
+    # 主分支已由 master 更名为 main（2026-10）；只保留 main，避免 workflow 里挂着不存在的分支
+    branches: [main]
   pull_request:
 
 # 同一分支只保留最新一次运行，避免连续 push 排队
