@@ -21,6 +21,7 @@ import request from 'supertest';
 import { config } from '../src/common/config/config.js';
 import { RedisService } from '../src/common/redis/redis.service.js';
 import { createTestApp } from './setup-app.js';
+import { resolveSeedAdminPassword } from '../src/prisma/seed.service.js';
 
 /** 路由前缀（见 src/app.setup.ts 的 setGlobalPrefix）。 */
 const API = '/api';
@@ -122,7 +123,8 @@ describe('接口契约快照 (e2e)', () => {
     }
     const login = await request(app.getHttpServer())
       .post(`${API}/auth/login`)
-      .send({ username: 'admin', password: '123456', captchaId, captchaCode })
+      // 口令与种子共用同一取值：CI 用 SEED_ADMIN_PASSWORD 注入，本地回退默认值
+      .send({ username: 'admin', password: resolveSeedAdminPassword(), captchaId, captchaCode })
       .expect(200);
     return (login.body.data as { accessToken: string }).accessToken;
   };
@@ -150,7 +152,7 @@ describe('接口契约快照 (e2e)', () => {
 
     const login = await request(app.getHttpServer())
       .post(`${API}/auth/login`)
-      .send({ username: 'admin', password: '123456', captchaId, captchaCode })
+      .send({ username: 'admin', password: resolveSeedAdminPassword(), captchaId, captchaCode })
       .expect(200);
     token = (login.body.data as { accessToken: string }).accessToken;
     expect(typeof token).toBe('string');

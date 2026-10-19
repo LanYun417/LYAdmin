@@ -814,6 +814,16 @@ async function seedRole(prisma: PrismaService, menuIdMap: Map<string, number>): 
 const DEFAULT_SEED_ADMIN_PASSWORD = '123456';
 
 /**
+ * 实际生效的种子超管口令。
+ *
+ * 单独抽成导出函数是为了让 e2e 测试**复用同一套取值逻辑**：曾经测试里硬编码 `123456`，
+ * 而 CI 通过环境变量注入 `SEED_ADMIN_PASSWORD`，两边一不一致就 401（真实发生过）。
+ */
+export function resolveSeedAdminPassword(): string {
+  return process.env.SEED_ADMIN_PASSWORD?.trim() || DEFAULT_SEED_ADMIN_PASSWORD;
+}
+
+/**
  * 写入超级管理员 `admin` 并绑定超管角色（幂等：已存在的账号不覆盖密码）。
  *
  * 口令来自 `SEED_ADMIN_PASSWORD`；未配置时回退默认值，并在生产环境打 warn —— 默认口令
