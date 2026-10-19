@@ -376,7 +376,12 @@ describe('接口契约快照 (e2e)', () => {
     });
 
     it('导出超过行数上限时返回 400（而不是给出半截 CSV）', async () => {
-      // 直接把上限压到 1：库里必然有多于 1 条登录日志
+      // **先自备数据**：CI 用的是全新库，只有本次 e2e 产生的登录日志；
+      // 若沿用本地"库里必然有多于 1 条"的假设，行数不够就不会触发上限（真实 CI 上就是这么挂的）。
+      await loginFreshSession();
+      await loginFreshSession();
+
+      // 直接把上限压到 1：上面两次登录必然让登录日志多于 1 条
       const original = config.export.maxRows;
       (config.export as { maxRows: number }).maxRows = 1;
       try {
