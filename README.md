@@ -4,7 +4,7 @@
 
 <p align="center"><em>开箱即用的通用后台管理基座</em></p>
 
-> 一套开箱即用的通用后台管理基座：JWT 双 Token 鉴权、RBAC + 数据权限、系统管理（用户 / 角色 / 菜单 / 部门 / 字典 / 参数）、三类日志、文件管理、代码生成器与 ECharts 仪表盘。前后端 TypeScript 全覆盖，遵循严格分层与统一工程规范。
+> 一套开箱即用的通用后台管理基座：JWT 双 Token 鉴权、RBAC + 数据权限、系统管理（用户 / 角色 / 菜单 / 部门 / 字典 / 参数）、三类日志、文件管理、通知中心、在线用户与系统监控（CPU / 内存 / 磁盘 / 网络吞吐）、代码生成器、ECharts 仪表盘与中英双语。前后端 TypeScript 全覆盖，遵循严格分层与统一工程规范。
 
 <p align="center">
   <img src="https://img.shields.io/badge/Vue-3.5-42b883" alt="Vue" height="20">
@@ -71,31 +71,35 @@ LYAdmin 面向企业内部运营 / 管理场景，提供一套可直接二次开
 
 ## 功能特性
 
-| 模块            | 能力                                                                                                                                         |
-| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| 登录鉴权        | 账号密码登录、图形验证码、JWT 双 Token（access 2h / refresh 7d）、无感刷新、登出即时失效（Redis 黑名单）、登录频率限制、账号禁用强制下线     |
-| 权限管理        | RBAC 三段式（用户—角色—菜单）+ **数据权限**（数据范围：全部 / 自定义部门 / 本部门及以下 / 仅本人）；菜单树 → 动态路由；按钮级 `v-permission` |
-| 用户管理        | 分页查询、增删改、启用 / 禁用、重置密码、分配角色、头像上传、部门归属                                                                        |
-| 角色管理        | 角色 CRUD、菜单授权（权限树勾选）、数据范围设置、编码唯一校验                                                                                |
-| 菜单管理        | 树形表格 CRUD、目录 / 菜单 / 按钮三类、图标选择、排序、显隐、路由与组件路径、权限标识                                                        |
-| 部门管理        | 组织树 CRUD、上级部门选择、防成环校验、删除保护                                                                                              |
-| 字典管理        | 字典类型 + 字典项两表；类型编码创建后不可改；内置字典保护；业务侧 `useDict` 缓存取数                                                         |
-| 参数管理        | 单值可调的系统参数；键名创建后不可改；内置参数禁删                                                                                           |
-| 日志管理        | 登录日志 / 操作日志 / HTTP 访问日志；条件筛选 + 导出 + 单条 / 多选删除；自动归档 + 按保留天数清理                                            |
-| 文件管理        | 多文件上传、哈希秒传预检、按扩展名分目录存储、类型 / 大小白名单、列表多条件筛选、下载、删除、静态访问（鉴权 + 防盗链 + 图片按需缩放）        |
-| 代码生成        | 读取数据表结构 → 预览 → 生成前后端 CRUD 骨架（下载 ZIP 或写入项目目录，含 Prisma model 与 NestJS 模块接线）                                  |
-| 接口文档        | `GET /api/docs` 扫描控制器自动生成接口清单（方法 / 路径 / 权限码 / 说明）；前端「接口文档」页按模块检索浏览                                  |
-| 仪表盘          | 统计卡片、近 7 日登录趋势、操作类型分布、各角色用户数（ECharts）                                                                             |
-| 个人中心        | 修改资料、修改密码（旧密码校验）、更换头像                                                                                                   |
-| Markdown 编辑器 | 内置 Vditor（懒加载、资源自托管、随主题切换亮 / 暗）                                                                                         |
-| 布局与体验      | 侧边栏折叠、面包屑、标签页（tagsView）、keep-alive、暗黑模式、移动端响应式、403 / 404 / 500 错误页                                           |
+| 模块            | 能力                                                                                                                                                                                                                             |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 登录鉴权        | 账号密码登录、图形验证码、JWT 双 Token（access 2h / refresh 7d）、无感刷新、登出即时失效（Redis 黑名单）、登录频率限制、账号禁用强制下线                                                                                         |
+| 权限管理        | RBAC 三段式（用户—角色—菜单）+ **数据权限**（数据范围：全部 / 自定义部门 / 本部门及以下 / 仅本人）；菜单树 → 动态路由；按钮级 `v-permission`                                                                                     |
+| 用户管理        | 分页查询、增删改、启用 / 禁用、重置密码、分配角色、头像上传、部门归属                                                                                                                                                            |
+| 角色管理        | 角色 CRUD、菜单授权（权限树勾选）、数据范围设置、编码唯一校验                                                                                                                                                                    |
+| 菜单管理        | 树形表格 CRUD、目录 / 菜单 / 按钮三类、图标选择、排序、显隐、路由与组件路径、权限标识                                                                                                                                            |
+| 部门管理        | 组织树 CRUD、上级部门选择、防成环校验、删除保护                                                                                                                                                                                  |
+| 字典管理        | 字典类型 + 字典项两表；类型编码创建后不可改；内置字典保护；业务侧 `useDict` 缓存取数                                                                                                                                             |
+| 参数管理        | 单值可调的系统参数；键名创建后不可改；内置参数禁删                                                                                                                                                                               |
+| 日志管理        | 登录日志 / 操作日志 / HTTP 访问日志；条件筛选 + 导出 + 单条 / 多选删除；自动归档 + 按保留天数清理                                                                                                                                |
+| 文件管理        | 多文件上传、哈希秒传预检、按扩展名分目录存储、类型 / 大小白名单、列表多条件筛选、下载、删除、静态访问（鉴权 + 防盗链 + 图片按需缩放）                                                                                            |
+| 代码生成        | 读取数据表结构 → 预览 → 生成前后端 CRUD 骨架（下载 ZIP 或写入项目目录，含 Prisma model 与 NestJS 模块接线）                                                                                                                      |
+| 接口文档        | `GET /api/docs` 扫描控制器自动生成接口清单（方法 / 路径 / 权限码 / 说明）；前端「接口文档」页按模块检索浏览                                                                                                                      |
+| 通知中心        | 站内通知：导航栏未读数、列表查询、标记已读 / 全部已读；按接收人隔离                                                                                                                                                              |
+| 在线用户        | 在线会话列表（按 sid 去重，刷新令牌不会翻倍）、强制下线（写入 Redis 黑名单，旧令牌立即失效）                                                                                                                                     |
+| 系统监控        | CPU（整体 / 分核，cgroup 配额感知）、内存、磁盘、系统负载、进程；**网络活动**（上下行速率、累计流量、错误 / 丢包）。网络口径：Linux 读 `/proc/net/dev`（与采样同频 3s），Windows 走网卡统计（15s，因需起子进程），均排除环回网卡 |
+| 仪表盘          | 统计卡片、近 7 日登录趋势、操作类型分布、各角色用户数（ECharts）                                                                                                                                                                 |
+| 个人中心        | 修改资料、修改密码（旧密码校验）、更换头像                                                                                                                                                                                       |
+| 多语言          | vue-i18n 中 / 英 双语，导航栏切换；语言包 key 由 `npm run guard:locale` 门禁对齐（缺 key / 占位符不一致直接拦截）                                                                                                                |
+| Markdown 编辑器 | 内置 Vditor（懒加载、资源自托管、随主题切换亮 / 暗）                                                                                                                                                                             |
+| 布局与体验      | 侧边栏折叠、面包屑、标签页（tagsView）、keep-alive、暗黑模式、移动端响应式、403 / 404 / 500 错误页                                                                                                                               |
 
 ## 技术栈
 
 | 层             | 技术                                                                                                                                                                   |
 | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 前端框架       | Vue 3.5 + Vue Router 5 + Pinia 4（`pinia-plugin-persistedstate`）                                                                                                      |
-| 前端 UI / 生态 | Element Plus 2.14 + Tailwind CSS 4.3 + `bootstrap-icons` + ECharts 6 + Vditor 4 + axios + dayjs + `@vueuse/core` + `lodash-es` + nprogress                             |
+| 前端 UI / 生态 | Element Plus 2.14 + Tailwind CSS 4.3 + `bootstrap-icons` + ECharts 6 + Vditor 4 + axios + dayjs + vue-i18n 11 + `@vueuse/core` + `lodash-es` + nprogress               |
 | 前端工程       | Vite 8 + TypeScript 5.9 + vue-tsc；`unplugin-auto-import` + `unplugin-vue-components` 按需引入；`vite-plugin-compression2` 构建期 gzip / brotli 压缩                   |
 | 后端框架       | NestJS 12 + TypeScript（纯 ESM，Express 5 适配层）                                                                                                                     |
 | 后端数据层     | Prisma 7 + `@prisma/adapter-mariadb`（driver adapter 提供运行期连接；CLI 连接串见 `prisma.config.ts`）                                                                 |
@@ -116,7 +120,7 @@ ly-admin/
 │  ├─ cache/                  # 图片处理缓存（运行时产物，不入库）
 │  └─ logs/                   # 日志文件目录
 ├─ .husky/                    # Git Hooks（pre-commit / commit-msg / pre-push）
-├─ scripts/                   # 根脚本（如依赖基线守卫 deps-guard.mjs）
+├─ scripts/                   # 工程门禁脚本：deps-guard（依赖基线）/ check-tracked-imports（相对导入可解析）/ check-locale-keys（语言包 key 一致）
 ├─ package.json               # 根脚本：lint / format / commit / dev（并行启动）
 ├─ eslint.config.mjs          # ESLint flat config（覆盖 ly-admin-web + ly-admin-api）
 ├─ .prettierrc.json           # Prettier 规则
@@ -132,18 +136,19 @@ ly-admin/
 
 ```
 ly-admin-web/src/
-├─ api/          # axios 实例(request.ts) + 各模块接口(auth/user/role/menu/dept/dict/config/log/file/gen/dashboard/profile/docs)
+├─ api/          # axios 实例(request.ts) + 各模块接口(auth/user/role/menu/dept/dict/config/log/file/gen/dashboard/profile/docs/notice/monitor)
 ├─ assets/       # 静态资源
-├─ components/   # 通用组件：BasicDialog / ErrorPage / IconPicker / MenuTree / Pagination / SearchForm / VditorEditor
+├─ components/   # 通用组件：BasicDialog / ColumnSettings / ErrorPage / IconPicker / MenuTree / Pagination / SearchForm / VditorEditor
 ├─ directives/   # v-permission 按钮权限指令及注册
 ├─ composables/  # 组合式复用逻辑（useTable / useTheme / useResponsiveSize / useDict）
 ├─ layout/       # 主布局（AppMain / Navbar / Sidebar / TagsView）
+├─ locales/      # 语言包（zh-CN / en-US，key 由 guard:locale 校验）
 ├─ router/       # 路由实例 / 静态路由表 / 全局守卫
-├─ store/        # Pinia（user / permission / app / tagsView）
+├─ store/        # Pinia（user / permission / app / tagsView / notice）
 ├─ styles/       # index.css（Tailwind v4 入口 + @theme 令牌）/ element.scss（EP 覆盖）
 ├─ types/        # 全局类型 / 接口 DTO / 路由 meta
-├─ utils/        # auth / format / permission / validate / element(命令式 API 桶) 等
-├─ views/        # 页面：home / login / upload / system / log / profile / tool / docs / error / redirect
+├─ utils/        # auth / format / permission / validate / echarts(按需注册) / chartTheme(图表配色与约定) / element(命令式 API 桶) 等
+├─ views/        # 页面：home / login / system（user、role、menu、dept、dict、config、notice）/ monitor（online、server）/ log / files / profile / tool / docs / redirect
 ├─ App.vue       # 根组件
 └─ main.ts       # 入口：样式引入顺序、注册 Pinia/Router/指令
 ```
@@ -163,18 +168,19 @@ ly-admin-api/
 │  └─ seed.ts                 # CLI 种子（npm run seed）
 ├─ scripts/
 │  ├─ prisma-comments.ts      # 把 schema 的 /// 同步为数据库表/字段 COMMENT
-│  └─ gen-api-docs.mjs        # 扫描控制器生成接口文档数据（docs:gen / build 的 prebuild）
+│  ├─ gen-api-docs.mjs        # 扫描控制器生成接口文档数据（docs:gen / build 的 prebuild）
+│  └─ update-ip2region.ts     # 下载 / 校验 / 原子替换 IP 归属地数据文件
 ├─ src/
 │  ├─ common/                 # 公共层（按职责分组）：config 配置常量 / utils 工具 / exception 异常 /
 │  │                          #   http 适配与响应 / auth 鉴权体系 / log 日志 / file 文件 / ip 归属地 / redis
 │  ├─ modules/                # 业务模块（各含 module / controller / service / dto）：
 │  │                          #   auth / menu / users / roles / depts / dict / config /
-│  │                          #   dashboard / gen / files / profile / logs / docs
+│  │                          #   dashboard / gen / files / profile / logs / notice / monitor / docs / health
 │  ├─ prisma/                 # PrismaModule / PrismaService（driver adapter）/ seed.service（启动即幂等种子）
 │  ├─ generated/              # Prisma Client 生成产物（提交入库，勿手改）
 │  ├─ app.module.ts           # 根模块（全局守卫 / 拦截器 / 过滤器装配）
 │  └─ main.ts                 # 入口（响应适配器、全局管道、静态资源托管）
-├─ test/                      # e2e 测试
+├─ test/                      # vitest 单测（13 个 spec）+ e2e（冒烟 / 契约快照，需本地 MySQL）
 ├─ prisma.config.ts           # Prisma CLI 的连接串与 schema 路径
 └─ package.json
 ```
@@ -260,7 +266,9 @@ npm run dev:web   # 前端 http://localhost:5173（等价 cd ly-admin-web && npm
 启动后可访问：
 
 - 前端页面：<http://localhost:5173>
-- 健康检查：`GET http://localhost:3000/api`
+- 健康检查（探针）：`GET http://localhost:3000/api/health/live`（只证明进程可响应）、
+  `GET http://localhost:3000/api/health/ready`（探测 MySQL / Redis，MySQL 不可用返回 503）
+- 根探活：`GET http://localhost:3000/api`（返回服务名、状态、版本、uptime）
 
 > 前端 dev server 通过 Vite 代理把 `/api`、`/static` 转发到 `http://localhost:3000`，开发期同源、无跨域。
 
@@ -278,21 +286,23 @@ npm run dev:web   # 前端 http://localhost:5173（等价 cd ly-admin-web && npm
 
 ### 根目录
 
-| 命令                    | 说明                                             |
-| ----------------------- | ------------------------------------------------ |
-| `npm run dev`           | 并行启动前后端                                   |
-| `npm run dev:api`       | 仅启动后端                                       |
-| `npm run dev:web`       | 仅启动前端                                       |
-| `npm run lint`          | 全仓 ESLint 检查（`--max-warnings 0`）           |
-| `npm run lint:fix`      | 全仓 ESLint 自动修复                             |
-| `npm run format`        | 全仓 Prettier 格式化                             |
-| `npm run format:check`  | 全仓 Prettier 格式校验（不写文件）               |
-| `npm run stylelint`     | 全仓 Stylelint 检查                              |
-| `npm run stylelint:fix` | 全仓 Stylelint 自动修复                          |
-| `npm run guard:deps`    | 校验三处 `package.json` 的运行时依赖与基线一致   |
-| `npm run guard:imports` | 校验已入库文件的相对导入可解析（干净克隆可构建） |
-| `npm run commit`        | cz-git 交互式生成规范提交                        |
-| `npm run prepare`       | 装配 husky 钩子（`npm install` 后自动执行）      |
+| 命令                        | 说明                                             |
+| --------------------------- | ------------------------------------------------ |
+| `npm run dev`               | 并行启动前后端                                   |
+| `npm run dev:api`           | 仅启动后端                                       |
+| `npm run dev:web`           | 仅启动前端                                       |
+| `npm run lint`              | 全仓 ESLint 检查（`--max-warnings 0`）           |
+| `npm run lint:fix`          | 全仓 ESLint 自动修复                             |
+| `npm run format`            | 全仓 Prettier 格式化                             |
+| `npm run format:check`      | 全仓 Prettier 格式校验（不写文件）               |
+| `npm run stylelint`         | 全仓 Stylelint 检查                              |
+| `npm run stylelint:fix`     | 全仓 Stylelint 自动修复                          |
+| `npm run guard:deps`        | 校验三处 `package.json` 的运行时依赖与基线一致   |
+| `npm run guard:deps:update` | 依赖基线有变更时，先生成新基线再提交             |
+| `npm run guard:imports`     | 校验已入库文件的相对导入可解析（干净克隆可构建） |
+| `npm run guard:locale`      | 校验 zh-CN / en-US 语言包 key 与占位符一致       |
+| `npm run commit`            | cz-git 交互式生成规范提交                        |
+| `npm run prepare`           | 装配 husky 钩子（`npm install` 后自动执行）      |
 
 ### 前端 `ly-admin-web/`
 
@@ -309,59 +319,77 @@ npm run dev:web   # 前端 http://localhost:5173（等价 cd ly-admin-web && npm
 | 命令                            | 说明                                                       |
 | ------------------------------- | ---------------------------------------------------------- |
 | `npm run start:dev`             | Nest watch 模式热重载（:3000）                             |
+| `npm run start:debug`           | 同样的 watch 模式，附带 Node 调试端口                      |
 | `npm run build`                 | 编译到 `dist/`                                             |
 | `npm run start:prod`            | 运行编译产物 `node dist/main`                              |
+| `npm run migrate:dev`           | 生成并应用迁移（开发环境，产出的 SQL 需入库）              |
+| `npm run migrate:deploy`        | 应用已有迁移（生产 / 容器）                                |
+| `npm run migrate:status`        | 查看迁移状态                                               |
 | `npm run prisma:push`           | 建表 / 同步表结构（首次必执行）                            |
 | `npm run prisma:comments`       | 把 schema 的 `///` 同步为库内表 / 字段 COMMENT             |
 | `npm run prisma:comments:check` | 检查库内注释是否漂移（有差异退出码 1）                     |
 | `npm run prisma:generate`       | 重新生成 Prisma Client                                     |
 | `npm run prisma:studio`         | 启动 Prisma Studio 可视化                                  |
 | `npm run docs:gen`              | 扫描控制器重新生成接口文档（`build` 的 prebuild 自动执行） |
+| `npm run ip2region:update`      | 下载 / 更新 IP 归属地数据文件（约 10MB，不入库）           |
 | `npm run seed`                  | 单独执行种子数据（幂等）                                   |
 | `npm run typecheck`             | 仅类型检查（`tsc --noEmit`）                               |
 | `npm run lint`                  | oxlint（type-aware）                                       |
 | `npm run test`                  | vitest 单元测试                                            |
+| `npm run test:e2e`              | vitest e2e 契约测试（需本地 MySQL；CI 与提交前建议跑）     |
 
 ## 环境变量
 
+> **单一事实源**：模板以 `ly-admin-api/.env.example` 为准，逐项说明见
+> [后端开发规范/03-环境与配置](./knowledge/后端开发规范/03-环境与配置.md)。
+> 下表是「必填 + 高频」清单，新增变量请同步这三处（本表曾因三份清单并存而漂移）。
+
 ### 后端 `ly-admin-api/.env`
 
-| 变量                                | 示例值                  | 说明                                                       |
-| ----------------------------------- | ----------------------- | ---------------------------------------------------------- |
-| `NODE_ENV`                          | `development`           | 运行环境                                                   |
-| `PORT`                              | `3000`                  | 后端端口                                                   |
-| `DB_HOST` / `DB_PORT`               | `localhost` / `3306`    | MySQL 主机 / 端口                                          |
-| `DB_NAME` / `DB_USER`               | `ly_admin` / `root`     | 数据库名 / 账号                                            |
-| `DB_PASSWORD`                       | `your_password`         | 数据库密码（改成实际值）                                   |
-| `DATABASE_URL`                      | `mysql://…`             | 可选。Prisma CLI 用的完整连接串（优先于 `DB_*` 拼装）      |
-| `DB_LOGGING`                        | `true`                  | 是否订阅 Prisma 查询事件（慢 SQL 日志 `db-*.log`）         |
-| `DB_CONNECTION_LIMIT`               | `10`                    | 数据库连接池上限（1~100）                                  |
-| `JWT_ACCESS_SECRET`                 | `<32 字节随机 hex>`     | accessToken 密钥（**必填**，无默认值）                     |
-| `JWT_REFRESH_SECRET`                | `<32 字节随机 hex>`     | refreshToken 密钥（**必填**，须与上方不同）                |
-| `JWT_ACCESS_EXPIRES_IN`             | `2h`                    | accessToken 有效期                                         |
-| `JWT_REFRESH_EXPIRES_IN`            | `7d`                    | refreshToken 有效期                                        |
-| `CAPTCHA_ENABLED`                   | `true`                  | 是否启用登录图形验证码                                     |
-| `CAPTCHA_TTL_MS` / `CAPTCHA_LENGTH` | `300000` / `4`          | 验证码有效期（ms）/ 字符数                                 |
-| `TRUST_PROXY`                       | `1`                     | 反向代理信任跳数（仅部署在代理后设置）                     |
-| `UPLOAD_DIR`                        | `uploads`               | 上传根目录（相对 `ly-admin-api/`）                         |
-| `UPLOAD_MAX_SIZE`                   | `10485760`              | 单文件上限（字节，10MB）                                   |
-| `UPLOAD_MAX_COUNT`                  | `10`                    | 单次最多文件数                                             |
-| `UPLOAD_CACHE_DIR`                  | `cache/images`          | 图片缩放缓存目录（须位于 `UPLOAD_DIR` 之外）               |
-| `UPLOAD_ALLOWED_REFERERS`           | `http://localhost:5173` | 防盗链 Referer 白名单（逗号分隔；同源部署无需配置）        |
-| `CORS_ORIGIN`                       | `http://localhost:5173` | 允许的跨域来源                                             |
-| `LOG_DIR`                           | `logs`                  | 日志目录                                                   |
-| `LOG_ARCHIVE_HOUR/MINUTE`           | `0` / `5`               | 日志归档时刻（本地时间）                                   |
-| `LOG_ARCHIVE_KEEP_SOURCE`           | `false`                 | 归档后是否保留源 `.log`                                    |
-| `LOG_SLOW_SQL_MS`                   | `200`                   | 慢 SQL 阈值（ms）                                          |
-| `LOG_HTTP_RETENTION_DAYS`           | `7`                     | HTTP 访问日志保留天数                                      |
-| `LOG_OPERATION_RETENTION_DAYS`      | `180`                   | 操作日志保留天数                                           |
-| `LOG_LOGIN_RETENTION_DAYS`          | `180`                   | 登录日志保留天数                                           |
-| `LOG_RETENTION_HOUR/MINUTE`         | `0` / `10`              | 保留清理触发时刻                                           |
-| `LOG_RETENTION_ENABLED`             | `true`                  | 是否启用日志保留清理                                       |
-| `TAR_BIN`                           | `tar`                   | 自定义 tar 可执行文件（默认取 PATH）                       |
-| `REDIS_HOST` / `REDIS_PORT`         | `127.0.0.1` / `6379`    | Redis 地址（留空 `REDIS_HOST` 即视为不启用）               |
-| `REDIS_PASSWORD` / `REDIS_DB`       | 空 / `0`                | Redis 密码 / 库号                                          |
-| `WEB_DIST_DIR`                      | `web`                   | 前端产物托管目录（相对 `ly-admin-api/`；不存在则跳过托管） |
+| 变量                                | 示例值                  | 说明                                                                                                                                 |
+| ----------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `NODE_ENV`                          | `development`           | 运行环境                                                                                                                             |
+| `PORT`                              | `3000`                  | 后端端口                                                                                                                             |
+| `DB_HOST` / `DB_PORT`               | `localhost` / `3306`    | MySQL 主机 / 端口                                                                                                                    |
+| `DB_NAME` / `DB_USER`               | `ly_admin` / `root`     | 数据库名 / 账号                                                                                                                      |
+| `DB_PASSWORD`                       | `your_password`         | 数据库密码（改成实际值）                                                                                                             |
+| `DATABASE_URL`                      | `mysql://…`             | 可选。Prisma CLI 用的完整连接串（优先于 `DB_*` 拼装）                                                                                |
+| `DB_LOGGING`                        | `true`                  | 是否订阅 Prisma 查询事件（慢 SQL 日志 `db-*.log`）                                                                                   |
+| `DB_CONNECTION_LIMIT`               | `10`                    | 数据库连接池上限（1~100）                                                                                                            |
+| `JWT_ACCESS_SECRET`                 | `<32 字节随机 hex>`     | accessToken 密钥（**必填**，无默认值）                                                                                               |
+| `JWT_REFRESH_SECRET`                | `<32 字节随机 hex>`     | refreshToken 密钥（**必填**，须与上方不同）                                                                                          |
+| `JWT_ACCESS_EXPIRES_IN`             | `2h`                    | accessToken 有效期                                                                                                                   |
+| `JWT_REFRESH_EXPIRES_IN`            | `7d`                    | refreshToken 有效期                                                                                                                  |
+| `SEED_ADMIN_PASSWORD`               | 空                      | 超管初始口令；留空用开发默认弱口令（production 打 warn 提示）                                                                        |
+| `CAPTCHA_ENABLED`                   | `true`                  | 是否启用登录图形验证码                                                                                                               |
+| `CAPTCHA_TTL_MS` / `CAPTCHA_LENGTH` | `300000` / `4`          | 验证码有效期（ms）/ 字符数                                                                                                           |
+| `TRUST_PROXY`                       | `1`                     | 反向代理信任跳数（仅部署在代理后设置）                                                                                               |
+| `UPLOAD_DIR`                        | `uploads`               | 上传根目录（相对 `ly-admin-api/`）                                                                                                   |
+| `UPLOAD_MAX_SIZE`                   | `10485760`              | 单文件上限（字节，10MB）                                                                                                             |
+| `UPLOAD_MAX_COUNT`                  | `10`                    | 单次最多文件数                                                                                                                       |
+| `UPLOAD_USER_QUOTA_MB`              | `512`                   | 单用户累计上传配额（MB），`0` = 不限                                                                                                 |
+| `UPLOAD_CACHE_DIR`                  | `cache/images`          | 图片缩放缓存目录（须位于 `UPLOAD_DIR` 之外）                                                                                         |
+| `UPLOAD_ALLOWED_REFERERS`           | `http://localhost:5173` | 防盗链 Referer 白名单（逗号分隔；同源部署无需配置）                                                                                  |
+| `CORS_ORIGIN`                       | `http://localhost:5173` | 允许的跨域来源                                                                                                                       |
+| `LOG_DIR`                           | `logs`                  | 日志目录                                                                                                                             |
+| `LOG_ARCHIVE_DIR`                   | `logs/archive`          | 归档根目录（默认 `<LOG_DIR>/archive`）                                                                                               |
+| `LOG_ARCHIVE_HOUR/MINUTE`           | `0` / `5`               | 日志归档时刻（本地时间）                                                                                                             |
+| `LOG_ARCHIVE_KEEP_SOURCE`           | `false`                 | 归档后是否保留源 `.log`                                                                                                              |
+| `LOG_SLOW_SQL_MS`                   | `200`                   | 慢 SQL 阈值（ms）                                                                                                                    |
+| `LOG_HTTP_RETENTION_DAYS`           | `7`                     | HTTP 访问日志保留天数                                                                                                                |
+| `LOG_OPERATION_RETENTION_DAYS`      | `180`                   | 操作日志保留天数                                                                                                                     |
+| `LOG_LOGIN_RETENTION_DAYS`          | `180`                   | 登录日志保留天数                                                                                                                     |
+| `LOG_RETENTION_HOUR/MINUTE`         | `0` / `10`              | 保留清理触发时刻                                                                                                                     |
+| `LOG_RETENTION_ENABLED`             | `true`                  | 是否启用日志保留清理                                                                                                                 |
+| `TAR_BIN`                           | `tar`                   | 自定义 tar 可执行文件（默认取 PATH）                                                                                                 |
+| `IP2REGION_DB_PATH`                 | `data/ip2region_v4.xdb` | IP 归属地离线库路径（文件缺失时静默降级为空串）                                                                                      |
+| `REDIS_HOST` / `REDIS_PORT`         | `127.0.0.1` / `6379`    | Redis 地址（留空 `REDIS_HOST` 即视为不启用）                                                                                         |
+| `REDIS_PASSWORD` / `REDIS_DB`       | 空 / `0`                | Redis 密码 / 库号                                                                                                                    |
+| `WEB_DIST_DIR`                      | `web`                   | 前端产物托管目录（相对 `ly-admin-api/`；不存在则跳过托管）                                                                           |
+| `SECURITY_HSTS`                     | 跟随 production         | 是否下发 HSTS 头（默认 `NODE_ENV=production` 时开启）                                                                                |
+| `CSP_POLICY`                        | 空                      | Content-Security-Policy 内容；留空不下发（SPA 需按实际配置）                                                                         |
+| `APP_VERSION` / `GIT_COMMIT`        | `dev` / 空              | 版本与提交号，出现在 `/api` 与 `/api/health/live` 响应里                                                                             |
+| `NET_DEV_PATH`                      | 空                      | 网卡计数文件路径覆盖（默认 Linux 读 `/proc/net/dev`）。用于非 Linux 集成测试，或容器使用 host 网络命名空间时指向挂载进来的宿主机文件 |
 
 ### 前端 `ly-admin-web/.env.development` / `.env.production`
 
@@ -380,7 +408,9 @@ npm run dev:web   # 前端 http://localhost:5173（等价 cd ly-admin-web && npm
 
 ```bash
 cd ly-admin-web
-npm run build:only -- --outDir ../web   # 产物输出到根目录 web/，由后端一并托管
+# 产物必须落在 ly-admin-api/web/：后端按 path.resolve(ROOT_DIR, 'web') 读取（ROOT_DIR 即 ly-admin-api/），
+# 写到仓库根 web/ 会导致后端找不到产物、跳过静态托管。
+npm run build:only -- --outDir ../ly-admin-api/web --emptyOutDir
 
 cd ../ly-admin-api
 npm run build
@@ -428,7 +458,8 @@ NODE_ENV=production node dist/main.js
    npm run lint              # ESLint（--max-warnings 0）
    npm run stylelint         # Stylelint
    npm run guard:deps        # 依赖基线
-   (cd ly-admin-api && npm run typecheck && npm run lint && npm run test)
+   npm run guard:locale      # 语言包 key / 占位符一致
+   (cd ly-admin-api && npm run typecheck && npm run lint && npm run test && npm run test:e2e)
    (cd ly-admin-web && npm run type-check)
    ```
 

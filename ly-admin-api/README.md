@@ -46,7 +46,7 @@ ly-admin-api/
 │  │  └─ dto/                 #   路径参数 :id 的统一校验
 │  ├─ modules/                # 业务模块（module / controller / service / dto）
 │  │                          #   auth / menu / users / roles / depts / dict / config /
-│  │                          #   dashboard / gen / files / profile / logs / docs
+│  │                          #   dashboard / gen / files / profile / logs / notice / monitor / docs / health
 │  ├─ prisma/                 # PrismaModule / PrismaService / seed.service（启动即幂等种子）
 │  ├─ generated/              # Prisma Client 生成产物（提交入库，勿手改）
 │  ├─ app.module.ts           # 根模块：全局守卫 / 拦截器 / 过滤器 / 中间件
@@ -65,8 +65,12 @@ ly-admin-api/
 | 命令                            | 说明                                                       |
 | ------------------------------- | ---------------------------------------------------------- |
 | `npm run start:dev`             | Nest watch 模式热重载（:3000）                             |
+| `npm run start:debug`           | 同样的 watch 模式，附带 Node 调试端口                      |
 | `npm run build`                 | 编译到 `dist/`（prebuild 自动重新生成接口文档）            |
 | `npm run start:prod`            | 运行编译产物 `node dist/main`                              |
+| `npm run migrate:dev`           | 生成并应用迁移（开发环境，产出的 SQL 需入库）              |
+| `npm run migrate:deploy`        | 应用已有迁移（生产 / 容器）                                |
+| `npm run migrate:status`        | 查看迁移状态                                               |
 | `npm run prisma:push`           | 建表 / 同步表结构（首次必执行；Prisma 7 启动时不自动建表） |
 | `npm run prisma:comments`       | 把 schema 的 `///` 同步为库内表 / 字段 COMMENT（幂等）     |
 | `npm run prisma:comments:check` | 检查库内注释是否漂移（有差异退出码 1）                     |
@@ -90,9 +94,25 @@ IP 归属地数据文件默认读取 `data/ip2region_v4.xdb`（约 10 MB，**不
 - 可用环境变量 `IP2REGION_DB_PATH` 覆盖路径；
 - 文件缺失或损坏时服务照常启动，仅 IP 归属地解析降级为空，不影响其他功能。
 
+## 系统监控的采集口径
+
+`GET /api/monitor/server` 是一张「主机 + 运行时」快照，三处口径容易被误读，单独说明：
+
+| 指标        | 来源                                                        | 说明                                                                                                          |
+| ----------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| CPU         | `os.cpus()` 两次采样做差 + cgroup 配额                      | 容器内按配额换算（`quotaCores`），整体使用率用各核 Δ 累加，首次采样为 `null`                                  |
+| 内存 / 磁盘 | cgroup 优先、`statfs` 兜底                                  | 磁盘只统计上传目录所在文件系统（写满时最先出问题的地方）                                                      |
+| 网络        | Linux：`/proc/net/dev`；Windows：`Get-NetAdapterStatistics` | 累计字节做差得速率；**排除环回**；Windows 因需起子进程，采样间隔放宽到 15s（`samplingIntervalMs` 会如实下发） |
+
+`null` 一律表示**没测到**（首次采样无基线、计数器被重置、平台不支持），与 `0`（确实没有流量）区分；
+不支持的平台返回 `supported: false` + `reason`，不做数字兜底。
+
 ## 开发约定速查
 
-- 环境变量只允许出现在 `src/common/config/`；常量集中在 `src/common/config/constants.ts`。
+- 环境变量只允许出现在 `src/common/config/`——**例外**：构建 / 运维注入类（`APP_VERSION`、
+  `GIT_COMMIT`、`SEED_ADMIN_PASSWORD`、`NET_DEV_PATH`）在使用点直读，因为它们要么由 CI 注入、
+  要么只在探测阶段读一次，进配置快照反而会让"启动时快照"与"运行时实际值"产生歧义。
+- 常量集中在 `src/common/config/constants.ts`。
 - 每张核心表只允许一个 service 直接读写；跨模块取数注入对方 service。
 - 写操作加 `@OperationLog('模块名', '动作')` 留痕；接口权限码遵循 `:list` / `:query` / `:add` / `:edit` / `:remove`。
 - 表结构变更改 `prisma/schema/` 对应域文件后，依次执行 `prisma:push` + `prisma:comments` + `prisma:generate`。
