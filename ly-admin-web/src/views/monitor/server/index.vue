@@ -13,7 +13,7 @@
 import { throttle } from 'lodash-es';
 import { useDocumentVisibility } from '@vueuse/core';
 import echarts from '@/utils/echarts';
-import { getChartPalette, hexToRgba, GRID_AXIS_LABEL_FIT } from '@/utils/chartTheme';
+import { getChartPalette, hexToRgba, GRID_AXIS_LABEL_FIT, verticalGradient } from '@/utils/chartTheme';
 import { ElMessage } from '@/utils/element';
 import { getServerMetricsApi } from '@/api/monitor';
 import { useAppStore } from '@/store/modules/app';
@@ -107,27 +107,47 @@ function renderChart(): void {
   const palette = getChartPalette(appStore.dark);
   const primary = appStore.primaryColor;
   const points = metrics.value.history.slice(-CHART_POINTS);
+  /**
+   * X 轴标签间隔：目标"整屏约 6 个"。
+   * 采样间隔 3s、默认展示 60 点，若不控数量 ECharts 会自动抽成每 15s 一个（12 个），
+   * 又密又难读；这里按点数反推 interval，让刻度稳定落在整分钟附近。
+   */
+  const labelInterval = Math.max(0, Math.ceil(points.length / 6) - 1);
 
   chart.setOption({
     tooltip: {
       trigger: 'axis',
+      backgroundColor: palette.tooltipBg,
+      borderColor: palette.tooltipBorder,
+      textStyle: { color: palette.tooltipText },
+      axisPointer: { type: 'line', lineStyle: { color: hexToRgba(primary, 0.4) } },
       valueFormatter: (value: unknown) => (value === null ? t('monitor.sampling') : `${value}%`),
     },
-    legend: { data: [t('monitor.cpuUsage'), t('monitor.memoryUsage')], textStyle: { color: palette.text } },
-    grid: { top: 40, right: 16, bottom: 24, left: 44 },
+    /**
+     * 图例**必须显式给 top**：不给位置时 ECharts 会把它排到绘图区底边内部
+     * （实测 y≈261，而绘图区是 40~264），结果图例压在曲线与面积上、还和 X 轴标签挤在一起。
+     */
+    legend: {
+      top: 8,
+      data: [t('monitor.cpuUsage'), t('monitor.memoryUsage')],
+      textStyle: { color: palette.text },
+    },
+    // 与首页 TrendChart 同一套：只给很小的 padding，留白交给 outerBounds 按轴标签实测宽度自动让位
+    grid: { left: 8, right: 16, top: 48, bottom: 8, ...GRID_AXIS_LABEL_FIT },
     xAxis: {
       type: 'category',
       boundaryGap: false,
       data: points.map((point) => new Date(point.at).toLocaleTimeString('zh-CN', { hour12: false })),
-      axisLabel: { color: palette.textSecondary, ...GRID_AXIS_LABEL_FIT },
       axisLine: { lineStyle: { color: palette.axisLine } },
+      axisTick: { show: false },
+      axisLabel: { color: palette.textSecondary, fontSize: 12, margin: 12, interval: labelInterval },
     },
     yAxis: {
       type: 'value',
       min: 0,
       max: 100,
-      axisLabel: { color: palette.textSecondary, formatter: '{value}%' },
-      splitLine: { lineStyle: { color: palette.splitLine } },
+      axisLabel: { color: palette.textSecondary, fontSize: 12, formatter: '{value}%' },
+      splitLine: { lineStyle: { color: palette.splitLine, type: 'dashed' } },
     },
     series: [
       {
@@ -135,20 +155,23 @@ function renderChart(): void {
         type: 'line',
         smooth: true,
         showSymbol: false,
+        emphasis: { focus: 'series' },
         data: points.map((point) => point.cpu),
-        lineStyle: { width: 2, color: primary },
-        itemStyle: { color: primary },
-        areaStyle: { color: hexToRgba(primary, 0.15) },
+        lineStyle: { width: 3, color: primary },
+        itemStyle: { color: primary, borderColor: palette.cardBg, borderWidth: 2 },
+        areaStyle: { color: verticalGradient(hexToRgba(primary, 0.3), hexToRgba(primary, 0.02)) },
       },
       {
         name: t('monitor.memoryUsage'),
+        // 内存曲线基本是一条水平线，**不铺面积**：两条半透明填充叠在一起会把下方糊成一整块，
+        // 既看不出信息、也让图表显得脏（原先就是这个问题）
         type: 'line',
         smooth: true,
         showSymbol: false,
+        emphasis: { focus: 'series' },
         data: points.map((point) => point.memory),
         lineStyle: { width: 2, color: '#f59e0b' },
-        itemStyle: { color: '#f59e0b' },
-        areaStyle: { color: hexToRgba('#f59e0b', 0.12) },
+        itemStyle: { color: '#f59e0b', borderColor: palette.cardBg, borderWidth: 2 },
       },
     ],
   });
