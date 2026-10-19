@@ -380,18 +380,6 @@ const MENU_TREE: MenuSeedNode[] = [
         keepAlive: 1,
         children: [
           {
-            key: 'monitor:server',
-            menuName: '系统监控',
-            menuType: MenuType.MENU,
-            path: '/monitor/server',
-            component: 'monitor/server/index',
-            icon: 'cpu',
-            permission: 'monitor:server:list',
-            sort: 2,
-            visible: Status.ENABLED,
-            keepAlive: 0,
-          },
-          {
             key: 'monitor:online:forceLogout',
             menuName: '强制下线',
             menuType: MenuType.BUTTON,
@@ -399,6 +387,19 @@ const MENU_TREE: MenuSeedNode[] = [
             sort: 1,
           },
         ],
+      },
+      {
+        key: 'monitor:server',
+        menuName: '系统监控',
+        menuType: MenuType.MENU,
+        path: '/monitor/server',
+        component: 'monitor/server/index',
+        icon: 'cpu',
+        permission: 'monitor:server:list',
+        sort: 2,
+        visible: Status.ENABLED,
+        // 不缓存：页面每次进入重新取指标并重建定时器，避免看到已停止刷新的旧曲线
+        keepAlive: 0,
       },
     ],
   },

@@ -24,6 +24,16 @@ import { createTestApp } from './setup-app.js';
 
 /** 路由前缀（见 src/app.setup.ts 的 setGlobalPrefix）。 */
 const API = '/api';
+/** 菜单树节点（`GET /auth/menus` 的响应结构，仅测试内使用）。 */
+interface MenuTreeNode {
+  menuName: string;
+  menuType: 'M' | 'C' | 'F';
+  path?: string | null;
+  component?: string | null;
+  permission?: string | null;
+  children?: MenuTreeNode[];
+}
+
 /** 验证码在 Redis 中的键前缀（见 src/common/auth/captcha.service.ts）。 */
 const CAPTCHA_KEY_PREFIX = 'auth:captcha:';
 /** 登录日志导出 CSV 的表头 —— 逐字固化，改动会破坏既有的下载/对账习惯。 */
@@ -499,34 +509,65 @@ describe('接口契约快照 (e2e)', () => {
       await request(app.getHttpServer()).get(`${API}/monitor/server`).expect(401);
     });
 
-    it('菜单种子已授权：当前用户的路由里带 /monitor/server 与其权限码', async () => {
-      // 锁住"菜单种子 + 权限码 + 前端组件路径"三者一致：任一写错，页面在界面上都点不出来
+    it('菜单树结构正确：系统监控挂在「监控管理」目录下（不是挂在在线用户下）', async () => {
       const res = await authGet('/auth/menus').expect(200);
-      const menus = (res.body as { data: Array<Record<string, unknown>> }).data;
+      const menus = (res.body as { data: MenuTreeNode[] }).data;
 
-      /** 深度优先找目标菜单 */
-      const find = (nodes: Array<Record<string, unknown>>, path: string): Record<string, unknown> | undefined => {
+      /** 按 path 找节点，同时返回它的父节点 */
+      const locate = (
+        nodes: MenuTreeNode[],
+        path: string,
+        parent?: MenuTreeNode,
+      ): { node: MenuTreeNode; parent?: MenuTreeNode } | undefined => {
         for (const node of nodes) {
           if (node.path === path) {
-            return node;
+            return { node, parent };
           }
-          const children = node.children as Array<Record<string, unknown>> | undefined;
-          if (children?.length) {
-            const hit = find(children, path);
-            if (hit) {
-              return hit;
-            }
+          const hit = locate(node.children ?? [], path, node);
+          if (hit) {
+            return hit;
           }
         }
         return undefined;
       };
 
-      const target = find(menus, '/monitor/server');
+      const target = locate(menus, '/monitor/server');
       expect(target).toBeTruthy();
-      expect(target?.component).toBe('monitor/server/index');
-      expect(target?.permission).toBe('monitor:server:list');
-      // 父目录（监控管理）也应存在，否则子菜单挂不上去
-      expect(find(menus, '/monitor')).toBeTruthy();
+      // 关键：父级必须是「监控管理」目录本身。
+      // 只断言"节点存在"是不够的——写错缩进会让它变成「在线用户」的子节点，
+      // 前端 buildRoutes 见"菜单节点还带可路由子节点"就会把父节点降级成 <router-view>
+      // 透传容器（丢掉自己的组件并 redirect 到子节点），页面于是 404。
+      expect(target?.parent?.path).toBe('/monitor');
+      expect(target?.parent?.menuType).toBe('M');
+      expect(target?.node.component).toBe('monitor/server/index');
+      expect(target?.node.permission).toBe('monitor:server:list');
+    });
+
+    it('菜单树结构约束：菜单（C）节点必须是叶子（不能挂子节点）', async () => {
+      // 这条是上面那个 404 的通用护栏：M（目录）才是容器、C（菜单）是"可路由的叶子页面"。
+      // 若把 C 挂到 C 下面，前端 buildRoutes 会把父节点降级成 <router-view> 透传容器并 redirect
+      // 到子节点，父页面被吞、子页面路径错位，必然 404。
+      // 注：`/auth/menus` 只下发 M/C（按钮 F 走权限码，不在路由树里），
+      // 所以这里的约束就是"C 节点不得有任何子节点"。
+      const res = await authGet('/auth/menus').expect(200);
+      const menus = (res.body as { data: MenuTreeNode[] }).data;
+
+      const violations: string[] = [];
+      const walk = (nodes: MenuTreeNode[]): void => {
+        for (const node of nodes) {
+          const children = node.children ?? [];
+          if (node.menuType === 'C' && children.length > 0) {
+            violations.push(
+              `菜单「${node.menuName}」下挂了子节点：${children.map((child) => child.menuName).join('、')}` +
+                '（菜单应为叶子页面，容器请用目录 M）',
+            );
+          }
+          walk(children);
+        }
+      };
+      walk(menus);
+
+      expect(violations).toEqual([]);
     });
   });
 
