@@ -3,6 +3,7 @@ import { useAppStore } from '@/store/modules/app';
 import Breadcrumb from './Breadcrumb.vue';
 import Avatar from './Avatar.vue';
 import NoticeBell from './NoticeBell.vue';
+import LocaleSwitcher from './LocaleSwitcher.vue';
 
 defineOptions({ name: 'Navbar' });
 
@@ -39,6 +40,7 @@ function handleToggle(): void {
       <Breadcrumb />
     </div>
     <div class="flex items-center gap-3">
+      <LocaleSwitcher />
       <NoticeBell />
       <Avatar />
     </div>

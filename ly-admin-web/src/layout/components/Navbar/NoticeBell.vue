@@ -7,6 +7,7 @@
  */
 import { ElMessage } from '@/utils/element';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { getNoticeListApi, markAllNoticesReadApi, markNoticeReadApi } from '@/api/notice';
 import { useNoticeStore } from '@/store/modules/notice';
 import { formatDateTime } from '@/utils/format';
@@ -14,6 +15,7 @@ import type { NoticeItem } from '@/types/api';
 
 const router = useRouter();
 const noticeStore = useNoticeStore();
+const { t } = useI18n();
 
 /** 最近通知（下拉里展示） */
 const recent = ref<NoticeItem[]>([]);
@@ -68,24 +70,24 @@ function handleViewAll(): void {
   <el-popover placement="bottom-end" :width="360" trigger="click" @show="handleOpen">
     <template #reference>
       <el-badge :value="noticeStore.unreadCount" :hidden="noticeStore.unreadCount === 0" :max="99">
-        <el-icon class="text-lg text-ink cursor-pointer" role="button" tabindex="0" aria-label="通知中心">
+        <el-icon class="text-lg text-ink cursor-pointer" role="button" tabindex="0" :aria-label="t('nav.notice')">
           <i class="bi bi-bell" />
         </el-icon>
       </el-badge>
     </template>
 
     <div class="flex items-center justify-between mb-2">
-      <span class="text-sm font-semibold text-ink">通知</span>
+      <span class="text-sm font-semibold text-ink">{{ t('notice.title') }}</span>
       <div class="flex items-center gap-2">
         <el-button v-if="noticeStore.unreadCount > 0" type="primary" link size="small" @click="handleReadAll">
-          全部已读
+          {{ t('common.readAll') }}
         </el-button>
         <el-button type="primary" link size="small" @click="handleViewAll">查看全部</el-button>
       </div>
     </div>
 
     <div v-loading="loading" class="max-h-96 overflow-y-auto">
-      <p v-if="!loading && recent.length === 0" class="py-6 text-center text-sm text-faint">暂无通知</p>
+      <p v-if="!loading && recent.length === 0" class="py-6 text-center text-sm text-faint">{{ t('notice.empty') }}</p>
       <div
         v-for="item in recent"
         :key="item.id"

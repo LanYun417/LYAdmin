@@ -1,6 +1,11 @@
 /**
- * 应用级 UI 状态：侧边栏折叠、暗黑模式、主题色、全屏与移动端抽屉。
+ * 应用级 UI 状态：侧边栏折叠、暗黑模式、主题色、全屏、移动端抽屉与界面语言。
+ *
+ * 语言放在这里而不是组件内：Element Plus 的 locale（`el-config-provider`）在 App.vue，
+ * 切换入口在顶栏，两者需要同一份状态；持久化后刷新仍保持用户选择。
  */
+
+import { DEFAULT_LOCALE, type LocaleValue } from '@/locales';
 
 export const useAppStore = defineStore(
   'app',
@@ -17,6 +22,13 @@ export const useAppStore = defineStore(
     const isMobile = ref<boolean>(false);
     /** 移动端侧边栏抽屉是否展开，不持久化 */
     const mobileDrawerOpen = ref<boolean>(false);
+    /** 界面语言（同时驱动 vue-i18n 与 Element Plus 内置文案） */
+    const locale = ref<LocaleValue>(DEFAULT_LOCALE);
+
+    /** 设置界面语言 */
+    function setLocale(value: LocaleValue): void {
+      locale.value = value;
+    }
 
     /** 切换侧边栏折叠状态 */
     function toggleSidebar(): void {
@@ -79,12 +91,15 @@ export const useAppStore = defineStore(
       setMobile,
       toggleMobileDrawer,
       setMobileDrawer,
+      locale,
+      setLocale,
     };
   },
   {
     persist: {
       key: 'ly_admin_app',
-      pick: ['sidebarCollapsed', 'primaryColor', 'dark'],
+      // locale 一并持久化：刷新后仍保持用户选择的语言
+      pick: ['sidebarCollapsed', 'primaryColor', 'dark', 'locale'],
     },
   },
 );

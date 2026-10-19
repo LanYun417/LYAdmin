@@ -61,21 +61,70 @@ const { value } = await ElMessageBox.confirm('确认删除？', '提示', { type
 
 **禁止** `import { ElButton } from 'element-plus'` 与 `app.use(ElementPlus)` 全量注册——前者拖慢首屏，后者使按需加载失效。
 
-## 中文语言包
+## 多语言（i18n）
 
-语言包是资源文件，不在自动导入范围，在 `main.ts` 通过 `el-config-provider` 注入（本项目已接 `zh-cn`）：
+语言包是资源文件，不在自动导入范围，在 `App.vue` 通过 `el-config-provider` 注入。
+
+**联动三处**（少一处就会出现「切了一半」的割裂感）：
+
+| 位置         | 代码                            | 管什么                                 |
+| ------------ | ------------------------------- | -------------------------------------- |
+| vue-i18n     | `i18n.global.locale`            | 业务文案（`t()`）                      |
+| Element Plus | `<el-config-provider :locale>`  | 组件内置文案（分页、空状态、日期选择） |
+| 文档语言     | `document.documentElement.lang` | 浏览器与读屏软件识别的语言（无障碍）   |
 
 ```vue
+<!-- App.vue（节选） -->
 <script setup lang="ts">
 import zhCn from 'element-plus/es/locale/lang/zh-cn';
+import en from 'element-plus/es/locale/lang/en';
+
+const EP_LOCALE = { 'zh-CN': zhCn, 'en-US': en };
+const elementLocale = computed(() => EP_LOCALE[appStore.locale] ?? zhCn);
+
+// 业务文案与 <html lang> 由 watch 跟随 store
+watch(
+  () => appStore.locale,
+  (value) => {
+    locale.value = value;
+    document.documentElement.lang = value;
+  },
+  { immediate: true },
+);
 </script>
 
 <template>
-  <el-config-provider :locale="zhCn">
+  <el-config-provider :locale="elementLocale">
     <router-view />
   </el-config-provider>
 </template>
 ```
+
+### 组织与约定
+
+- 语言包在 `src/locales/`：`zh-CN.ts`（基准）、`en-US.ts`、`index.ts`（实例 + `SUPPORT_LOCALES`）。
+- key 命名 `<模块/页面>.<字段>`，常用动作放 `common` 复用（见 `common.*` / `nav.*` / `login.*` / `notice.*`）。
+- **增量迁移**：存量页面有大量硬编码中文，不做一次性大改（会让 diff 失去可读性）；
+  约定是**新增/改动的文案一律走 `t()`**，存量按页面逐步迁移。
+- 切换入口在顶栏 `LocaleSwitcher.vue`，只改 `appStore.locale`（与主题色一起持久化，刷新保持）。
+- `main.ts` 在 `app.use(i18n)` 之前先按持久化偏好设置 locale，避免首屏闪一下默认语言。
+
+### 门禁
+
+`npm run guard:locale`（`scripts/check-locale-keys.mjs`，已进 CI）：校验两侧语言包
+**key 集合完全一致**、值非空、`{count}` 这类插值占位符成对出现。
+漏一个 key 不会报错，只会在英文界面露出中文，属于「看起来能跑、实际很难发现」的问题。
+
+> 写这个脚本时踩过的坑：曾用 `/^\s*import[^;]+;\s*$/gm` 剥离 import，该正则会**跨行匹配**
+> （`\s*` 含换行），把注释到最后一个分号整段吞掉——42 个 key 只解析出 8 个却"检查通过"，
+> 比没有门禁更危险。现在只剥 `export default`，import 行自然匹配不上解析规则。
+
+### 为什么用 vue-i18n
+
+语言包合并、插值、日期数字本地化、与 Element Plus locale 的联动都是成熟约定；
+自己撸一个 `t()` 等于长期维护一份半成品。注意「零运行时依赖」是**后端**的约束，
+前端本来就有 11 个运行时依赖（vue / pinia / element-plus / echarts …），
+新增依赖已登记进 `scripts/deps-baseline.json`。
 
 ## 暗黑模式
 

@@ -61,6 +61,8 @@ jobs:
         run: npm run guard:deps
       - name: 被忽略但仍被引用的源码文件
         run: npm run guard:imports
+      - name: 语言包 key 一致性
+        run: npm run guard:locale
 
   api:
     name: 后端（编译 / 单测 / 迁移 / 契约 e2e）

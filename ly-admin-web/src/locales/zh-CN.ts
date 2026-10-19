@@ -1,0 +1,56 @@
+/**
+ * 简体中文语言包（基准语言）。
+ * 命名约定：`<模块/页面>.<字段>`，模块名用小写短横线；常用动作放 `common` 以便复用。
+ */
+export default {
+  common: {
+    confirm: '确定',
+    cancel: '取消',
+    search: '查询',
+    reset: '重置',
+    create: '新增',
+    edit: '编辑',
+    delete: '删除',
+    batchDelete: '批量删除',
+    import: '导入',
+    export: '导出',
+    refresh: '刷新',
+    readAll: '全部已读',
+    loading: '加载中',
+    empty: '暂无数据',
+    total: '共 {count} 条',
+    success: '操作成功',
+    failed: '操作失败',
+  },
+  nav: {
+    notice: '通知',
+    viewAll: '查看全部',
+    language: '语言',
+    theme: '主题',
+    fullscreen: '全屏',
+    exitFullscreen: '退出全屏',
+  },
+  login: {
+    title: '后台管理系统',
+    subtitle: '欢迎回来，请登录',
+    username: '账号',
+    password: '密码',
+    captcha: '验证码',
+    submit: '登 录',
+    success: '登录成功',
+    failed: '登录失败',
+    usernameRequired: '请输入账号',
+    passwordRequired: '请输入密码',
+  },
+  notice: {
+    title: '通知',
+    unread: '未读',
+    read: '已读',
+    allRead: '已全部标记为已读',
+    empty: '暂无通知',
+    center: '通知中心',
+    myNotice: '我的通知',
+    publish: '发布通知',
+    clear: '清空',
+  },
+};

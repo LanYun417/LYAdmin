@@ -1,8 +1,10 @@
 import App from './App.vue';
 import router from './router';
 import pinia from './store';
+import { useAppStore } from './store/modules/app';
 import { setupDirectives } from './directives';
 import { setRequestRouter } from '@/api/request';
+import i18n from '@/locales';
 
 // 样式引入顺序（架构文档 1.4 风险 A）：
 // 1) Element Plus 暗黑变量（组件基础样式由 unplugin 的 ElementPlusResolver 按组件按需注入，不在此全量引入，
@@ -43,6 +45,9 @@ const app = createApp(App);
 setRequestRouter(router);
 
 app.use(pinia);
+// 界面语言：先按持久化偏好设置，再挂载 i18n（否则首屏会用默认语言闪一下）
+i18n.global.locale.value = useAppStore().locale;
+app.use(i18n);
 // app.use(router) 会在此处触发「首次导航」——首屏加载动画正是覆盖这一段等待
 app.use(router);
 setupDirectives(app);
