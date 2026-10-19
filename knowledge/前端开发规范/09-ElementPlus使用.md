@@ -141,6 +141,13 @@ watch(
 1. 表格 Header 背景色等视觉规范通过 CSS 变量 / 命名空间类统一，不在每个页面写内联样式。
 2. `ElMessage` 文案统一中文、句尾不加标点（与 commitlint subject 风格一致的约定）。
 3. 弹窗类组件优先用 `v-model` 控制显隐；固定尺寸弹层必须走响应式封装（`useResponsiveSize` / `BasicDialog`，见 17）。
+4. **纯图标交互必须配 `el-tooltip`**：只有图标、没有文字标签的按钮（顶栏侧边栏开关 / 语言 /
+   通知铃铛 / 全屏 / 暗黑切换等）一律套 `<el-tooltip placement="bottom">`，
+   否则新用户无从判断图标含义。配套要求：
+   - tooltip 的 `content` 与 `aria-label` **用同一个变量**（如 Navbar 的 `toggleLabel`），不要写两遍；
+   - tooltip 与 dropdown / popover 组合时，tooltip 在**外层**并用 `<span>` 承载触发节点
+     （组件根节点挂指令会有 Vue 告警，写法同 Avatar.vue 的主题色 picker）；
+   - 文案走 `t()`，别再写死中文。
 
 ## 常见错误
 

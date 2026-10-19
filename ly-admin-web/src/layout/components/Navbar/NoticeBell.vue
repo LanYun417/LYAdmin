@@ -67,46 +67,54 @@ function handleViewAll(): void {
 </script>
 
 <template>
-  <el-popover placement="bottom-end" :width="360" trigger="click" @show="handleOpen">
-    <template #reference>
-      <el-badge :value="noticeStore.unreadCount" :hidden="noticeStore.unreadCount === 0" :max="99">
-        <el-icon class="text-lg text-ink cursor-pointer" role="button" tabindex="0" :aria-label="t('nav.notice')">
-          <i class="bi bi-bell" />
-        </el-icon>
-      </el-badge>
-    </template>
+  <!-- 纯图标交互必须有文字提示：hover 显示「通知」，点击仍打开面板
+       （tooltip 在外层、popover 在内层，两者触发方式不同，互不干扰）。 -->
+  <el-tooltip :content="t('nav.notice')" placement="bottom">
+    <span class="inline-flex items-center">
+      <el-popover placement="bottom-end" :width="360" trigger="click" @show="handleOpen">
+        <template #reference>
+          <el-badge :value="noticeStore.unreadCount" :hidden="noticeStore.unreadCount === 0" :max="99">
+            <el-icon class="text-lg text-ink cursor-pointer" role="button" tabindex="0" :aria-label="t('nav.notice')">
+              <i class="bi bi-bell" />
+            </el-icon>
+          </el-badge>
+        </template>
 
-    <div class="flex items-center justify-between mb-2">
-      <span class="text-sm font-semibold text-ink">{{ t('notice.title') }}</span>
-      <div class="flex items-center gap-2">
-        <el-button v-if="noticeStore.unreadCount > 0" type="primary" link size="small" @click="handleReadAll">
-          {{ t('common.readAll') }}
-        </el-button>
-        <el-button type="primary" link size="small" @click="handleViewAll">查看全部</el-button>
-      </div>
-    </div>
-
-    <div v-loading="loading" class="max-h-96 overflow-y-auto">
-      <p v-if="!loading && recent.length === 0" class="py-6 text-center text-sm text-faint">{{ t('notice.empty') }}</p>
-      <div
-        v-for="item in recent"
-        :key="item.id"
-        class="px-2 py-2 rounded cursor-pointer hover:bg-fill-light"
-        @click="handleClick(item)"
-      >
-        <div class="flex items-center gap-2">
-          <span v-if="item.isRead === 0" class="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
-          <span v-else class="w-1.5 shrink-0" />
-          <span class="text-sm font-medium truncate" :class="item.isRead === 0 ? 'text-ink' : 'text-muted'">
-            {{ item.title }}
-          </span>
-          <el-tag :type="TYPE_META[item.noticeType]?.type ?? 'primary'" size="small" class="!mr-0">
-            {{ TYPE_META[item.noticeType]?.label ?? '通知' }}
-          </el-tag>
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-sm font-semibold text-ink">{{ t('notice.title') }}</span>
+          <div class="flex items-center gap-2">
+            <el-button v-if="noticeStore.unreadCount > 0" type="primary" link size="small" @click="handleReadAll">
+              {{ t('common.readAll') }}
+            </el-button>
+            <el-button type="primary" link size="small" @click="handleViewAll">查看全部</el-button>
+          </div>
         </div>
-        <p class="mt-1 text-xs text-muted line-clamp-2 pl-3.5">{{ item.content }}</p>
-        <p class="mt-1 text-xs text-faint pl-3.5">{{ formatDateTime(item.createdAt) }}</p>
-      </div>
-    </div>
-  </el-popover>
+
+        <div v-loading="loading" class="max-h-96 overflow-y-auto">
+          <p v-if="!loading && recent.length === 0" class="py-6 text-center text-sm text-faint">
+            {{ t('notice.empty') }}
+          </p>
+          <div
+            v-for="item in recent"
+            :key="item.id"
+            class="px-2 py-2 rounded cursor-pointer hover:bg-fill-light"
+            @click="handleClick(item)"
+          >
+            <div class="flex items-center gap-2">
+              <span v-if="item.isRead === 0" class="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+              <span v-else class="w-1.5 shrink-0" />
+              <span class="text-sm font-medium truncate" :class="item.isRead === 0 ? 'text-ink' : 'text-muted'">
+                {{ item.title }}
+              </span>
+              <el-tag :type="TYPE_META[item.noticeType]?.type ?? 'primary'" size="small" class="!mr-0">
+                {{ TYPE_META[item.noticeType]?.label ?? '通知' }}
+              </el-tag>
+            </div>
+            <p class="mt-1 text-xs text-muted line-clamp-2 pl-3.5">{{ item.content }}</p>
+            <p class="mt-1 text-xs text-faint pl-3.5">{{ formatDateTime(item.createdAt) }}</p>
+          </div>
+        </div>
+      </el-popover>
+    </span>
+  </el-tooltip>
 </template>
