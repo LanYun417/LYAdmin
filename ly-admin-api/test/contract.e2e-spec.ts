@@ -431,6 +431,105 @@ describe('接口契约快照 (e2e)', () => {
     });
   });
 
+  describe('系统资源监控', () => {
+    /** 取一次系统指标快照。 */
+    const getServer = async (): Promise<{
+      scope: string;
+      cpu: { cores: number; usage: number | null; perCore: Array<number | null>; quotaCores: number | null };
+      memory: { used: number; total: number; usage: number | null };
+      disk: { path: string; total: number; usage: number | null };
+      load: [number, number, number] | null;
+      process: { rss: number; uptime: number };
+      system: { hostname: string; platform: string; nodeVersion: string; appVersion: string };
+      history: Array<{ at: number; cpu: number | null; memory: number | null }>;
+      warmingUp: boolean;
+    }> => {
+      const res = await authGet('/monitor/server').expect(200);
+      return (res.body as { data: ReturnType<typeof getServer> extends Promise<infer T> ? T : never }).data;
+    };
+
+    it('返回口径明确的资源快照：CPU / 内存 / 磁盘 / 进程', async () => {
+      const data = await getServer();
+
+      // 口径必须明确标注（容器 vs 宿主），否则容器里的数字会误导人
+      expect(['container', 'host']).toContain(data.scope);
+
+      expect(data.cpu.cores).toBeGreaterThan(0);
+      expect(data.cpu.perCore).toHaveLength(data.cpu.cores);
+
+      // 内存：总量必然拿得到；百分比非空时必须在 0~100
+      expect(data.memory.total).toBeGreaterThan(0);
+      expect(data.memory.used).toBeGreaterThanOrEqual(0);
+      if (data.memory.usage !== null) {
+        expect(data.memory.usage).toBeGreaterThanOrEqual(0);
+        expect(data.memory.usage).toBeLessThanOrEqual(100);
+      }
+
+      // 磁盘：统计的是上传目录所在文件系统
+      expect(data.disk.path).toContain('uploads');
+      expect(data.disk.usage === null || (data.disk.usage >= 0 && data.disk.usage <= 100)).toBe(true);
+
+      // 进程与系统信息
+      expect(data.process.rss).toBeGreaterThan(0);
+      expect(data.process.uptime).toBeGreaterThan(0);
+      expect(data.system.nodeVersion).toMatch(/^v\d+/);
+      expect(data.system.platform.length).toBeGreaterThan(0);
+
+      // 环形缓冲至少有 1 个点（模块初始化时已采一次）
+      expect(data.history.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('采样器在后台按时运行：等待一个采样周期后 CPU 使用率不再是 null', async () => {
+      // 首���采样只建立基线（usage=null）；若定时器没跑，第二次请求仍是 null —— 这里锁住该回归
+      let data = await getServer();
+      const deadline = Date.now() + 9000;
+      while (data.cpu.usage === null && Date.now() < deadline) {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        data = await getServer();
+      }
+      expect(data.warmingUp).toBe(false);
+      expect(data.cpu.usage).not.toBeNull();
+      expect(data.cpu.usage as number).toBeGreaterThanOrEqual(0);
+      expect(data.cpu.usage as number).toBeLessThanOrEqual(100);
+      // 采样点应随时间累积
+      expect(data.history.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('未登录不可调用系统监控（与其它监控接口一致）', async () => {
+      await request(app.getHttpServer()).get(`${API}/monitor/server`).expect(401);
+    });
+
+    it('菜单种子已授权：当前用户的路由里带 /monitor/server 与其权限码', async () => {
+      // 锁住"菜单种子 + 权限码 + 前端组件路径"三者一致：任一写错，页面在界面上都点不出来
+      const res = await authGet('/auth/menus').expect(200);
+      const menus = (res.body as { data: Array<Record<string, unknown>> }).data;
+
+      /** 深度优先找目标菜单 */
+      const find = (nodes: Array<Record<string, unknown>>, path: string): Record<string, unknown> | undefined => {
+        for (const node of nodes) {
+          if (node.path === path) {
+            return node;
+          }
+          const children = node.children as Array<Record<string, unknown>> | undefined;
+          if (children?.length) {
+            const hit = find(children, path);
+            if (hit) {
+              return hit;
+            }
+          }
+        }
+        return undefined;
+      };
+
+      const target = find(menus, '/monitor/server');
+      expect(target).toBeTruthy();
+      expect(target?.component).toBe('monitor/server/index');
+      expect(target?.permission).toBe('monitor:server:list');
+      // 父目录（监控管理）也应存在，否则子菜单挂不上去
+      expect(find(menus, '/monitor')).toBeTruthy();
+    });
+  });
+
   describe('站内通知', () => {
     /** 发布一条只发给 admin 的通知，返回其 id。 */
     const publishToAdmin = async (title: string): Promise<number> => {

@@ -4213,6 +4213,41 @@ export const API_DOCS: ApiDocGroup[] = [
         }
       },
       {
+        "method": "GET",
+        "path": "/api/monitor/online/server",
+        "summary": "系统资源快照（CPU / 内存 / 磁盘 / 负载 / 进程）。 刻意**不记操作日志**：页面每几秒轮询一次，打日志只会把操作日志表灌满噪音， 而读指标本身没有审计价值（要留痕的是「强退」这类写操作）",
+        "permission": [
+          "monitor:server:list"
+        ],
+        "isPublic": false,
+        "action": "",
+        "params": [
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "页码，从 1 开始",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "每页条数",
+            "example": 10
+          }
+        ],
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/monitor/online/server?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "page": 1,
+            "pageSize": 10
+          }
+        }
+      },
+      {
         "method": "DELETE",
         "path": "/api/monitor/online/:sid",
         "summary": "强制下线单个会话",

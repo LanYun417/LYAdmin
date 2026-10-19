@@ -380,6 +380,18 @@ const MENU_TREE: MenuSeedNode[] = [
         keepAlive: 1,
         children: [
           {
+            key: 'monitor:server',
+            menuName: '系统监控',
+            menuType: MenuType.MENU,
+            path: '/monitor/server',
+            component: 'monitor/server/index',
+            icon: 'cpu',
+            permission: 'monitor:server:list',
+            sort: 2,
+            visible: Status.ENABLED,
+            keepAlive: 0,
+          },
+          {
             key: 'monitor:online:forceLogout',
             menuName: '强制下线',
             menuType: MenuType.BUTTON,

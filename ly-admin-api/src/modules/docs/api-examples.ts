@@ -376,6 +376,29 @@ export const RESPONSE_EXAMPLES: Record<string, unknown> = {
       lastSeenAt: '2026-10-19T02:05:00.000Z',
     },
   ]),
+  /* 系统资源监控 */
+  'GET /api/monitor/server': envelope({
+    scope: 'container',
+    cpu: { model: 'Intel(R) Xeon(R) Platinum', cores: 4, usage: 12.5, perCore: [10.1, 14.2], quotaCores: 2 },
+    memory: { used: 268435456, total: 536870912, usage: 50 },
+    disk: { path: '/app/uploads', used: 1073741824, total: 10737418240, usage: 10 },
+    load: [0.52, 0.41, 0.38],
+    process: { rss: 188743680, heapUsed: 96468992, heapTotal: 134217728, uptime: 86400 },
+    system: {
+      hostname: 'ly-admin',
+      platform: 'linux',
+      release: '6.1.0',
+      arch: 'x64',
+      nodeVersion: 'v22.11.0',
+      appVersion: '1.0.0',
+    },
+    history: [
+      { at: 1763500000000, cpu: 11.2, memory: 48.6 },
+      { at: 1763500003000, cpu: 12.5, memory: 50 },
+    ],
+    warmingUp: false,
+    sampledAt: '2026-10-19T04:00:03.000Z',
+  }),
   /* 站内通知 */
   'GET /api/notices': paged([
     {

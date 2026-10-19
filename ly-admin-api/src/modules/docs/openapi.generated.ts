@@ -7020,6 +7020,91 @@ export const OPENAPI_DOC: Record<string, unknown> = {
         ]
       }
     },
+    "/api/monitor/online/server": {
+      "get": {
+        "tags": [
+          "在线用户"
+        ],
+        "summary": "系统资源快照（CPU / 内存 / 磁盘 / 负载 / 进程）。 刻意**不记操作日志**：页面每几秒轮询一次，打日志只会把操作日志表灌满噪音， 而读指标本身没有审计价值（要留痕的是「强退」这类写操作）",
+        "operationId": "get__api_monitor_online_server",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "description": "页码"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 10
+            },
+            "description": "每页条数"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功（统一信封 { code, message, data }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "业务码，0 表示成功"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "list": {
+                          "type": "array",
+                          "items": {}
+                        },
+                        "total": {
+                          "type": "integer",
+                          "example": 0
+                        },
+                        "page": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "pageSize": {
+                          "type": "integer",
+                          "example": 10
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
     "/api/monitor/online/{sid}": {
       "delete": {
         "tags": [

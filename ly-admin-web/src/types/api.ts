@@ -400,6 +400,73 @@ export interface UserImportResult {
   }>;
 }
 
+/* ------------------------------- 系统监控 ------------------------------- */
+
+/** 系统资源快照（GET /monitor/server） */
+export interface ServerMetrics {
+  /**
+   * 指标口径：
+   * - `container`：读的是 cgroup 限制（本服务运行在容器里时的真实可用资源）
+   * - `host`：读的是宿主机资源
+   *
+   * 两者都可能"对"，但含义不同，界面必须显式标出来，否则会出现
+   * 「显示 16G 用了 3G，实际容器 512M 就 OOM」这种误导。
+   */
+  scope: 'container' | 'host';
+  cpu: {
+    model: string;
+    /** 逻辑核数 */
+    cores: number;
+    /** 总使用率 0~100；首次采样为 null（尚无基线） */
+    usage: number | null;
+    /** 各核使用率 */
+    perCore: Array<number | null>;
+    /** 容器 CPU 配额折算核数（如 1.5）；不在容器内为 null */
+    quotaCores: number | null;
+  };
+  memory: {
+    /** 字节 */
+    used: number;
+    total: number;
+    usage: number | null;
+  };
+  disk: {
+    /** 被统计的目录（上传目录） */
+    path: string;
+    used: number;
+    total: number;
+    usage: number | null;
+  };
+  /** 1/5/15 分钟平均负载；Windows 恒为 0，不支持时为 null */
+  load: [number, number, number] | null;
+  process: {
+    /** 常驻内存 */
+    rss: number;
+    heapUsed: number;
+    heapTotal: number;
+    /** 进程运行时长（秒） */
+    uptime: number;
+  };
+  system: {
+    hostname: string;
+    platform: string;
+    release: string;
+    arch: string;
+    nodeVersion: string;
+    /** 镜像构建时注入的应用版本 */
+    appVersion: string;
+  };
+  /** 最近若干个采样点（图表用） */
+  history: Array<{
+    at: number;
+    cpu: number | null;
+    memory: number | null;
+  }>;
+  /** 是否还在预热（首次采样已建立基线但尚无使用率） */
+  warmingUp: boolean;
+  sampledAt: string;
+}
+
 /* ------------------------------- 通知中心 ------------------------------- */
 
 /** 通知类型 */
