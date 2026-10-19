@@ -426,6 +426,126 @@ describe('接口契约快照 (e2e)', () => {
     });
   });
 
+  describe('站内通知', () => {
+    /** 发布一条只发给 admin 的通知，返回其 id。 */
+    const publishToAdmin = async (title: string): Promise<number> => {
+      const me = await authGet('/auth/profile').expect(200);
+      const userId = Number((me.body as { data: { user: { id: number } } }).data.user.id);
+      const res = await authPost('/notices', {
+        title,
+        content: `内容：${title}`,
+        noticeType: 2,
+        userIds: [userId],
+      }).expect(200);
+      expect((res.body as { data: { count: number } }).data.count).toBe(1);
+      return userId;
+    };
+
+    /** 当前用户未读数。 */
+    const unreadCount = async (): Promise<number> => {
+      const res = await authGet('/notices/unread-count').expect(200);
+      return (res.body as { data: { count: number } }).data.count;
+    };
+
+    it('发布 → 未读数 +1 → 标记已读 → 未读数 -1；重复标记返回 404', async () => {
+      const before = await unreadCount();
+      await publishToAdmin(`e2e通知-${Date.now()}`);
+      expect(await unreadCount()).toBe(before + 1);
+
+      const list = await authGet('/notices?page=1&pageSize=1').expect(200);
+      const first = (list.body as { data: { list: Array<{ id: number; isRead: number; noticeType: number }> } }).data
+        .list[0]!;
+      expect(first.isRead).toBe(0);
+      expect(first.noticeType).toBe(2);
+
+      await request(app.getHttpServer())
+        .put(`${API}/notices/${first.id}/read`)
+        .set('authorization', `Bearer ${token}`)
+        .expect(200);
+      expect(await unreadCount()).toBe(before);
+
+      // 已经读过的再标记一次 → 404（不区分"已读"与"不存在"，不泄露存在性）
+      await request(app.getHttpServer())
+        .put(`${API}/notices/${first.id}/read`)
+        .set('authorization', `Bearer ${token}`)
+        .expect(404);
+    });
+
+    it('全部已读把未读清零，随后可删除与清空', async () => {
+      await publishToAdmin(`待全部已读-${Date.now()}`);
+      const res = await request(app.getHttpServer())
+        .put(`${API}/notices/read-all`)
+        .set('authorization', `Bearer ${token}`)
+        .expect(200);
+      expect((res.body as { data: { count: number } }).data.count).toBeGreaterThanOrEqual(1);
+      expect(await unreadCount()).toBe(0);
+
+      // 删除不存在的 → 404
+      await authDelete('/notices/999999999').expect(404);
+    });
+
+    it('通知按人隔离：另一个账号看不到、也改不了我的通知', async () => {
+      // 建一个普通账号并登录，用它验证隔离
+      const rolesRes = await authGet('/roles/all').expect(200);
+      const roleId = ((rolesRes.body as { data: Array<{ id: number; roleCode: string }> }).data ?? [])[0]!.id;
+      const username = `notif${Date.now().toString().slice(-6)}`;
+      const created = await authPost('/users', {
+        username,
+        nickname: '通知隔离测试',
+        password: 'Notice123',
+        roleIds: [roleId],
+      }).expect(200);
+      const otherUserId = Number((created.body as { data: { id: number } }).data.id);
+
+      try {
+        const title = `仅admin可见-${Date.now()}`;
+        await publishToAdmin(title);
+
+        // 用新账号登录
+        const captcha = await request(app.getHttpServer()).get(`${API}/auth/captcha`).expect(200);
+        const { enabled, captchaId } = captcha.body.data as { enabled: boolean; captchaId: string | null };
+        let captchaCode = '';
+        if (enabled && captchaId) {
+          captchaCode = (await redis.get(`${CAPTCHA_KEY_PREFIX}${captchaId}`)) ?? '';
+        }
+        const login = await request(app.getHttpServer())
+          .post(`${API}/auth/login`)
+          .send({ username, password: 'Notice123', captchaId, captchaCode })
+          .expect(200);
+        const otherToken = (login.body.data as { accessToken: string }).accessToken;
+
+        // 他的收件箱里不该出现这条
+        const list = await request(app.getHttpServer())
+          .get(`${API}/notices?page=1&pageSize=50`)
+          .set('authorization', `Bearer ${otherToken}`)
+          .expect(200);
+        const titles = (list.body as { data: { list: Array<{ title: string }> } }).data.list.map((item) => item.title);
+        expect(titles).not.toContain(title);
+
+        // 他也改不了我的通知（拿 admin 收件箱第一条的 id 去试）
+        const adminList = await authGet('/notices?page=1&pageSize=1').expect(200);
+        const adminNoticeId = (adminList.body as { data: { list: Array<{ id: number }> } }).data.list[0]!.id;
+        await request(app.getHttpServer())
+          .put(`${API}/notices/${adminNoticeId}/read`)
+          .set('authorization', `Bearer ${otherToken}`)
+          .expect(404);
+      } finally {
+        await authDelete('/users', { ids: [otherUserId] }).expect(200);
+      }
+    });
+
+    it('发布通知校验：缺标题 / 类型非法 / 未登录 401', async () => {
+      const noTitle = await authPost('/notices', { title: '  ', content: 'x', noticeType: 2 }).expect(400);
+      expect(String((noTitle.body as { message: string }).message)).toContain('标题');
+
+      await authPost('/notices', { title: 'x', content: 'y', noticeType: 9 }).expect(400);
+      await request(app.getHttpServer())
+        .post(`${API}/notices`)
+        .send({ title: 'x', content: 'y', noticeType: 2 })
+        .expect(401);
+    });
+  });
+
   describe('用户 CSV 批量导入', () => {
     /**
      * 行分隔符。

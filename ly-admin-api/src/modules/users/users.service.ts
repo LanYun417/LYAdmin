@@ -12,6 +12,7 @@ import { buildPageResult, hashPassword, parsePagination, readNumber, readString 
 import { assertPasswordNotContainsAccount } from '../../common/auth/password-policy.js';
 import { recordAfter, recordBefore } from '../../common/log/operation-snapshot.js';
 import { runBatchDelete, type BatchDeleteResult } from '../../common/utils/batch.js';
+import { NOTICE_TYPE, NoticeService } from '../notice/notice.service.js';
 import type { AuthUserContext, PageResult, UserDetail } from '../../common/types.js';
 import type { Prisma } from '../../generated/prisma/client.js';
 import type { CreateUserDto, UpdateUserDto } from './dto/users.dto.js';
@@ -55,6 +56,7 @@ export class UsersService {
     private readonly prisma: PrismaService,
     private readonly dataScope: DataScopeService,
     private readonly authCache: AuthCacheService,
+    private readonly noticeService: NoticeService,
   ) {}
 
   /** 判断用户是否为超级管理员：内置 `admin` 账号，或持有 `super_admin` 角色。 */
@@ -366,6 +368,14 @@ export class UsersService {
     });
     // 改密：失效缓存的旧 passwordChangedAt，保持「旧 Token 立即失效」语义
     this.authCache.invalidate(id);
+    // 通知本人：否则用户下次登录被顶掉时不知道原因（安全提醒，发布失败不影响改密结果）
+    await this.noticeService.publish({
+      title: '密码已被管理员重置',
+      content: '你的登录密码刚被管理员重置，所有旧会话已失效。若非本人操作，请立即联系管理员。',
+      noticeType: NOTICE_TYPE.SECURITY,
+      userIds: [id],
+      createdBy: null,
+    });
   }
 
   /** 分配角色（替换式：先清后建）。 */

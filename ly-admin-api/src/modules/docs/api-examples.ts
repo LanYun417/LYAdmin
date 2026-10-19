@@ -376,6 +376,26 @@ export const RESPONSE_EXAMPLES: Record<string, unknown> = {
       lastSeenAt: '2026-10-19T02:05:00.000Z',
     },
   ]),
+  /* 站内通知 */
+  'GET /api/notices': paged([
+    {
+      id: 12,
+      title: '登录会话已被强制下线',
+      content: '管理员终止了你在 203.0.113.8 的登录会话。如非本人操作，请及时修改密码。',
+      noticeType: 3,
+      link: null,
+      isRead: 0,
+      readAt: null,
+      createdAt: '2026-10-19T03:20:00.000Z',
+    },
+  ]),
+  'GET /api/notices/unread-count': envelope({ count: 3 }),
+  'POST /api/notices': envelope({ count: 12 }, '已发送 12 条'),
+  'PUT /api/notices/:id/read': envelope(null, '已标记为已读'),
+  'PUT /api/notices/read-all': envelope({ count: 3 }, '已标记 3 条为已读'),
+  'DELETE /api/notices/:id': envelope(null, '删除成功'),
+  'DELETE /api/notices': envelope({ count: 5 }, '已清空 5 条'),
+
   /* 用户批量导入（CSV） */
   'GET /api/users/import/template': '账号,昵称,密码,邮箱,手机号,性别(男/女),部门ID,状态(启用/禁用),角色编码,备注',
   'POST /api/users/import': envelope(

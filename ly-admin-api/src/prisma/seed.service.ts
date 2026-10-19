@@ -293,6 +293,27 @@ const MENU_TREE: MenuSeedNode[] = [
         ],
       },
       {
+        key: 'system:notice',
+        menuName: '通知中心',
+        menuType: MenuType.MENU,
+        path: '/system/notice',
+        component: 'system/notice/index',
+        icon: 'bell',
+        permission: 'system:notice:list',
+        sort: 7,
+        visible: Status.ENABLED,
+        keepAlive: 1,
+        children: [
+          {
+            key: 'system:notice:add',
+            menuName: '发布通知',
+            menuType: MenuType.BUTTON,
+            permission: 'system:notice:add',
+            sort: 1,
+          },
+        ],
+      },
+      {
         key: 'system:config',
         menuName: '参数管理',
         menuType: MenuType.MENU,

@@ -112,3 +112,36 @@ model HttpLog {
   @@index([username])
   @@map("sys_http_log")
 }
+
+/**
+ * 站内通知（每个接收人一条记录）。
+ * 刻意用「每人一条」而不是「公告一条 + 已读关联表」：
+ * 收件人规模可控（后台用户），而按人存能直接支持未读数、逐条已读与个人通知（强制下线、改密提醒），
+ * 不需要额外的已读关联表与联表查询。
+ */
+model Notice {
+  /// 主键
+  id         BigInt   @id @default(autoincrement()) @db.BigInt
+  /// 接收人 id
+  userId     BigInt   @map("user_id") @db.BigInt
+  /// 标题
+  title      String   @db.VarChar(200)
+  /// 正文（纯文本，渲染时按纯文本处理，不接受 HTML）
+  content    String   @db.Text
+  /// 类型：1 系统通知 / 2 公告 / 3 安全提醒
+  noticeType Int      @default(1) @map("notice_type") @db.TinyInt
+  /// 点击跳转的前端路由（空 = 不跳转）
+  link       String?  @db.VarChar(255)
+  /// 0 未读 / 1 已读
+  isRead     Int      @default(0) @map("is_read") @db.TinyInt
+  /// 阅读时间
+  readAt     DateTime? @map("read_at")
+  /// 创建人 id（系统自动通知可为空）
+  createdBy  BigInt?  @map("created_by") @db.BigInt
+  /// 创建时间
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  /// 个人收件箱列表：按人 + 未读优先 + 时间倒序
+  @@index([userId, isRead, createdAt])
+  @@map("sys_notice")
+}

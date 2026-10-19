@@ -13,6 +13,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { parseUserAgent } from '../../common/utils/user-agent.js';
 import { buildPageResult, parsePagination, readString } from '../../common/utils/utils.js';
 import { SessionService, type SessionRecord } from '../../common/auth/session.service.js';
+import { NOTICE_TYPE, NoticeService } from '../notice/notice.service.js';
 import { TokenBlacklistService } from '../../common/auth/token-blacklist.service.js';
 import { AppException } from '../../common/exception/app.exception.js';
 import type { PageResult } from '../../common/types.js';
@@ -44,6 +45,7 @@ export class MonitorService {
   constructor(
     private readonly sessionService: SessionService,
     private readonly blacklist: TokenBlacklistService,
+    private readonly noticeService: NoticeService,
   ) {}
 
   /**
@@ -74,6 +76,14 @@ export class MonitorService {
     }
     await this.sessionService.remove(sid, record.userId);
     this.logger.log(`[Monitor] 强制下线会话：${record.username} (${sid})`);
+    // 被踢的人应当知道为什么登出：给他留一条安全提醒（publish 内部吞异常，不会影响下线结果）
+    await this.noticeService.publish({
+      title: '登录会话已被强制下线',
+      content: `管理员终止了你在 ${record.ip || '未知 IP'} 的登录会话。如非本人操作，请及时修改密码。`,
+      noticeType: NOTICE_TYPE.SECURITY,
+      userIds: [record.userId],
+      createdBy: null,
+    });
   }
 
   /**
@@ -89,6 +99,13 @@ export class MonitorService {
     const removed = await this.sessionService.removeAllOfUser(userId);
     await this.blacklist.recordLogout(userId);
     this.logger.log(`[Monitor] 强制下线用户全部会话：userId=${userId}，共 ${removed} 个`);
+    await this.noticeService.publish({
+      title: '你的全部登录会话已被强制下线',
+      content: '管理员终止了你的全部登录会话，请重新登录。如非本人操作，请及时修改密码。',
+      noticeType: NOTICE_TYPE.SECURITY,
+      userIds: [userId],
+      createdBy: null,
+    });
     return removed;
   }
 

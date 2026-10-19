@@ -58,6 +58,7 @@ export const ModelName = {
   LoginLog: 'LoginLog',
   OperationLog: 'OperationLog',
   HttpLog: 'HttpLog',
+  Notice: 'Notice',
   User: 'User',
   Role: 'Role',
   Menu: 'Menu',
@@ -199,6 +200,22 @@ export const HttpLogScalarFieldEnum = {
 } as const
 
 export type HttpLogScalarFieldEnum = (typeof HttpLogScalarFieldEnum)[keyof typeof HttpLogScalarFieldEnum]
+
+
+export const NoticeScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  title: 'title',
+  content: 'content',
+  noticeType: 'noticeType',
+  link: 'link',
+  isRead: 'isRead',
+  readAt: 'readAt',
+  createdBy: 'createdBy',
+  createdAt: 'createdAt'
+} as const
+
+export type NoticeScalarFieldEnum = (typeof NoticeScalarFieldEnum)[keyof typeof NoticeScalarFieldEnum]
 
 
 export const UserScalarFieldEnum = {
@@ -426,6 +443,15 @@ export const HttpLogOrderByRelevanceFieldEnum = {
 } as const
 
 export type HttpLogOrderByRelevanceFieldEnum = (typeof HttpLogOrderByRelevanceFieldEnum)[keyof typeof HttpLogOrderByRelevanceFieldEnum]
+
+
+export const NoticeOrderByRelevanceFieldEnum = {
+  title: 'title',
+  content: 'content',
+  link: 'link'
+} as const
+
+export type NoticeOrderByRelevanceFieldEnum = (typeof NoticeOrderByRelevanceFieldEnum)[keyof typeof NoticeOrderByRelevanceFieldEnum]
 
 
 export const UserOrderByRelevanceFieldEnum = {

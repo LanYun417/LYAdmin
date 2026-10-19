@@ -400,6 +400,45 @@ export interface UserImportResult {
   }>;
 }
 
+/* ------------------------------- 通知中心 ------------------------------- */
+
+/** 通知类型 */
+export type NoticeTypeValue = 1 | 2 | 3;
+
+/** 站内通知 */
+export interface NoticeItem {
+  id: number;
+  title: string;
+  /** 纯文本正文（服务端不接受 HTML） */
+  content: string;
+  /** 1 系统通知 / 2 公告 / 3 安全提醒 */
+  noticeType: NoticeTypeValue;
+  /** 点击跳转的前端路由（空 = 不跳转） */
+  link: string | null;
+  /** 0 未读 / 1 已读 */
+  isRead: 0 | 1;
+  readAt: string | null;
+  createdAt: string;
+}
+
+/** 通知查询参数 */
+export interface NoticeQuery extends PageQuery {
+  /** 0 未读 / 1 已读 */
+  isRead?: number;
+  noticeType?: number;
+  title?: string;
+}
+
+/** 发布通知入参 */
+export interface NoticePublishPayload {
+  title: string;
+  content: string;
+  noticeType: NoticeTypeValue;
+  link?: string;
+  /** 接收人 id；不传表示发给全部启用中的用户 */
+  userIds?: number[];
+}
+
 /* ------------------------------- 在线用户 ------------------------------- */
 
 /** 在线会话（GET /monitor/online） */

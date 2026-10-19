@@ -404,6 +404,7 @@ export const ModelName = {
   LoginLog: 'LoginLog',
   OperationLog: 'OperationLog',
   HttpLog: 'HttpLog',
+  Notice: 'Notice',
   User: 'User',
   Role: 'Role',
   Menu: 'Menu',
@@ -426,7 +427,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "dictType" | "dictItem" | "sysConfig" | "file" | "loginLog" | "operationLog" | "httpLog" | "user" | "role" | "menu" | "dept" | "userRole" | "roleMenu" | "roleDept"
+    modelProps: "dictType" | "dictItem" | "sysConfig" | "file" | "loginLog" | "operationLog" | "httpLog" | "notice" | "user" | "role" | "menu" | "dept" | "userRole" | "roleMenu" | "roleDept"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -889,6 +890,72 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.HttpLogCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.HttpLogCountAggregateOutputType> | number
+        }
+      }
+    }
+    Notice: {
+      payload: Prisma.$NoticePayload<ExtArgs>
+      fields: Prisma.NoticeFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.NoticeFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoticePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.NoticeFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoticePayload>
+        }
+        findFirst: {
+          args: Prisma.NoticeFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoticePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.NoticeFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoticePayload>
+        }
+        findMany: {
+          args: Prisma.NoticeFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoticePayload>[]
+        }
+        create: {
+          args: Prisma.NoticeCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoticePayload>
+        }
+        createMany: {
+          args: Prisma.NoticeCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        delete: {
+          args: Prisma.NoticeDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoticePayload>
+        }
+        update: {
+          args: Prisma.NoticeUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoticePayload>
+        }
+        deleteMany: {
+          args: Prisma.NoticeDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.NoticeUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        upsert: {
+          args: Prisma.NoticeUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NoticePayload>
+        }
+        aggregate: {
+          args: Prisma.NoticeAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateNotice>
+        }
+        groupBy: {
+          args: Prisma.NoticeGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.NoticeGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.NoticeCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.NoticeCountAggregateOutputType> | number
         }
       }
     }
@@ -1511,6 +1578,22 @@ export const HttpLogScalarFieldEnum = {
 export type HttpLogScalarFieldEnum = (typeof HttpLogScalarFieldEnum)[keyof typeof HttpLogScalarFieldEnum]
 
 
+export const NoticeScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  title: 'title',
+  content: 'content',
+  noticeType: 'noticeType',
+  link: 'link',
+  isRead: 'isRead',
+  readAt: 'readAt',
+  createdBy: 'createdBy',
+  createdAt: 'createdAt'
+} as const
+
+export type NoticeScalarFieldEnum = (typeof NoticeScalarFieldEnum)[keyof typeof NoticeScalarFieldEnum]
+
+
 export const UserScalarFieldEnum = {
   id: 'id',
   username: 'username',
@@ -1736,6 +1819,15 @@ export const HttpLogOrderByRelevanceFieldEnum = {
 } as const
 
 export type HttpLogOrderByRelevanceFieldEnum = (typeof HttpLogOrderByRelevanceFieldEnum)[keyof typeof HttpLogOrderByRelevanceFieldEnum]
+
+
+export const NoticeOrderByRelevanceFieldEnum = {
+  title: 'title',
+  content: 'content',
+  link: 'link'
+} as const
+
+export type NoticeOrderByRelevanceFieldEnum = (typeof NoticeOrderByRelevanceFieldEnum)[keyof typeof NoticeOrderByRelevanceFieldEnum]
 
 
 export const UserOrderByRelevanceFieldEnum = {
@@ -1996,6 +2088,7 @@ export type GlobalOmitConfig = {
   loginLog?: Prisma.LoginLogOmit
   operationLog?: Prisma.OperationLogOmit
   httpLog?: Prisma.HttpLogOmit
+  notice?: Prisma.NoticeOmit
   user?: Prisma.UserOmit
   role?: Prisma.RoleOmit
   menu?: Prisma.MenuOmit

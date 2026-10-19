@@ -2,6 +2,7 @@
 import { useAppStore } from '@/store/modules/app';
 import Breadcrumb from './Breadcrumb.vue';
 import Avatar from './Avatar.vue';
+import NoticeBell from './NoticeBell.vue';
 
 defineOptions({ name: 'Navbar' });
 
@@ -38,6 +39,7 @@ function handleToggle(): void {
       <Breadcrumb />
     </div>
     <div class="flex items-center gap-3">
+      <NoticeBell />
       <Avatar />
     </div>
   </div>

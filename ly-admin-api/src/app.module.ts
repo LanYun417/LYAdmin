@@ -28,6 +28,7 @@ import { LogsModule } from './modules/logs/logs.module.js';
 import { DocsModule } from './modules/docs/docs.module.js';
 import { HealthModule } from './modules/health/health.module.js';
 import { MonitorModule } from './modules/monitor/monitor.module.js';
+import { NoticeModule } from './modules/notice/notice.module.js';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { MonitorModule } from './modules/monitor/monitor.module.js';
     CommonModule,
     HealthModule,
     MonitorModule,
+    NoticeModule,
     AuthModule,
     MenuModule,
     UsersModule,

@@ -5,12 +5,14 @@
  * 直接注入即可，无需在此 imports。
  */
 import { Module } from '@nestjs/common';
+import { NoticeModule } from '../notice/notice.module.js';
 import { UsersController } from './users.controller.js';
 import { UsersService } from './users.service.js';
 import { UsersImportService } from './users-import.service.js';
 
 @Module({
   controllers: [UsersController],
+  imports: [NoticeModule],
   providers: [UsersService, UsersImportService],
 })
 export class UsersModule {}

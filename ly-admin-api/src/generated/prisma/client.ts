@@ -77,6 +77,15 @@ export type OperationLog = Prisma.OperationLogModel
  */
 export type HttpLog = Prisma.HttpLogModel
 /**
+ * Model Notice
+ * *
+ *  * 站内通知（每个接收人一条记录）。
+ *  * 刻意用「每人一条」而不是「公告一条 + 已读关联表」：
+ *  * 收件人规模可控（后台用户），而按人存能直接支持未读数、逐条已读与个人通知（强制下线、改密提醒），
+ *  * 不需要额外的已读关联表与联表查询。
+ */
+export type Notice = Prisma.NoticeModel
+/**
  * Model User
  * 用户表
  */
