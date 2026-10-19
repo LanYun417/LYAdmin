@@ -569,6 +569,10 @@ async function handleRefresh(): Promise<void> {
               </el-tag>
             </div>
             <p class="mt-2 text-xs text-faint">{{ t('monitor.netHint') }}</p>
+            <!-- Windows 走子进程采样（15s），比页面 5s 轮询慢：不解释清楚会被当成"卡住了" -->
+            <p v-if="metrics?.network.source === 'powershell'" class="mt-1 text-xs text-faint">
+              {{ t('monitor.netCadence', { s: Math.round((metrics?.network.samplingIntervalMs ?? 0) / 1000) }) }}
+            </p>
           </template>
 
           <el-alert

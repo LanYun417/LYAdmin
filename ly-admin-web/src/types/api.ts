@@ -442,14 +442,18 @@ export interface ServerMetrics {
   /**
    * 网络活动。
    *
-   * 只有 Linux（含容器）支持：后端读 `/proc/net/dev` 的累计计数做差。
-   * Windows / macOS 上 Node 无跨平台网络计数 API，`supported: false` 并带 `reason`，
-   * 界面据此显示"当前平台不支持"而不是伪装成 0。
+   * - Linux（含容器）：读 `/proc/net/dev`，与主采样同频（3s）；
+   * - Windows：起子进程查 `Get-NetAdapterStatistics`，因进程启动开销大，采样放宽到 15s；
+   * - 其它平台：`supported: false` + `reason`，界面如实显示不支持而不是伪装成 0。
    */
   network: {
     supported: boolean;
     /** 不支持时的原因 */
     reason: string | null;
+    /** 数据来源：proc = /proc/net/dev；powershell = Windows 网卡统计 */
+    source: 'proc' | 'powershell' | null;
+    /** 该来源的采样间隔（毫秒）；Windows 更宽，界面据此解释"为何不是每 5s 变" */
+    samplingIntervalMs: number;
     /** 下行 / 上行速率（字节/秒）；首次采样为 null */
     rxRate: number | null;
     txRate: number | null;

@@ -16,6 +16,7 @@ import {
   parseCpuMax,
   parseMemoryLimit,
   parseProcNetDev,
+  parseWindowsAdapterStats,
   toCpuTimes,
   type CpuTimes,
 } from '../src/modules/monitor/system-metrics.service.js';
@@ -155,6 +156,53 @@ describe('parseProcNetDev', () => {
   });
 });
 
+/**
+ * Windows 路径：`Get-NetAdapterStatistics | ConvertTo-Json` 的输出解析。
+ * 下面是**本机实测**的真实输出（网卡名是本地化的"以太网"/"WLAN"，
+ * 所以绝不能按名字过滤 —— 换个系统语言名字就变了）。
+ */
+describe('parseWindowsAdapterStats', () => {
+  it('多网卡 → 数组，字段按英文属性名取（不受系统语言影响）', () => {
+    const raw =
+      '[{"Name":"以太网","ReceivedBytes":0,"SentBytes":0,"ReceivedPacketErrors":0,' +
+      '"ReceivedDiscardedPackets":0,"OutboundPacketErrors":0,"OutboundDiscardedPackets":0},' +
+      '{"Name":"WLAN","ReceivedBytes":14331210641,"SentBytes":10398379902,"ReceivedPacketErrors":2,' +
+      '"ReceivedDiscardedPackets":3,"OutboundPacketErrors":4,"OutboundDiscardedPackets":5}]';
+
+    const result = parseWindowsAdapterStats(raw);
+    expect(result.map((item) => item.name)).toEqual(['以太网', 'WLAN']);
+    expect(result[1]).toEqual({
+      name: 'WLAN',
+      rxBytes: 14331210641,
+      txBytes: 10398379902,
+      rxErrors: 2,
+      rxDropped: 3,
+      txErrors: 4,
+      txDropped: 5,
+    });
+  });
+
+  it('单网卡 → PowerShell 5.1 的 ConvertTo-Json 返回对象而不是数组', () => {
+    const raw = '{"Name":"WLAN","ReceivedBytes":100,"SentBytes":200}';
+    const result = parseWindowsAdapterStats(raw);
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({ name: 'WLAN', rxBytes: 100, txBytes: 200 });
+  });
+
+  it('丢包/错误字段缺失时按 0 处理（不产出 NaN）', () => {
+    const result = parseWindowsAdapterStats('{"Name":"WLAN","ReceivedBytes":1,"SentBytes":2}');
+    expect(result[0]).toMatchObject({ rxErrors: 0, rxDropped: 0, txErrors: 0, txDropped: 0 });
+  });
+
+  it('空输出 / 坏 JSON / 缺关键字段 → 空数组，不抛错', () => {
+    expect(parseWindowsAdapterStats('')).toEqual([]);
+    expect(parseWindowsAdapterStats('   ')).toEqual([]);
+    expect(parseWindowsAdapterStats('not json')).toEqual([]);
+    expect(parseWindowsAdapterStats('{"SentBytes":1}')).toEqual([]);
+    expect(parseWindowsAdapterStats('[{"Name":"x","ReceivedBytes":"n/a","SentBytes":2}]')).toEqual([]);
+  });
+});
+
 describe('computeRate', () => {
   it('累计字节差 / 时间差 → 字节每秒', () => {
     // 3 秒里多收了 3000 字节 → 1000 B/s
@@ -210,7 +258,7 @@ describe('SystemMetricsService 网络采集（fixture 驱动）', () => {
     process.env.NET_DEV_PATH = fixturePath;
 
     const service = new SystemMetricsService();
-    service.onModuleInit();
+    await service.onModuleInit();
 
     // 首次快照：有累计值（来自文件），但速率还没有基线
     const first = service.getSnapshot().network;
@@ -246,10 +294,10 @@ describe('SystemMetricsService 网络采集（fixture 驱动）', () => {
     service.onModuleDestroy();
   }, 10_000);
 
-  it('NET_DEV_PATH 指向不存在的文件 → 明确报不支持并带上原因', () => {
+  it('NET_DEV_PATH 指向不存在的文件 → 明确报不支持并带上原因', async () => {
     process.env.NET_DEV_PATH = join(tmpdir(), 'definitely-not-exist-netdev');
     const service = new SystemMetricsService();
-    service.onModuleInit();
+    await service.onModuleInit();
 
     const network = service.getSnapshot().network;
     expect(network.supported).toBe(false);

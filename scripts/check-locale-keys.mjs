@@ -21,34 +21,46 @@ const BASE_LOCALE = 'zh-CN';
 const OTHER_LOCALES = ['en-US'];
 
 /** 从语言包源码里提取 key → 值（只解析对象字面量，不引入 TS 运行时）。 */
+/**
+ * 从语言包源码里提取 key → 值（只解析对象字面量，不引入 TS 运行时）。
+ *
+ * 实现要点：**按出现位置顺序**同时匹配「分区开始」与「键值对」，用一个游标记录当前所在分区。
+ * 之所以不做逐行状态机：长文案会被 prettier 折成 `key:` 与值分两行（真实发生过——
+ * 英文长句被折行后逐行解析器报"缺 key"，是护栏自己错了）。
+ * 所以键与值之间允许跨行空白，但仍要求值本身是单行字符串字面量。
+ */
 function parseLocale(file) {
   const source = readFileSync(file, 'utf8');
   // 只剥掉 `export default`。⚠️ 曾经用 `/^\s*import[^;]+;\s*$/gm` 剥 import，
   // 结果该正则会跨行匹配（`\s*` 含换行），把注释到最后一个分号的整段内容一起吞掉，
   // 42 个 key 只解析出 8 个却"检查通过"——比没有门禁更危险。import 行本来就匹配不上
-  // 下面两条正则，会被自然忽略。
+  // 下面的规则，会被自然忽略。
   const body = source.replace(/^export\s+default\s*/m, '');
+
+  const sectionPattern = /^[ \t]*'?([A-Za-z0-9_-]+)'?[ \t]*:[ \t]*\{/gm;
+  const entryPattern = /^[ \t]*([A-Za-z0-9_]+)[ \t]*:[ \t]*\n?[ \t]*'((?:[^'\\\n]|\\.)*)'[ \t]*,?[ \t]*$/gm;
+
+  /** 收集两类匹配，按位置排序后一次遍历 */
+  const tokens = [];
+  for (let match = sectionPattern.exec(body); match; match = sectionPattern.exec(body)) {
+    tokens.push({ at: match.index, kind: 'section', name: match[1] });
+  }
+  for (let match = entryPattern.exec(body); match; match = entryPattern.exec(body)) {
+    tokens.push({ at: match.index, kind: 'entry', key: match[1], value: match[2] });
+  }
+  tokens.sort((left, right) => left.at - right.at);
+
   const messages = {};
   let section = '';
-  const lines = body.split('\n');
-  for (const rawLine of lines) {
-    const line = rawLine.trim();
-    if (line === '' || line.startsWith('//') || line.startsWith('*') || line.startsWith('/*')) {
+  for (const token of tokens) {
+    if (token.kind === 'section') {
+      section = token.name;
       continue;
     }
-    const sectionMatch = /^'?([A-Za-z0-9_-]+)'?\s*:\s*\{$/.exec(line);
-    if (sectionMatch) {
-      section = sectionMatch[1];
+    if (!section) {
       continue;
     }
-    if (line === '},') {
-      section = '';
-      continue;
-    }
-    const entryMatch = /^([A-Za-z0-9_]+):\s*'((?:[^'\\]|\\.)*)',?$/.exec(line);
-    if (entryMatch && section) {
-      messages[`${section}.${entryMatch[1]}`] = entryMatch[2].replace(/\\'/g, "'");
-    }
+    messages[`${section}.${token.key}`] = token.value.replace(/\\'/g, "'");
   }
   return messages;
 }

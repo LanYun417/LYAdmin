@@ -19,8 +19,10 @@
  * 磁盘用量取的是**上传目录**所在文件系统，而不是任意路径：磁盘写满时最先出问题的地方就是它。
  */
 import { Injectable, Logger, type OnModuleDestroy, type OnModuleInit } from '@nestjs/common';
+import { execFile } from 'node:child_process';
 import { readFileSync, statfsSync } from 'node:fs';
 import { hostname, arch, platform, cpus, freemem, totalmem, loadavg, release } from 'node:os';
+import { promisify } from 'node:util';
 import { config } from '../../common/config/config.js';
 
 /** 采样间隔（毫秒）。3s 兼顾曲线平滑度与读取开销。 */
@@ -29,6 +31,40 @@ const SAMPLE_INTERVAL_MS = 3000;
 const HISTORY_SIZE = 120;
 /** Linux 网卡累计计数文件（每行一张网卡）。 */
 const PROC_NET_DEV = '/proc/net/dev';
+
+/**
+ * Windows 上网络计数的采样间隔。
+ *
+ * Windows 没有可读的网卡计数文件，只能起 PowerShell 子进程查（`Get-NetAdapterStatistics`）：
+ * cmdlet 本身约 100ms，加上进程启动通常 0.3~0.6s，比 Linux 读一个文件贵几个数量级。
+ * 因此**与主采样解耦**：CPU/内存仍是 3s，网络在 Windows 上 15s 一次；
+ * 速率按「两次实际读取的时间差」计算，不受主采样间隔影响。
+ */
+const WINDOWS_NET_SAMPLE_MS = 15_000;
+/** PowerShell 查询超时：超时即放弃本次（不阻塞主采样，也不留挂起的子进程）。 */
+const WINDOWS_NET_TIMEOUT_MS = 8_000;
+
+/**
+ * Windows 网卡计数查询语句。
+ *
+ * 三个刻意的选择：
+ * - 用 `Get-NetAdapterStatistics` **不带 `-Name`**：网卡名是本地化且机器相关的
+ *   （本机实测就是"以太网"/"WLAN"），按名字过滤换个系统语言就失效；不带参数返回全部真实网卡；
+ * - 它只列**真实 NDIS 适配器**（不含环回），正好省掉"排除 lo"这一步；
+ * - 它同时提供丢包与错误计数，不必把这两项硬凑成 0。
+ *
+ * ⚠️ 开头那两句 `OutputEncoding` **不能删**：`powershell.exe` 默认按**控制台代码页**输出
+ * （中文系统是 GBK），而 Node 按 UTF-8 解码 → 网卡名会变成 U+FFFD 替换字符。
+ * 这个 bug 静默通过（数值全对、只有名字是乱码），本机实测对比：
+ * 不加前缀 `["��̫��","WLAN"]`，加了之后 `["以太网","WLAN"]`。
+ * e2e 里有一条断言专门盯"网卡名不含 U+FFFD"，防止有人把它当冗余删掉。
+ */
+const WINDOWS_NET_COMMAND =
+  '[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; $OutputEncoding = [System.Text.Encoding]::UTF8; ' +
+  'Get-NetAdapterStatistics | Select-Object Name,ReceivedBytes,SentBytes,ReceivedPacketErrors,' +
+  'ReceivedDiscardedPackets,OutboundPacketErrors,OutboundDiscardedPackets | ConvertTo-Json -Compress';
+
+const execFileAsync = promisify(execFile);
 
 /** 累积 CPU 时间（秒）。 */
 export interface CpuTimes {
@@ -94,14 +130,18 @@ export interface NetworkMetric {
   /**
    * 当前平台是否支持采集。
    *
-   * 只有 Linux（含容器）能拿到真实的网卡计数：`/proc/net/dev` 的累计字节数是精确值，
-   * 两次采样做差即速率。**Windows / macOS 上 Node 核心库没有任何网络计数 API**，
-   * 若去解析 `netstat -e` 会踩"表头本地化"（中文 Windows 是"收到的字节数"）与版本差异，
-   * 宁可明确报"不支持"，也不给一个会静默出错或不准确的数字。
+   * - Linux（含容器）：读 `/proc/net/dev`，精确、零成本；
+   * - Windows：起 PowerShell 查 `Get-NetAdapterStatistics`，可用但慢（故采样间隔更长）；
+   * - 其它平台：明确报不支持——Node 核心库没有跨平台网络计数 API，解析 `netstat -i` 之类输出
+   *   会踩表头/列顺序的本地化差异，与其给可能错的数字不如如实说"不支持"。
    */
   supported: boolean;
   /** 不支持时的原因（直接展示给运维看） */
   reason: string | null;
+  /** 数据来源：proc = /proc/net/dev；powershell = Windows 网卡统计 */
+  source: 'proc' | 'powershell' | null;
+  /** 该来源的采样间隔（毫秒）。Windows 走子进程，间隔更宽，界面据此提示"不会每 5s 变" */
+  samplingIntervalMs: number;
   /** 采样间隔内的平均速率（字节/秒）；首次采样为 null */
   rxRate: number | null;
   txRate: number | null;
@@ -295,6 +335,56 @@ export function computeRate(previous: number, current: number, elapsedMs: number
   return Math.round((delta / elapsedMs) * 1000);
 }
 
+/**
+ * 解析 `Get-NetAdapterStatistics | ConvertTo-Json` 的输出。
+ *
+ * 注意 `ConvertTo-Json` 的坑：单元素结果返回**对象**、多元素返回**数组**（PowerShell 5.1 没有
+ * `-AsArray`），所以两种形状都要处理。字段名是 cmdlet 的英文属性名，不受系统语言影响；
+ * 只有 `Name` 的**值**是本地化的（"以太网"/"WLAN"），我们只把它当标签透传。
+ *
+ * @param raw 命令输出
+ * @returns 每张网卡的累计计数；解析失败返回空数组（采样失败不该拖垮指标接口）
+ */
+export function parseWindowsAdapterStats(raw: string): NetCounters[] {
+  const text = raw.trim();
+  if (!text) {
+    return [];
+  }
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    return [];
+  }
+
+  const list = Array.isArray(parsed) ? parsed : [parsed];
+  const result: NetCounters[] = [];
+  for (const item of list) {
+    if (!item || typeof item !== 'object') {
+      continue;
+    }
+    const record = item as Record<string, unknown>;
+    const name = typeof record.Name === 'string' ? record.Name.trim() : '';
+    const rxBytes = Number(record.ReceivedBytes);
+    const txBytes = Number(record.SentBytes);
+    if (!name || !Number.isFinite(rxBytes) || !Number.isFinite(txBytes)) {
+      continue;
+    }
+    // 这三项可能缺失（老系统/特定驱动），缺失按 0 处理并在类型上保持数值，避免界面出现 NaN
+    const num = (value: unknown): number => (Number.isFinite(Number(value)) ? Number(value) : 0);
+    result.push({
+      name,
+      rxBytes,
+      txBytes,
+      rxErrors: num(record.ReceivedPacketErrors),
+      rxDropped: num(record.ReceivedDiscardedPackets),
+      txErrors: num(record.OutboundPacketErrors),
+      txDropped: num(record.OutboundDiscardedPackets),
+    });
+  }
+  return result;
+}
+
 function clamp(value: number): number {
   return Math.min(100, Math.max(0, value));
 }
@@ -319,10 +409,20 @@ export class SystemMetricsService implements OnModuleInit, OnModuleDestroy {
   private previousNet: NetCounters[] | null = null;
   /** 上一次采样时刻（算速率需要时间差） */
   private previousAt = 0;
-  /** 网卡计数文件路径；null = 当前环境不支持采集 */
+  /** 网卡计数来源：proc = 读文件（Linux/测试注入）；powershell = Windows 网卡统计 */
+  private netSource: 'proc' | 'powershell' | null = null;
+  /** Linux/测试注入时的计数文件路径 */
   private netDevPath: string | null = null;
   /** 不支持采集时的原因（展示给运维） */
   private netReason: string | null = null;
+  /** Windows 路径最近一次的网卡计数（算速率要用上一次） */
+  private windowsCounters: NetCounters[] | null = null;
+  /** Windows 路径上一次读取的时刻 */
+  private windowsAt = 0;
+  /** Windows 路径是否正在查询（避免定时器叠加出多个 PowerShell 进程） */
+  private networkBusy = false;
+  /** 最近一次算出的网络指标（Windows 路径异步更新，快照直接取它） */
+  private latestNetwork: NetworkMetric | null = null;
   /** 环形缓冲 */
   private history: MetricsPoint[] = [];
   /** 最近一次快照 */
@@ -334,14 +434,18 @@ export class SystemMetricsService implements OnModuleInit, OnModuleDestroy {
     cpuQuota: null,
   };
 
-  onModuleInit(): void {
+  async onModuleInit(): Promise<void> {
     this.probeCgroup();
-    this.probeNetwork();
+    // Windows 的探测本身要起一次 PowerShell（同时充当首次采样的基线），故是异步的
+    await this.probeNetwork();
     this.tick();
     this.timer = setInterval(() => this.tick(), SAMPLE_INTERVAL_MS);
     // 不让采样定时器吊住进程（测试/优雅退出都靠它）
     this.timer.unref();
-    this.logger.log(`[SystemMetrics] 系统指标采样已启动，间隔 ${SAMPLE_INTERVAL_MS}ms`);
+    this.logger.log(
+      `[SystemMetrics] 系统指标采样已启动，间隔 ${SAMPLE_INTERVAL_MS}ms` +
+        `（网络：${this.netSource ?? '不支持'}${this.netSource === 'powershell' ? `，${WINDOWS_NET_SAMPLE_MS}ms/次` : ''}）`,
+    );
   }
 
   onModuleDestroy(): void {
@@ -464,45 +568,188 @@ export class SystemMetricsService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * 探测网络计数是否可用，并记下要读的文件路径。
+   * 探测网络计数来源（每个平台各走各的路，探测一次后不再变）。
    *
-   * 只认 `/proc/net/dev`：它是 Linux（含容器）里唯一**精确且零依赖**的网卡计数来源，
-   * 容器里读到的是自己 network namespace 的接口（也就是本服务的真实流量）。
-   * Windows / macOS 明确不采集——解析 `netstat -e` 之类输出会踩表头本地化与版本差异，
-   * 与其给出可能错的数字，不如在界面上如实说"不支持"。
+   * | 平台 | 来源 | 采样间隔 |
+   * | ---- | ---- | -------- |
+   * | Linux（含容器） | `/proc/net/dev`（文件读，微秒级） | 与主采样同为 3s |
+   * | Windows | `Get-NetAdapterStatistics`（PowerShell 子进程） | 15s（解耦） |
+   * | 其它（macOS 等） | 不支持 | — |
    *
-   * `NET_DEV_PATH` 可覆盖路径：一是便于非 Linux 环境做集成测试，
-   * 二是容器用 host 网络命名空间时可指向挂载进来的宿主机 `/proc/net/dev`。
+   * `NET_DEV_PATH` 可覆盖计数文件：一是便于非 Linux 环境做集成测试，
+   * 二是容器使用 host 网络命名空间时可指向挂载进来的宿主机 `/proc/net/dev`。
    */
-  private probeNetwork(): void {
+  private async probeNetwork(): Promise<void> {
     const override = process.env.NET_DEV_PATH?.trim();
     if (override) {
       try {
         readFileSync(override, 'utf8');
         this.netDevPath = override;
+        this.netSource = 'proc';
         this.netReason = null;
         return;
       } catch {
         this.netDevPath = null;
+        this.netSource = null;
         this.netReason = `NET_DEV_PATH 指向的文件不可读：${override}`;
         return;
       }
     }
 
-    if (platform() !== 'linux') {
-      this.netDevPath = null;
-      this.netReason = `当前平台（${platform()}）不支持采集网卡计数：Node 核心库无跨平台网络计数 API，Linux 走 /proc/net/dev`;
+    if (platform() === 'linux') {
+      try {
+        readFileSync(PROC_NET_DEV, 'utf8');
+        this.netDevPath = PROC_NET_DEV;
+        this.netSource = 'proc';
+        this.netReason = null;
+      } catch {
+        this.netDevPath = null;
+        this.netSource = null;
+        this.netReason = `${PROC_NET_DEV} 不可读（容器可能未挂载 /proc）`;
+      }
       return;
     }
 
-    try {
-      readFileSync(PROC_NET_DEV, 'utf8');
-      this.netDevPath = PROC_NET_DEV;
-      this.netReason = null;
-    } catch {
-      this.netDevPath = null;
-      this.netReason = `${PROC_NET_DEV} 不可读（容器可能未挂载 /proc）`;
+    if (platform() === 'win32') {
+      try {
+        // 首次读取既验证可用性，也充当速率计算的基线（省一次子进程）
+        const counters = await this.readWindowsCounters();
+        if (counters.length === 0) {
+          this.netSource = null;
+          this.netReason = 'PowerShell 查询成功但未返回任何网卡计数（可能没有启用的网卡）';
+          return;
+        }
+        this.netSource = 'powershell';
+        this.netReason = null;
+        const at = Date.now();
+        // 首次只有累计值：速率仍是 null（"采样中"），一个周期后才出现真实速率
+        this.latestNetwork = this.buildWindowsMetric(counters, null, 0, at);
+        this.windowsCounters = counters;
+        this.windowsAt = at;
+      } catch (error) {
+        this.netSource = null;
+        this.netReason = `Windows 网卡计数不可用：${error instanceof Error ? error.message : String(error)}`;
+      }
+      return;
     }
+
+    this.netSource = null;
+    this.netReason = `当前平台（${platform()}）不支持采集网卡计数：Node 核心库无跨平台网络计数 API`;
+  }
+
+  /**
+   * 执行一次 PowerShell 查询，拿到各网卡的累计计数。
+   * 超时/非零退出码一律抛出，由调用方转成"本次失败"。
+   */
+  private async readWindowsCounters(): Promise<NetCounters[]> {
+    const { stdout } = await execFileAsync(
+      'powershell.exe',
+      ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', WINDOWS_NET_COMMAND],
+      { timeout: WINDOWS_NET_TIMEOUT_MS, windowsHide: true, maxBuffer: 1024 * 1024 },
+    );
+    return parseWindowsAdapterStats(stdout);
+  }
+
+  /** 不支持采集时的空指标（带原因）。 */
+  private emptyNetwork(): NetworkMetric {
+    return {
+      supported: false,
+      reason: this.netReason,
+      source: null,
+      samplingIntervalMs: 0,
+      rxRate: null,
+      txRate: null,
+      rxTotal: 0,
+      txTotal: 0,
+      rxErrors: 0,
+      txErrors: 0,
+      rxDropped: 0,
+      txDropped: 0,
+      interfaces: [],
+    };
+  }
+
+  /**
+   * Windows 路径的采样：由主定时器节流触发（异步，不阻塞快照）。
+   *
+   * 为什么节流而不是每次 tick 都查：一次查询要起一个 PowerShell 进程（0.3~0.6s），
+   * 3s 一次的代价会直接体现在我们自己采集的 CPU 曲线里。
+   */
+  private refreshWindowsNetwork(): void {
+    if (this.netSource !== 'powershell' || this.networkBusy) {
+      return;
+    }
+    const now = Date.now();
+    if (now - this.windowsAt < WINDOWS_NET_SAMPLE_MS) {
+      return;
+    }
+
+    this.networkBusy = true;
+    void this.readWindowsCounters()
+      .then((counters) => {
+        const at = Date.now();
+        this.latestNetwork = this.buildWindowsMetric(counters, this.windowsCounters, this.windowsAt, at);
+        this.windowsCounters = counters;
+        this.windowsAt = at;
+      })
+      .catch((error: unknown) => {
+        // 单次失败不改 supported：偶发超时（系统正忙）不该让界面忽然变成"不支持"
+        this.logger.debug(`[SystemMetrics] Windows 网卡计数查询失败：${String(error)}`);
+      })
+      .finally(() => {
+        this.networkBusy = false;
+      });
+  }
+
+  /**
+   * 把 Windows 网卡计数组装成对外的 NetworkMetric（与 proc 路径同一套速率算法）。
+   * @param counters 本次读到的累计计数
+   * @param previous 上次的累计计数（首次为 null）
+   * @param previousAt 上次读取时刻（首次为 0）
+   * @param at 本次读取时刻
+   */
+  private buildWindowsMetric(
+    counters: NetCounters[],
+    previous: NetCounters[] | null,
+    previousAt: number,
+    at: number,
+  ): NetworkMetric {
+    const elapsedMs = previousAt > 0 ? at - previousAt : 0;
+    const previousMap = new Map((previous ?? []).map((item) => [item.name, item]));
+
+    const interfaces = counters.map((item) => {
+      const before = previousMap.get(item.name);
+      return {
+        name: item.name,
+        rxRate: before ? computeRate(before.rxBytes, item.rxBytes, elapsedMs) : null,
+        txRate: before ? computeRate(before.txBytes, item.txBytes, elapsedMs) : null,
+        rxTotal: item.rxBytes,
+        txTotal: item.txBytes,
+      };
+    });
+
+    const sumRates = (pick: (item: (typeof interfaces)[number]) => number | null): number | null => {
+      const values = interfaces.map(pick).filter((value): value is number => value !== null);
+      return values.length > 0 ? values.reduce((total, value) => total + value, 0) : null;
+    };
+    const sumTotals = (pick: (item: NetCounters) => number): number =>
+      counters.reduce((total, item) => total + pick(item), 0);
+
+    return {
+      supported: true,
+      reason: null,
+      source: 'powershell',
+      samplingIntervalMs: WINDOWS_NET_SAMPLE_MS,
+      rxRate: sumRates((item) => item.rxRate),
+      txRate: sumRates((item) => item.txRate),
+      rxTotal: sumTotals((item) => item.rxBytes),
+      txTotal: sumTotals((item) => item.txBytes),
+      rxErrors: sumTotals((item) => item.rxErrors),
+      txErrors: sumTotals((item) => item.txErrors),
+      rxDropped: sumTotals((item) => item.rxDropped),
+      txDropped: sumTotals((item) => item.txDropped),
+      interfaces,
+    };
   }
 
   /**
@@ -515,20 +762,13 @@ export class SystemMetricsService implements OnModuleInit, OnModuleDestroy {
    *   界面显示"采样中"而不是"0 KB/s"，避免把"没测到"说成"没流量"。
    */
   private collectNetwork(at: number): NetworkMetric {
-    const empty: NetworkMetric = {
-      supported: false,
-      reason: this.netReason,
-      rxRate: null,
-      txRate: null,
-      rxTotal: 0,
-      txTotal: 0,
-      rxErrors: 0,
-      txErrors: 0,
-      rxDropped: 0,
-      txDropped: 0,
-      interfaces: [],
-    };
+    // Windows 走异步路径：快速返回上一份结果，并顺带触发（节流后的）刷新
+    if (this.netSource === 'powershell') {
+      this.refreshWindowsNetwork();
+      return this.latestNetwork ?? this.emptyNetwork();
+    }
 
+    const empty: NetworkMetric = this.emptyNetwork();
     if (!this.netDevPath) {
       return empty;
     }
@@ -571,6 +811,8 @@ export class SystemMetricsService implements OnModuleInit, OnModuleDestroy {
     return {
       supported: true,
       reason: null,
+      source: 'proc',
+      samplingIntervalMs: SAMPLE_INTERVAL_MS,
       rxRate: sumRates((item) => item.rxRate),
       txRate: sumRates((item) => item.txRate),
       rxTotal: sumTotals((item) => item.rxBytes),

@@ -513,6 +513,8 @@ describe('接口契约快照 (e2e)', () => {
             network: {
               supported: boolean;
               reason: string | null;
+              source: 'proc' | 'powershell' | null;
+              samplingIntervalMs: number;
               rxRate: number | null;
               txRate: number | null;
               rxTotal: number;
@@ -526,20 +528,29 @@ describe('接口契约快照 (e2e)', () => {
       expect(typeof network.supported).toBe('boolean');
 
       if (!network.supported) {
-        // 不支持的平台（Windows/macOS）必须给出可读原因，而不是静默给 0
+        // 不支持的平台必须给出可读原因，而不是静默给 0
         expect(network.reason).toBeTruthy();
+        expect(network.source).toBeNull();
         expect(network.rxRate).toBeNull();
         expect(network.interfaces).toEqual([]);
         return;
       }
 
-      // Linux（含容器）：`/proc/net/dev` 的累计值必然可用
+      // 支持时：来源与采样节奏必须是明确的（Linux 3s / Windows 15s）
+      expect(['proc', 'powershell']).toContain(network.source);
+      expect(network.samplingIntervalMs).toBeGreaterThan(0);
       expect(network.reason).toBeNull();
-      expect(network.rxTotal).toBeGreaterThan(0);
       expect(network.rxRate === null || network.rxRate >= 0).toBe(true);
-      // 环回必须被排除：否则进程间通信也算"网络活动"，数字会虚高
+      // 至少一张网卡；且环回必须被排除（proc 路径显式过滤，Windows 的 cmdlet 天然不含环回）
+      expect(network.interfaces.length).toBeGreaterThan(0);
       expect(network.interfaces.map((item) => item.name)).not.toContain('lo');
-      // 合计 = 各网卡之和（排除 lo），界面上展示的合计值要能自证
+      // 网卡名不能是乱码：Windows 的 PowerShell 默认按控制台代码页输出（中文系统是 GBK），
+      // 不加 OutputEncoding 前缀时 Node 按 UTF-8 解码会得到 U+FFFD——数值全对、只有名字坏，
+      // 属于"静默通过"的一类问题，必须在这里盯住。
+      for (const iface of network.interfaces) {
+        expect(iface.name).not.toContain('\uFFFD');
+      }
+      // 合计 = 各网卡之和：界面展示的合计值要能自证
       const sum = network.interfaces.reduce((total, item) => total + item.rxTotal, 0);
       expect(network.rxTotal).toBe(sum);
     });
