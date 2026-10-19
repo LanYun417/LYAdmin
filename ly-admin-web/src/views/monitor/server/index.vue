@@ -312,7 +312,6 @@ function drawResourceTrend(chart: ReturnType<typeof echarts.init>): void {
         smooth: true,
         showSymbol: false,
         emphasis: { focus: 'series' },
-        // z 控制叠放顺序：主序列（强渐变）盖在次序列（弱渐变）之上，避免两色混成脏色
         z: 3,
         data: points.map((point) => point.cpu),
         lineStyle: { width: 3, color: primary },
@@ -320,22 +319,7 @@ function drawResourceTrend(chart: ReturnType<typeof echarts.init>): void {
         areaStyle: { color: verticalGradient(hexToRgba(primary, 0.3), hexToRgba(primary, 0.02)) },
       },
       {
-        // 次序列的"阴影"用**辉光层**而不是面积：同数据、更粗、低透明度的线，贴着曲线走。
-        // 为什么不用 areaStyle：面积的渐变锚点是**整条序列的包围盒**（最高点）而不是曲线本身，
-        // 色块会浮在曲线上方；而两条都铺满面积又会叠成一片灰（两种都踩过）。
-        // 辉光层是独立序列，必须 `tooltip.show: false` + `silent`，否则提示框会多出一行。
-        name: t('monitor.memoryUsage') + ' glow',
-        type: 'line',
-        smooth: true,
-        showSymbol: false,
-        silent: true,
-        legendHoverLink: false,
-        z: 1,
-        data: points.map((point) => point.memory),
-        lineStyle: { width: 10, color: hexToRgba('#f59e0b', 0.18), cap: 'round' },
-        tooltip: { show: false },
-      },
-      {
+        // 次序列与主序列同样铺面积（同一套渐变参数，只换颜色）
         name: t('monitor.memoryUsage'),
         type: 'line',
         smooth: true,
@@ -345,6 +329,7 @@ function drawResourceTrend(chart: ReturnType<typeof echarts.init>): void {
         data: points.map((point) => point.memory),
         lineStyle: { width: 2, color: '#f59e0b' },
         itemStyle: { color: '#f59e0b', borderColor: palette.cardBg, borderWidth: 2 },
+        areaStyle: { color: verticalGradient(hexToRgba('#f59e0b', 0.3), hexToRgba('#f59e0b', 0.02)) },
       },
     ],
   });
@@ -418,19 +403,7 @@ function drawNetworkTrend(chart: ReturnType<typeof echarts.init>): void {
         areaStyle: { color: verticalGradient(hexToRgba(rxColor, 0.3), hexToRgba(rxColor, 0.02)) },
       },
       {
-        // 与资源趋势一致：次序列用辉光层（同数据粗线）而不是面积
-        name: t('monitor.netTx') + ' glow',
-        type: 'line',
-        smooth: true,
-        showSymbol: false,
-        silent: true,
-        legendHoverLink: false,
-        z: 1,
-        data: points.map((point) => point.txRate),
-        lineStyle: { width: 10, color: hexToRgba(txColor, 0.18), cap: 'round' },
-        tooltip: { show: false },
-      },
-      {
+        // 与资源趋势一致：次序列同样铺面积
         name: t('monitor.netTx'),
         type: 'line',
         smooth: true,
@@ -440,6 +413,7 @@ function drawNetworkTrend(chart: ReturnType<typeof echarts.init>): void {
         data: points.map((point) => point.txRate),
         lineStyle: { width: 2, color: txColor },
         itemStyle: { color: txColor, borderColor: palette.cardBg, borderWidth: 2 },
+        areaStyle: { color: verticalGradient(hexToRgba(txColor, 0.3), hexToRgba(txColor, 0.02)) },
       },
     ],
   });
