@@ -621,116 +621,93 @@ async function handleRefresh(): Promise<void> {
       </el-col>
     </el-row>
 
-    <!-- 网络活动卡片 + 网络吞吐趋势：单位是 B/s，与"使用率 %"不同，故单独一张图 -->
-    <el-row :gutter="16" class="mt-4">
-      <el-col :xs="24" :lg="8">
-        <el-card shadow="never" class="h-full">
-          <!-- 纵向布局撑满卡片高度：右侧图表把行高拉起来，内容不足时要主动填满，
-               否则卡片下方会留一大片空白（原先就是这样，看起来像没做完） -->
-          <div class="flex h-full flex-col">
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-muted">{{ t('monitor.network') }}</span>
-              <!-- 口径与采样节奏收进提示，不再用两行灰字占版面 -->
-              <el-tooltip placement="top" effect="dark">
-                <template #content>
-                  <div class="max-w-72 leading-relaxed">
-                    {{ t('monitor.netHint') }}
-                    <template v-if="metrics?.network.source === 'powershell'">
-                      <br />
-                      {{
-                        t('monitor.netCadence', { s: Math.round((metrics?.network.samplingIntervalMs ?? 0) / 1000) })
-                      }}
-                    </template>
-                  </div>
-                </template>
-                <el-icon class="cursor-help text-muted" role="button" tabindex="0" :aria-label="t('monitor.netHint')">
-                  <i class="bi bi-info-circle" />
-                </el-icon>
-              </el-tooltip>
+    <!-- 网络活动：指标横排 + 自带吞吐图，一张卡 24 栏（不与高图表并排，避免高度错配留白） -->
+    <el-card shadow="never" class="mt-4">
+      <div class="flex items-center justify-between">
+        <span class="text-[15px] font-semibold text-ink">{{ t('monitor.network') }}</span>
+        <!-- 口径与采样节奏收进提示，不占版面 -->
+        <el-tooltip placement="top" effect="dark">
+          <template #content>
+            <div class="max-w-72 leading-relaxed">
+              {{ t('monitor.netHint') }}
+              <template v-if="metrics?.network.source === 'powershell'">
+                <br />
+                {{ t('monitor.netCadence', { s: Math.round((metrics?.network.samplingIntervalMs ?? 0) / 1000) }) }}
+              </template>
             </div>
+          </template>
+          <el-icon class="cursor-help text-muted" role="button" tabindex="0" :aria-label="t('monitor.netHint')">
+            <i class="bi bi-info-circle" />
+          </el-icon>
+        </el-tooltip>
+      </div>
 
-            <template v-if="metrics?.network.supported">
-              <!-- 主指标：数值大、单位小；左侧小圆点与图表图例颜色对应 -->
-              <div class="mt-4 grid grid-cols-2 gap-4">
-                <div v-for="item in rateCards" :key="item.key">
-                  <p class="flex items-center gap-1.5 text-xs text-faint">
-                    <span
-                      class="inline-block h-1.5 w-1.5 shrink-0 rounded-full"
-                      :style="{ backgroundColor: item.color }"
-                    />
-                    {{ item.label }}
-                  </p>
-                  <p class="mt-1 flex items-baseline gap-1">
-                    <span class="text-2xl font-semibold leading-none text-ink">{{ item.value }}</span>
-                    <span class="text-xs text-muted">{{ item.unit }}</span>
-                  </p>
-                </div>
-              </div>
-
-              <!-- 累计流量 / 异常：两行对齐的键值 -->
-              <div class="mt-4 border-t border-line-light pt-3 text-xs">
-                <div class="flex items-center justify-between">
-                  <span class="text-faint">{{ t('monitor.netTotal') }}</span>
-                  <span class="tabular-nums text-ink-regular">
-                    ↓ {{ formatBytes(metrics?.network.rxTotal) }} · ↑ {{ formatBytes(metrics?.network.txTotal) }}
-                  </span>
-                </div>
-                <div class="mt-1.5 flex items-center justify-between">
-                  <span class="text-faint">{{ t('monitor.netAbnormal') }}</span>
-                  <span
-                    class="tabular-nums"
-                    :class="netErrorSummary.danger ? 'font-medium text-[var(--el-color-danger)]' : 'text-ink-regular'"
-                  >
-                    {{ netErrorSummary.text }}
-                  </span>
-                </div>
-              </div>
-
-              <!-- 网卡明细：贴底（mt-auto），数字右对齐；用标签做会参差不齐 -->
-              <div v-if="netInterfaces.length" class="mt-auto border-t border-line-light pt-3">
-                <p class="mb-1.5 text-xs text-faint">{{ t('monitor.netInterfaces') }}</p>
-                <div
-                  v-for="iface in netInterfaces"
-                  :key="iface.name"
-                  class="flex items-center justify-between gap-2 py-0.5 text-xs"
-                  :title="`${iface.name}：↓ ${formatBytes(iface.rxTotal)} / ↑ ${formatBytes(iface.txTotal)}`"
-                >
-                  <span class="truncate text-ink-regular">{{ iface.name }}</span>
-                  <span class="shrink-0 tabular-nums text-muted">
-                    ↓ {{ formatRate(iface.rxRate) }} · ↑ {{ formatRate(iface.txRate) }}
-                  </span>
-                </div>
-              </div>
-            </template>
-
-            <el-alert
-              v-else
-              class="mt-3"
-              type="info"
-              :closable="false"
-              show-icon
-              :title="t('monitor.netUnsupported')"
-              :description="metrics?.network.reason ?? ''"
-            />
+      <template v-if="metrics?.network.supported">
+        <!-- 指标横条：窄屏自动折行，宽屏一行看完 -->
+        <div class="mt-3 flex flex-wrap items-center gap-x-8 gap-y-3">
+          <div v-for="item in rateCards" :key="item.key">
+            <p class="flex items-center gap-1.5 text-xs text-faint">
+              <span class="inline-block h-1.5 w-1.5 shrink-0 rounded-full" :style="{ backgroundColor: item.color }" />
+              {{ item.label }}
+            </p>
+            <p class="mt-0.5 flex items-baseline gap-1">
+              <span class="text-xl font-semibold leading-none text-ink">{{ item.value }}</span>
+              <span class="text-xs text-muted">{{ item.unit }}</span>
+            </p>
           </div>
-        </el-card>
-      </el-col>
-      <el-col :xs="24" :lg="16">
-        <el-card shadow="never" class="h-full">
-          <div class="mb-2 text-[15px] font-semibold text-ink">{{ t('monitor.netTrend') }}</div>
-          <div v-if="metrics?.network.supported" ref="netChartRef" class="h-72 w-full" />
-          <el-alert
-            v-else
-            class="mt-4"
-            type="info"
-            :closable="false"
-            show-icon
-            :title="t('monitor.netUnsupported')"
-            :description="metrics?.network.reason ?? ''"
-          />
-        </el-card>
-      </el-col>
-    </el-row>
+
+          <div class="border-line-light pl-8 lg:border-l">
+            <p class="text-xs text-faint">{{ t('monitor.netTotal') }}</p>
+            <p class="mt-0.5 text-sm text-ink-regular tabular-nums">
+              ↓ {{ formatBytes(metrics?.network.rxTotal) }} · ↑ {{ formatBytes(metrics?.network.txTotal) }}
+            </p>
+          </div>
+
+          <div class="border-line-light pl-8 lg:border-l">
+            <p class="text-xs text-faint">{{ t('monitor.netAbnormal') }}</p>
+            <p
+              class="mt-0.5 text-sm tabular-nums"
+              :class="netErrorSummary.danger ? 'font-medium text-[var(--el-color-danger)]' : 'text-ink-regular'"
+            >
+              {{ netErrorSummary.text }}
+            </p>
+          </div>
+
+          <!-- 网卡明细：横排，数字用等宽字体对齐 -->
+          <div v-if="netInterfaces.length" class="border-line-light pl-8 lg:border-l">
+            <p class="text-xs text-faint">{{ t('monitor.netInterfaces') }}</p>
+            <div class="mt-0.5 flex flex-wrap items-center gap-x-4 gap-y-1">
+              <span
+                v-for="iface in netInterfaces"
+                :key="iface.name"
+                class="text-sm text-ink-regular tabular-nums"
+                :title="`${iface.name}：↓ ${formatBytes(iface.rxTotal)} / ↑ ${formatBytes(iface.txTotal)}`"
+              >
+                {{ iface.name }}
+                <span class="text-muted"
+                  >↓{{ formatRate(iface.rxRate, true) }} ↑{{ formatRate(iface.txRate, true) }}</span
+                >
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-3 border-line-light border-t pt-3">
+          <div class="mb-1 text-sm text-muted">{{ t('monitor.netTrend') }}</div>
+          <div ref="netChartRef" class="h-56 w-full" />
+        </div>
+      </template>
+
+      <el-alert
+        v-else
+        class="mt-3"
+        type="info"
+        :closable="false"
+        show-icon
+        :title="t('monitor.netUnsupported')"
+        :description="metrics?.network.reason ?? ''"
+      />
+    </el-card>
 
     <el-row :gutter="16" class="mt-4">
       <el-col :xs="24" :lg="16">
