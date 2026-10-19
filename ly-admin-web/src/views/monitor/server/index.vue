@@ -55,9 +55,14 @@ function formatBytes(bytes: number | null | undefined): string {
  * 字节/秒 → 人类可读速率。
  * @param compact 紧凑模式（轴刻度用）：不带 "/s" 后缀，省横向空间
  */
-function formatRate(bytesPerSecond: number | null | undefined, compact = false): string {
+/**
+ * 字节/秒 → 数值与单位分开返回。
+ * 拆开的用途：主指标需要"大号数值 + 小号单位"（`formatRate` 只能给一整串），
+ * 否则 `63.0 KB/s` 全用大字号，读起来很笨重。
+ */
+function rateParts(bytesPerSecond: number | null | undefined): { value: string; unit: string } {
   if (bytesPerSecond === null || bytesPerSecond === undefined || !Number.isFinite(bytesPerSecond)) {
-    return '-';
+    return { value: '-', unit: '' };
   }
   const units = ['B', 'KB', 'MB', 'GB'];
   let value = bytesPerSecond;
@@ -67,8 +72,20 @@ function formatRate(bytesPerSecond: number | null | undefined, compact = false):
     unitIndex += 1;
   }
   // 小于 1KB 时不带小数（"37 B/s" 比 "37.0 B/s" 干净）
-  const text = `${unitIndex === 0 ? Math.round(value) : value.toFixed(1)} ${units[unitIndex]}`;
-  return compact ? text : `${text}/s`;
+  return { value: unitIndex === 0 ? String(Math.round(value)) : value.toFixed(1), unit: `${units[unitIndex]}/s` };
+}
+
+/**
+ * 字节/秒 → 人类可读速率（数值 + 单位连写，用于表格、提示框这类紧凑位置）。
+ * @param compact 紧凑模式（轴刻度用）：不带 "/s" 后缀，省横向空间
+ */
+function formatRate(bytesPerSecond: number | null | undefined, compact = false): string {
+  const { value, unit } = rateParts(bytesPerSecond);
+  if (unit === '') {
+    return value;
+  }
+  const text = `${value} ${compact ? unit.replace('/s', '') : unit}`;
+  return text;
 }
 
 /** 秒 → 人类可读时长 */
@@ -119,6 +136,11 @@ async function fetchMetrics(): Promise<void> {
  * 这两项平时都是 0，一旦非 0 就是真问题（丢包常见于带宽打满或网卡队列溢出），
  * 所以非 0 时标红，而不是和"累计流量"一样用灰字平铺。
  */
+/**
+ * 网络错误 / 丢包摘要。
+ * 这两项平时都是 0，一旦非 0 就是真问题（丢包常见于带宽打满或网卡队列溢出），
+ * 所以非 0 时标红。文案自带字段名（"错误 0 · 丢包 0"），不让读者猜 `0 / 0` 谁是谁。
+ */
 const netErrorSummary = computed(() => {
   const network = metrics.value?.network;
   if (!network?.supported) {
@@ -126,7 +148,40 @@ const netErrorSummary = computed(() => {
   }
   const errors = network.rxErrors + network.txErrors;
   const dropped = network.rxDropped + network.txDropped;
-  return { text: `${errors} / ${dropped}`, danger: errors + dropped > 0 };
+  return {
+    text: `${t('monitor.netErrorShort')} ${errors} · ${t('monitor.netDroppedShort')} ${dropped}`,
+    danger: errors + dropped > 0,
+  };
+});
+
+/**
+ * 网卡明细（按累计流量倒序）。
+ * 排序原因：未接线的网卡累计为 0，按接口原顺序会排在最前，看起来像"主力网卡没数据"。
+ */
+const netInterfaces = computed(() =>
+  [...(metrics.value?.network.interfaces ?? [])].sort(
+    (left, right) => right.rxTotal + right.txTotal - (left.rxTotal + left.txTotal),
+  ),
+);
+
+/**
+ * 上行统一用这个颜色（图表曲线与卡片上的小圆点共用），
+ * 同一份色值出现两处就容易漂移，抽成常量。
+ */
+const NET_UP_COLOR = '#10b981';
+
+/**
+ * 上下行的展示单元：数值与单位拆开（大号数值 + 小号单位），
+ * 色点与图表图例颜色一一对应，读图时不用再对"哪个颜色是哪条线"。
+ */
+const rateCards = computed(() => {
+  const network = metrics.value?.network;
+  const down = rateParts(network?.rxRate);
+  const up = rateParts(network?.txRate);
+  return [
+    { key: 'rx', label: t('monitor.netRx'), value: down.value, unit: down.unit, color: appStore.primaryColor },
+    { key: 'tx', label: t('monitor.netTx'), value: up.value, unit: up.unit, color: NET_UP_COLOR },
+  ];
 });
 
 /* ------------------------------ 图表 ------------------------------ */
@@ -311,7 +366,7 @@ function drawNetworkTrend(chart: ReturnType<typeof echarts.init>): void {
   const palette = getChartPalette(appStore.dark);
   const points = metrics.value?.history.slice(-CHART_POINTS) ?? [];
   const rxColor = appStore.primaryColor;
-  const txColor = '#10b981';
+  const txColor = NET_UP_COLOR;
 
   chart.setOption({
     tooltip: {
@@ -596,57 +651,94 @@ async function handleRefresh(): Promise<void> {
     <el-row :gutter="16" class="mt-4">
       <el-col :xs="24" :lg="8">
         <el-card shadow="never" class="h-full">
-          <div class="flex items-center justify-between">
-            <span class="text-sm text-muted">{{ t('monitor.network') }}</span>
-            <i class="bi bi-activity text-muted" />
+          <!-- 纵向布局撑满卡片高度：右侧图表把行高拉起来，内容不足时要主动填满，
+               否则卡片下方会留一大片空白（原先就是这样，看起来像没做完） -->
+          <div class="flex h-full flex-col">
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-muted">{{ t('monitor.network') }}</span>
+              <!-- 口径与采样节奏收进提示，不再用两行灰字占版面 -->
+              <el-tooltip placement="top" effect="dark">
+                <template #content>
+                  <div class="max-w-72 leading-relaxed">
+                    {{ t('monitor.netHint') }}
+                    <template v-if="metrics?.network.source === 'powershell'">
+                      <br />
+                      {{
+                        t('monitor.netCadence', { s: Math.round((metrics?.network.samplingIntervalMs ?? 0) / 1000) })
+                      }}
+                    </template>
+                  </div>
+                </template>
+                <el-icon class="cursor-help text-muted" role="button" tabindex="0" :aria-label="t('monitor.netHint')">
+                  <i class="bi bi-info-circle" />
+                </el-icon>
+              </el-tooltip>
+            </div>
+
+            <template v-if="metrics?.network.supported">
+              <!-- 主指标：数值大、单位小；左侧小圆点与图表图例颜色对应 -->
+              <div class="mt-4 grid grid-cols-2 gap-4">
+                <div v-for="item in rateCards" :key="item.key">
+                  <p class="flex items-center gap-1.5 text-xs text-faint">
+                    <span
+                      class="inline-block h-1.5 w-1.5 shrink-0 rounded-full"
+                      :style="{ backgroundColor: item.color }"
+                    />
+                    {{ item.label }}
+                  </p>
+                  <p class="mt-1 flex items-baseline gap-1">
+                    <span class="text-2xl font-semibold leading-none text-ink">{{ item.value }}</span>
+                    <span class="text-xs text-muted">{{ item.unit }}</span>
+                  </p>
+                </div>
+              </div>
+
+              <!-- 累计流量 / 异常：两行对齐的键值 -->
+              <div class="mt-4 border-t border-line-light pt-3 text-xs">
+                <div class="flex items-center justify-between">
+                  <span class="text-faint">{{ t('monitor.netTotal') }}</span>
+                  <span class="tabular-nums text-ink-regular">
+                    ↓ {{ formatBytes(metrics?.network.rxTotal) }} · ↑ {{ formatBytes(metrics?.network.txTotal) }}
+                  </span>
+                </div>
+                <div class="mt-1.5 flex items-center justify-between">
+                  <span class="text-faint">{{ t('monitor.netAbnormal') }}</span>
+                  <span
+                    class="tabular-nums"
+                    :class="netErrorSummary.danger ? 'font-medium text-[var(--el-color-danger)]' : 'text-ink-regular'"
+                  >
+                    {{ netErrorSummary.text }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- 网卡明细：贴底（mt-auto），数字右对齐；用标签做会参差不齐 -->
+              <div v-if="netInterfaces.length" class="mt-auto border-t border-line-light pt-3">
+                <p class="mb-1.5 text-xs text-faint">{{ t('monitor.netInterfaces') }}</p>
+                <div
+                  v-for="iface in netInterfaces"
+                  :key="iface.name"
+                  class="flex items-center justify-between gap-2 py-0.5 text-xs"
+                  :title="`${iface.name}：↓ ${formatBytes(iface.rxTotal)} / ↑ ${formatBytes(iface.txTotal)}`"
+                >
+                  <span class="truncate text-ink-regular">{{ iface.name }}</span>
+                  <span class="shrink-0 tabular-nums text-muted">
+                    ↓ {{ formatRate(iface.rxRate) }} · ↑ {{ formatRate(iface.txRate) }}
+                  </span>
+                </div>
+              </div>
+            </template>
+
+            <el-alert
+              v-else
+              class="mt-3"
+              type="info"
+              :closable="false"
+              show-icon
+              :title="t('monitor.netUnsupported')"
+              :description="metrics?.network.reason ?? ''"
+            />
           </div>
-
-          <template v-if="metrics?.network.supported">
-            <div class="mt-2 grid grid-cols-2 gap-3">
-              <div>
-                <p class="text-xs text-faint">{{ t('monitor.netRx') }}</p>
-                <p class="text-xl font-semibold text-ink">{{ formatRate(metrics?.network.rxRate) }}</p>
-              </div>
-              <div>
-                <p class="text-xs text-faint">{{ t('monitor.netTx') }}</p>
-                <p class="text-xl font-semibold text-ink">{{ formatRate(metrics?.network.txRate) }}</p>
-              </div>
-            </div>
-
-            <p class="mt-3 text-xs text-faint">
-              {{ t('monitor.netTotal') }}：↓ {{ formatBytes(metrics?.network.rxTotal) }} / ↑
-              {{ formatBytes(metrics?.network.txTotal) }}
-            </p>
-            <p class="mt-1 text-xs" :class="netErrorSummary.danger ? 'text-[var(--el-color-danger)]' : 'text-faint'">
-              {{ t('monitor.netErrors') }}：{{ netErrorSummary.text }}
-            </p>
-
-            <div v-if="metrics?.network.interfaces.length" class="mt-3 flex flex-wrap gap-1">
-              <el-tag
-                v-for="iface in metrics?.network.interfaces"
-                :key="iface.name"
-                size="small"
-                :title="`${iface.name}：↓ ${formatBytes(iface.rxTotal)} / ↑ ${formatBytes(iface.txTotal)}`"
-              >
-                {{ iface.name }} ↓{{ formatRate(iface.rxRate, true) }} ↑{{ formatRate(iface.txRate, true) }}
-              </el-tag>
-            </div>
-            <p class="mt-2 text-xs text-faint">{{ t('monitor.netHint') }}</p>
-            <!-- Windows 走子进程采样（15s），比页面 5s 轮询慢：不解释清楚会被当成"卡住了" -->
-            <p v-if="metrics?.network.source === 'powershell'" class="mt-1 text-xs text-faint">
-              {{ t('monitor.netCadence', { s: Math.round((metrics?.network.samplingIntervalMs ?? 0) / 1000) }) }}
-            </p>
-          </template>
-
-          <el-alert
-            v-else
-            class="mt-3"
-            type="info"
-            :closable="false"
-            show-icon
-            :title="t('monitor.netUnsupported')"
-            :description="metrics?.network.reason ?? ''"
-          />
         </el-card>
       </el-col>
       <el-col :xs="24" :lg="16">
