@@ -131,9 +131,12 @@ describe('SessionService', () => {
   it('list 支持按账号/IP 过滤，并按最后活跃时间倒序', async () => {
     const oldSid = String(await service.create(sessionInput({ ip: '10.0.0.1' })));
     const newSid = String(await service.create(sessionInput({ ip: '10.0.0.2' })));
+    await service.create(sessionInput({ userId: 2, username: 'tom' }));
+    // touch 必须放在**最后**：它把 newSid 的活跃时间顶到最新。
+    // 若在创建 tom 之前 touch，二者谁更新取决于毫秒级时序（慢机器上 tom 更晚），
+    // 这条断言就会变成 flaky——真实 CI 上就是这么挂的。
     await new Promise((resolve) => setTimeout(resolve, 5));
     await service.touch(newSid);
-    await service.create(sessionInput({ userId: 2, username: 'tom' }));
 
     const all = await service.list();
     expect(all[0]?.sid).toBe(newSid); // 最近活跃在最前

@@ -199,7 +199,10 @@ export class SessionService {
       }
       this.logger.debug(`[Session] 清理失效会话索引 ${stale.length} 条`);
     }
-    return records.sort((left, right) => right.lastSeenAt - left.lastSeenAt);
+    // 按最近活跃倒序；**同毫秒活跃的会话用 sid 兜底**，否则排序结果取决于
+    // Redis `mGet` 的返回顺序（索引集合的迭代序不保证稳定），列表会莫名其妙地抖动，
+    // 也让"最近活跃在最前"这类断言在慢机器/快机器上时对时错。
+    return records.sort((left, right) => right.lastSeenAt - left.lastSeenAt || left.sid.localeCompare(right.sid));
   }
 
   /** 在线会话数（供仪表盘或列表头部展示）。 */

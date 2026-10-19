@@ -50,6 +50,19 @@ describe('resolveStoredPath', () => {
     expect(resolveStoredPath('..\\secret.txt')).toBeNull();
     expect(resolveStoredPath(path.resolve(config.upload.dir, '..', 'secret.txt'))).toBeNull();
   });
+
+  /**
+   * 这几条在 POSIX 与 Windows 上必须**行为一致**。
+   * 曾经的实现把判断全交给 `path.resolve`，于是 `'..\\secret.txt'` 在 Linux 上只是
+   * 合法文件名（不构成穿越）被放行、在 Windows 上却被拒——安全边界跟着部署平台变，
+   * CI（ubuntu）上这条用例直接红了。
+   */
+  it('跨平台一致：反斜杠 / 绝对路径在两套平台语义下都被拒绝', () => {
+    expect(resolveStoredPath('png\\a.png')).toBeNull(); // 反斜杠出现在任何位置
+    expect(resolveStoredPath('/etc/passwd')).toBeNull(); // POSIX 绝对路径
+    expect(resolveStoredPath('C:\\Windows\\win.ini')).toBeNull(); // Windows 绝对路径
+    expect(resolveStoredPath('\\\\server\\share\\a.png')).toBeNull(); // UNC
+  });
 });
 
 describe('toPosixPath', () => {

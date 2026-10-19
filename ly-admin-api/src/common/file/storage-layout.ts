@@ -35,10 +35,22 @@ export function storageRelativePath(ext: string, fileName: string): string {
 
 /**
  * 把相对路径解析为磁盘绝对路径，并确保仍在 UPLOAD_DIR 之内。
- * @param relativePath DB 中的相对路径（posix / 本地分隔符均可）
+ *
+ * 拒绝三类输入（**顺序有意义**）：反斜杠、绝对路径、越过 UPLOAD_DIR。
+ * - **含反斜杠一律拒绝**：入库路径约定是 posix（`storageRelativePath` 产出 `/`，`toPosixPath` 归一），
+ *   出现 `\` 只能来自 Windows 风格穿越或历史脏数据。若交给 `path.resolve` 判断，
+ *   `'..\\secret.txt'` 在 POSIX 上只是**合法文件名**（不构成穿越）→ 在 Linux 上会被放行，
+ *   同一个值在 Windows 上却被拒——安全边界不该随部署平台变化。
+ * - **绝对路径显式拒绝**：`path.resolve(root, '/etc/passwd')` 会**丢弃 root**，
+ *   虽然随后会被前缀检查拦下，但显式判断更清楚，也避免依赖调用顺序。
+ *
+ * @param relativePath DB 中的相对路径（posix 分隔符）
  * @returns 绝对路径；越界或为绝对路径时返回 null
  */
 export function resolveStoredPath(relativePath: string): string | null {
+  if (relativePath.includes('\\') || path.isAbsolute(relativePath)) {
+    return null;
+  }
   const root = config.upload.dir;
   const absolute = path.resolve(root, relativePath);
   const prefix = root.endsWith(path.sep) ? root : `${root}${path.sep}`;
