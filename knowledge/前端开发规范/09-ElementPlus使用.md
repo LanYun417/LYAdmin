@@ -126,6 +126,51 @@ watch(
 前端本来就有 11 个运行时依赖（vue / pinia / element-plus / echarts …），
 新增依赖已登记进 `scripts/deps-baseline.json`。
 
+## el-tree 回填勾选：不要用 `setCheckedKeys`（会级联补全）
+
+角色授权的抽屉要"按服务端返回的 id 还原勾选状态"。直觉写法是 `tree.setCheckedKeys(ids)`，
+但**在父级 id 也在列表里时会出严重问题**：用户取消掉的权限，重新打开抽屉又"自己回来了"。
+
+### 机制（看源码才明白）
+
+`el-tree` 内部 `_setCheckedKeys` 对列表里的**非叶子**节点执行的是
+`node.setChecked(true, true)` —— 第二个参数是 **deep**，即**深度级联，勾上该节点下所有子孙**。
+更糟的是：级联勾上的子孙会被内部 `cache` 标记保护，后面的"不在列表里就取消"那段循环**跳过它们**，
+所以级联结果不会被纠正。
+
+而角色授权保存的恰恰是「勾选 + 半选」（半选父级必须一起存，否则后端拼不出菜单树），
+半选父级一旦进入列表 → 它下面**全部**子孙被补成勾选。
+
+### 实测（真实菜单树 + 「只读访客」角色的 13 个授权 id）
+
+| 回填方式                                  | 结果                                                                                              |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `setCheckedKeys(ids)`                     | 13 个 id → **50 个勾选**（多出「系统管理」下所有未授权按钮：新增用户、删除角色、清空 HTTP 日志…） |
+| 清空 + 逐个 `setChecked(id, true, false)` | 11 勾选 + 2 半选 = **13，与服务端完全一致**                                                       |
+
+### 正确写法
+
+```js
+// 先清空（空列表走的是"逐个取消、不级联"的分支）
+tree.setCheckedKeys([]);
+// 再逐节点设置：deep=false 不向下联动；node.setChecked 末尾会自动 reInitChecked(parent)，
+// 父级的全选 / 半选状态照样算对，所以"父级授权但子项未授权"也能如实还原
+for (const id of ids) {
+  tree.setChecked(id, true, false);
+}
+```
+
+### 另一个必踩的点：别再传 `default-checked-keys`
+
+`el-tree` 初始化时对默认勾选同样走级联（`node.setChecked(true, !checkStrictly)`）。
+如果同时保留 `:default-checked-keys` 和上面的手动回填，就有两条互相覆盖的路径——
+**回填只保留一条**（本项目 `components/MenuTree` 用 watcher + 手动回填，模板里不再传该属性）。
+
+### 自查清单
+
+- 回填后断言一次：`getCheckedKeys().length + getHalfCheckedKeys().length === 服务端 id 数`；
+- 若用 `check-strictly`（父子不关联）就不存在级联问题，但要自己在保存时补全祖先 id。
+
 ## 暗黑模式
 
 `main.ts` 引入 `element-plus/theme-chalk/dark/css-vars.css`，暗黑切换由 `html.dark` 类驱动（与 `useTheme` / VueUse `useDark` 对齐）。Tailwind 的 `darkMode: 'class'` 与之同源。
