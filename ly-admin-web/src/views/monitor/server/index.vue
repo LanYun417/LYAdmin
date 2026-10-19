@@ -136,6 +136,15 @@ const netErrorSummary = computed(() => {
  * 两个图表（资源趋势 / 网络吞吐）的初始化、尺寸自适应、销毁完全一样，抽成一个工厂，
  * 避免把 `echarts.init / ResizeObserver / dispose` 这套样板写两遍（漏一处就是内存泄漏）。
  *
+ * ⚠️ **必须懒初始化**：图表容器可能带 `v-if`（如网络图只在平台支持时才渲染），
+ * 挂载那一刻容器还不存在。只在 `onMounted` 里 init 会导致实例永远不创建、面板一直空白
+ * （真实踩过：网络吞吐面板全白，而没加 v-if 的资源趋势正常）。
+ * 所以每次绘制前都 `ensure()` 一次，等容器出现后再建实例。
+ *
+ * ⚠️ 配合要求：触发绘制的 watch 必须 `flush: 'post'`。
+ * 默认 `'pre'` 在**组件重渲染之前**执行，那时 `v-if` 的容器还没插入 DOM，
+ * `ensure()` 依然拿不到元素——只加懒初始化而忘了这个，仍会间歇性空白。
+ *
  * @param target 图表容器
  * @param draw 绘制回调，拿到实例后调 setOption
  * @returns 重新绘制的函数（数据/主题变化时调用）
@@ -145,23 +154,36 @@ function setupChart(
   draw: (chart: ReturnType<typeof echarts.init>) => void,
 ): () => void {
   let chart: ReturnType<typeof echarts.init> | null = null;
+
+  /** 容器就绪后才创建实例；已创建则直接返回 */
+  const ensure = (): ReturnType<typeof echarts.init> | null => {
+    if (!chart && target.value) {
+      chart = echarts.init(target.value);
+    }
+    return chart;
+  };
+
   // 限频 100ms：窗口拖拽、侧边栏折叠会让 ResizeObserver 高频触发
   const resize = throttle((): void => void chart?.resize(), 100, { leading: true, trailing: true });
   useResizeObserver(target, resize);
+
   onMounted(() => {
-    if (target.value) {
-      chart = echarts.init(target.value);
-      draw(chart);
+    const instance = ensure();
+    if (instance) {
+      draw(instance);
     }
   });
+
   onBeforeUnmount(() => {
     resize.cancel();
     chart?.dispose();
     chart = null;
   });
+
   return (): void => {
-    if (chart) {
-      draw(chart);
+    const instance = ensure();
+    if (instance) {
+      draw(instance);
     }
   };
 }
@@ -341,24 +363,33 @@ const drawNetwork = setupChart(netChartRef, drawNetworkTrend);
 
 onMounted(async () => {
   await fetchMetrics();
-  // 图表实例由 setupChart 的 onMounted 创建（早于此），拿到数据后主动重绘一次
+  // 等 DOM 更新（网络图的容器带 v-if，数据到了才渲染出来），再绘制
+  await nextTick();
   drawResource();
   drawNetwork();
 });
 
-// 数据或主题变化时重绘两张图
+/**
+ * 数据或主题变化时重绘两张图。
+ * `flush: 'post'` 不是可选项：默认 `'pre'` 在组件重渲染**之前**执行，
+ * 那时 `v-if` 的图表容器还没插入 DOM，懒初始化拿不到元素 → 面板空白。
+ */
 watch(
   metrics,
   () => {
     drawResource();
     drawNetwork();
   },
-  { deep: true },
+  { deep: true, flush: 'post' },
 );
-watch([() => appStore.dark, () => appStore.primaryColor], () => {
-  drawResource();
-  drawNetwork();
-});
+watch(
+  [() => appStore.dark, () => appStore.primaryColor],
+  () => {
+    drawResource();
+    drawNetwork();
+  },
+  { flush: 'post' },
+);
 
 /* ------------------------------ 自动刷新 ------------------------------ */
 
