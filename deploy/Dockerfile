@@ -10,7 +10,7 @@
 # 代价只是镜像大 ~100MB。web 构建阶段不跑原生模块，故仍用 alpine（拉取更快）。
 
 ############################ 1. 前端构建 ############################
-FROM node:22-alpine AS web-builder
+FROM node:24-alpine AS web-builder
 WORKDIR /build/ly-admin-web
 
 # 先只拷依赖清单：依赖未变时可命中缓存，改源码不会触发重新 npm ci
@@ -22,7 +22,7 @@ COPY ly-admin-web/ ./
 RUN npm run build:only
 
 ############################ 2. 后端构建 ############################
-FROM node:22-bookworm-slim AS api-builder
+FROM node:24-bookworm-slim AS api-builder
 WORKDIR /build/ly-admin-api
 
 COPY ly-admin-api/package.json ly-admin-api/package-lock.json ./
@@ -33,7 +33,7 @@ COPY ly-admin-api/ ./
 RUN npm run build
 
 ############################ 3. 运行时 ############################
-FROM node:22-bookworm-slim AS runtime
+FROM node:24-bookworm-slim AS runtime
 
 ENV NODE_ENV=production \
     PORT=3000 \
