@@ -2,7 +2,7 @@
  * 用户接口：用户分页列表、详情、增删改、状态切换、重置密码与分配角色。
  */
 import { del, get, post, put, request } from './request';
-import type { BatchDeleteSummary, PageResult, UserDetail, UserQuery, UserUpsert } from '@/types/api';
+import type { BatchDeleteSummary, PageResult, UserDetail, UserImportResult, UserQuery, UserUpsert } from '@/types/api';
 
 /** 用户分页列表 */
 export function getUserListApi(params: UserQuery): Promise<PageResult<UserDetail>> {
@@ -50,4 +50,30 @@ export function resetUserPasswordApi(id: number, password: string): Promise<null
 /** 分配角色 */
 export function assignUserRolesApi(id: number, roleIds: number[]): Promise<null> {
   return put<null>(`/users/${id}/roles`, { roleIds });
+}
+
+/**
+ * 下载 CSV 导入模板（二进制流，前端用 downloadBlob 落盘）。
+ */
+export function getUserImportTemplateApi(): Promise<Blob> {
+  return request<Blob>({
+    url: '/users/import/template',
+    method: 'GET',
+    responseType: 'blob',
+  });
+}
+
+/**
+ * CSV 批量导入用户。
+ * 返回的是**导入报告**而非异常：行级问题在 `failed` 里逐行说明，
+ * 任一行不合格时服务端不写入任何数据（created=0）。
+ */
+export function importUsersApi(file: File): Promise<UserImportResult> {
+  const formData = new FormData();
+  formData.append('file', file);
+  return request<UserImportResult>({
+    url: '/users/import',
+    method: 'POST',
+    data: formData,
+  });
 }

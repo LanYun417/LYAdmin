@@ -426,6 +426,116 @@ describe('接口契约快照 (e2e)', () => {
     });
   });
 
+  describe('用户 CSV 批量导入', () => {
+    /**
+     * 行分隔符。
+     * 用 `String.fromCharCode(10)` 而不是字面量转义：CSV 允许 LF，
+     * 且避免测试源码里出现难以肉眼校验的转义序列（CRLF 的解析覆盖在 csv-parse.spec.ts）。
+     */
+    const LF = String.fromCharCode(10);
+
+    /** 以 multipart 提交一份 CSV 内容。 */
+    const importCsv = (content: string, filename = 'users.csv'): request.Test =>
+      request(app.getHttpServer())
+        .post(`${API}/users/import`)
+        .set('authorization', `Bearer ${token}`)
+        .attach('file', Buffer.from(content, 'utf8'), { filename, contentType: 'text/csv' });
+
+    /** 按账号前缀查用户（用于断言"到底写进去没有"）。 */
+    const findUsersByPrefix = async (prefix: string): Promise<Array<{ id: number; username: string }>> => {
+      const res = await authGet(`/users?page=1&pageSize=50&username=${prefix}`).expect(200);
+      const list = (res.body as { data: { list: Array<{ id: number; username: string }> } }).data.list ?? [];
+      return list.filter((item) => item.username.startsWith(prefix));
+    };
+
+    it('模板可下载：含表头与 UTF-8 BOM', async () => {
+      const res = await request(app.getHttpServer())
+        .get(`${API}/users/import/template`)
+        .set('authorization', `Bearer ${token}`)
+        .buffer(true)
+        .parse(binaryParser)
+        .expect(200);
+      expect(res.headers['content-type']).toContain('text/csv');
+      const raw = res.body as Buffer;
+      expect([raw[0], raw[1], raw[2]]).toEqual([0xef, 0xbb, 0xbf]);
+      expect(csvLines(raw)[0]).toContain('账号');
+      expect(csvLines(raw)[0]).toContain('昵称');
+    });
+
+    it('上传合法 CSV：全部写入且可查到，随后能被批量删除清理', async () => {
+      const prefix = `impa${Date.now().toString().slice(-6)}`;
+      // 角色编码从库里取真实值：硬编码种子编码会让用例随种子调整而失效
+      const rolesRes = await authGet('/roles/all').expect(200);
+      const roleCode = ((rolesRes.body as { data: Array<{ roleCode: string }> }).data ?? [])
+        .map((role) => role.roleCode)
+        .find((code) => code !== 'super_admin');
+      expect(roleCode).toBeTruthy();
+
+      const csv = [
+        '账号,昵称,密码,邮箱,性别,状态,角色编码,备注',
+        `${prefix}1,导入甲,Import123,impa1@example.com,男,启用,${roleCode},批量导入`,
+        `${prefix}2,导入乙,Import456,,女,禁用,,批量导入`,
+      ].join(LF);
+
+      const res = await importCsv(`${csv}${LF}`).expect(200);
+      const data = (res.body as { data: { total: number; created: number; failed: unknown[] } }).data;
+      expect(data.total).toBe(2);
+      expect(data.created).toBe(2);
+      expect(data.failed).toEqual([]);
+
+      const created = await findUsersByPrefix(prefix);
+      expect(created.map((item) => item.username).sort()).toEqual([`${prefix}1`, `${prefix}2`]);
+
+      // 清理：批量删除（顺带验证导入与批量删除能串起来）
+      await authDelete('/users', { ids: created.map((item) => item.id) }).expect(200);
+      expect(await findUsersByPrefix(prefix)).toHaveLength(0);
+    });
+
+    it('任一行不合格 → 全批不写入，并返回逐行报告（含行号）', async () => {
+      const prefix = `impb${Date.now().toString().slice(-6)}`;
+      const csv = [
+        '账号,昵称,密码,状态,备注',
+        `${prefix}1,合法行,Import123,启用,这行本来可以写入`,
+        `${prefix}2,弱口令,123,启用,密码太短`,
+        `${prefix}3,坏状态,Import123,已停用,状态取值非法`,
+        `${prefix}1,重复账号,Import123,启用,文件内重复`,
+      ].join(LF);
+
+      const res = await importCsv(`${csv}${LF}`).expect(200);
+      const data = (
+        res.body as { data: { total: number; created: number; failed: Array<{ line: number; message: string }> } }
+      ).data;
+      expect(data.total).toBe(4);
+      expect(data.created).toBe(0);
+      expect(data.failed).toHaveLength(3);
+      // 行号含表头（第 1 行是表头），故第一行数据是第 2 行
+      expect(data.failed.map((item) => item.line)).toEqual([3, 4, 5]);
+      expect(data.failed[0]!.message).toContain('密码');
+      expect(data.failed[1]!.message).toContain('状态');
+      expect(data.failed[2]!.message).toContain('重复');
+
+      // 关键：合法那一行也不能被写进去（全成功或全不写）
+      expect(await findUsersByPrefix(prefix)).toHaveLength(0);
+    });
+
+    it('账号已存在 → 计入失败明细，且不覆盖既有账号', async () => {
+      const csv = ['账号,昵称,密码', 'admin,想覆盖超管,Import123'].join(LF);
+      const res = await importCsv(`${csv}${LF}`).expect(200);
+      const data = (res.body as { data: { created: number; failed: Array<{ message: string }> } }).data;
+      expect(data.created).toBe(0);
+      expect(data.failed[0]!.message).toContain('已存在');
+    });
+
+    it('请求级问题才是 400：缺必填列 / 无数据行 / 非 CSV 扩展名', async () => {
+      const missing = await importCsv(['账号,昵称', 'foo,张三'].join(LF)).expect(400);
+      expect(String((missing.body as { message: string }).message)).toContain('密码');
+
+      // 只有表头、没有数据行
+      await importCsv('账号,昵称,密码').expect(400);
+
+      await importCsv(['账号,昵称,密码', 'foo,张三,Import123'].join(LF), 'users.xlsx').expect(400);
+    });
+  });
   describe('在线会话与强制下线', () => {
     it('登录即产生会话：列表可见且带 sid / 客户端信息', async () => {
       const res = await authGet('/monitor/online?page=1&pageSize=50').expect(200);

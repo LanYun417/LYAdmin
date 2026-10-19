@@ -1279,6 +1279,76 @@ export const OPENAPI_DOC: Record<string, unknown> = {
         ]
       }
     },
+    "/api/users/import/template": {
+      "get": {
+        "tags": [
+          "用户管理"
+        ],
+        "summary": "下载 CSV 导入模板。 必须声明在 `@Get(':id')` **之前**：Nest 按声明顺序匹配，否则 `import/template` 会被 `:id` 吃掉",
+        "operationId": "get__api_users_import_template",
+        "responses": {
+          "200": {
+            "description": "文件流（CSV / ZIP / 附件），响应体为二进制，无 JSON 信封",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/users/import": {
+      "post": {
+        "tags": [
+          "用户管理"
+        ],
+        "summary": "批量导入用户（CSV，全成功或全不写）。 行级校验失败返回 200 + 逐行报告（`data.failed`），请求级问题（空文件/缺列/超行数）才是 400",
+        "operationId": "post__api_users_import",
+        "responses": {
+          "200": {
+            "description": "成功（统一信封 { code, message, data }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "业务码，0 表示成功"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {}
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
     "/api/users/{id}/password": {
       "put": {
         "tags": [

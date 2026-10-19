@@ -52,3 +52,35 @@ export const UPLOAD_MULTER_OPTIONS = {
   fileFilter,
   limits: { fileSize: config.upload.maxSize, files: config.upload.maxCount },
 };
+
+/**
+ * CSV 导入专用 multer 配置。
+ *
+ * 为什么不复用 `UPLOAD_MULTER_OPTIONS`：
+ * 1. 那份是 **diskStorage**，会把导入文件永久写进 `uploads/`（导入文件是临时数据，
+ *    不该出现在文件管理页里，还得额外删盘）；
+ * 2. 它的扩展名/MIME 白名单是给"业务附件"用的，不含 csv。
+ * 故这里单独用 memoryStorage：文件直接进内存，解析完即回收。
+ */
+export const CSV_IMPORT_MULTER_OPTIONS = {
+  storage: multer.memoryStorage(),
+  limits: {
+    // 2MB 足够 5000 行（解析行数上限见 csv-parse.ts），同时避免超大文件占内存
+    fileSize: 2 * 1024 * 1024,
+    files: 1,
+  },
+  fileFilter: (
+    _req: unknown,
+    file: Express.Multer.File,
+    cb: (error: Error | null, acceptFile: boolean) => void,
+  ): void => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    // Excel 另存为 CSV 时 MIME 可能是 text/csv、application/vnd.ms-excel 或 application/octet-stream
+    const allowedExt = ['.csv', '.txt'];
+    if (!allowedExt.includes(ext)) {
+      cb(AppException.badRequest('仅支持 .csv 文件（请用 Excel/WPS 另存为 CSV）'), false);
+      return;
+    }
+    cb(null, true);
+  },
+};

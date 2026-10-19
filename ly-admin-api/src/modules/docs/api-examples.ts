@@ -376,6 +376,16 @@ export const RESPONSE_EXAMPLES: Record<string, unknown> = {
       lastSeenAt: '2026-10-19T02:05:00.000Z',
     },
   ]),
+  /* 用户批量导入（CSV） */
+  'GET /api/users/import/template': '账号,昵称,密码,邮箱,手机号,性别(男/女),部门ID,状态(启用/禁用),角色编码,备注',
+  'POST /api/users/import': envelope(
+    {
+      total: 3,
+      created: 0,
+      failed: [{ line: 3, username: 'lisi', message: '密码长度不能少于 8 位' }],
+    },
+    '校验未通过，未写入任何数据',
+  ),
   'DELETE /api/monitor/online/:sid': envelope(null, '已强制下线'),
   'DELETE /api/monitor/online/user/:userId': envelope(null, '已下线 2 个会话'),
   'GET /api/files/uploaders': envelope([{ id: 1, username: 'admin', nickname: '超级管理员' }]),

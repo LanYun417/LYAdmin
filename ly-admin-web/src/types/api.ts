@@ -381,6 +381,25 @@ export interface FileQuery extends PageQuery {
   bizId?: number;
 }
 
+/* ------------------------------- 用户导入 ------------------------------- */
+
+/** CSV 导入结果 */
+export interface UserImportResult {
+  /** 数据行总数 */
+  total: number;
+  /** 成功写入条数（全成功或全不写：非 0 即等于 total） */
+  created: number;
+  /** 失败明细（为空表示导入成功） */
+  failed: Array<{
+    /** 文件中的物理行号（含表头，便于定位） */
+    line: number;
+    /** 该行账号（无法解析时为「第 N 行」） */
+    username: string;
+    /** 失败原因 */
+    message: string;
+  }>;
+}
+
 /* ------------------------------- 在线用户 ------------------------------- */
 
 /** 在线会话（GET /monitor/online） */

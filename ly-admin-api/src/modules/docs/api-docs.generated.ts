@@ -444,6 +444,20 @@ export const API_DOCS: ApiDocGroup[] = [
         }
       },
       {
+        "method": "GET",
+        "path": "/api/users/import/template",
+        "summary": "下载 CSV 导入模板。 必须声明在 `@Get(':id')` **之前**：Nest 按声明顺序匹配，否则 `import/template` 会被 `:id` 吃掉",
+        "permission": [
+          "system:user:add"
+        ],
+        "isPublic": false,
+        "action": "",
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/users/import/template\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "isRawResponse": true
+        }
+      },
+      {
         "method": "POST",
         "path": "/api/users",
         "summary": "新增用户",
@@ -552,6 +566,19 @@ export const API_DOCS: ApiDocGroup[] = [
             "deptId": 1,
             "remark": "示例备注"
           }
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/api/users/import",
+        "summary": "批量导入用户（CSV，全成功或全不写）。 行级校验失败返回 200 + 逐行报告（`data.failed`），请求级问题（空文件/缺列/超行数）才是 400",
+        "permission": [
+          "system:user:add"
+        ],
+        "isPublic": false,
+        "action": "用户管理 · 批量导入",
+        "examples": {
+          "curl": "curl -X POST \"http://localhost:3000/api/users/import\" \\\n  -H \"Authorization: Bearer <accessToken>\""
         }
       },
       {

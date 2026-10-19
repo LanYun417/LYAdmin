@@ -110,7 +110,46 @@ columnOptions?: GenColumnOptionDto[];
 - 通用约束用 `MSG`（`isString` / `isInt` / `maxLength(n)` …）。
 - 禁止英文默认文案漏出；契约测试会断言错误信息含中文且不含 `must be` 等英文片段。
 
-## 8. 命名与位置
+## 8. 批量导入：复用 DTO + 逐行报告
+
+CSV 导入（`POST /api/users/import`）不另起一套校验规则，而是**把每一行交给同一个 DTO**：
+
+```ts
+const dto = plainToInstance(CreateUserDto, { username, nickname, password, ... });
+const violations = await validate(dto, { whitelist: true });
+violations.forEach((v) => rowErrors.push(...Object.values(v.constraints ?? {})));
+```
+
+- 好处：导入与接口新增的校验口径**天然一致**，DTO 加一条规则导入立刻生效，不存在两套规则漂移。
+- 跨字段规则（如"密码不得包含账号"）DTO 装饰器管不到，在导入服务里显式调用对应断言。
+- 表头归一化：`状态(启用/禁用)` 这类带取值说明的表头会被剥掉括号部分再匹配，
+  所以模板可以自带说明，用户也不必死抠表头写法。
+
+### 返回口径：行级问题 200 + 报告，请求级问题才 400
+
+| 情形                                                        | 响应                                                                 | 理由                                                                    |
+| ----------------------------------------------------------- | -------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| 文件为空 / 缺必填列 / 只有表头 / 超行数上限 / 非 CSV 扩展名 | `400`                                                                | 请求本身不合法，交给统一异常信封                                        |
+| 某些行校验不通过                                            | `200` + `{ total, created: 0, failed: [{line, username, message}] }` | 报告是"处理结果"不是异常；且异常信封的 `data` 恒为 null，装不下逐行明细 |
+
+- **全成功或全不写**：任意一行不合格则整批不落库。导入是批量新建，半成功会让管理员
+  猜"到底导进去几条"；删除则相反（幂等、可部分成功，见 `common/utils/batch.ts`）。
+- 失败明细里的 `line` 是**文件里的物理行号（含表头）**，用户按第 N 行就能定位；
+  多行单元格（引号内换行）不会把行号算错。
+- 文件大小限制 2MB、解析行数上限 5000 行（`CSV_MAX_ROWS`），超限直接拒绝而不是静默截断。
+
+### CSV 解析为什么自己写
+
+`common/utils/csv-parse.ts` 是零依赖手写实现（约 100 行），因为项目的身份约束是
+"零第三方运行时依赖"。它覆盖 Excel / WPS 真实会产出的形态：UTF-8 BOM、CRLF/LF/裸 CR、
+引号内含逗号与换行、`""` 转义、末尾空行。**不猜编码**：文件按 UTF-8 解码，
+GBK 导出会让中文变乱码，此时提示用户另存为 UTF-8 比自动猜测更可靠。
+
+- 导入文件的 multer 配置是独立的 `CSV_IMPORT_MULTER_OPTIONS`（**memoryStorage**）：
+  复用通用上传配置会把导入文件永久写进 `uploads/`（临时数据不该出现在文件管理页），
+  且那份白名单不含 csv。
+
+## 9. 命名与位置
 
 - 文件：`src/modules/<domain>/dto/<domain>.dto.ts`（如 `dto/menu.dto.ts`）。
 - 类名：`CreateXxxDto` / `UpdateXxxDto` / `XxxUpsertDto` / `XxxQueryDto`。

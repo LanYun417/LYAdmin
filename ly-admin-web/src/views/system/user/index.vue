@@ -27,6 +27,7 @@ import SearchForm from '@/components/SearchForm/index.vue';
 import ColumnSettings from '@/components/ColumnSettings/index.vue';
 import UserForm from './components/UserForm.vue';
 import AssignRoleDialog from './components/AssignRoleDialog.vue';
+import UserImportDialog from './components/UserImportDialog.vue';
 import { withUploadToken } from '@/utils/uploadToken';
 
 defineOptions({ name: 'SystemUser' });
@@ -53,6 +54,13 @@ const { loading, list, total, query, search, reset, getList, changePage, changeP
 );
 
 const formVisible = ref(false);
+/** CSV 批量导入弹窗 */
+const importVisible = ref(false);
+
+/** 打开导入弹窗 */
+function handleImport(): void {
+  importVisible.value = true;
+}
 const editId = ref<number | undefined>(undefined);
 const assignVisible = ref(false);
 const assignUserId = ref<number | undefined>(undefined);
@@ -240,6 +248,10 @@ onMounted(() => {
       <div class="flex items-center justify-between mb-3">
         <span class="text-[15px] font-semibold text-ink">用户列表</span>
         <div class="flex items-center gap-2">
+          <el-button v-permission="'system:user:add'" plain @click="handleImport">
+            <template #icon><i class="bi bi-upload" /></template>
+            批量导入
+          </el-button>
           <el-button
             v-permission="'system:user:remove'"
             type="danger"
@@ -350,6 +362,7 @@ onMounted(() => {
       />
     </el-card>
 
+    <UserImportDialog v-model="importVisible" @imported="getList" />
     <UserForm v-model="formVisible" :user-id="editId" :role-options="roleOptions" @success="handleFormSuccess" />
 
     <AssignRoleDialog
