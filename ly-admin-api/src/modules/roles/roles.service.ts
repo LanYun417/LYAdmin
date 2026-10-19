@@ -245,19 +245,44 @@ export class RoleService {
     return records.map((record) => Number(record.menuId));
   }
 
-  /** 授权角色菜单（先清后建）。 */
+  /**
+   * 授权角色菜单（先清后建）。
+   *
+   * 两处必须注意的地方：
+   * 1. **两条写操作必须在同一个事务里**。原先 `deleteMany` 与 `createMany` 是两条独立语句，
+   *    只要后者失败（并发下菜单被删导致外键报错、连接中断等），该角色的授权会被**清空且不恢复**，
+   *    而调用方只看到一次 500——授权数据静默丢失，属于必须修掉的 bug。
+   * 2. 先校验 menuId 都存在，把"脏 id"变成**明确的 400**，而不是让数据库外键报错（前端只会看到 500）。
+   *    校验与写入之间仍有并发窗口，所以事务不能省。
+   */
   async assignMenus(id: number, menuIds: number[]): Promise<void> {
     const role = await this.prisma.role.findUnique({ where: { id: BigInt(id) } });
     if (!role) {
       throw AppException.notFound('角色不存在');
     }
-    await this.prisma.roleMenu.deleteMany({ where: { roleId: BigInt(id) } });
+
     const unique = Array.from(new Set(menuIds));
     if (unique.length > 0) {
-      await this.prisma.roleMenu.createMany({
-        data: unique.map((menuId) => ({ roleId: BigInt(id), menuId: BigInt(menuId) })),
+      const existing = await this.prisma.menu.findMany({
+        where: { id: { in: unique.map((menuId) => BigInt(menuId)) } },
+        select: { id: true },
       });
+      if (existing.length !== unique.length) {
+        const existingIds = new Set(existing.map((menu) => Number(menu.id)));
+        const missing = unique.filter((menuId) => !existingIds.has(menuId));
+        throw AppException.badRequest(`以下菜单不存在，可能已被删除，请刷新后重试：${missing.join('、')}`);
+      }
     }
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.roleMenu.deleteMany({ where: { roleId: BigInt(id) } });
+      if (unique.length > 0) {
+        await tx.roleMenu.createMany({
+          data: unique.map((menuId) => ({ roleId: BigInt(id), menuId: BigInt(menuId) })),
+        });
+      }
+    });
+
     // 角色菜单授权变更 → 权限码集合变化：清空鉴权缓存（影响所有持有该角色的用户）
     this.authCache.invalidate();
   }

@@ -92,6 +92,21 @@ Prisma 7 禁止在 schema 写 `datasource.url`：
 - 关联查询注意「未知参数不报错」：Prisma 的 `SelectSubset` 会让不在模型上的 `where` 键静默失效
   （类型检查也可能通过）。写关系过滤前先确认 schema 里真的有该关系。
 - 多表写入用 `$transaction`；删除主表前先清中间表（有外键时）。
+- **「先删后建」必须整体放进事务**。授权 / 关联重建这类 `deleteMany` + `createMany` 的写法，
+  两条语句分开执行时，只要后者失败（并发下被引用行被删导致外键报错、连接中断等），
+  **旧数据也已经删掉了，且不会恢复**——调用方只看到一次 500，数据静默丢失。
+  真实事故：角色菜单授权接口在菜单被并发删除时，把该角色的权限清空。
+
+  ```ts
+  await prisma.$transaction(async (tx) => {
+    await tx.roleMenu.deleteMany({ where: { roleId } });
+    if (ids.length) await tx.roleMenu.createMany({ data: ids.map(...) });
+  });
+  ```
+
+  能提前校验的（如传入的 id 是否都存在）先校验，把脏数据变成**明确的 400 + 可读原因**，
+  而不是让外键在写库时才炸成 500；校验与写入之间仍有并发窗口，所以**事务不能省**。
+
 - 原生 SQL 仅限代码生成器（表名来自 `information_schema` 白名单），业务查询不得使用 `$queryRawUnsafe`。
 - 慢 SQL 日志：`DB_LOGGING=true` 时 Prisma 发出查询事件，超过 `LOG_SLOW_SQL_MS`（默认 200ms）写
   `logs/db-YYYY-MM-DD.log`。

@@ -1201,5 +1201,58 @@ describe('接口契约快照 (e2e)', () => {
       const login = auth?.endpoints.find((endpoint) => endpoint.path === '/api/auth/login');
       expect(login?.isPublic).toBe(true);
     });
+
+    describe('角色菜单授权的原子性', () => {
+      /** 展平菜单树，取出真实存在的 id 供授权用 */
+      const collectMenuIds = (nodes: Array<{ id: number; children?: unknown[] }>): number[] => {
+        const ids: number[] = [];
+        const walk = (items: Array<{ id: number; children?: unknown[] }>): void => {
+          for (const item of items) {
+            ids.push(item.id);
+            walk((item.children ?? []) as Array<{ id: number; children?: unknown[] }>);
+          }
+        };
+        walk(nodes);
+        return ids;
+      };
+
+      it('提交不存在的 menuId → 400，且角色原有授权不被清空（先删后建必须在事务里）', async () => {
+        const treeRes = await authGet('/menus/tree').expect(200);
+        const allMenuIds = collectMenuIds(
+          (treeRes.body as { data: Array<{ id: number; children?: unknown[] }> }).data ?? [],
+        );
+        expect(allMenuIds.length).toBeGreaterThan(1);
+        const valid = allMenuIds.slice(0, 2);
+
+        // 建一个临时角色，避免污染种子角色
+        const created = await authPost('/roles', {
+          roleName: 'e2e-授权原子性',
+          roleCode: `e2e_assign_${Date.now()}`,
+          sort: 99,
+          status: 1,
+          // 本项目统一用 200 表示成功（不走 Nest 对 POST 的 201 默认）
+        }).expect(200);
+        const roleId = (created.body as { data: { id: number } }).data.id;
+
+        try {
+          await authPut(`/roles/${roleId}/menus`, { menuIds: valid }).expect(200);
+          const before = (await authGet(`/roles/${roleId}/menus`).expect(200)).body as { data: number[] };
+          expect([...before.data].sort((left, right) => left - right)).toEqual(
+            [...valid].sort((left, right) => left - right),
+          );
+
+          // 混入一个不存在的 id：应当 400（而不是让外键在写库时才炸）
+          await authPut(`/roles/${roleId}/menus`, { menuIds: [...valid, 999_999_999] }).expect(400);
+
+          // 关键：原授权必须原封不动（旧实现会先 deleteMany 再失败 → 授权被清空）
+          const after = (await authGet(`/roles/${roleId}/menus`).expect(200)).body as { data: number[] };
+          expect([...after.data].sort((left, right) => left - right)).toEqual(
+            [...valid].sort((left, right) => left - right),
+          );
+        } finally {
+          await authDelete(`/roles/${roleId}`).expect(200);
+        }
+      });
+    });
   });
 });
