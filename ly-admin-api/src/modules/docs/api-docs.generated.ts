@@ -3545,6 +3545,327 @@ export const API_DOCS: ApiDocGroup[] = [
     ]
   },
   {
+    "group": "在线用户",
+    "endpoints": [
+      {
+        "method": "GET",
+        "path": "/api/monitor/online",
+        "summary": "在线会话列表",
+        "permission": [
+          "monitor:online:list"
+        ],
+        "isPublic": false,
+        "action": "",
+        "params": [
+          {
+            "name": "username",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "ip",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "页码，从 1 开始",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "每页条数",
+            "example": 10
+          }
+        ],
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/monitor/online?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "page": 1,
+            "pageSize": 10
+          }
+        }
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/monitor/online/:sid",
+        "summary": "强制下线单个会话",
+        "permission": [
+          "monitor:online:forceLogout"
+        ],
+        "isPublic": false,
+        "action": "在线用户 · 强制下线",
+        "params": [
+          {
+            "name": "sid",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X DELETE \"http://localhost:3000/api/monitor/online/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "sid": "1"
+          }
+        }
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/monitor/online/user/:userId",
+        "summary": "强制下线某用户的全部会话",
+        "permission": [
+          "monitor:online:forceLogout"
+        ],
+        "isPublic": false,
+        "action": "在线用户 · 强制下线全部会话",
+        "params": [
+          {
+            "name": "userId",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X DELETE \"http://localhost:3000/api/monitor/online/user/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "userId": "1"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "group": "系统监控",
+    "endpoints": [
+      {
+        "method": "GET",
+        "path": "/api/monitor/server",
+        "summary": "系统资源快照。 刻意**不记操作日志**：页面每几秒轮询一次，记日志只会把 sys_operation_log 灌满噪音， 而\"读指标\"本身没有审计价值（真正需要留痕的是强退这类写操作）",
+        "permission": [
+          "monitor:server:list"
+        ],
+        "isPublic": false,
+        "action": "",
+        "params": [
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "页码，从 1 开始",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "每页条数",
+            "example": 10
+          }
+        ],
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/monitor/server?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "page": 1,
+            "pageSize": 10
+          }
+        }
+      }
+    ]
+  },
+  {
+    "group": "通知中心",
+    "endpoints": [
+      {
+        "method": "GET",
+        "path": "/api/notices",
+        "summary": "我的收件箱（未读优先 + 时间倒序）",
+        "permission": [],
+        "isPublic": false,
+        "action": "",
+        "params": [
+          {
+            "name": "isRead",
+            "in": "query",
+            "type": "number",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "noticeType",
+            "in": "query",
+            "type": "number",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "title",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "页码，从 1 开始",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "每页条数",
+            "example": 10
+          }
+        ],
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/notices?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "page": 1,
+            "pageSize": 10
+          }
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/api/notices/unread-count",
+        "summary": "未读数（顶栏红点）",
+        "permission": [],
+        "isPublic": false,
+        "action": "",
+        "params": [
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "页码，从 1 开始",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "每页条数",
+            "example": 10
+          }
+        ],
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/notices/unread-count?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "page": 1,
+            "pageSize": 10
+          }
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/api/notices",
+        "summary": "发布通知（指定人或全员）",
+        "permission": [
+          "system:notice:add"
+        ],
+        "isPublic": false,
+        "action": "通知中心 · 发布通知",
+        "examples": {
+          "curl": "curl -X POST \"http://localhost:3000/api/notices\" \\\n  -H \"Authorization: Bearer <accessToken>\""
+        }
+      },
+      {
+        "method": "PUT",
+        "path": "/api/notices/:id/read",
+        "summary": "标记已读",
+        "permission": [],
+        "isPublic": false,
+        "action": "通知中心 · 标记已读",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X PUT \"http://localhost:3000/api/notices/1/read\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "id": "1"
+          }
+        }
+      },
+      {
+        "method": "PUT",
+        "path": "/api/notices/read-all",
+        "summary": "全部标记已读",
+        "permission": [],
+        "isPublic": false,
+        "action": "通知中心 · 全部已读",
+        "examples": {
+          "curl": "curl -X PUT \"http://localhost:3000/api/notices/read-all\" \\\n  -H \"Authorization: Bearer <accessToken>\""
+        }
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/notices",
+        "summary": "清空我的通知",
+        "permission": [],
+        "isPublic": false,
+        "action": "通知中心 · 清空通知",
+        "examples": {
+          "curl": "curl -X DELETE \"http://localhost:3000/api/notices\" \\\n  -H \"Authorization: Bearer <accessToken>\""
+        }
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/notices/:id",
+        "summary": "删除一条通知",
+        "permission": [],
+        "isPublic": false,
+        "action": "通知中心 · 删除通知",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X DELETE \"http://localhost:3000/api/notices/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "id": "1"
+          }
+        }
+      }
+    ]
+  },
+  {
     "group": "系统",
     "endpoints": [
       {
@@ -3980,322 +4301,6 @@ export const API_DOCS: ApiDocGroup[] = [
           "curl": "curl -X DELETE \"http://localhost:3000/api/depts/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
             "id": "1"
-          }
-        }
-      }
-    ]
-  },
-  {
-    "group": "通知中心",
-    "endpoints": [
-      {
-        "method": "GET",
-        "path": "/api/notices",
-        "summary": "我的收件箱（未读优先 + 时间倒序）",
-        "permission": [],
-        "isPublic": false,
-        "action": "",
-        "params": [
-          {
-            "name": "isRead",
-            "in": "query",
-            "type": "number",
-            "required": false,
-            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
-          },
-          {
-            "name": "noticeType",
-            "in": "query",
-            "type": "number",
-            "required": false,
-            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
-          },
-          {
-            "name": "title",
-            "in": "query",
-            "type": "string",
-            "required": false,
-            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "type": "integer",
-            "required": false,
-            "description": "页码，从 1 开始",
-            "example": 1
-          },
-          {
-            "name": "pageSize",
-            "in": "query",
-            "type": "integer",
-            "required": false,
-            "description": "每页条数",
-            "example": 10
-          }
-        ],
-        "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/notices?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
-          "query": {
-            "page": 1,
-            "pageSize": 10
-          }
-        }
-      },
-      {
-        "method": "GET",
-        "path": "/api/notices/unread-count",
-        "summary": "未读数（顶栏红点）",
-        "permission": [],
-        "isPublic": false,
-        "action": "",
-        "params": [
-          {
-            "name": "page",
-            "in": "query",
-            "type": "integer",
-            "required": false,
-            "description": "页码，从 1 开始",
-            "example": 1
-          },
-          {
-            "name": "pageSize",
-            "in": "query",
-            "type": "integer",
-            "required": false,
-            "description": "每页条数",
-            "example": 10
-          }
-        ],
-        "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/notices/unread-count?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
-          "query": {
-            "page": 1,
-            "pageSize": 10
-          }
-        }
-      },
-      {
-        "method": "POST",
-        "path": "/api/notices",
-        "summary": "发布通知（指定人或全员）",
-        "permission": [
-          "system:notice:add"
-        ],
-        "isPublic": false,
-        "action": "通知中心 · 发布通知",
-        "examples": {
-          "curl": "curl -X POST \"http://localhost:3000/api/notices\" \\\n  -H \"Authorization: Bearer <accessToken>\""
-        }
-      },
-      {
-        "method": "PUT",
-        "path": "/api/notices/:id/read",
-        "summary": "标记已读",
-        "permission": [],
-        "isPublic": false,
-        "action": "通知中心 · 标记已读",
-        "params": [
-          {
-            "name": "id",
-            "in": "path",
-            "type": "string",
-            "required": true,
-            "description": "",
-            "example": "1"
-          }
-        ],
-        "examples": {
-          "curl": "curl -X PUT \"http://localhost:3000/api/notices/1/read\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
-          "pathParams": {
-            "id": "1"
-          }
-        }
-      },
-      {
-        "method": "PUT",
-        "path": "/api/notices/read-all",
-        "summary": "全部标记已读",
-        "permission": [],
-        "isPublic": false,
-        "action": "通知中心 · 全部已读",
-        "examples": {
-          "curl": "curl -X PUT \"http://localhost:3000/api/notices/read-all\" \\\n  -H \"Authorization: Bearer <accessToken>\""
-        }
-      },
-      {
-        "method": "DELETE",
-        "path": "/api/notices",
-        "summary": "清空我的通知",
-        "permission": [],
-        "isPublic": false,
-        "action": "通知中心 · 清空通知",
-        "examples": {
-          "curl": "curl -X DELETE \"http://localhost:3000/api/notices\" \\\n  -H \"Authorization: Bearer <accessToken>\""
-        }
-      },
-      {
-        "method": "DELETE",
-        "path": "/api/notices/:id",
-        "summary": "删除一条通知",
-        "permission": [],
-        "isPublic": false,
-        "action": "通知中心 · 删除通知",
-        "params": [
-          {
-            "name": "id",
-            "in": "path",
-            "type": "string",
-            "required": true,
-            "description": "",
-            "example": "1"
-          }
-        ],
-        "examples": {
-          "curl": "curl -X DELETE \"http://localhost:3000/api/notices/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
-          "pathParams": {
-            "id": "1"
-          }
-        }
-      }
-    ]
-  },
-  {
-    "group": "在线用户",
-    "endpoints": [
-      {
-        "method": "GET",
-        "path": "/api/monitor/online",
-        "summary": "在线会话列表",
-        "permission": [
-          "monitor:online:list"
-        ],
-        "isPublic": false,
-        "action": "",
-        "params": [
-          {
-            "name": "username",
-            "in": "query",
-            "type": "string",
-            "required": false,
-            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
-          },
-          {
-            "name": "ip",
-            "in": "query",
-            "type": "string",
-            "required": false,
-            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "type": "integer",
-            "required": false,
-            "description": "页码，从 1 开始",
-            "example": 1
-          },
-          {
-            "name": "pageSize",
-            "in": "query",
-            "type": "integer",
-            "required": false,
-            "description": "每页条数",
-            "example": 10
-          }
-        ],
-        "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/monitor/online?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
-          "query": {
-            "page": 1,
-            "pageSize": 10
-          }
-        }
-      },
-      {
-        "method": "GET",
-        "path": "/api/monitor/online/server",
-        "summary": "系统资源快照（CPU / 内存 / 磁盘 / 负载 / 进程）。 刻意**不记操作日志**：页面每几秒轮询一次，打日志只会把操作日志表灌满噪音， 而读指标本身没有审计价值（要留痕的是「强退」这类写操作）",
-        "permission": [
-          "monitor:server:list"
-        ],
-        "isPublic": false,
-        "action": "",
-        "params": [
-          {
-            "name": "page",
-            "in": "query",
-            "type": "integer",
-            "required": false,
-            "description": "页码，从 1 开始",
-            "example": 1
-          },
-          {
-            "name": "pageSize",
-            "in": "query",
-            "type": "integer",
-            "required": false,
-            "description": "每页条数",
-            "example": 10
-          }
-        ],
-        "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/monitor/online/server?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
-          "query": {
-            "page": 1,
-            "pageSize": 10
-          }
-        }
-      },
-      {
-        "method": "DELETE",
-        "path": "/api/monitor/online/:sid",
-        "summary": "强制下线单个会话",
-        "permission": [
-          "monitor:online:forceLogout"
-        ],
-        "isPublic": false,
-        "action": "在线用户 · 强制下线",
-        "params": [
-          {
-            "name": "sid",
-            "in": "path",
-            "type": "string",
-            "required": true,
-            "description": "",
-            "example": "1"
-          }
-        ],
-        "examples": {
-          "curl": "curl -X DELETE \"http://localhost:3000/api/monitor/online/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
-          "pathParams": {
-            "sid": "1"
-          }
-        }
-      },
-      {
-        "method": "DELETE",
-        "path": "/api/monitor/online/user/:userId",
-        "summary": "强制下线某用户的全部会话",
-        "permission": [
-          "monitor:online:forceLogout"
-        ],
-        "isPublic": false,
-        "action": "在线用户 · 强制下线全部会话",
-        "params": [
-          {
-            "name": "userId",
-            "in": "path",
-            "type": "string",
-            "required": true,
-            "description": "",
-            "example": "1"
-          }
-        ],
-        "examples": {
-          "curl": "curl -X DELETE \"http://localhost:3000/api/monitor/online/user/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
-          "pathParams": {
-            "userId": "1"
           }
         }
       }

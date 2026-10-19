@@ -51,6 +51,8 @@ const GROUP_OVERRIDES = {
   HealthController: '系统',
   // 接口文档接口自身（GET /api/docs）也纳入清单，归入「接口文档」组
   DocsController: '接口文档',
+  // 系统监控是无写操作的纯读控制器 → 推断不出模块名，会回退成英文类名"SystemMetrics"
+  SystemMetricsController: '系统监控',
 };
 
 /** 个别方法的说明覆盖（键为 `类名.方法名`）。 */
@@ -75,6 +77,10 @@ const GROUP_ORDER = [
   '代码生成',
   '个人中心',
   '接口文档',
+  // 监控相关（两个控制器的模块名由 @OperationLog / GROUP_OVERRIDES 给出）
+  '在线用户',
+  '系统监控',
+  '通知中心',
   '系统',
 ];
 

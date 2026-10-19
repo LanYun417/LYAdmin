@@ -439,6 +439,37 @@ export interface ServerMetrics {
   };
   /** 1/5/15 分钟平均负载；Windows 恒为 0，不支持时为 null */
   load: [number, number, number] | null;
+  /**
+   * 网络活动。
+   *
+   * 只有 Linux（含容器）支持：后端读 `/proc/net/dev` 的累计计数做差。
+   * Windows / macOS 上 Node 无跨平台网络计数 API，`supported: false` 并带 `reason`，
+   * 界面据此显示"当前平台不支持"而不是伪装成 0。
+   */
+  network: {
+    supported: boolean;
+    /** 不支持时的原因 */
+    reason: string | null;
+    /** 下行 / 上行速率（字节/秒）；首次采样为 null */
+    rxRate: number | null;
+    txRate: number | null;
+    /** 累计流量（字节，自网卡启动） */
+    rxTotal: number;
+    txTotal: number;
+    /** 累计错误 / 丢包 */
+    rxErrors: number;
+    txErrors: number;
+    rxDropped: number;
+    txDropped: number;
+    /** 每张网卡明细（已排除环回 lo） */
+    interfaces: Array<{
+      name: string;
+      rxRate: number | null;
+      txRate: number | null;
+      rxTotal: number;
+      txTotal: number;
+    }>;
+  };
   process: {
     /** 常驻内存 */
     rss: number;
@@ -461,6 +492,9 @@ export interface ServerMetrics {
     at: number;
     cpu: number | null;
     memory: number | null;
+    /** 下行 / 上行速率（字节/秒）；平台不支持或首次采样为 null */
+    rxRate: number | null;
+    txRate: number | null;
   }>;
   /** 是否还在预热（首次采样已建立基线但尚无使用率） */
   warmingUp: boolean;

@@ -51,6 +51,26 @@ function formatBytes(bytes: number | null | undefined): string {
   return `${value.toFixed(unitIndex === 0 ? 0 : 1)} ${units[unitIndex]}`;
 }
 
+/**
+ * 字节/秒 → 人类可读速率。
+ * @param compact 紧凑模式（轴刻度用）：不带 "/s" 后缀，省横向空间
+ */
+function formatRate(bytesPerSecond: number | null | undefined, compact = false): string {
+  if (bytesPerSecond === null || bytesPerSecond === undefined || !Number.isFinite(bytesPerSecond)) {
+    return '-';
+  }
+  const units = ['B', 'KB', 'MB', 'GB'];
+  let value = bytesPerSecond;
+  let unitIndex = 0;
+  while (value >= 1024 && unitIndex < units.length - 1) {
+    value /= 1024;
+    unitIndex += 1;
+  }
+  // 小于 1KB 时不带小数（"37 B/s" 比 "37.0 B/s" 干净）
+  const text = `${unitIndex === 0 ? Math.round(value) : value.toFixed(1)} ${units[unitIndex]}`;
+  return compact ? text : `${text}/s`;
+}
+
 /** 秒 → 人类可读时长 */
 function formatUptime(seconds: number): string {
   const days = Math.floor(seconds / 86400);
@@ -94,25 +114,84 @@ async function fetchMetrics(): Promise<void> {
   }
 }
 
-/* ------------------------------ 趋势图 ------------------------------ */
+/**
+ * 网络错误 / 丢包摘要。
+ * 这两项平时都是 0，一旦非 0 就是真问题（丢包常见于带宽打满或网卡队列溢出），
+ * 所以非 0 时标红，而不是和"累计流量"一样用灰字平铺。
+ */
+const netErrorSummary = computed(() => {
+  const network = metrics.value?.network;
+  if (!network?.supported) {
+    return { text: '-', danger: false };
+  }
+  const errors = network.rxErrors + network.txErrors;
+  const dropped = network.rxDropped + network.txDropped;
+  return { text: `${errors} / ${dropped}`, danger: errors + dropped > 0 };
+});
 
-const chartRef = ref<HTMLDivElement>();
-let chart: ReturnType<typeof echarts.init> | null = null;
+/* ------------------------------ 图表 ------------------------------ */
 
-/** 渲染 CPU / 内存双折线 */
-function renderChart(): void {
-  if (!chart || !metrics.value) {
+/**
+ * 统一创建图表实例。
+ * 两个图表（资源趋势 / 网络吞吐）的初始化、尺寸自适应、销毁完全一样，抽成一个工厂，
+ * 避免把 `echarts.init / ResizeObserver / dispose` 这套样板写两遍（漏一处就是内存泄漏）。
+ *
+ * @param target 图表容器
+ * @param draw 绘制回调，拿到实例后调 setOption
+ * @returns 重新绘制的函数（数据/主题变化时调用）
+ */
+function setupChart(
+  target: Ref<HTMLDivElement | undefined>,
+  draw: (chart: ReturnType<typeof echarts.init>) => void,
+): () => void {
+  let chart: ReturnType<typeof echarts.init> | null = null;
+  // 限频 100ms：窗口拖拽、侧边栏折叠会让 ResizeObserver 高频触发
+  const resize = throttle((): void => void chart?.resize(), 100, { leading: true, trailing: true });
+  useResizeObserver(target, resize);
+  onMounted(() => {
+    if (target.value) {
+      chart = echarts.init(target.value);
+      draw(chart);
+    }
+  });
+  onBeforeUnmount(() => {
+    resize.cancel();
+    chart?.dispose();
+    chart = null;
+  });
+  return (): void => {
+    if (chart) {
+      draw(chart);
+    }
+  };
+}
+
+const cpuChartRef = ref<HTMLDivElement>();
+const netChartRef = ref<HTMLDivElement>();
+
+/** X 轴时间刻度：与图表数据点一一对应 */
+function timeLabels(): string[] {
+  const points = metrics.value?.history.slice(-CHART_POINTS) ?? [];
+  return points.map((point) => new Date(point.at).toLocaleTimeString('zh-CN', { hour12: false }));
+}
+
+/**
+ * X 轴标签间隔：目标"整屏约 6 个"。
+ * 采样间隔 3s、默认展示 60 点，若不控数量 ECharts 会自动抽成每 15s 一个（12 个），
+ * 又密又难读；这里按点数反推 interval，让刻度稳定落在整分钟附近。
+ */
+function labelInterval(total: number): number {
+  return Math.max(0, Math.ceil(total / 6) - 1);
+}
+
+/** 渲染 CPU / 内存双折线（单位 %） */
+function drawResourceTrend(chart: ReturnType<typeof echarts.init>): void {
+  if (!metrics.value) {
     return;
   }
   const palette = getChartPalette(appStore.dark);
   const primary = appStore.primaryColor;
   const points = metrics.value.history.slice(-CHART_POINTS);
-  /**
-   * X 轴标签间隔：目标"整屏约 6 个"。
-   * 采样间隔 3s、默认展示 60 点，若不控数量 ECharts 会自动抽成每 15s 一个（12 个），
-   * 又密又难读；这里按点数反推 interval，让刻度稳定落在整分钟附近。
-   */
-  const labelInterval = Math.max(0, Math.ceil(points.length / 6) - 1);
 
   chart.setOption({
     tooltip: {
@@ -137,10 +216,10 @@ function renderChart(): void {
     xAxis: {
       type: 'category',
       boundaryGap: false,
-      data: points.map((point) => new Date(point.at).toLocaleTimeString('zh-CN', { hour12: false })),
+      data: timeLabels(),
       axisLine: { lineStyle: { color: palette.axisLine } },
       axisTick: { show: false },
-      axisLabel: { color: palette.textSecondary, fontSize: 12, margin: 12, interval: labelInterval },
+      axisLabel: { color: palette.textSecondary, fontSize: 12, margin: 12, interval: labelInterval(points.length) },
     },
     yAxis: {
       type: 'value',
@@ -177,27 +256,109 @@ function renderChart(): void {
   });
 }
 
-/** 容器尺寸变化 → 重绘（throttle 避免连续重排） */
-const resize = throttle((): void => void chart?.resize(), 100, { leading: true, trailing: true });
-useResizeObserver(chartRef, resize);
+/**
+ * 渲染网络吞吐双折线（单位 B/s，故必须与百分比分开一张图）。
+ * 纵轴不给固定 max：网络速率量级变化极大（几十 B/s 到几十 MB/s），
+ * 自动量程比写死上限更容易看出"此刻是否有突发流量"。
+ */
+function drawNetworkTrend(chart: ReturnType<typeof echarts.init>): void {
+  const network = metrics.value?.network;
+  if (!network?.supported) {
+    // 平台不支持时清空图表（模板里会换成原因提示，不留一张空图误导人）
+    chart.clear();
+    return;
+  }
+
+  const palette = getChartPalette(appStore.dark);
+  const points = metrics.value?.history.slice(-CHART_POINTS) ?? [];
+  const rxColor = appStore.primaryColor;
+  const txColor = '#10b981';
+
+  chart.setOption({
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: palette.tooltipBg,
+      borderColor: palette.tooltipBorder,
+      textStyle: { color: palette.tooltipText },
+      axisPointer: { type: 'line', lineStyle: { color: hexToRgba(rxColor, 0.4) } },
+      valueFormatter: (value: unknown) => (value === null ? t('monitor.sampling') : formatRate(value as number)),
+    },
+    legend: {
+      top: 8,
+      data: [t('monitor.netRx'), t('monitor.netTx')],
+      textStyle: { color: palette.text },
+    },
+    grid: { left: 8, right: 16, top: 48, bottom: 8, ...GRID_AXIS_LABEL_FIT },
+    xAxis: {
+      type: 'category',
+      boundaryGap: false,
+      data: timeLabels(),
+      axisLine: { lineStyle: { color: palette.axisLine } },
+      axisTick: { show: false },
+      axisLabel: { color: palette.textSecondary, fontSize: 12, margin: 12, interval: labelInterval(points.length) },
+    },
+    yAxis: {
+      type: 'value',
+      min: 0,
+      // 速率量级不定、自动量程，刻度数量收一下（默认会切出 8 条网格线，小卡片里太密）
+      splitNumber: 4,
+      axisLabel: {
+        color: palette.textSecondary,
+        fontSize: 12,
+        // 轴刻度用紧凑单位（如 1.2M），否则会出现 "1258291" 这种读不出来的刻度
+        formatter: (value: number) => formatRate(value, true),
+      },
+      splitLine: { lineStyle: { color: palette.splitLine, type: 'dashed' } },
+    },
+    series: [
+      {
+        name: t('monitor.netRx'),
+        type: 'line',
+        smooth: true,
+        showSymbol: false,
+        emphasis: { focus: 'series' },
+        data: points.map((point) => point.rxRate),
+        lineStyle: { width: 3, color: rxColor },
+        itemStyle: { color: rxColor, borderColor: palette.cardBg, borderWidth: 2 },
+        areaStyle: { color: verticalGradient(hexToRgba(rxColor, 0.3), hexToRgba(rxColor, 0.02)) },
+      },
+      {
+        name: t('monitor.netTx'),
+        type: 'line',
+        smooth: true,
+        showSymbol: false,
+        emphasis: { focus: 'series' },
+        data: points.map((point) => point.txRate),
+        lineStyle: { width: 2, color: txColor },
+        itemStyle: { color: txColor, borderColor: palette.cardBg, borderWidth: 2 },
+      },
+    ],
+  });
+}
+
+const drawResource = setupChart(cpuChartRef, drawResourceTrend);
+const drawNetwork = setupChart(netChartRef, drawNetworkTrend);
 
 onMounted(async () => {
   await fetchMetrics();
-  if (chartRef.value) {
-    chart = echarts.init(chartRef.value);
-    renderChart();
-  }
+  // 图表实例由 setupChart 的 onMounted 创建（早于此），拿到数据后主动重绘一次
+  drawResource();
+  drawNetwork();
 });
 
-onBeforeUnmount(() => {
-  resize.cancel();
-  chart?.dispose();
-  chart = null;
+// 数据或主题变化时重绘两张图
+watch(
+  metrics,
+  () => {
+    drawResource();
+    drawNetwork();
+  },
+  { deep: true },
+);
+watch([() => appStore.dark, () => appStore.primaryColor], () => {
+  drawResource();
+  drawNetwork();
 });
-
-/** 数据或主题变化 → 重绘 */
-watch(metrics, renderChart, { deep: true });
-watch(() => [appStore.dark, appStore.primaryColor], renderChart);
 
 /* ------------------------------ 自动刷新 ------------------------------ */
 
@@ -368,11 +529,81 @@ async function handleRefresh(): Promise<void> {
       </el-col>
     </el-row>
 
+    <!-- 网络活动卡片 + 网络吞吐趋势：单位是 B/s，与"使用率 %"不同，故单独一张图 -->
+    <el-row :gutter="16" class="mt-4">
+      <el-col :xs="24" :lg="8">
+        <el-card shadow="never" class="h-full">
+          <div class="flex items-center justify-between">
+            <span class="text-sm text-muted">{{ t('monitor.network') }}</span>
+            <i class="bi bi-activity text-muted" />
+          </div>
+
+          <template v-if="metrics?.network.supported">
+            <div class="mt-2 grid grid-cols-2 gap-3">
+              <div>
+                <p class="text-xs text-faint">{{ t('monitor.netRx') }}</p>
+                <p class="text-xl font-semibold text-ink">{{ formatRate(metrics?.network.rxRate) }}</p>
+              </div>
+              <div>
+                <p class="text-xs text-faint">{{ t('monitor.netTx') }}</p>
+                <p class="text-xl font-semibold text-ink">{{ formatRate(metrics?.network.txRate) }}</p>
+              </div>
+            </div>
+
+            <p class="mt-3 text-xs text-faint">
+              {{ t('monitor.netTotal') }}：↓ {{ formatBytes(metrics?.network.rxTotal) }} / ↑
+              {{ formatBytes(metrics?.network.txTotal) }}
+            </p>
+            <p class="mt-1 text-xs" :class="netErrorSummary.danger ? 'text-[var(--el-color-danger)]' : 'text-faint'">
+              {{ t('monitor.netErrors') }}：{{ netErrorSummary.text }}
+            </p>
+
+            <div v-if="metrics?.network.interfaces.length" class="mt-3 flex flex-wrap gap-1">
+              <el-tag
+                v-for="iface in metrics?.network.interfaces"
+                :key="iface.name"
+                size="small"
+                :title="`${iface.name}：↓ ${formatBytes(iface.rxTotal)} / ↑ ${formatBytes(iface.txTotal)}`"
+              >
+                {{ iface.name }} ↓{{ formatRate(iface.rxRate, true) }} ↑{{ formatRate(iface.txRate, true) }}
+              </el-tag>
+            </div>
+            <p class="mt-2 text-xs text-faint">{{ t('monitor.netHint') }}</p>
+          </template>
+
+          <el-alert
+            v-else
+            class="mt-3"
+            type="info"
+            :closable="false"
+            show-icon
+            :title="t('monitor.netUnsupported')"
+            :description="metrics?.network.reason ?? ''"
+          />
+        </el-card>
+      </el-col>
+      <el-col :xs="24" :lg="16">
+        <el-card shadow="never" class="h-full">
+          <div class="mb-2 text-[15px] font-semibold text-ink">{{ t('monitor.netTrend') }}</div>
+          <div v-if="metrics?.network.supported" ref="netChartRef" class="h-72 w-full" />
+          <el-alert
+            v-else
+            class="mt-4"
+            type="info"
+            :closable="false"
+            show-icon
+            :title="t('monitor.netUnsupported')"
+            :description="metrics?.network.reason ?? ''"
+          />
+        </el-card>
+      </el-col>
+    </el-row>
+
     <el-row :gutter="16" class="mt-4">
       <el-col :xs="24" :lg="16">
         <el-card shadow="never">
           <div class="mb-2 text-[15px] font-semibold text-ink">{{ t('monitor.trend') }}</div>
-          <div ref="chartRef" class="h-72 w-full" />
+          <div ref="cpuChartRef" class="h-72 w-full" />
         </el-card>
       </el-col>
       <el-col :xs="24" :lg="8">

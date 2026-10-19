@@ -505,6 +505,45 @@ describe('接口契约快照 (e2e)', () => {
       expect(data.history.length).toBeGreaterThanOrEqual(2);
     });
 
+    it('网络活动：支持与否都要有明确口径，支持时数值必须自洽', async () => {
+      const res = await authGet('/monitor/server').expect(200);
+      const network = (
+        res.body as {
+          data: {
+            network: {
+              supported: boolean;
+              reason: string | null;
+              rxRate: number | null;
+              txRate: number | null;
+              rxTotal: number;
+              txTotal: number;
+              interfaces: Array<{ name: string; rxTotal: number }>;
+            };
+          };
+        }
+      ).data.network;
+
+      expect(typeof network.supported).toBe('boolean');
+
+      if (!network.supported) {
+        // 不支持的平台（Windows/macOS）必须给出可读原因，而不是静默给 0
+        expect(network.reason).toBeTruthy();
+        expect(network.rxRate).toBeNull();
+        expect(network.interfaces).toEqual([]);
+        return;
+      }
+
+      // Linux（含容器）：`/proc/net/dev` 的累计值必然可用
+      expect(network.reason).toBeNull();
+      expect(network.rxTotal).toBeGreaterThan(0);
+      expect(network.rxRate === null || network.rxRate >= 0).toBe(true);
+      // 环回必须被排除：否则进程间通信也算"网络活动"，数字会虚高
+      expect(network.interfaces.map((item) => item.name)).not.toContain('lo');
+      // 合计 = 各网卡之和（排除 lo），界面上展示的合计值要能自证
+      const sum = network.interfaces.reduce((total, item) => total + item.rxTotal, 0);
+      expect(network.rxTotal).toBe(sum);
+    });
+
     it('未登录不可调用系统监控（与其它监控接口一致）', async () => {
       await request(app.getHttpServer()).get(`${API}/monitor/server`).expect(401);
     });

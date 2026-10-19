@@ -27,6 +27,8 @@ import { config } from '../../common/config/config.js';
 const SAMPLE_INTERVAL_MS = 3000;
 /** 环形缓冲保留的采样点数（120 × 3s ≈ 6 分钟）。 */
 const HISTORY_SIZE = 120;
+/** Linux 网卡累计计数文件（每行一张网卡）。 */
+const PROC_NET_DEV = '/proc/net/dev';
 
 /** 累积 CPU 时间（秒）。 */
 export interface CpuTimes {
@@ -76,6 +78,51 @@ export interface ProcessMetric {
   uptime: number;
 }
 
+/** 单个网卡的累计计数（`/proc/net/dev` 的一行）。 */
+export interface NetCounters {
+  name: string;
+  rxBytes: number;
+  rxErrors: number;
+  rxDropped: number;
+  txBytes: number;
+  txErrors: number;
+  txDropped: number;
+}
+
+/** 网络活动指标。 */
+export interface NetworkMetric {
+  /**
+   * 当前平台是否支持采集。
+   *
+   * 只有 Linux（含容器）能拿到真实的网卡计数：`/proc/net/dev` 的累计字节数是精确值，
+   * 两次采样做差即速率。**Windows / macOS 上 Node 核心库没有任何网络计数 API**，
+   * 若去解析 `netstat -e` 会踩"表头本地化"（中文 Windows 是"收到的字节数"）与版本差异，
+   * 宁可明确报"不支持"，也不给一个会静默出错或不准确的数字。
+   */
+  supported: boolean;
+  /** 不支持时的原因（直接展示给运维看） */
+  reason: string | null;
+  /** 采样间隔内的平均速率（字节/秒）；首次采样为 null */
+  rxRate: number | null;
+  txRate: number | null;
+  /** 自网卡启动以来的累计流量（字节） */
+  rxTotal: number;
+  txTotal: number;
+  /** 累计错误 / 丢包（排查网络问题的关键指标） */
+  rxErrors: number;
+  txErrors: number;
+  rxDropped: number;
+  txDropped: number;
+  /** 每张网卡的明细（速率与累计），便于解释合计值是怎么来的 */
+  interfaces: Array<{
+    name: string;
+    rxRate: number | null;
+    txRate: number | null;
+    rxTotal: number;
+    txTotal: number;
+  }>;
+}
+
 /** 单个采样点（图表用）。 */
 export interface MetricsPoint {
   /** 采样时刻（毫秒时间戳） */
@@ -84,6 +131,10 @@ export interface MetricsPoint {
   cpu: number | null;
   /** 内存使用率 0~100 */
   memory: number | null;
+  /** 下行速率（字节/秒）；平台不支持或首次采样为 null */
+  rxRate: number | null;
+  /** 上行速率（字节/秒）；平台不支持或首次采样为 null */
+  txRate: number | null;
 }
 
 /** 一次快照（接口响应体）。 */
@@ -93,6 +144,7 @@ export interface ServerMetrics {
   cpu: CpuMetric;
   memory: MemoryMetric;
   disk: DiskMetric;
+  network: NetworkMetric;
   /** 1/5/15 分钟平均负载；Windows 恒为 0，故不支持时为 null */
   load: [number, number, number] | null;
   process: ProcessMetric;
@@ -182,6 +234,67 @@ export function parseMemoryLimit(content: string): number | null {
   return value;
 }
 
+/**
+ * 解析 `/proc/net/dev`。
+ *
+ * 文件形如（前两行是表头，可跳过）：
+ * ```
+ *   eth0: 1234 10 0 0 0 0 0 0   5678 20 0 0 0 0 0 0
+ * ```
+ * 冒号后共 16 个数字：接收 {bytes,packets,errs,drop,fifo,frame,compressed,multicast}
+ * 与发送 {bytes,packets,errs,drop,fifo,colls,carrier,compressed}。
+ *
+ * @param content 文件内容
+ * @returns 每张网卡的累计计数（无法解析的行会被跳过，不抛错——采样失败不该拖垮整个指标接口）
+ */
+export function parseProcNetDev(content: string): NetCounters[] {
+  const result: NetCounters[] = [];
+  for (const rawLine of content.split('\n')) {
+    const colon = rawLine.indexOf(':');
+    if (colon <= 0) {
+      // 表头行（Inter-| Receive ...）与"总计"行没有冒号，直接跳过
+      continue;
+    }
+    const name = rawLine.slice(0, colon).trim();
+    const fields = rawLine
+      .slice(colon + 1)
+      .trim()
+      .split(/\s+/)
+      .map((value) => Number(value));
+    if (!name || fields.length < 16 || fields.some((value) => !Number.isFinite(value))) {
+      continue;
+    }
+    result.push({
+      name,
+      rxBytes: fields[0]!,
+      rxErrors: fields[2]!,
+      rxDropped: fields[3]!,
+      txBytes: fields[8]!,
+      txErrors: fields[10]!,
+      txDropped: fields[11]!,
+    });
+  }
+  return result;
+}
+
+/**
+ * 两次累计值 → 速率（单位/秒）。
+ *
+ * 返回 null 的两种情况都要当心，不能当成 0：
+ * - `elapsedMs <= 0`：没有时间差，速率无意义（除零）；
+ * - `delta < 0`：计数器被重置（网卡重载、容器重建、网卡名复用），此时"负速率"是脏数据。
+ */
+export function computeRate(previous: number, current: number, elapsedMs: number): number | null {
+  if (elapsedMs <= 0) {
+    return null;
+  }
+  const delta = current - previous;
+  if (delta < 0) {
+    return null;
+  }
+  return Math.round((delta / elapsedMs) * 1000);
+}
+
 function clamp(value: number): number {
   return Math.min(100, Math.max(0, value));
 }
@@ -202,6 +315,14 @@ export class SystemMetricsService implements OnModuleInit, OnModuleDestroy {
   private timer: NodeJS.Timeout | null = null;
   /** 上一次采样（用于 CPU 做差） */
   private previous: CpuTimes[] = [];
+  /** 上一次网卡累计计数（用于算速率） */
+  private previousNet: NetCounters[] | null = null;
+  /** 上一次采样时刻（算速率需要时间差） */
+  private previousAt = 0;
+  /** 网卡计数文件路径；null = 当前环境不支持采集 */
+  private netDevPath: string | null = null;
+  /** 不支持采集时的原因（展示给运维） */
+  private netReason: string | null = null;
   /** 环形缓冲 */
   private history: MetricsPoint[] = [];
   /** 最近一次快照 */
@@ -215,6 +336,7 @@ export class SystemMetricsService implements OnModuleInit, OnModuleDestroy {
 
   onModuleInit(): void {
     this.probeCgroup();
+    this.probeNetwork();
     this.tick();
     this.timer = setInterval(() => this.tick(), SAMPLE_INTERVAL_MS);
     // 不让采样定时器吊住进程（测试/优雅退出都靠它）
@@ -286,7 +408,8 @@ export class SystemMetricsService implements OnModuleInit, OnModuleDestroy {
     const usageMemory = process.memoryUsage();
 
     const at = Date.now();
-    this.history.push({ at, cpu: usage, memory: memory.usage });
+    const network = this.collectNetwork(at);
+    this.history.push({ at, cpu: usage, memory: memory.usage, rxRate: network.rxRate, txRate: network.txRate });
     if (this.history.length > HISTORY_SIZE) {
       this.history.splice(0, this.history.length - HISTORY_SIZE);
     }
@@ -302,6 +425,7 @@ export class SystemMetricsService implements OnModuleInit, OnModuleDestroy {
       },
       memory,
       disk,
+      network,
       load: isWindows ? null : [round1(loadValues[0]), round1(loadValues[1]), round1(loadValues[2])],
       process: {
         rss: usageMemory.rss,
@@ -337,6 +461,126 @@ export class SystemMetricsService implements OnModuleInit, OnModuleDestroy {
     const total = totalmem();
     const used = total - freemem();
     return { used, total, usage: computeUsage(used, total) };
+  }
+
+  /**
+   * 探测网络计数是否可用，并记下要读的文件路径。
+   *
+   * 只认 `/proc/net/dev`：它是 Linux（含容器）里唯一**精确且零依赖**的网卡计数来源，
+   * 容器里读到的是自己 network namespace 的接口（也就是本服务的真实流量）。
+   * Windows / macOS 明确不采集——解析 `netstat -e` 之类输出会踩表头本地化与版本差异，
+   * 与其给出可能错的数字，不如在界面上如实说"不支持"。
+   *
+   * `NET_DEV_PATH` 可覆盖路径：一是便于非 Linux 环境做集成测试，
+   * 二是容器用 host 网络命名空间时可指向挂载进来的宿主机 `/proc/net/dev`。
+   */
+  private probeNetwork(): void {
+    const override = process.env.NET_DEV_PATH?.trim();
+    if (override) {
+      try {
+        readFileSync(override, 'utf8');
+        this.netDevPath = override;
+        this.netReason = null;
+        return;
+      } catch {
+        this.netDevPath = null;
+        this.netReason = `NET_DEV_PATH 指向的文件不可读：${override}`;
+        return;
+      }
+    }
+
+    if (platform() !== 'linux') {
+      this.netDevPath = null;
+      this.netReason = `当前平台（${platform()}）不支持采集网卡计数：Node 核心库无跨平台网络计数 API，Linux 走 /proc/net/dev`;
+      return;
+    }
+
+    try {
+      readFileSync(PROC_NET_DEV, 'utf8');
+      this.netDevPath = PROC_NET_DEV;
+      this.netReason = null;
+    } catch {
+      this.netDevPath = null;
+      this.netReason = `${PROC_NET_DEV} 不可读（容器可能未挂载 /proc）`;
+    }
+  }
+
+  /**
+   * 采集网络活动：把每张网卡的累计计数做差得到速率。
+   *
+   * 两个刻意的口径：
+   * - **排除 `lo`（环回）**：本机进程间通信也走环回，算进"网络活动"会虚高，
+   *   且与真实网卡重复计数（如 docker0 + eth0 转发同一份流量）；
+   * - 速率可能为 null（首次采样无基线、或计数器被重置）——**不当成 0**：
+   *   界面显示"采样中"而不是"0 KB/s"，避免把"没测到"说成"没流量"。
+   */
+  private collectNetwork(at: number): NetworkMetric {
+    const empty: NetworkMetric = {
+      supported: false,
+      reason: this.netReason,
+      rxRate: null,
+      txRate: null,
+      rxTotal: 0,
+      txTotal: 0,
+      rxErrors: 0,
+      txErrors: 0,
+      rxDropped: 0,
+      txDropped: 0,
+      interfaces: [],
+    };
+
+    if (!this.netDevPath) {
+      return empty;
+    }
+
+    // 不写初始值：catch 分支直接 return，初始值永远用不到（会被 lint 判为无用赋值）
+    let counters: NetCounters[];
+    try {
+      counters = parseProcNetDev(readFileSync(this.netDevPath, 'utf8'));
+    } catch (error) {
+      this.logger.debug(`[SystemMetrics] 网卡计数读取失败：${String(error)}`);
+      return { ...empty, reason: '网卡计数读取失败' };
+    }
+
+    const elapsedMs = this.previousAt > 0 ? at - this.previousAt : 0;
+    const previousMap = new Map((this.previousNet ?? []).map((item) => [item.name, item]));
+    const usable = counters.filter((item) => item.name !== 'lo');
+
+    const interfaces = usable.map((item) => {
+      const before = previousMap.get(item.name);
+      return {
+        name: item.name,
+        rxRate: before ? computeRate(before.rxBytes, item.rxBytes, elapsedMs) : null,
+        txRate: before ? computeRate(before.txBytes, item.txBytes, elapsedMs) : null,
+        rxTotal: item.rxBytes,
+        txTotal: item.txBytes,
+      };
+    });
+
+    /** 逐网卡速率求和；全部为 null（首次采样）时合计也为 null，而不是 0 */
+    const sumRates = (pick: (item: (typeof interfaces)[number]) => number | null): number | null => {
+      const values = interfaces.map(pick).filter((value): value is number => value !== null);
+      return values.length > 0 ? values.reduce((total, value) => total + value, 0) : null;
+    };
+    const sumTotals = (pick: (item: NetCounters) => number): number =>
+      usable.reduce((total, item) => total + pick(item), 0);
+
+    this.previousNet = counters;
+    this.previousAt = at;
+
+    return {
+      supported: true,
+      reason: null,
+      rxRate: sumRates((item) => item.rxRate),
+      txRate: sumRates((item) => item.txRate),
+      rxTotal: sumTotals((item) => item.rxBytes),
+      txTotal: sumTotals((item) => item.txBytes),
+      rxErrors: sumTotals((item) => item.rxErrors),
+      txErrors: sumTotals((item) => item.txErrors),
+      rxDropped: sumTotals((item) => item.rxDropped),
+      txDropped: sumTotals((item) => item.txDropped),
+      interfaces,
+    };
   }
 
   /**
