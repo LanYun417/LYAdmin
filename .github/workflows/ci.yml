@@ -200,7 +200,7 @@ jobs:
           curl -sSf -X POST http://localhost:3000/api/auth/login \
             -H 'Content-Type: application/json' \
             -d "{\"username\":\"admin\",\"password\":\"$PW\",\"captchaId\":\"$CAP\",\"captchaCode\":\"$CODE\"}" \
-            | python -c "import sys,json;d=json.load(sys.stdin);assert d['code']==200,d;print('登录成功：',d['data']['username'])"
+            | python -c "import sys,json;d=json.load(sys.stdin);assert d['code']==200,d;t=d['data']['accessToken'];assert isinstance(t,str) and len(t)>20,'accessToken 异常';print('登录成功，accessToken 长度',len(t))"
       - name: 前端同源托管可用
         run: |
           curl -sSf http://localhost:3000/ | grep -q '<div id="app">'
