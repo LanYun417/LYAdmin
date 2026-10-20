@@ -65,7 +65,8 @@ export const ModelName = {
   Dept: 'Dept',
   UserRole: 'UserRole',
   RoleMenu: 'RoleMenu',
-  RoleDept: 'RoleDept'
+  RoleDept: 'RoleDept',
+  UserMenu: 'UserMenu'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -317,6 +318,16 @@ export const RoleDeptScalarFieldEnum = {
 } as const
 
 export type RoleDeptScalarFieldEnum = (typeof RoleDeptScalarFieldEnum)[keyof typeof RoleDeptScalarFieldEnum]
+
+
+export const UserMenuScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  menuId: 'menuId',
+  type: 'type'
+} as const
+
+export type UserMenuScalarFieldEnum = (typeof UserMenuScalarFieldEnum)[keyof typeof UserMenuScalarFieldEnum]
 
 
 export const SortOrder = {

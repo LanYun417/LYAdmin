@@ -17,6 +17,8 @@ const props = withDefaults(
     nodeKey?: string;
     /** 字段映射 */
     treeProps?: { label: string; children: string };
+    /** 需要额外标注「角色」的小标签的节点 key（如角色自带的菜单）；空则不标注 */
+    markKeys?: number[];
   }>(),
   {
     checkStrictly: false,
@@ -24,8 +26,22 @@ const props = withDefaults(
     showCheckbox: true,
     nodeKey: 'id',
     treeProps: () => ({ label: 'menuName', children: 'children' }),
+    markKeys: () => [],
   },
 );
+
+/** 需要标注的节点集合 */
+const markSet = computed(() => new Set(props.markKeys));
+
+/** 从节点数据里取 key（用于判定是否标注） */
+function nodeKeyValue(data: MenuNode): number {
+  return Number((data as unknown as Record<string, unknown>)[props.nodeKey]);
+}
+
+/** 从节点数据里取显示文本（自定义节点内容时需自行渲染 label） */
+function nodeLabel(data: MenuNode): string {
+  return String((data as unknown as Record<string, unknown>)[props.treeProps.label] ?? '');
+}
 
 const emit = defineEmits<{
   (e: 'check', checkedKeys: number[], halfCheckedKeys: number[]): void;
@@ -118,5 +134,17 @@ defineExpose({ setCheckedKeys, getCheckedKeys, getHalfCheckedKeys, treeRef });
     :default-expand-all="true"
     highlight-current
     @check="handleCheck"
-  />
+  >
+    <template #default="{ data: node }">
+      <span class="inline-flex items-center gap-1.5">
+        <span>{{ nodeLabel(node) }}</span>
+        <span
+          v-if="markSet.has(nodeKeyValue(node))"
+          class="rounded bg-fill-light px-1 text-[11px] leading-4 text-muted"
+        >
+          角色
+        </span>
+      </span>
+    </template>
+  </el-tree>
 </template>

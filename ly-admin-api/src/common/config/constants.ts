@@ -49,6 +49,17 @@ export enum MenuType {
   BUTTON = 'F',
 }
 
+/**
+ * 用户级菜单覆盖类型（`sys_user_menu.type`）。
+ * - GRANT：在该用户角色权限之外**额外授予**某菜单
+ * - REVOKE：从该用户的角色权限中**额外撤销**某菜单
+ * 有效菜单集合 =（角色菜单并集 ∪ GRANT）− REVOKE。
+ */
+export enum UserMenuType {
+  GRANT = 1,
+  REVOKE = 2,
+}
+
 /** 日志结果：1 成功 / 0 失败。 */
 export enum LogResult {
   FAIL = 0,

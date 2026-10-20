@@ -8,8 +8,9 @@
  * 三张表，高并发下会成为瓶颈。30s TTL 换性能，写操作时主动失效保证正确性。
  *
  * 失效点清单（改动权限/菜单相关数据时**必须**调用，否则变更最多延迟 30s 生效）：
- * - user.service：updateUser / deleteUser / updateStatus / resetPassword / assignRoles
- *   → `invalidate(id)`（精确失效该用户）
+ * - user.service：updateUser / deleteUser / updateStatus / resetPassword / assignRoles /
+ *   assignUserMenus（用户级额外权限覆盖）→ `invalidate(id)`（精确失效该用户，
+ *   含带用户维度的菜单树缓存键 `...||u<id>`）
  * - role.service：updateRole / deleteRole / assignMenus → `invalidate()`（全清）
  * - menu.service：createMenu / updateMenu / deleteMenu → `invalidate()`（全清）
  * - dept/dict/config：不参与鉴权码与菜单树，不调用（数据权限的部门缓存单独失效，见 DataScopeService）
@@ -117,6 +118,14 @@ export class AuthCacheService {
       return;
     }
     this.store.delete(userId);
+    // 菜单树缓存里带用户维度的条目（键后缀 `||u<id>`）也要清：用户的额外权限覆盖变更后，
+    // 侧边栏最多会晚 30s 才更新（键规则见 MenuService.getMenusForUser）。
+    const suffix = `||u${userId}`;
+    this.menuStore.forEach((_entry, key) => {
+      if (key.endsWith(suffix)) {
+        this.menuStore.delete(key);
+      }
+    });
   }
 
   /** 清理所有已过期条目。 */

@@ -87,10 +87,10 @@ export class AuthController {
     return this.authService.getProfile(user.userId, req.authContext ?? null);
   }
 
-  /** 当前用户菜单树（仅目录/菜单节点，按角色过滤）。 */
+  /** 当前用户菜单树（仅目录/菜单节点，按角色 + 用户级额外权限覆盖过滤）。 */
   @Get('menus')
   async menus(@CurrentUser() user: AuthUserContext): Promise<unknown> {
-    return this.menuService.getMenusByRoles(user.roles);
+    return this.menuService.getMenusForUser(user.userId, user.roles);
   }
 
   /** 当前用户权限码列表。 */

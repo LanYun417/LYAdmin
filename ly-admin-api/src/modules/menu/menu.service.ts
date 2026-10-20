@@ -5,6 +5,7 @@
 import { Injectable } from '@nestjs/common';
 import { AppException } from '../../common/exception/app.exception.js';
 import { AuthCacheService } from '../../common/auth/auth-cache.service.js';
+import { loadUserMenuOverrides, mergeEffectiveMenuIds, type MenuOverride } from '../../common/auth/effective-menu.js';
 import { MenuType, Status, SUPER_ADMIN_ROLE } from '../../common/config/constants.js';
 import { buildTree, readNumber, readString } from '../../common/utils/utils.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
@@ -68,16 +69,22 @@ export class MenuService {
   }
 
   /**
-   * 按角色查询菜单树（供 /auth/menus 下发，供前端生成动态路由）。
+   * 按用户查询菜单树（供 /auth/menus 下发，供前端生成动态路由）。
+   *
+   * 与「按角色」的区别：在角色菜单基础上叠加该用户的**额外授予 / 额外撤销**，
+   * 因此同一角色下的不同用户可能看到不同菜单。有效菜单集合口径见
+   * `common/auth/effective-menu.ts`（与权限码解析同源）。
    *
    * 三重过滤：
-   * ① 超管短路（不加角色关联限制 → 全部启用菜单）；
+   * ① 超管短路（不加关联限制 → 全部启用菜单）；
    * ② SQL 层 `menuType IN ('M','C')`——**按钮（F）在 SQL 层被裁掉**，不是内存剔除；
-   * ③ 非超管按 roleIds 过滤（INNER JOIN 语义 → Prisma include + some）。
+   * ③ 非超管按「有效菜单 id 集合」过滤（`id IN (...)`）。
    *
-   * 结果按「角色组合」缓存 30s（`AuthCacheService`）；菜单增删改与角色授权会全清缓存。
+   * 缓存：无用户级覆盖时按「角色组合」共享（沿用既有键）；有覆盖时键追加用户维度
+   * （`||u<id>`），避免同角色不同覆盖的用户串味。菜单 / 角色授权变更由
+   * `authCache.invalidate()` 全清；用户级覆盖变更由 `authCache.invalidate(userId)` 精确清理。
    */
-  async getMenusByRoles(roleCodes: string[]): Promise<MenuNode[]> {
+  async getMenusForUser(userId: number, roleCodes: string[]): Promise<MenuNode[]> {
     const isSuperAdmin = roleCodes.includes(SUPER_ADMIN_ROLE);
 
     // 非超管且无角色：直接返回空，不查库也不缓存
@@ -85,26 +92,42 @@ export class MenuService {
       return [];
     }
 
-    // 角色组合 → 菜单树，30s TTL；菜单 / 角色授权变更时由 authCache.invalidate() 全清
-    const cacheKey = isSuperAdmin ? 'super' : [...roleCodes].sort().join(',');
+    // 非超管：解析角色 id（角色不存在 → 空，不缓存），并读取用户级覆盖
+    let roleIds: number[] = [];
+    let overrides: MenuOverride[] = [];
+    if (!isSuperAdmin) {
+      roleIds = (
+        await this.prisma.role.findMany({
+          where: { roleCode: { in: roleCodes } },
+          select: { id: true },
+        })
+      ).map((role) => Number(role.id));
+      if (roleIds.length === 0) {
+        return [];
+      }
+      overrides = await loadUserMenuOverrides(this.prisma, userId);
+    }
+
+    // 缓存键：无覆盖时按角色组合共享；有覆盖时追加用户维度
+    const baseKey = isSuperAdmin ? 'super' : [...roleCodes].sort().join(',');
+    const cacheKey = overrides.length > 0 ? `${baseKey}||u${userId}` : baseKey;
     const cached = this.authCache.getMenuTree(cacheKey);
     if (cached) {
       return cached;
     }
 
-    // 非超管：先把角色编码解析成 id（角色不存在时为空 → 直接返回空，不查菜单）
-    const roleIds = isSuperAdmin
-      ? []
-      : (
-          await this.prisma.role.findMany({
-            where: { roleCode: { in: roleCodes } },
-            select: { id: true },
-          })
-        ).map((role) => Number(role.id));
-
-    // 非超管且无角色：直接返回空，不查库
-    if (!isSuperAdmin && roleIds.length === 0) {
-      return [];
+    // 计算有效菜单 id 集合：角色菜单并集 ∪ GRANT − REVOKE（超管不限制）
+    let idFilter: { id: { in: bigint[] } } = { id: { in: [] } };
+    if (!isSuperAdmin) {
+      const roleMenus = await this.prisma.roleMenu.findMany({
+        where: { roleId: { in: roleIds.map((roleId) => BigInt(roleId)) } },
+        select: { menuId: true },
+      });
+      const effective = mergeEffectiveMenuIds(
+        roleMenus.map((row) => Number(row.menuId)),
+        overrides,
+      );
+      idFilter = { id: { in: Array.from(effective).map((menuId) => BigInt(menuId)) } };
     }
 
     const rows = await this.prisma.menu.findMany({
@@ -112,9 +135,7 @@ export class MenuService {
         status: Status.ENABLED,
         menuType: { in: [MenuType.DIRECTORY, MenuType.MENU] },
         // 超管不加此条件（看全部启用菜单）
-        // 角色过滤走显式中间表 sys_role_menu（Menu 上不存在 roles 关系，
-        // 写成 roles: { some } 类型检查不报错、运行期会抛 Unknown argument）
-        ...(isSuperAdmin ? {} : { roleMenus: { some: { roleId: { in: roleIds.map((roleId) => BigInt(roleId)) } } } }),
+        ...(isSuperAdmin ? {} : idFilter),
       },
       orderBy: [{ sort: 'asc' }, { id: 'asc' }],
     });

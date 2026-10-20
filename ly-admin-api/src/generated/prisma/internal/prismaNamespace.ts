@@ -411,7 +411,8 @@ export const ModelName = {
   Dept: 'Dept',
   UserRole: 'UserRole',
   RoleMenu: 'RoleMenu',
-  RoleDept: 'RoleDept'
+  RoleDept: 'RoleDept',
+  UserMenu: 'UserMenu'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -427,7 +428,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "dictType" | "dictItem" | "sysConfig" | "file" | "loginLog" | "operationLog" | "httpLog" | "notice" | "user" | "role" | "menu" | "dept" | "userRole" | "roleMenu" | "roleDept"
+    modelProps: "dictType" | "dictItem" | "sysConfig" | "file" | "loginLog" | "operationLog" | "httpLog" | "notice" | "user" | "role" | "menu" | "dept" | "userRole" | "roleMenu" | "roleDept" | "userMenu"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1421,6 +1422,72 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    UserMenu: {
+      payload: Prisma.$UserMenuPayload<ExtArgs>
+      fields: Prisma.UserMenuFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.UserMenuFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserMenuPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.UserMenuFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserMenuPayload>
+        }
+        findFirst: {
+          args: Prisma.UserMenuFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserMenuPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.UserMenuFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserMenuPayload>
+        }
+        findMany: {
+          args: Prisma.UserMenuFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserMenuPayload>[]
+        }
+        create: {
+          args: Prisma.UserMenuCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserMenuPayload>
+        }
+        createMany: {
+          args: Prisma.UserMenuCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        delete: {
+          args: Prisma.UserMenuDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserMenuPayload>
+        }
+        update: {
+          args: Prisma.UserMenuUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserMenuPayload>
+        }
+        deleteMany: {
+          args: Prisma.UserMenuDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.UserMenuUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        upsert: {
+          args: Prisma.UserMenuUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserMenuPayload>
+        }
+        aggregate: {
+          args: Prisma.UserMenuAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateUserMenu>
+        }
+        groupBy: {
+          args: Prisma.UserMenuGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.UserMenuGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.UserMenuCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.UserMenuCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -1693,6 +1760,16 @@ export const RoleDeptScalarFieldEnum = {
 } as const
 
 export type RoleDeptScalarFieldEnum = (typeof RoleDeptScalarFieldEnum)[keyof typeof RoleDeptScalarFieldEnum]
+
+
+export const UserMenuScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  menuId: 'menuId',
+  type: 'type'
+} as const
+
+export type UserMenuScalarFieldEnum = (typeof UserMenuScalarFieldEnum)[keyof typeof UserMenuScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -2096,6 +2173,7 @@ export type GlobalOmitConfig = {
   userRole?: Prisma.UserRoleOmit
   roleMenu?: Prisma.RoleMenuOmit
   roleDept?: Prisma.RoleDeptOmit
+  userMenu?: Prisma.UserMenuOmit
 }
 
 /* Types for Logging */

@@ -115,6 +115,13 @@ const MENU_TREE: MenuSeedNode[] = [
             permission: 'system:user:assignRole',
             sort: 6,
           },
+          {
+            key: 'system:user:assignPerm',
+            menuName: '额外权限',
+            menuType: MenuType.BUTTON,
+            permission: 'system:user:assignPerm',
+            sort: 7,
+          },
         ],
       },
       {
@@ -690,6 +697,8 @@ const ROLE_SEEDS: RoleSeed[] = [
       'system:user:remove',
       'system:user:resetPwd',
       'system:user:assignRole',
+      // 用户额外权限（在角色之上给单个用户加/减权限）
+      'system:user:assignPerm',
       // 角色下拉（GET /api/roles/all 所需）；admin 无 system:role:list，靠此独立码拉下拉框
       'system:role:all',
       // 字典管理：admin 可维护字典（含启停用，复用 system:dict:edit）

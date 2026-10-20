@@ -174,6 +174,18 @@ export interface MenuNode extends Menu {
   children?: MenuNode[];
 }
 
+/** 用户的菜单权限概况（角色自带 / 额外授予 / 额外撤销 / 最终有效集合）。 */
+export interface UserMenuOverview {
+  /** 角色自带的菜单 id（基线） */
+  roleMenuIds: number[];
+  /** 额外授予（在角色之外多加的） */
+  grantIds: number[];
+  /** 额外撤销（从角色里单独收掉的） */
+  revokeIds: number[];
+  /** 最终有效菜单 id 集合（= 角色 ∪ 授予 − 撤销，用于回填权限树勾选） */
+  effectiveMenuIds: number[];
+}
+
 /** 菜单查询参数 */
 export interface MenuQuery {
   menuName?: string;

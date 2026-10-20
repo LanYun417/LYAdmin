@@ -6,7 +6,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { AppException } from '../../common/exception/app.exception.js';
 import { AuthCacheService } from '../../common/auth/auth-cache.service.js';
 import { DataScopeService } from '../../common/auth/data-scope.service.js';
-import { Status, SUPER_ADMIN_ROLE } from '../../common/config/constants.js';
+import { Status, SUPER_ADMIN_ROLE, UserMenuType } from '../../common/config/constants.js';
+import { loadUserMenuOverrides, mergeEffectiveMenuIds } from '../../common/auth/effective-menu.js';
 import { lookupDeptName, lookupDeptNames } from '../../common/utils/dept-lookup.js';
 import { buildPageResult, hashPassword, parsePagination, readNumber, readString } from '../../common/utils/utils.js';
 import { assertPasswordNotContainsAccount } from '../../common/auth/password-policy.js';
@@ -389,6 +390,105 @@ export class UsersService {
     }
     await this.syncUserRoles(id, roleIds);
     // 角色变更：立即失效该用户鉴权缓存，确保新权限即时生效
+    this.authCache.invalidate(id);
+  }
+
+  /** 取用户的角色 id 列表。 */
+  private async listUserRoleIds(userId: number): Promise<number[]> {
+    const links = await this.prisma.userRole.findMany({
+      where: { userId: BigInt(userId) },
+      select: { roleId: true },
+    });
+    return links.map((link) => Number(link.roleId));
+  }
+
+  /** 取角色集合对应的「角色自带菜单」id 集合。 */
+  private async listRoleMenuIds(roleIds: number[]): Promise<Set<number>> {
+    const menuIds = new Set<number>();
+    if (roleIds.length > 0) {
+      const rows = await this.prisma.roleMenu.findMany({
+        where: { roleId: { in: roleIds.map((roleId) => BigInt(roleId)) } },
+        select: { menuId: true },
+      });
+      rows.forEach((row) => menuIds.add(Number(row.menuId)));
+    }
+    return menuIds;
+  }
+
+  /**
+   * 读取用户的菜单权限概况。
+   * 返回角色自带集合、额外授予、额外撤销，以及最终有效集合（供前端回填权限树）。
+   */
+  async getUserMenus(id: number): Promise<{
+    roleMenuIds: number[];
+    grantIds: number[];
+    revokeIds: number[];
+    effectiveMenuIds: number[];
+  }> {
+    const user = await this.prisma.user.findUnique({ where: { id: BigInt(id) }, select: { id: true } });
+    if (!user) {
+      throw AppException.notFound('用户不存在');
+    }
+    const roleMenuIds = await this.listRoleMenuIds(await this.listUserRoleIds(id));
+    const overrides = await loadUserMenuOverrides(this.prisma, id);
+    const effective = mergeEffectiveMenuIds(roleMenuIds, overrides);
+    return {
+      roleMenuIds: Array.from(roleMenuIds),
+      grantIds: overrides.filter((override) => override.type === UserMenuType.GRANT).map((o) => o.menuId),
+      revokeIds: overrides.filter((override) => override.type === UserMenuType.REVOKE).map((o) => o.menuId),
+      effectiveMenuIds: Array.from(effective),
+    };
+  }
+
+  /**
+   * 保存用户的额外菜单权限。
+   *
+   * 入参是「期望的最终有效菜单集合」：服务端与角色自带集合求差——
+   * 落在角色之外 → 额外授予（GRANT）；角色内有但未被选中 → 额外撤销（REVOKE）。
+   * 这样前端不必关心基线，只管把权限树的勾选结果发上来即可。
+   */
+  async assignUserMenus(id: number, menuIds: number[]): Promise<void> {
+    const user = await this.prisma.user.findUnique({ where: { id: BigInt(id) }, select: { id: true } });
+    if (!user) {
+      throw AppException.notFound('用户不存在');
+    }
+
+    const desired = Array.from(
+      new Set(menuIds.map((menuId) => Number(menuId)).filter((menuId) => Number.isInteger(menuId) && menuId > 0)),
+    );
+    // 校验菜单都存在：把「脏 id」变成明确的 400，而不是让数据库外键报 500
+    if (desired.length > 0) {
+      const existing = await this.prisma.menu.findMany({
+        where: { id: { in: desired.map((menuId) => BigInt(menuId)) } },
+        select: { id: true },
+      });
+      if (existing.length !== desired.length) {
+        const existingIds = new Set(existing.map((menu) => Number(menu.id)));
+        const missing = desired.filter((menuId) => !existingIds.has(menuId));
+        throw AppException.badRequest(`以下菜单不存在，可能已被删除，请刷新后重试：${missing.join('、')}`);
+      }
+    }
+
+    const roleMenuIds = await this.listRoleMenuIds(await this.listUserRoleIds(id));
+    const desiredSet = new Set(desired);
+    const records = [
+      ...desired
+        .filter((menuId) => !roleMenuIds.has(menuId))
+        .map((menuId) => ({ userId: BigInt(id), menuId: BigInt(menuId), type: UserMenuType.GRANT })),
+      ...Array.from(roleMenuIds)
+        .filter((menuId) => !desiredSet.has(menuId))
+        .map((menuId) => ({ userId: BigInt(id), menuId: BigInt(menuId), type: UserMenuType.REVOKE })),
+    ];
+
+    // 先清后建，且在同一事务里：避免中途失败导致覆盖被清空却不恢复（与角色授权同一教训）
+    await this.prisma.$transaction(async (tx) => {
+      await tx.userMenu.deleteMany({ where: { userId: BigInt(id) } });
+      if (records.length > 0) {
+        await tx.userMenu.createMany({ data: records });
+      }
+    });
+
+    // 额外权限变更：立即失效该用户鉴权缓存（含带用户维度的菜单树缓存），确保即时生效
     this.authCache.invalidate(id);
   }
 }

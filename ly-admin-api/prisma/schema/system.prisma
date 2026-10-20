@@ -43,6 +43,9 @@ model User {
   ///    不互通——表现为角色恒为空、权限码为空、所有带权限码的接口 403、前端菜单树为空。
   userRoles UserRole[]
 
+  /// 用户级额外权限覆盖（在角色权限之上单独对该用户「额外授予 / 额外撤销」，见 UserMenu 模型）
+  userMenus UserMenu[]
+
   @@index([deptId])
   @@map("sys_user")
 }
@@ -110,6 +113,7 @@ model Menu {
   updatedAt  DateTime @updatedAt @map("updated_at")
 
   roleMenus RoleMenu[]
+  userMenus UserMenu[]
 
   @@index([parentId])
   @@map("sys_menu")
@@ -195,4 +199,26 @@ model RoleDept {
   @@unique([roleId, deptId])
   @@index([deptId])
   @@map("sys_role_dept")
+}
+
+/// 用户级额外权限覆盖表
+/// 语义：某个用户的有效菜单集合 =（其所有角色的菜单并集 ∪ type=1 的菜单）− type=2 的菜单。
+/// 用于「只给某一个人加点权限 / 收掉一点权限」，而不必改动角色（改角色会波及该角色下所有人）。
+/// 该表**不参与种子重建**（角色授权每次种子会重建，但用户级覆盖需长期保留）。
+model UserMenu {
+  /// 主键
+  id     BigInt @id @default(autoincrement()) @db.BigInt
+  /// 用户 id
+  userId BigInt @map("user_id") @db.BigInt
+  /// 菜单 id
+  menuId BigInt @map("menu_id") @db.BigInt
+  /// 覆盖类型：1 额外授予（grant）/ 2 额外撤销（revoke）
+  type   Int    @db.TinyInt
+
+  user User @relation(fields: [userId], references: [id])
+  menu Menu @relation(fields: [menuId], references: [id])
+
+  @@unique([userId, menuId])
+  @@index([menuId])
+  @@map("sys_user_menu")
 }

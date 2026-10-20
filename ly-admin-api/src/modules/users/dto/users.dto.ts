@@ -193,3 +193,15 @@ export class AssignRoleDto {
   @IsArray({ message: '角色列表格式不正确' })
   roleIds?: number[];
 }
+
+/**
+ * 保存用户的额外菜单权限。
+ * 入参是「期望的最终有效菜单集合」——服务端会与角色自带集合求差，
+ * 得出哪些是额外授予、哪些是额外撤销（前端只管把树上勾选结果发过来）。
+ */
+export class AssignUserMenuDto {
+  @IsOptional()
+  @Transform(({ value }) => (Array.isArray(value) ? value.map((v: unknown) => Number(v)) : []))
+  @IsArray({ message: '菜单列表格式不正确' })
+  menuIds?: number[];
+}

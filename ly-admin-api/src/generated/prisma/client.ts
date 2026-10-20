@@ -120,3 +120,11 @@ export type RoleMenu = Prisma.RoleMenuModel
  * 角色数据权限部门关联表（承载 data_scope=2 的自定义部门集合）
  */
 export type RoleDept = Prisma.RoleDeptModel
+/**
+ * Model UserMenu
+ * 用户级额外权限覆盖表
+ * 语义：某个用户的有效菜单集合 =（其所有角色的菜单并集 ∪ type=1 的菜单）− type=2 的菜单。
+ * 用于「只给某一个人加点权限 / 收掉一点权限」，而不必改动角色（改角色会波及该角色下所有人）。
+ * 该表**不参与种子重建**（角色授权每次种子会重建，但用户级覆盖需长期保留）。
+ */
+export type UserMenu = Prisma.UserMenuModel

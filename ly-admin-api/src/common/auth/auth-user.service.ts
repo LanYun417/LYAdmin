@@ -5,6 +5,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { AuthCacheService } from './auth-cache.service.js';
+import { resolveEffectiveMenuIds } from './effective-menu.js';
 import { Status, SUPER_ADMIN_ROLE } from '../config/constants.js';
 import { lookupDeptName } from '../utils/dept-lookup.js';
 import type { AuthContext } from '../types.js';
@@ -17,23 +18,19 @@ export class AuthUserService {
   ) {}
 
   /**
-   * 汇总角色对应的权限码。
-   * 超管返回 `['*']`（前端视为拥有全部权限）。
+   * 汇总「有效菜单集合」对应的权限码。
+   *
+   * 有效菜单由 {@link resolveEffectiveMenuIds} 计算：角色菜单并集 ∪ 额外授予 − 额外撤销。
+   * 这里只负责取这些菜单的 permission 字段；不限 menuType（含 F 按钮节点）。
    */
-  private async collectPermissions(roleCodes: string[], roleIds: number[]): Promise<string[]> {
-    if (roleCodes.includes(SUPER_ADMIN_ROLE)) {
-      return ['*'];
-    }
-    if (roleIds.length === 0) {
+  private async collectPermissions(menuIds: Set<number>): Promise<string[]> {
+    if (menuIds.size === 0) {
       return [];
     }
-    // 只取启用菜单的 permission；不限 menuType（含 F 按钮节点）
-    // 角色过滤走显式中间表 sys_role_menu（role_menu.role_id）—— Menu 上不存在 roles 关系，
-    // 若写成 `roles: { some: ... }` 类型检查不会报错，但运行期 Prisma 会抛「Unknown argument」
     const menus = await this.prisma.menu.findMany({
       where: {
         status: Status.ENABLED,
-        roleMenus: { some: { roleId: { in: roleIds.map((roleId) => BigInt(roleId)) } } },
+        id: { in: Array.from(menuIds).map((menuId) => BigInt(menuId)) },
       },
       select: { permission: true },
     });
@@ -76,7 +73,10 @@ export class AuthUserService {
     const roles = user.userRoles.map((link) => link.role);
     const roleCodes = roles.map((role) => role.roleCode);
     const roleIds = roles.map((role) => Number(role.id));
-    const permissions = await this.collectPermissions(roleCodes, roleIds);
+    // 超管直通全部权限；其余按「角色并集 ∪ 用户额外授予 − 用户额外撤销」汇总
+    const permissions = roleCodes.includes(SUPER_ADMIN_ROLE)
+      ? ['*']
+      : await this.collectPermissions((await resolveEffectiveMenuIds(this.prisma, Number(user.id), roleIds)).menuIds);
 
     const context: AuthContext = {
       userId: Number(user.id),

@@ -27,6 +27,7 @@ import SearchForm from '@/components/SearchForm/index.vue';
 import ColumnSettings from '@/components/ColumnSettings/index.vue';
 import UserForm from './components/UserForm.vue';
 import AssignRoleDialog from './components/AssignRoleDialog.vue';
+import UserPermissionDrawer from './components/UserPermissionDrawer.vue';
 import UserImportDialog from './components/UserImportDialog.vue';
 import { withUploadToken } from '@/utils/uploadToken';
 
@@ -65,6 +66,11 @@ const editId = ref<number | undefined>(undefined);
 const assignVisible = ref(false);
 const assignUserId = ref<number | undefined>(undefined);
 const assignRoleIds = ref<number[]>([]);
+
+/** 额外权限抽屉（按用户单独叠加 / 撤销权限） */
+const permVisible = ref(false);
+const permUserId = ref<number | undefined>(undefined);
+const permUserName = ref('');
 
 /** 加载角色下拉（仅具备 system:role:all 的角色可拉取，避免无权限角色触发 403 整页跳转） */
 async function loadRoles(): Promise<void> {
@@ -207,6 +213,13 @@ function handleAssignRole(row: UserDetail): void {
   assignVisible.value = true;
 }
 
+/** 额外权限：在该用户角色权限之上单独叠加 / 撤销，不影响其角色下的其他人 */
+function handlePermission(row: UserDetail): void {
+  permUserId.value = row.id;
+  permUserName.value = row.nickname || row.username;
+  permVisible.value = true;
+}
+
 /** 表单提交成功 */
 function handleFormSuccess(): void {
   void getList();
@@ -316,7 +329,7 @@ onMounted(() => {
         <el-table-column v-if="isVisible('lastLogin')" label="最后登录" width="180">
           <template #default="{ row }">{{ formatDateTime(row.lastLoginAt) }}</template>
         </el-table-column>
-        <el-table-column label="操作" width="280" fixed="right">
+        <el-table-column label="操作" width="340" fixed="right">
           <template #default="{ row }">
             <div class="table-action">
               <el-button v-permission="'system:user:edit'" type="primary" link @click="handleEdit(row as UserDetail)">
@@ -329,6 +342,14 @@ onMounted(() => {
                 @click="handleAssignRole(row as UserDetail)"
               >
                 角色
+              </el-button>
+              <el-button
+                v-permission="'system:user:assignPerm'"
+                type="success"
+                link
+                @click="handlePermission(row as UserDetail)"
+              >
+                权限
               </el-button>
               <el-button
                 v-permission="'system:user:resetPwd'"
@@ -370,6 +391,13 @@ onMounted(() => {
       :user-id="assignUserId"
       :role-ids="assignRoleIds"
       :role-options="roleOptions"
+      @success="handleFormSuccess"
+    />
+
+    <UserPermissionDrawer
+      v-model="permVisible"
+      :user-id="permUserId"
+      :user-name="permUserName"
       @success="handleFormSuccess"
     />
   </div>

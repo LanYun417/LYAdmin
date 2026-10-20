@@ -305,6 +305,7 @@ export type UserWhereInput = {
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   userRoles?: Prisma.UserRoleListRelationFilter
+  userMenus?: Prisma.UserMenuListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -324,6 +325,7 @@ export type UserOrderByWithRelationInput = {
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   userRoles?: Prisma.UserRoleOrderByRelationAggregateInput
+  userMenus?: Prisma.UserMenuOrderByRelationAggregateInput
   _relevance?: Prisma.UserOrderByRelevanceInput
 }
 
@@ -347,6 +349,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   userRoles?: Prisma.UserRoleListRelationFilter
+  userMenus?: Prisma.UserMenuListRelationFilter
 }, "id" | "username">
 
 export type UserOrderByWithAggregationInput = {
@@ -410,6 +413,7 @@ export type UserCreateInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   userRoles?: Prisma.UserRoleCreateNestedManyWithoutUserInput
+  userMenus?: Prisma.UserMenuCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -429,6 +433,7 @@ export type UserUncheckedCreateInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   userRoles?: Prisma.UserRoleUncheckedCreateNestedManyWithoutUserInput
+  userMenus?: Prisma.UserMenuUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserUpdateInput = {
@@ -448,6 +453,7 @@ export type UserUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   userRoles?: Prisma.UserRoleUpdateManyWithoutUserNestedInput
+  userMenus?: Prisma.UserMenuUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -467,6 +473,7 @@ export type UserUncheckedUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   userRoles?: Prisma.UserRoleUncheckedUpdateManyWithoutUserNestedInput
+  userMenus?: Prisma.UserMenuUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -614,6 +621,20 @@ export type UserUpdateOneRequiredWithoutUserRolesNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutUserRolesInput, Prisma.UserUpdateWithoutUserRolesInput>, Prisma.UserUncheckedUpdateWithoutUserRolesInput>
 }
 
+export type UserCreateNestedOneWithoutUserMenusInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutUserMenusInput, Prisma.UserUncheckedCreateWithoutUserMenusInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutUserMenusInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutUserMenusNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutUserMenusInput, Prisma.UserUncheckedCreateWithoutUserMenusInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutUserMenusInput
+  upsert?: Prisma.UserUpsertWithoutUserMenusInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutUserMenusInput, Prisma.UserUpdateWithoutUserMenusInput>, Prisma.UserUncheckedUpdateWithoutUserMenusInput>
+}
+
 export type UserCreateWithoutUserRolesInput = {
   id?: bigint | number
   username: string
@@ -630,6 +651,7 @@ export type UserCreateWithoutUserRolesInput = {
   deptId?: bigint | number
   createdAt?: Date | string
   updatedAt?: Date | string
+  userMenus?: Prisma.UserMenuCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutUserRolesInput = {
@@ -648,6 +670,7 @@ export type UserUncheckedCreateWithoutUserRolesInput = {
   deptId?: bigint | number
   createdAt?: Date | string
   updatedAt?: Date | string
+  userMenus?: Prisma.UserMenuUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutUserRolesInput = {
@@ -682,6 +705,7 @@ export type UserUpdateWithoutUserRolesInput = {
   deptId?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  userMenus?: Prisma.UserMenuUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutUserRolesInput = {
@@ -700,6 +724,99 @@ export type UserUncheckedUpdateWithoutUserRolesInput = {
   deptId?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  userMenus?: Prisma.UserMenuUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutUserMenusInput = {
+  id?: bigint | number
+  username: string
+  password: string
+  nickname?: string
+  avatar?: string | null
+  email?: string | null
+  phone?: string | null
+  gender?: string | null
+  status?: number
+  lastLoginAt?: Date | string | null
+  passwordChangedAt?: Date | string | null
+  remark?: string | null
+  deptId?: bigint | number
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  userRoles?: Prisma.UserRoleCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutUserMenusInput = {
+  id?: bigint | number
+  username: string
+  password: string
+  nickname?: string
+  avatar?: string | null
+  email?: string | null
+  phone?: string | null
+  gender?: string | null
+  status?: number
+  lastLoginAt?: Date | string | null
+  passwordChangedAt?: Date | string | null
+  remark?: string | null
+  deptId?: bigint | number
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  userRoles?: Prisma.UserRoleUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutUserMenusInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutUserMenusInput, Prisma.UserUncheckedCreateWithoutUserMenusInput>
+}
+
+export type UserUpsertWithoutUserMenusInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutUserMenusInput, Prisma.UserUncheckedUpdateWithoutUserMenusInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutUserMenusInput, Prisma.UserUncheckedCreateWithoutUserMenusInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutUserMenusInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutUserMenusInput, Prisma.UserUncheckedUpdateWithoutUserMenusInput>
+}
+
+export type UserUpdateWithoutUserMenusInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  username?: Prisma.StringFieldUpdateOperationsInput | string
+  password?: Prisma.StringFieldUpdateOperationsInput | string
+  nickname?: Prisma.StringFieldUpdateOperationsInput | string
+  avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.IntFieldUpdateOperationsInput | number
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  remark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deptId?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  userRoles?: Prisma.UserRoleUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutUserMenusInput = {
+  id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  username?: Prisma.StringFieldUpdateOperationsInput | string
+  password?: Prisma.StringFieldUpdateOperationsInput | string
+  nickname?: Prisma.StringFieldUpdateOperationsInput | string
+  avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  gender?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.IntFieldUpdateOperationsInput | number
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  passwordChangedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  remark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  deptId?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  userRoles?: Prisma.UserRoleUncheckedUpdateManyWithoutUserNestedInput
 }
 
 
@@ -709,10 +826,12 @@ export type UserUncheckedUpdateWithoutUserRolesInput = {
 
 export type UserCountOutputType = {
   userRoles: number
+  userMenus: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   userRoles?: boolean | UserCountOutputTypeCountUserRolesArgs
+  userMenus?: boolean | UserCountOutputTypeCountUserMenusArgs
 }
 
 /**
@@ -730,6 +849,13 @@ export type UserCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensi
  */
 export type UserCountOutputTypeCountUserRolesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.UserRoleWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountUserMenusArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.UserMenuWhereInput
 }
 
 
@@ -750,6 +876,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   createdAt?: boolean
   updatedAt?: boolean
   userRoles?: boolean | Prisma.User$userRolesArgs<ExtArgs>
+  userMenus?: boolean | Prisma.User$userMenusArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -776,6 +903,7 @@ export type UserSelectScalar = {
 export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "username" | "password" | "nickname" | "avatar" | "email" | "phone" | "gender" | "status" | "lastLoginAt" | "passwordChangedAt" | "remark" | "deptId" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   userRoles?: boolean | Prisma.User$userRolesArgs<ExtArgs>
+  userMenus?: boolean | Prisma.User$userMenusArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 
@@ -789,6 +917,10 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
      * 不互通——表现为角色恒为空、权限码为空、所有带权限码的接口 403、前端菜单树为空。
      */
     userRoles: Prisma.$UserRolePayload<ExtArgs>[]
+    /**
+     * 用户级额外权限覆盖（在角色权限之上单独对该用户「额外授予 / 额外撤销」，见 UserMenu 模型）
+     */
+    userMenus: Prisma.$UserMenuPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     /**
@@ -1192,6 +1324,7 @@ readonly fields: UserFieldRefs;
 export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   userRoles<T extends Prisma.User$userRolesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$userRolesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserRolePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  userMenus<T extends Prisma.User$userMenusArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$userMenusArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserMenuPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1605,6 +1738,30 @@ export type User$userRolesArgs<ExtArgs extends runtime.Types.Extensions.Internal
   take?: number
   skip?: number
   distinct?: Prisma.UserRoleScalarFieldEnum | Prisma.UserRoleScalarFieldEnum[]
+}
+
+/**
+ * User.userMenus
+ */
+export type User$userMenusArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the UserMenu
+   */
+  select?: Prisma.UserMenuSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the UserMenu
+   */
+  omit?: Prisma.UserMenuOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.UserMenuInclude<ExtArgs> | null
+  where?: Prisma.UserMenuWhereInput
+  orderBy?: Prisma.UserMenuOrderByWithRelationInput | Prisma.UserMenuOrderByWithRelationInput[]
+  cursor?: Prisma.UserMenuWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.UserMenuScalarFieldEnum | Prisma.UserMenuScalarFieldEnum[]
 }
 
 /**

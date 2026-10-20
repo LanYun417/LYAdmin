@@ -2,7 +2,15 @@
  * 用户接口：用户分页列表、详情、增删改、状态切换、重置密码与分配角色。
  */
 import { del, get, post, put, request } from './request';
-import type { BatchDeleteSummary, PageResult, UserDetail, UserImportResult, UserQuery, UserUpsert } from '@/types/api';
+import type {
+  BatchDeleteSummary,
+  PageResult,
+  UserDetail,
+  UserImportResult,
+  UserMenuOverview,
+  UserQuery,
+  UserUpsert,
+} from '@/types/api';
 
 /** 用户分页列表 */
 export function getUserListApi(params: UserQuery): Promise<PageResult<UserDetail>> {
@@ -50,6 +58,19 @@ export function resetUserPasswordApi(id: number, password: string): Promise<null
 /** 分配角色 */
 export function assignUserRolesApi(id: number, roleIds: number[]): Promise<null> {
   return put<null>(`/users/${id}/roles`, { roleIds });
+}
+
+/** 用户的菜单权限概况（角色自带 / 额外授予 / 额外撤销 / 最终有效） */
+export function getUserMenusApi(id: number): Promise<UserMenuOverview> {
+  return get<UserMenuOverview>(`/users/${id}/menus`);
+}
+
+/**
+ * 保存用户的额外菜单权限。
+ * 入参为「期望的最终有效菜单集合」——服务端与角色自带集合求差，得出额外授予 / 额外撤销。
+ */
+export function assignUserMenusApi(id: number, menuIds: number[]): Promise<null> {
+  return put<null>(`/users/${id}/menus`, { menuIds });
 }
 
 /**

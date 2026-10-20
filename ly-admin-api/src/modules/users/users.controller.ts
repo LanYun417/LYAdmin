@@ -29,7 +29,14 @@ import { UsersService } from './users.service.js';
 import { IdParamDto } from '../../common/dto/id-param.dto.js';
 import { IdsBodyDto } from '../../common/dto/ids-body.dto.js';
 import type { BatchDeleteResult } from '../../common/utils/batch.js';
-import { AssignRoleDto, CreateUserDto, ResetPasswordDto, StatusDto, UpdateUserDto } from './dto/users.dto.js';
+import {
+  AssignRoleDto,
+  AssignUserMenuDto,
+  CreateUserDto,
+  ResetPasswordDto,
+  StatusDto,
+  UpdateUserDto,
+} from './dto/users.dto.js';
 import { UsersImportService, type ImportResult } from './users-import.service.js';
 
 @Controller('users')
@@ -156,5 +163,27 @@ export class UsersController {
   async assignRoles(@Param() params: IdParamDto, @Body() dto: AssignRoleDto): Promise<ResponseEnvelope<null>> {
     await this.usersService.assignRoles(params.id, dto.roleIds ?? []);
     return { __raw: true, data: null, message: '角色分配成功' };
+  }
+
+  /**
+   * 用户的菜单权限概况：角色自带 / 额外授予 / 额外撤销 / 最终有效。
+   * 用于「额外权限」抽屉回填：最终有效用于勾选，角色自带用于标注来源。
+   */
+  @Get(':id/menus')
+  @RequirePermissions('system:user:assignPerm')
+  menus(@Param() params: IdParamDto): Promise<unknown> {
+    return this.usersService.getUserMenus(params.id);
+  }
+
+  /**
+   * 保存用户的额外菜单权限。
+   * 入参为「期望的最终有效菜单集合」，服务端与角色自带集合求差得出额外授予 / 额外撤销。
+   */
+  @Put(':id/menus')
+  @RequirePermissions('system:user:assignPerm')
+  @OperationLog('用户管理', '额外权限')
+  async assignMenus(@Param() params: IdParamDto, @Body() dto: AssignUserMenuDto): Promise<ResponseEnvelope<null>> {
+    await this.usersService.assignUserMenus(params.id, dto.menuIds ?? []);
+    return { __raw: true, data: null, message: '额外权限保存成功' };
   }
 }
