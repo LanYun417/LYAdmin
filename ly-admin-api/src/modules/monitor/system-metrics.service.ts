@@ -389,6 +389,46 @@ function clamp(value: number): number {
   return Math.min(100, Math.max(0, value));
 }
 
+/**
+ * 把 `execFile` 的失败对象压成**一行人能读的原因**。
+ *
+ * 为什么需要它：Node 的 `execFile` 失败时，`error.message` 永远只是
+ * `Command failed: <命令行>`——真正的信息在 `code`（退出码，或 ENOENT / ETIMEDOUT 等错误名）、
+ * `signal`、`killed`、`stderr` 里。不带上的话，监控页只会显示"网卡计数不可用 + 一大串命令行"，
+ * 完全没法判断是被杀、超时、还是被安全软件拦了。
+ * （真实教训：本机就出现过进程被环境回收时表现为 `Command failed`，只看 message 毫无线索。）
+ */
+export function describeExecFailure(error: unknown): string {
+  const detail = error as
+    | (Error & { code?: number | string; signal?: string | null; killed?: boolean; stderr?: string | Buffer })
+    | undefined;
+  if (!detail) {
+    return String(error);
+  }
+
+  const parts: string[] = [];
+  if (typeof detail.code === 'number') {
+    parts.push(`exit=${detail.code}`);
+  } else if (typeof detail.code === 'string') {
+    // ENOENT（PATH 里没有 powershell.exe）/ ETIMEDOUT / EACCES 等
+    parts.push(detail.code);
+  }
+  if (detail.killed) {
+    parts.push('killed');
+  }
+  if (detail.signal) {
+    parts.push(`signal=${detail.signal}`);
+  }
+  const stderr = detail.stderr === undefined ? '' : String(detail.stderr).trim();
+  if (stderr) {
+    // stderr 可能很长（PowerShell 报错带调用栈），截断到能看一眼的长度
+    parts.push(`stderr=${stderr.slice(0, 300)}`);
+  }
+
+  // 一样都没拿到时退回原始 message，别把信息弄丢
+  return parts.length > 0 ? parts.join(' ') : (detail.message ?? String(error));
+}
+
 function round1(value: number): number {
   return Math.round(value * 10) / 10;
 }
@@ -642,12 +682,19 @@ export class SystemMetricsService implements OnModuleInit, OnModuleDestroy {
    * 超时/非零退出码一律抛出，由调用方转成"本次失败"。
    */
   private async readWindowsCounters(): Promise<NetCounters[]> {
-    const { stdout } = await execFileAsync(
-      'powershell.exe',
-      ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', WINDOWS_NET_COMMAND],
-      { timeout: WINDOWS_NET_TIMEOUT_MS, windowsHide: true, maxBuffer: 1024 * 1024 },
-    );
-    return parseWindowsAdapterStats(stdout);
+    try {
+      const { stdout } = await execFileAsync(
+        'powershell.exe',
+        ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', WINDOWS_NET_COMMAND],
+        { timeout: WINDOWS_NET_TIMEOUT_MS, windowsHide: true, maxBuffer: 1024 * 1024 },
+      );
+      return parseWindowsAdapterStats(stdout);
+    } catch (error) {
+      // 带上退出码 / 信号 / stderr：否则 netReason 里只有一句 `Command failed: <命令行>`，
+      // 出真实问题时（被安全软件拦、超时被杀、PATH 里没有 powershell）完全没法定位。
+      // `cause` 保留原始错误对象，便于上层按需取 code/stderr（eslint: preserve-caught-error）。
+      throw new Error(`PowerShell 查询失败（${describeExecFailure(error)}）`, { cause: error });
+    }
   }
 
   /** 不支持采集时的空指标（带原因）。 */

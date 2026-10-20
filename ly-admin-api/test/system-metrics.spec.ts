@@ -13,6 +13,7 @@ import {
   computeCpuUsage,
   computeRate,
   computeUsage,
+  describeExecFailure,
   parseCpuMax,
   parseMemoryLimit,
   parseProcNetDev,
@@ -306,5 +307,50 @@ describe('SystemMetricsService 网络采集（fixture 驱动）', () => {
     expect(network.rxRate).toBeNull();
 
     service.onModuleDestroy();
+  });
+});
+
+describe('describeExecFailure', () => {
+  it('非零退出码 + stderr → 两者都带上（这是最常见的"命令跑了但失败"）', () => {
+    const error = Object.assign(new Error('Command failed: powershell.exe ...'), {
+      code: 1,
+      stderr: 'Get-NetAdapterStatistics : 找不到与服务绑定',
+    });
+    const text = describeExecFailure(error);
+    expect(text).toContain('exit=1');
+    expect(text).toContain('stderr=');
+    expect(text).toContain('找不到与服务绑定');
+    // 不要把那一大串无信息的命令行又抄一遍
+    expect(text).not.toContain('Command failed');
+  });
+
+  it('被信号杀死（超时）→ 标明 killed 与 signal', () => {
+    const error = Object.assign(new Error('Command failed: powershell.exe ...'), {
+      killed: true,
+      signal: 'SIGTERM',
+    });
+    const text = describeExecFailure(error);
+    expect(text).toContain('killed');
+    expect(text).toContain('signal=SIGTERM');
+  });
+
+  it('找不到可执行文件 → 带上错误名 ENOENT（PATH 里没有 powershell.exe）', () => {
+    const error = Object.assign(new Error('spawn powershell.exe ENOENT'), { code: 'ENOENT' });
+    expect(describeExecFailure(error)).toBe('ENOENT');
+  });
+
+  it('stderr 超长时截断，避免把整页报错塞进 reason', () => {
+    const error = Object.assign(new Error('x'), { code: 2, stderr: 'E'.repeat(5000) });
+    const text = describeExecFailure(error);
+    expect(text).toContain('exit=2');
+    expect(text.length).toBeLessThan(400);
+  });
+
+  it('什么都取不到时退回原始 message，不丢信息', () => {
+    expect(describeExecFailure(new Error('某种罕见的失败'))).toBe('某种罕见的失败');
+  });
+
+  it('非 Error 入参也能安全字符串化', () => {
+    expect(describeExecFailure('直接抛出的字符串')).toBe('直接抛出的字符串');
   });
 });
