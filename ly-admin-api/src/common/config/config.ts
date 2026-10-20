@@ -5,55 +5,15 @@
  * 安全校验一律 fail-fast：缺失必填项即抛错，服务拒绝启动。
  */
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { existsSync, readFileSync } from 'node:fs';
-import { toBoolean, toNumber } from './env-parse.js';
+import { ROOT_DIR, toBoolean, toNumber } from './env-parse.js';
 import { dbConfig } from './db-config.js';
 
 /**
- * 项目根目录。
- * ESM 下无 `__dirname`，用 `import.meta.url` 反解目录：
- * - 源码运行（nest start）：本文件位于 <root>/src/common/config/ → 上溯三级
- * - 编译运行（node dist/main.js）：本文件位于 <root>/dist/common/config/ → 上溯三级
- * 两者一致。
+ * 项目根目录（定义在 `env-parse.ts`，本文件仅转发导出以保持对外 API 稳定）。
+ * `.env` 的加载也发生在 `env-parse.ts` 模块顶层——务必早于任何读取 process.env 的配置模块求值，
+ * 否则 `dbConfig` 会在 `.env` 解析前被算成空密码（本地原生启动必现）。
  */
-export const ROOT_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
-
-/**
- * 极简 .env 解析器。
- *
- * 不依赖 dotenv：本项目只需读取 KEY=VALUE 形式的简单赋值，
- * 自实现可避免为一个「读文件」动作引入运行时依赖。
- * 已存在的环境变量优先（便于容器/命令行覆盖）。
- */
-function loadDotEnv(): void {
-  const envPath = path.resolve(ROOT_DIR, '.env');
-  if (!existsSync(envPath)) {
-    return;
-  }
-  const content = readFileSync(envPath, 'utf-8');
-  content.split(/\r?\n/).forEach((rawLine: string) => {
-    const line = rawLine.trim();
-    if (!line || line.startsWith('#')) {
-      return;
-    }
-    const eq = line.indexOf('=');
-    if (eq <= 0) {
-      return;
-    }
-    const key = line.slice(0, eq).trim();
-    let value = line.slice(eq + 1).trim();
-    // 去掉成对包裹的引号
-    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
-      value = value.slice(1, -1);
-    }
-    if (process.env[key] === undefined) {
-      process.env[key] = value;
-    }
-  });
-}
-
-loadDotEnv();
+export { ROOT_DIR } from './env-parse.js';
 
 /** 日志根目录（绝对路径）。 */
 /** 日志根目录（绝对路径）。 */
