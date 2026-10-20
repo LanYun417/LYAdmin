@@ -164,6 +164,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: 生成部署用 .env（随机密钥，仅本次运行有效）
+        # SEED_ADMIN_PASSWORD 不在这里写：compose 插值时 shell 环境变量优先于 .env 文件，
+        # 而工作流级 env 已注入该值——在 .env 里再写一份只会造成"两边不一致"的错觉。
         run: |
           cp deploy/.env.example deploy/.env
           node -e "
@@ -172,8 +174,7 @@ jobs:
           let s=fs.readFileSync('deploy/.env','utf8');
           s=s.replace(/^DB_PASSWORD=.*/m,'DB_PASSWORD=ci-smoke-root')
             .replace(/^JWT_ACCESS_SECRET=.*/m,'JWT_ACCESS_SECRET='+gen())
-            .replace(/^JWT_REFRESH_SECRET=.*/m,'JWT_REFRESH_SECRET='+gen())
-            .replace(/^SEED_ADMIN_PASSWORD=.*/m,'SEED_ADMIN_PASSWORD=ci-Smoke-2026');
+            .replace(/^JWT_REFRESH_SECRET=.*/m,'JWT_REFRESH_SECRET='+gen());
           fs.writeFileSync('deploy/.env',s);
           "
       - name: 起栈（构建镜像 + 迁移 + api）
@@ -188,13 +189,18 @@ jobs:
           done
           echo "::error::api 60 秒内未就绪"; docker compose -f deploy/docker-compose.yml logs migrate api | tail -40; exit 1
       - name: 登录冒烟（验证码答案从 Redis 取，种子账号 + 注入的口令）
+        # 口令必须取 shell 里的 $SEED_ADMIN_PASSWORD：compose 插值时 **shell 环境变量优先于 .env 文件**，
+        # 而工作流级 env 已注入该变量——容器实际拿到的就是它。若在 .env 里另写一个值，两边不一致
+        # 会得到 401（用户名或密码错误）；注意验证码错误是 400，别混为一谈。
         run: |
+          PW="${SEED_ADMIN_PASSWORD}"
           CAP=$(curl -s http://localhost:3000/api/auth/captcha | python -c "import sys,json;print(json.load(sys.stdin)['data']['captchaId'])")
           CODE=$(docker exec $(docker compose -f deploy/docker-compose.yml ps -q redis) redis-cli get "auth:captcha:$CAP")
+          test -n "$CODE" || { echo "::error::验证码答案取不到（Redis key: auth:captcha:$CAP）"; exit 1; }
           curl -sSf -X POST http://localhost:3000/api/auth/login \
             -H 'Content-Type: application/json' \
-            -d "{\"username\":\"admin\",\"password\":\"ci-Smoke-2026\",\"captchaId\":\"$CAP\",\"captchaCode\":\"$CODE\"}" \
-            | python -c "import sys,json;d=json.load(sys.stdin);assert d['code']==200,d;print('登录成功')"
+            -d "{\"username\":\"admin\",\"password\":\"$PW\",\"captchaId\":\"$CAP\",\"captchaCode\":\"$CODE\"}" \
+            | python -c "import sys,json;d=json.load(sys.stdin);assert d['code']==200,d;print('登录成功：',d['data']['username'])"
       - name: 前端同源托管可用
         run: |
           curl -sSf http://localhost:3000/ | grep -q '<div id="app">'
