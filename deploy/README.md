@@ -3,14 +3,25 @@
 ## 1. 前置要求
 
 - Docker 24+ 与 Docker Compose v2（`docker compose` 子命令）
-- 2GB 以上可用内存（MySQL 8 + Node 各占一份）
+- 2GB 以上可用内存（MySQL 8 + Node 各占一份）；Windows / Docker Desktop 建议给到 4GB+
+- **国内网络注意**：Docker Hub（`registry-1.docker.io` / `auth.docker.io`）经常连不通，
+  拉取 `node:24-*` 等基础镜像会超时。两条路选一条：
+  1. Docker Desktop → Settings → Docker Engine，加 `"registry-mirrors": ["https://docker.m.daocloud.io"]` 后重启；
+  2. 或先手动拉取再打标签（build 时命中本地镜像，不再走远端）：
+     ```bash
+     docker pull docker.m.daocloud.io/library/node:24-bookworm-slim
+     docker pull docker.m.daocloud.io/library/node:24-alpine
+     docker tag docker.m.daocloud.io/library/node:24-bookworm-slim node:24-bookworm-slim
+     docker tag docker.m.daocloud.io/library/node:24-alpine      node:24-alpine
+     ```
+     （`mysql:8.4` / `redis:7-alpine` 一般能直接拉；本仓库需要的三个基础镜像见 `deploy/Dockerfile`。）
 
 ## 2. 首次部署
 
 ```bash
 # 1) 准备环境变量（模板见下方第 4 节；该文件已被 .gitignore 忽略，不会进仓库）
 cp deploy/.env.example deploy/.env
-vi deploy/.env
+vi deploy/.env          # 必改：DB_PASSWORD / JWT_ACCESS_SECRET / JWT_REFRESH_SECRET；建议设 SEED_ADMIN_PASSWORD
 
 # 2) 构建并启动（含一次性迁移服务）
 docker compose -f deploy/docker-compose.yml up -d --build
@@ -20,6 +31,23 @@ curl --noproxy '*' http://localhost:3000/api/health/live
 curl --noproxy '*' http://localhost:3000/api/health/ready
 # 期望：live → status ok；ready → status ready 且 checks.db.status = up
 ```
+
+> 一键生成 `.env`（随机 JWT 密钥 + 本地口令），适合本机试跑：
+>
+> ```bash
+> node -e "
+> const fs=require('fs'),crypto=require('crypto');
+> const gen=()=>crypto.randomBytes(32).toString('hex');
+> let s=fs.readFileSync('deploy/.env.example','utf8');
+> s=s.replace(/^DB_PASSWORD=.*/m,'DB_PASSWORD=local-mysql-root')
+>  .replace(/^JWT_ACCESS_SECRET=.*/m,'JWT_ACCESS_SECRET='+gen())
+>  .replace(/^JWT_REFRESH_SECRET=.*/m,'JWT_REFRESH_SECRET='+gen())
+>  .replace(/^SEED_ADMIN_PASSWORD=.*/m,'SEED_ADMIN_PASSWORD=Admin@2026');
+> fs.writeFileSync('deploy/.env',s);
+> "
+> ```
+>
+> 然后 `admin` / `Admin@2026` 登录。**仅限本机试跑**，生产必须用强口令。
 
 启动顺序由 compose 的依赖条件保证：`mysql`/`redis` 健康 → `migrate` 执行
 `prisma migrate deploy` **并补齐表/字段注释**后成功退出 → `api` 启动
@@ -100,7 +128,10 @@ docker compose -f deploy/docker-compose.yml up -d --build
 - **镜像不含 `prisma` CLI**：运行时阶段只装 `dependencies`，迁移由 `migrate` 服务
   （`api-builder` 阶段镜像，含 devDependencies）执行，这也是它能用 `npx prisma` 的原因。
 - **前端产物是构建期烘焙的**：改了前端代码必须重新 `--build`，没有「挂载宿主 dist 热更」的用法。
-- **镜像构建只在 CI 验证**：`docker` job 会在每次 push 时构建 `--target runtime`，
-  用来证明 Dockerfile 没腐化；本地 `docker build` 需自行执行（本项目开发机未装 Docker）。
+- **部署链路由 CI 的 `compose-smoke` job 持续验证**：它会在每次 push 时真的把整套 compose 跑起来
+  （构建镜像 → 迁移 → api 就绪 → 登录冒烟 → 前端 index.html 可达），失败即红。
+  本地同样可以直接跑：`docker compose -f deploy/docker-compose.yml up -d --build` 后按第 2 节探活。
+  这条路径曾经只有"构建镜像"的覆盖，导致 `migrate` 服务里一个"缺 JWT 密钥即抛错"的问题
+  在本地从未被发现（见 `ly-admin-api/src/common/config/db-config.ts` 的注释）。
 - **`deploy/.env.example` 是唯一模板**：仓库根没有 `.env.example`，
   本地开发用的模板在 `ly-admin-api/.env.example`（后端 `cp .env.example .env`）。

@@ -57,7 +57,9 @@ pids
 *.pid.lock
 
 # ip2region 离线 IP 库数据文件（约 10MB，npm run ip2region:update 拉取，不入库）
-/data/*.xdb
+# 整目录忽略：下载过程的临时文件（.xdb.tmp）同样不该入库——
+# 只写 /data/*.xdb 时，一次失败下载留下的 .tmp 曾被误提交进去（11MB 二进制）。
+/data/*
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json

@@ -24,7 +24,7 @@ import { PrismaMariaDb } from '@prisma/adapter-mariadb';
 import fs from 'node:fs';
 import path from 'node:path';
 import { PrismaClient } from '../src/generated/prisma/client.js';
-import { config } from '../src/common/config/config.js';
+import { dbConfig } from '../src/common/config/db-config.js';
 
 /**
  * schema 目录（目录式 schema：模型按域拆在同目录的多个 `.prisma` 文件里）。
@@ -201,11 +201,11 @@ const escapeSql = (v: string): string => v.replace(/\\/g, '\\\\').replace(/'/g, 
 async function main(): Promise<void> {
   const prisma = new PrismaClient({
     adapter: new PrismaMariaDb({
-      host: config.db.host,
-      port: config.db.port,
-      user: config.db.user,
-      password: config.db.password,
-      database: config.db.name,
+      host: dbConfig.host,
+      port: dbConfig.port,
+      user: dbConfig.user,
+      password: dbConfig.password,
+      database: dbConfig.name,
       connectionLimit: 2,
     }),
   });
@@ -213,7 +213,7 @@ async function main(): Promise<void> {
   const targets = parseSchemaTargets(readSchemaDir());
   const existing = await prisma.$queryRawUnsafe<Array<Record<string, string>>>(
     `SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = ?`,
-    config.db.name,
+    dbConfig.name,
   );
   const existingTables = new Set(existing.map((r) => r.TABLE_NAME));
 

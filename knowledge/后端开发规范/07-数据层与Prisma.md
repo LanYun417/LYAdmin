@@ -70,6 +70,12 @@ Prisma 7 禁止在 schema 写 `datasource.url`：
 | 本地一次性试错（不产生迁移文件）      | `npm run prisma:push`（**仅限本地**，勿用于生产）         |
 | 同步表/字段 COMMENT                   | `npm run prisma:comments`（与迁移无关，独立执行）         |
 
+> **CLI 脚本只准依赖 `db-config`，不许依赖服务端 `config`**。`config.ts` 在模块加载时就会
+> fail-fast 校验 JWT 等必填项，而 `migrate` 服务、CI 冒烟这类环境里只有 `DB_*`——
+> 真实事故：`prisma-comments.ts` 曾 import `config.ts`，导致 compose 的 `migrate`
+> 退出码 1、部署卡在"迁移成功之后"。数据库连接设置已抽到 `src/common/config/db-config.ts`
+> （无任何校验），解析原语在 `env-parse.ts`。`test/db-config.spec.ts` 会拦住回退。
+
 - 迁移目录固定为 `prisma/migrations`，在 `prisma.config.ts` 的 `migrations.path` **显式指定**：
   schema 指向的是目录（`prisma/schema`），不显式指定时默认迁移目录会跟着 schema 走，
   导致 `migrate status` 报「找不到迁移」。

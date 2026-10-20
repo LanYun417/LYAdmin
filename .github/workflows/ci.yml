@@ -153,3 +153,52 @@ jobs:
             --build-arg APP_VERSION=ci \
             --build-arg GIT_COMMIT=${GITHUB_SHA::8} \
             -t ly-admin:ci .
+
+  # 把整套 compose 跑起来再探活：镜像能构建 ≠ 部署链路能通。
+  # 真实教训：migrate 服务里的 prisma:comments 曾因 import 服务端配置（缺 JWT 即抛错）而退出码 1，
+  # 而这条路径此前只被"构建镜像"覆盖过，从未真正执行过——部署卡在迁移成功后一步都没人发现。
+  compose-smoke:
+    name: 部署链路冒烟（仅 push 时跑）
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 生成部署用 .env（随机密钥，仅本次运行有效）
+        run: |
+          cp deploy/.env.example deploy/.env
+          node -e "
+          const fs=require('fs'),crypto=require('crypto');
+          const gen=()=>crypto.randomBytes(32).toString('hex');
+          let s=fs.readFileSync('deploy/.env','utf8');
+          s=s.replace(/^DB_PASSWORD=.*/m,'DB_PASSWORD=ci-smoke-root')
+            .replace(/^JWT_ACCESS_SECRET=.*/m,'JWT_ACCESS_SECRET='+gen())
+            .replace(/^JWT_REFRESH_SECRET=.*/m,'JWT_REFRESH_SECRET='+gen())
+            .replace(/^SEED_ADMIN_PASSWORD=.*/m,'SEED_ADMIN_PASSWORD=ci-Smoke-2026');
+          fs.writeFileSync('deploy/.env',s);
+          "
+      - name: 起栈（构建镜像 + 迁移 + api）
+        run: docker compose -f deploy/docker-compose.yml up -d --build
+      - name: 等待 api 就绪并探活（含 DB / Redis）
+        run: |
+          for i in $(seq 1 30); do
+            if curl -sSf http://localhost:3000/api/health/ready > /tmp/ready.json 2>/dev/null; then
+              cat /tmp/ready.json; exit 0
+            fi
+            echo "等待 api 就绪... ${i}0s"; sleep 10
+          done
+          echo "::error::api 60 秒内未就绪"; docker compose -f deploy/docker-compose.yml logs migrate api | tail -40; exit 1
+      - name: 登录冒烟（验证码答案从 Redis 取，种子账号 + 注入的口令）
+        run: |
+          CAP=$(curl -s http://localhost:3000/api/auth/captcha | python -c "import sys,json;print(json.load(sys.stdin)['data']['captchaId'])")
+          CODE=$(docker exec $(docker compose -f deploy/docker-compose.yml ps -q redis) redis-cli get "auth:captcha:$CAP")
+          curl -sSf -X POST http://localhost:3000/api/auth/login \
+            -H 'Content-Type: application/json' \
+            -d "{\"username\":\"admin\",\"password\":\"ci-Smoke-2026\",\"captchaId\":\"$CAP\",\"captchaCode\":\"$CODE\"}" \
+            | python -c "import sys,json;d=json.load(sys.stdin);assert d['code']==200,d;print('登录成功')"
+      - name: 前端同源托管可用
+        run: |
+          curl -sSf http://localhost:3000/ | grep -q '<div id="app">'
+          echo "SPA index.html 可访问"
+      - name: 失败时输出日志
+        if: failure()
+        run: docker compose -f deploy/docker-compose.yml logs migrate api | tail -60

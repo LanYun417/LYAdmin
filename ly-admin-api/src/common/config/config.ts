@@ -7,6 +7,8 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { existsSync, readFileSync } from 'node:fs';
+import { toBoolean, toNumber } from './env-parse.js';
+import { dbConfig } from './db-config.js';
 
 /**
  * 项目根目录。
@@ -52,23 +54,6 @@ function loadDotEnv(): void {
 }
 
 loadDotEnv();
-
-/** 将字符串布尔值安全转换为 boolean。 */
-export function toBoolean(value: string | undefined, fallback: boolean): boolean {
-  if (value === undefined || value === '') {
-    return fallback;
-  }
-  return value === 'true' || value === '1';
-}
-
-/** 将字符串数字安全转换为 number。 */
-export function toNumber(value: string | undefined, fallback: number): number {
-  if (value === undefined || value.trim() === '') {
-    return fallback;
-  }
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : fallback;
-}
 
 /** 日志根目录（绝对路径）。 */
 /** 日志根目录（绝对路径）。 */
@@ -173,16 +158,11 @@ export const config = {
   /** 项目根目录（绝对路径） */
   rootDir: ROOT_DIR,
   /** 数据库配置 */
-  db: {
-    host: process.env.DB_HOST ?? 'localhost',
-    port: toNumber(process.env.DB_PORT, 3306),
-    name: process.env.DB_NAME ?? 'ly_admin',
-    user: process.env.DB_USER ?? 'root',
-    password: process.env.DB_PASSWORD ?? '',
-    logging: toBoolean(process.env.DB_LOGGING, true),
-    // 连接池上限：默认 10，限制在 1~100，避免配置失误打满数据库
-    connectionLimit: Math.min(Math.max(toNumber(process.env.DB_CONNECTION_LIMIT, 10), 1), 100),
-  },
+  /**
+   * 数据库连接配置。单独放在 `db-config.ts`，好让只用到数据库的 CLI 脚本
+   * （`prisma:comments` 等）不必 import 本文件、从而不被下面的 JWT fail-fast 拦住。
+   */
+  db: dbConfig,
   /** JWT 配置（密钥必填：缺失、为空或两者相同均抛错拒绝启动） */
   jwt: {
     accessSecret: JWT_ACCESS_SECRET,
