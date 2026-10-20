@@ -105,3 +105,14 @@ export class AssignMenuDto {
   @Min(1, { each: true, message: MSG.eachMin(1) })
   menuIds?: number[] = [];
 }
+
+/** 恢复默认授权（按种子定义重建角色菜单授权）。 */
+export class ResetRoleMenusDto {
+  /** 目标角色 id；不传 / 传空数组 = 全部种子角色 */
+  @IsOptional()
+  @Type(() => Number)
+  @IsArray({ message: MSG.isArray })
+  @IsInt({ each: true, message: MSG.eachInt })
+  @Min(1, { each: true, message: MSG.eachMin(1) })
+  roleIds?: number[] = [];
+}

@@ -11,6 +11,7 @@ import type { PageResult } from '../../common/types.js';
 import { recordAfter, recordBefore } from '../../common/log/operation-snapshot.js';
 import { runBatchDelete, type BatchDeleteResult } from '../../common/utils/batch.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
+import { SEED_ROLE_CODES, resetSeedRoleMenus } from '../../prisma/seed.service.js';
 import type { CreateRoleDto, UpdateRoleDto } from './dto/role.dto.js';
 
 /** 角色简要信息（下拉 & 列表复用）。 */
@@ -285,5 +286,53 @@ export class RoleService {
 
     // 角色菜单授权变更 → 权限码集合变化：清空鉴权缓存（影响所有持有该角色的用户）
     this.authCache.invalidate();
+  }
+
+  /**
+   * 按种子定义重建角色的菜单授权（管理端「恢复默认授权」）。
+   *
+   * 与启动种子的分工：启动种子只负责**首次创建**角色并写授权，绝不覆盖已有授权
+   * （否则运维调好的权限会在重启 / 部署时被静默回滚）；需要重置时由运维在这里显式触发。
+   *
+   * @param roleIds 目标角色 id；传空数组 = 全部种子角色
+   * @returns 成功重建的角色（含授权条数）与被跳过的角色（含原因）
+   */
+  async resetMenusToSeed(roleIds: number[]): Promise<{
+    reset: Array<{ id: number; roleName: string; count: number }>;
+    skipped: Array<{ id: number; roleName: string; reason: string }>;
+  }> {
+    const reset: Array<{ id: number; roleName: string; count: number }> = [];
+    const skipped: Array<{ id: number; roleName: string; reason: string }> = [];
+
+    if (roleIds.length === 0) {
+      const result = await resetSeedRoleMenus(this.prisma);
+      result.forEach((item) => reset.push({ id: item.id, roleName: item.roleName, count: item.count }));
+    } else {
+      const seedCodes = new Set(SEED_ROLE_CODES);
+      const rows = await this.prisma.role.findMany({
+        where: { id: { in: roleIds.map((id) => BigInt(id)) } },
+        select: { id: true, roleCode: true, roleName: true },
+      });
+      const byId = new Map(rows.map((row) => [Number(row.id), row]));
+
+      for (const id of roleIds) {
+        const role = byId.get(id);
+        if (!role) {
+          skipped.push({ id, roleName: `#${id}`, reason: '角色不存在' });
+          continue;
+        }
+        if (!seedCodes.has(role.roleCode)) {
+          // 自定义角色没有种子定义，谈不上"恢复默认"
+          skipped.push({ id, roleName: role.roleName, reason: '非种子角色，没有可恢复的默认授权' });
+          continue;
+        }
+        const [one] = await resetSeedRoleMenus(this.prisma, role.roleCode);
+        reset.push({ id, roleName: role.roleName, count: one?.count ?? 0 });
+      }
+    }
+
+    // 菜单授权变化 → 权限码与菜单树都可能变，且可能一次涉及多个角色：全清最稳妥
+    this.authCache.invalidate();
+    return { reset, skipped };
   }
 }

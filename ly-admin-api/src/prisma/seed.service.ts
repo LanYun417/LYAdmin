@@ -777,19 +777,38 @@ const ROLE_SEEDS: RoleSeed[] = [
   },
 ];
 
+/** 种子角色编码集合（供「恢复默认授权」判断目标是否是种子角色）。 */
+export const SEED_ROLE_CODES: string[] = ROLE_SEEDS.map((seed) => seed.roleCode);
+
 /**
- * 写入默认角色并重建其菜单授权（幂等：授权每次按种子定义重建）。
+ * 写入默认角色。
+ *
+ * ⚠️ **只在角色不存在时创建并写授权；已存在的角色完全不碰它的菜单授权。**
+ * 曾经的实现是「每次启动都 deleteMany + 按种子重建」，等于把运维在角色管理里调好的授权
+ * 在重启 / 部署时**静默回滚**——调过权限的人不会收到任何提示，属于数据丢失级问题。
+ * 现在种子只负责「首次创建」；需要按种子重置时走管理端的「恢复默认授权」
+ * （{@link resetSeedRoleMenus}：显式触发、有权限码、有操作日志）。
+ *
  * @param prisma Prisma 客户端
  * @param menuIdMap 菜单 key → id 映射（由菜单种子产出）
+ * @returns 新建 / 跳过的角色数
  */
-async function seedRole(prisma: PrismaService, menuIdMap: Map<string, number>): Promise<void> {
-  const allMenuIds = Array.from(menuIdMap.values());
+export async function seedRole(
+  prisma: PrismaService,
+  menuIdMap: Map<string, number>,
+): Promise<{ created: number; skipped: number }> {
+  let created = 0;
+  let skipped = 0;
 
   for (const seed of ROLE_SEEDS) {
-    const role = await prisma.role.upsert({
-      where: { roleCode: seed.roleCode },
-      update: {},
-      create: {
+    const existing = await prisma.role.findUnique({ where: { roleCode: seed.roleCode }, select: { id: true } });
+    if (existing) {
+      // 角色已存在（其授权可能已被运维调整过）→ 保持原样，绝不覆盖
+      skipped += 1;
+      continue;
+    }
+    const role = await prisma.role.create({
+      data: {
         roleName: seed.roleName,
         roleCode: seed.roleCode,
         sort: seed.sort,
@@ -799,22 +818,75 @@ async function seedRole(prisma: PrismaService, menuIdMap: Map<string, number>): 
         remark: seed.remark,
       },
     });
-
-    const menuIds =
-      seed.menuKeys === 'ALL'
-        ? allMenuIds
-        : seed.menuKeys.map((key) => menuIdMap.get(key)).filter((id): id is number => typeof id === 'number');
-
-    // 幂等：先清理该角色既有授权，再重建
-    const roleId = role.id;
-    await prisma.roleMenu.deleteMany({ where: { roleId } });
-    if (menuIds.length > 0) {
-      await prisma.roleMenu.createMany({
-        data: menuIds.map((menuId) => ({ roleId, menuId: BigInt(menuId) })),
-        skipDuplicates: true,
-      });
-    }
+    await applySeedMenus(prisma, role.id, seed, menuIdMap);
+    created += 1;
   }
+
+  return { created, skipped };
+}
+
+/**
+ * 按种子定义为角色写菜单授权（先清后建）。
+ * @param prisma Prisma 客户端
+ * @param roleId 角色 id
+ * @param seed 角色种子定义
+ * @param menuIdMap 菜单 key → id 映射
+ * @returns 写入的授权条数
+ */
+async function applySeedMenus(
+  prisma: PrismaService,
+  roleId: bigint,
+  seed: RoleSeed,
+  menuIdMap: Map<string, number>,
+): Promise<number> {
+  const allMenuIds = Array.from(menuIdMap.values());
+  const menuIds =
+    seed.menuKeys === 'ALL'
+      ? allMenuIds
+      : seed.menuKeys.map((key) => menuIdMap.get(key)).filter((id): id is number => typeof id === 'number');
+
+  // 先清后建：调用方必须是「新建角色」或「运维显式要求重置」两种已确认场景
+  await prisma.roleMenu.deleteMany({ where: { roleId } });
+  if (menuIds.length > 0) {
+    await prisma.roleMenu.createMany({
+      data: menuIds.map((menuId) => ({ roleId, menuId: BigInt(menuId) })),
+      skipDuplicates: true,
+    });
+  }
+  return menuIds.length;
+}
+
+/**
+ * 按种子定义**重建**角色的菜单授权（管理端「恢复默认授权」用）。
+ *
+ * 与启动种子 {@link seedRole} 的关键区别：这里是运维**主动触发**的显式覆盖（先清后建），
+ * 而启动种子只负责首次创建、绝不覆盖已有授权。
+ *
+ * @param prisma Prisma 客户端
+ * @param roleCode 指定角色编码；省略则处理全部种子角色
+ * @returns 每个被重建角色的授权条数；角色不存在则跳过（不顺手创建）
+ */
+export async function resetSeedRoleMenus(
+  prisma: PrismaService,
+  roleCode?: string,
+): Promise<Array<{ id: number; roleCode: string; roleName: string; count: number }>> {
+  // 幂等补建缺失的菜单节点，保证种子 key 都能解析到 id
+  const menuIdMap = await seedMenu(prisma);
+  const seeds = roleCode ? ROLE_SEEDS.filter((seed) => seed.roleCode === roleCode) : ROLE_SEEDS;
+
+  const result: Array<{ id: number; roleCode: string; roleName: string; count: number }> = [];
+  for (const seed of seeds) {
+    const role = await prisma.role.findUnique({
+      where: { roleCode: seed.roleCode },
+      select: { id: true, roleName: true },
+    });
+    if (!role) {
+      continue;
+    }
+    const count = await applySeedMenus(prisma, role.id, seed, menuIdMap);
+    result.push({ id: Number(role.id), roleCode: seed.roleCode, roleName: role.roleName, count });
+  }
+  return result;
 }
 
 /* --------------------------------- 用户种子 -------------------------------- */
@@ -1089,8 +1161,11 @@ export async function runSeed(prisma: PrismaService): Promise<void> {
   const menuIdMap = await seedMenu(prisma);
   logger.log(`菜单数据完成，共 ${menuIdMap.size} 个节点`);
 
-  await seedRole(prisma, menuIdMap);
-  logger.log(`角色数据完成，共 ${ROLE_SEEDS.length} 个角色`);
+  const roleStat = await seedRole(prisma, menuIdMap);
+  logger.log(
+    `角色数据完成，共 ${ROLE_SEEDS.length} 个：新建 ${roleStat.created} 个，已存在 ${roleStat.skipped} 个` +
+      `（已有角色的菜单授权不被覆盖，需重置请用「恢复默认授权」）`,
+  );
 
   await seedUser(prisma);
   logger.log('用户数据完成，超管账号 admin（口令见 SEED_ADMIN_PASSWORD，未配置时为开发默认口令）');

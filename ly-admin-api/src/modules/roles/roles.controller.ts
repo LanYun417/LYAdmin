@@ -10,7 +10,7 @@ import { IdParamDto } from '../../common/dto/id-param.dto.js';
 import { IdsBodyDto } from '../../common/dto/ids-body.dto.js';
 import type { BatchDeleteResult } from '../../common/utils/batch.js';
 import { RoleService } from './roles.service.js';
-import { AssignMenuDto, CreateRoleDto, UpdateRoleDto } from './dto/role.dto.js';
+import { AssignMenuDto, CreateRoleDto, ResetRoleMenusDto, UpdateRoleDto } from './dto/role.dto.js';
 
 @Controller('roles')
 export class RoleController {
@@ -89,5 +89,29 @@ export class RoleController {
     return this.roleService
       .assignMenus(params.id, dto.menuIds ?? [])
       .then(() => ({ __raw: true, data: null, message: '授权成功' }) as ResponseEnvelope<null>);
+  }
+
+  /**
+   * 按种子定义恢复角色的默认菜单授权（「恢复默认授权」）。
+   *
+   * 为什么需要它：启动种子只负责**首次创建**角色并写授权，不再每次重启都覆盖
+   * （那会把运维调好的授权静默回滚）；所以"想回到种子默认"必须由运维显式触发。
+   *
+   * 权限码复用 `system:role:assignMenu`：这与「授权菜单」是同一种能力（写角色菜单授权），
+   * 只是数据来源换成种子定义；按项目「同一能力不拆权限码」的约定不新增码。
+   */
+  @Post('reset-menus')
+  @RequirePermissions('system:role:assignMenu')
+  @OperationLog('角色管理', '恢复默认授权')
+  async resetMenus(@Body() dto: ResetRoleMenusDto): Promise<ResponseEnvelope<unknown>> {
+    const result = await this.roleService.resetMenusToSeed(dto.roleIds ?? []);
+    return {
+      __raw: true,
+      data: result,
+      message:
+        result.reset.length > 0
+          ? `已恢复 ${result.reset.length} 个角色的默认授权`
+          : '没有可恢复的角色（自定义角色无种子默认授权）',
+    };
   }
 }

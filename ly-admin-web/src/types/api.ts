@@ -186,6 +186,14 @@ export interface UserMenuOverview {
   effectiveMenuIds: number[];
 }
 
+/** 恢复角色默认授权的结果（按种子定义重建菜单授权）。 */
+export interface ResetRoleMenusResult {
+  /** 成功重建的角色 */
+  reset: Array<{ id: number; roleName: string; count: number }>;
+  /** 被跳过的角色（含原因，如「非种子角色」） */
+  skipped: Array<{ id: number; roleName: string; reason: string }>;
+}
+
 /** 菜单查询参数 */
 export interface MenuQuery {
   menuName?: string;

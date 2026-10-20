@@ -2,7 +2,15 @@
  * 角色接口：角色分页列表、下拉选项、增删改与菜单授权。
  */
 import { del, get, post, put, request } from './request';
-import type { BatchDeleteSummary, PageResult, Role, RoleBrief, RoleQuery, RoleUpsert } from '@/types/api';
+import type {
+  BatchDeleteSummary,
+  PageResult,
+  ResetRoleMenusResult,
+  Role,
+  RoleBrief,
+  RoleQuery,
+  RoleUpsert,
+} from '@/types/api';
 
 /** 角色分页列表 */
 export function getRoleListApi(params: RoleQuery): Promise<PageResult<Role>> {
@@ -42,4 +50,12 @@ export function getRoleMenuIdsApi(id: number): Promise<number[]> {
 /** 授权角色菜单 */
 export function assignRoleMenusApi(id: number, menuIds: number[]): Promise<null> {
   return put<null>(`/roles/${id}/menus`, { menuIds });
+}
+
+/**
+ * 按种子定义恢复角色的默认菜单授权。
+ * 不传 roleIds = 恢复全部种子角色。
+ */
+export function resetRoleMenusApi(roleIds?: number[]): Promise<ResetRoleMenusResult> {
+  return post<ResetRoleMenusResult>('/roles/reset-menus', { roleIds: roleIds ?? [] });
 }

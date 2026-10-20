@@ -2,7 +2,7 @@
 /** 角色管理页。模块职责：角色列表查询与增删改，并进入菜单权限分配抽屉。 */
 
 import { ElMessage, ElMessageBox } from '@/utils/element';
-import { batchDeleteRolesApi, deleteRoleApi, getRoleListApi } from '@/api/role';
+import { batchDeleteRolesApi, deleteRoleApi, getRoleListApi, resetRoleMenusApi } from '@/api/role';
 import { useStatusDict } from '@/composables/useDict';
 import { useBatchDelete } from '@/composables/useBatchDelete';
 import { useTable } from '@/composables/useTable';
@@ -85,6 +85,33 @@ function handlePermission(row: Role): void {
   permissionRoleName.value = row.roleName;
   permissionVisible.value = true;
 }
+
+/**
+ * 恢复默认授权：按种子定义重建该角色的菜单授权。
+ *
+ * 为什么要有这个按钮：启动种子只负责「首次创建」角色，**不再每次重启覆盖授权**
+ * （那会把这里调好的权限静默回滚）。所以"想回到种子默认"必须由人显式触发——
+ * 会覆盖当前授权并影响该角色下所有用户，故必须二次确认。
+ */
+async function handleResetMenus(row: Role): Promise<void> {
+  try {
+    await ElMessageBox.confirm(
+      `确定把角色「${row.roleName}」的菜单授权恢复为种子默认吗？当前授权将被覆盖，并影响该角色下的所有用户。`,
+      '恢复默认授权',
+      { type: 'warning', confirmButtonText: '恢复', cancelButtonText: '取消' },
+    );
+  } catch {
+    return;
+  }
+  const result = await resetRoleMenusApi([row.id]);
+  const [done] = result.reset;
+  if (done) {
+    ElMessage.success(`已恢复「${done.roleName}」的默认授权，共 ${done.count} 项`);
+  } else {
+    ElMessage.warning(result.skipped[0]?.reason ?? '没有可恢复的角色');
+  }
+  await getList();
+}
 </script>
 
 <template>
@@ -140,7 +167,7 @@ function handlePermission(row: Role): void {
         <el-table-column label="创建时间" width="180">
           <template #default="{ row }">{{ formatDateTime(row.createdAt) }}</template>
         </el-table-column>
-        <el-table-column label="操作" width="220" fixed="right">
+        <el-table-column label="操作" width="300" fixed="right">
           <template #default="{ row }">
             <div class="table-action">
               <el-button v-permission="'system:role:edit'" type="primary" link @click="handleEdit(row as Role)">
@@ -153,6 +180,14 @@ function handlePermission(row: Role): void {
                 @click="handlePermission(row as Role)"
               >
                 权限
+              </el-button>
+              <el-button
+                v-permission="'system:role:assignMenu'"
+                type="info"
+                link
+                @click="handleResetMenus(row as Role)"
+              >
+                恢复默认
               </el-button>
               <el-button v-permission="'system:role:remove'" type="danger" link @click="handleDelete(row as Role)">
                 删除
