@@ -20,7 +20,7 @@
     "commit": "cz",
     "dev:api": "npm --prefix ly-admin-api run start:dev",
     "dev:web": "npm --prefix ly-admin-web run dev",
-    "dev": "concurrently -n api,web -c blue,green \"npm run dev:api\" \"npm run dev:web\""
+    "dev": "node scripts/dev.mjs"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.3",
@@ -30,7 +30,6 @@
     "@typescript-eslint/parser": "^8.70.1",
     "@vue/eslint-config-typescript": "^14.9.0",
     "commitizen": "^4.3.2",
-    "concurrently": "^10.0.5",
     "cz-git": "^1.14.0",
     "eslint": "^10.11.0",
     "eslint-config-prettier": "^10.1.8",

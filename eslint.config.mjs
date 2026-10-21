@@ -138,6 +138,14 @@ export default [
         // Node 内置全局：零依赖 Node 脚本（scripts/*.mjs）会用到
         Buffer: 'readonly',
         URL: 'readonly',
+        // 定时器不是 ES 内置全局， scripts/*.mjs 的轮询等待会用到
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly',
+        // Node 18+ 内置网络 API， dev.mjs 的健康检查轮询直接用，无需引第三方 HTTP 客户端
+        fetch: 'readonly',
+        AbortSignal: 'readonly',
       },
     },
     rules: {
