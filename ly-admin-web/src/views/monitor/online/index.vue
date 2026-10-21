@@ -79,7 +79,7 @@ async function handleForceLogoutAll(row: OnlineSession): Promise<void> {
     </SearchForm>
 
     <el-card shadow="never" class="mt-4">
-      <div class="flex items-center justify-between mb-3">
+      <div class="flex flex-wrap items-center justify-between gap-y-2 mb-3">
         <span class="text-[15px] font-semibold text-ink">在线会话（{{ total }}）</span>
         <el-button :loading="loading" @click="getList">
           <template #icon><i class="bi bi-arrow-clockwise" /></template>

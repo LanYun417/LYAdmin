@@ -82,9 +82,9 @@ onMounted(() => {
 <template>
   <div class="menu-page">
     <el-card shadow="never">
-      <div class="flex items-center justify-between mb-3">
+      <div class="flex flex-wrap items-center justify-between gap-y-2 mb-3">
         <span class="text-[15px] font-semibold text-ink">菜单列表</span>
-        <div class="flex items-center gap-2">
+        <div class="flex flex-wrap items-center gap-2">
           <el-button @click="loadTree">
             <template #icon><i class="bi bi-arrow-clockwise" /></template>刷新</el-button
           >

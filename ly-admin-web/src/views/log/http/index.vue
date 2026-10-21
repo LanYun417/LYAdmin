@@ -268,7 +268,7 @@ onMounted(() => {
     </SearchForm>
 
     <el-card shadow="never">
-      <div class="flex items-center justify-between mb-3">
+      <div class="flex flex-wrap items-center justify-between gap-y-2 mb-3">
         <span class="text-[15px] font-semibold text-ink">HTTP 访问日志</span>
         <div class="flex flex-wrap items-center gap-2">
           <el-button @click="getList">

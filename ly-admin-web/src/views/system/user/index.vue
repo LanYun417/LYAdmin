@@ -258,9 +258,9 @@ onMounted(() => {
     </SearchForm>
 
     <el-card shadow="never">
-      <div class="flex items-center justify-between mb-3">
+      <div class="flex flex-wrap items-center justify-between gap-y-2 mb-3">
         <span class="text-[15px] font-semibold text-ink">用户列表</span>
-        <div class="flex items-center gap-2">
+        <div class="flex flex-wrap items-center gap-2">
           <el-button v-permission="'system:user:add'" plain @click="handleImport">
             <template #icon><i class="bi bi-upload" /></template>
             批量导入
