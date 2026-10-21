@@ -135,6 +135,9 @@ jobs:
       - name: 类型检查
         working-directory: ly-admin-web
         run: npm run type-check
+      - name: 单测
+        working-directory: ly-admin-web
+        run: npm run test
       - name: 构建产物
         working-directory: ly-admin-web
         run: npm run build
