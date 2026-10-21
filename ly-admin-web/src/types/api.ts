@@ -802,3 +802,82 @@ export interface ChangePasswordParams {
   newPassword: string;
   confirmPassword: string;
 }
+
+/* ------------------------------- 定时任务 ------------------------------- */
+
+/** 定时任务执行状态（与后端 TaskRunStatus 对齐） */
+export type TaskRunStatusValue = 0 | 1 | 2;
+
+/** 定时任务触发方式（与后端 TaskTrigger 对齐） */
+export type TaskTriggerValue = 1 | 2;
+
+/** 单次任务执行摘要 */
+export interface TaskRunSummary {
+  /** 0 执行中 / 1 成功 / 2 失败 */
+  status: TaskRunStatusValue;
+  /** 1 自动（cron）/ 2 手动 */
+  trigger: TaskTriggerValue;
+  /** 开始时间 */
+  startedAt: string;
+  /** 结束时间（执行中为 null） */
+  finishedAt: string | null;
+  /** 耗时（毫秒） */
+  durationMs: number;
+  /** 失败原因 */
+  errorMessage: string | null;
+  /** 手动触发人账号（自动触发为 null） */
+  operator: string | null;
+}
+
+/** 定时任务列表项 */
+export interface TaskItem {
+  /** 任务标识 */
+  name: string;
+  /** 任务名称 */
+  title: string;
+  /** 任务说明 */
+  description: string;
+  /** cron 表达式（6 位：秒 分 时 日 月 周） */
+  cron: string;
+  /** 是否启用 */
+  enabled: boolean;
+  /** 下次执行时间（已停用为 null） */
+  nextRunAt: string | null;
+  /** 是否正在执行中 */
+  running: boolean;
+  /** 上次执行摘要（从未执行过为 null） */
+  lastRun: TaskRunSummary | null;
+}
+
+/** 任务执行记录列表项 */
+export interface TaskLogItem extends TaskRunSummary {
+  id: number;
+  /** 任务标识 */
+  taskName: string;
+  /** 任务名称（快照） */
+  taskTitle: string;
+}
+
+/** 任务执行记录查询参数 */
+export interface TaskLogQuery extends PageQuery {
+  /** 0 执行中 / 1 成功 / 2 失败 */
+  status?: number;
+  /** 1 自动 / 2 手动 */
+  trigger?: number;
+}
+
+/** 手动执行结果 */
+export interface TaskRunResult {
+  /** 任务标识 */
+  name: string;
+  /** 任务名称 */
+  title: string;
+  /** 1 成功 / 2 失败 */
+  status: TaskRunStatusValue;
+  /** 耗时（毫秒） */
+  durationMs: number;
+  /** 失败原因 */
+  errorMessage: string | null;
+  startedAt: string;
+  finishedAt: string;
+}

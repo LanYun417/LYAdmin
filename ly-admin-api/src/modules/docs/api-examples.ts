@@ -179,6 +179,40 @@ const FILE_ITEM = {
   createdAt: '2026-10-18 09:33:00',
 };
 
+/** 定时任务。 */
+const TASK_ITEM = {
+  name: 'log-archive',
+  title: '日志归档',
+  description: '将前一日的应用/错误/访问/慢 SQL 日志打包为 tar.gz 存入归档目录，并按配置删除源文件。',
+  cron: '0 5 0 * * *',
+  enabled: true,
+  nextRunAt: '2026-10-19T00:05:00.000Z',
+  running: false,
+  lastRun: {
+    status: 1,
+    trigger: 1,
+    startedAt: '2026-10-18T00:05:00.000Z',
+    finishedAt: '2026-10-18T00:05:02.000Z',
+    durationMs: 2130,
+    errorMessage: null,
+    operator: null,
+  },
+};
+
+/** 定时任务执行记录。 */
+const TASK_LOG = {
+  id: 1,
+  taskName: 'log-archive',
+  taskTitle: '日志归档',
+  status: 1,
+  trigger: 1,
+  startedAt: '2026-10-18T00:05:00.000Z',
+  finishedAt: '2026-10-18T00:05:02.000Z',
+  durationMs: 2130,
+  errorMessage: null,
+  operator: null,
+};
+
 /* ------------------------------ 示例登记表 ------------------------------ */
 
 /** `METHOD /path` → 响应示例。未命中的接口走 {@link responseExampleOf} 的兜底。 */
@@ -350,6 +384,22 @@ export const RESPONSE_EXAMPLES: Record<string, unknown> = {
   'GET /api/logs/operation/export': stream('CSV 文件（Content-Type: text/csv; charset=utf-8，带 UTF-8 BOM）'),
   'GET /api/logs/http/export': stream('CSV 文件（Content-Type: text/csv; charset=utf-8，带 UTF-8 BOM）'),
   'DELETE /api/logs/http': envelope(null, '已清空所有 HTTP 日志'),
+
+  /* 定时任务 */
+  'GET /api/tasks': envelope([TASK_ITEM]),
+  'GET /api/tasks/:name/logs': paged([TASK_LOG]),
+  'POST /api/tasks/:name/run': envelope(
+    {
+      name: 'log-archive',
+      title: '日志归档',
+      status: 1,
+      durationMs: 2130,
+      errorMessage: null,
+      startedAt: '2026-10-18T10:20:00.000Z',
+      finishedAt: '2026-10-18T10:20:02.000Z',
+    },
+    '任务执行成功',
+  ),
 
   /* 文件管理 */
   'POST /api/files/upload': envelope(

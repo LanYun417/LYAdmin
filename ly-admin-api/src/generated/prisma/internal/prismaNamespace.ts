@@ -412,7 +412,8 @@ export const ModelName = {
   UserRole: 'UserRole',
   RoleMenu: 'RoleMenu',
   RoleDept: 'RoleDept',
-  UserMenu: 'UserMenu'
+  UserMenu: 'UserMenu',
+  TaskLog: 'TaskLog'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -428,7 +429,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "dictType" | "dictItem" | "sysConfig" | "file" | "loginLog" | "operationLog" | "httpLog" | "notice" | "user" | "role" | "menu" | "dept" | "userRole" | "roleMenu" | "roleDept" | "userMenu"
+    modelProps: "dictType" | "dictItem" | "sysConfig" | "file" | "loginLog" | "operationLog" | "httpLog" | "notice" | "user" | "role" | "menu" | "dept" | "userRole" | "roleMenu" | "roleDept" | "userMenu" | "taskLog"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1488,6 +1489,72 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    TaskLog: {
+      payload: Prisma.$TaskLogPayload<ExtArgs>
+      fields: Prisma.TaskLogFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.TaskLogFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TaskLogPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.TaskLogFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TaskLogPayload>
+        }
+        findFirst: {
+          args: Prisma.TaskLogFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TaskLogPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.TaskLogFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TaskLogPayload>
+        }
+        findMany: {
+          args: Prisma.TaskLogFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TaskLogPayload>[]
+        }
+        create: {
+          args: Prisma.TaskLogCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TaskLogPayload>
+        }
+        createMany: {
+          args: Prisma.TaskLogCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        delete: {
+          args: Prisma.TaskLogDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TaskLogPayload>
+        }
+        update: {
+          args: Prisma.TaskLogUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TaskLogPayload>
+        }
+        deleteMany: {
+          args: Prisma.TaskLogDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.TaskLogUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        upsert: {
+          args: Prisma.TaskLogUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TaskLogPayload>
+        }
+        aggregate: {
+          args: Prisma.TaskLogAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateTaskLog>
+        }
+        groupBy: {
+          args: Prisma.TaskLogGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TaskLogGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.TaskLogCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TaskLogCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -1772,6 +1839,23 @@ export const UserMenuScalarFieldEnum = {
 export type UserMenuScalarFieldEnum = (typeof UserMenuScalarFieldEnum)[keyof typeof UserMenuScalarFieldEnum]
 
 
+export const TaskLogScalarFieldEnum = {
+  id: 'id',
+  taskName: 'taskName',
+  taskTitle: 'taskTitle',
+  triggerType: 'triggerType',
+  status: 'status',
+  startedAt: 'startedAt',
+  finishedAt: 'finishedAt',
+  duration: 'duration',
+  errorMessage: 'errorMessage',
+  operator: 'operator',
+  createdAt: 'createdAt'
+} as const
+
+export type TaskLogScalarFieldEnum = (typeof TaskLogScalarFieldEnum)[keyof typeof TaskLogScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -1951,6 +2035,16 @@ export const DeptOrderByRelevanceFieldEnum = {
 } as const
 
 export type DeptOrderByRelevanceFieldEnum = (typeof DeptOrderByRelevanceFieldEnum)[keyof typeof DeptOrderByRelevanceFieldEnum]
+
+
+export const TaskLogOrderByRelevanceFieldEnum = {
+  taskName: 'taskName',
+  taskTitle: 'taskTitle',
+  errorMessage: 'errorMessage',
+  operator: 'operator'
+} as const
+
+export type TaskLogOrderByRelevanceFieldEnum = (typeof TaskLogOrderByRelevanceFieldEnum)[keyof typeof TaskLogOrderByRelevanceFieldEnum]
 
 
 
@@ -2174,6 +2268,7 @@ export type GlobalOmitConfig = {
   roleMenu?: Prisma.RoleMenuOmit
   roleDept?: Prisma.RoleDeptOmit
   userMenu?: Prisma.UserMenuOmit
+  taskLog?: Prisma.TaskLogOmit
 }
 
 /* Types for Logging */

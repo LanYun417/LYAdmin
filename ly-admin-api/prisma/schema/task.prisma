@@ -1,0 +1,41 @@
+// use prisma-next
+// ↑ 首行不可删：VS Code 的 Prisma 扩展**按文件**判定是否启用 Prisma 7 语言服务，
+//   缺失会回落到 v6 语义并误报 `Argument "url" is missing in data source block "db"`。
+//
+// 定时任务：执行记录
+// 公共约定（snake_case 映射 / 哨兵值 / 注释落库）见 base.prisma。
+
+/// 定时任务执行记录表
+/// 每次执行（自动触发或手动触发）落一条记录，是「定时任务管理」页的历史轨迹来源。
+/// 刻意只记录**执行结果**而不记录任务定义（cron 表达式、启停状态）：
+/// 任务定义在代码里（见 src/modules/task/task.service.ts），是唯一事实来源；
+/// 若把定义也存进库，就会出现「库里的 cron」与「代码里的 cron」两套口径，
+/// 改动其中一处就会漂移——这正是本项目在角色授权上踩过的坑。
+model TaskLog {
+  /// 主键
+  id        BigInt @id @default(autoincrement()) @db.BigInt
+  /// 任务标识（代码中的任务 key，如 log-archive）
+  taskName  String @map("task_name") @db.VarChar(64)
+  /// 任务名称（快照：任务改名后历史记录仍保留当时的名称）
+  taskTitle String @map("task_title") @db.VarChar(100)
+  /// 触发方式：1 自动（cron）/ 2 手动（管理端点击「立即执行」）
+  triggerType Int   @map("trigger_type") @db.TinyInt
+  /// 执行状态：0 执行中 / 1 成功 / 2 失败
+  status    Int    @db.TinyInt
+  /// 开始时间
+  startedAt DateTime @map("started_at")
+  /// 结束时间（执行中尚未写入）
+  finishedAt DateTime? @map("finished_at")
+  /// 耗时（毫秒）
+  duration  Int      @default(0)
+  /// 失败原因（成功时为空）
+  errorMessage String? @map("error_message") @db.VarChar(1000)
+  /// 手动触发人账号（自动触发为空）
+  operator  String?  @db.VarChar(50)
+  /// 记录创建时间
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  // 按任务 + 时间倒序查历史（任务管理页的「执行记录」抽屉）
+  @@index([taskName, startedAt])
+  @@map("sys_task_log")
+}

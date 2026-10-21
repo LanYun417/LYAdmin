@@ -104,3 +104,15 @@ export type RoleDept = Prisma.RoleDeptModel
  * 该表**不参与种子重建**（角色授权每次种子会重建，但用户级覆盖需长期保留）。
  */
 export type UserMenu = Prisma.UserMenuModel
+/**
+ * Model TaskLog
+ * *
+ *  * 定时任务执行记录表。
+ *  *
+ *  * 每次执行（自动触发或手动触发）落一条记录，是「定时任务管理」页的历史轨迹来源。
+ *  * 刻意只记录**执行结果**而不记录任务定义（cron 表达式、启停状态）：
+ *  * 任务定义在代码里（见 src/modules/task/task.service.ts），是唯一事实来源；
+ *  * 若把定义也存进库，就会出现「库里的 cron」与「代码里的 cron」两套口径，
+ *  * 改动其中一处就会漂移——这正是本项目在角色授权上踩过的坑。
+ */
+export type TaskLog = Prisma.TaskLogModel

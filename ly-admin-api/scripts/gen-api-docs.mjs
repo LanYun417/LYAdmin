@@ -72,6 +72,7 @@ const GROUP_ORDER = [
   '部门管理',
   '字典管理',
   '参数管理',
+  '定时任务',
   '日志管理',
   '文件管理',
   '代码生成',
@@ -212,6 +213,8 @@ const SAMPLE_VALUES = {
   maxSize: 5242880,
   startTime: '2026-10-01 00:00:00',
   endTime: '2026-10-18 23:59:59',
+  // 定时任务标识（kebab-case，与 TaskService 的任务注册表一致）
+  name: 'log-archive',
 };
 
 /** 收集 DTO 源文件。 */

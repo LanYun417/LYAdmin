@@ -4,6 +4,7 @@
  */
 import { MiddlewareConsumer, Module, type NestModule } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AuthGuard } from './common/auth/auth.guard.js';
 import { PermissionGuard } from './common/auth/permission.guard.js';
 import { AllExceptionsFilter } from './common/exception/all-exceptions.filter.js';
@@ -29,11 +30,16 @@ import { DocsModule } from './modules/docs/docs.module.js';
 import { HealthModule } from './modules/health/health.module.js';
 import { MonitorModule } from './modules/monitor/monitor.module.js';
 import { NoticeModule } from './modules/notice/notice.module.js';
+import { TaskModule } from './modules/task/task.module.js';
 
 @Module({
   imports: [
     PrismaModule,
     CommonModule,
+    // 定时任务基础设施（SchedulerRegistry + 装饰器扫描）。
+    // 业务任务由 TaskModule 用 SchedulerRegistry 动态注册（cron 表达式来自配置，运行时才知道），
+    // 故此处只需装好底座；forRoot() 是全局模块，SchedulerRegistry 在任意模块都可注入。
+    ScheduleModule.forRoot(),
     HealthModule,
     MonitorModule,
     NoticeModule,
@@ -50,6 +56,7 @@ import { NoticeModule } from './modules/notice/notice.module.js';
     ProfileModule,
     LogsModule,
     DocsModule,
+    TaskModule,
   ],
   providers: [
     // 守卫顺序：先鉴权（挂 req.user），再校验权限码

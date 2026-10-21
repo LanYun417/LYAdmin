@@ -66,6 +66,32 @@ export enum LogResult {
   SUCCESS = 1,
 }
 
+/**
+ * 定时任务触发方式（`sys_task_log.trigger_type`）。
+ * - AUTO：cron 自动触发
+ * - MANUAL：管理端点「立即执行」触发
+ */
+export enum TaskTrigger {
+  AUTO = 1,
+  MANUAL = 2,
+}
+
+/**
+ * 定时任务执行状态（`sys_task_log.status`）。
+ *
+ * 刻意做成三态而非「成功/失败」两态：任务执行期间先落一条 RUNNING 记录，
+ * 结束后再更新为终态。运维在任务列表上就能看到「正在执行」，
+ * 而不必只看到一个「上一轮结果」——长耗时任务（如日志清理）尤其需要这个区分。
+ */
+export enum TaskRunStatus {
+  /** 执行中（尚未写入终态） */
+  RUNNING = 0,
+  /** 执行成功 */
+  SUCCESS = 1,
+  /** 执行失败（错误信息见 error_message） */
+  FAILED = 2,
+}
+
 /** 超级管理员角色编码（不受权限裁剪）。 */
 export const SUPER_ADMIN_ROLE = 'super_admin';
 

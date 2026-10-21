@@ -300,6 +300,27 @@ const MENU_TREE: MenuSeedNode[] = [
         ],
       },
       {
+        key: 'system:task',
+        menuName: '定时任务',
+        menuType: MenuType.MENU,
+        path: '/system/task',
+        component: 'system/task/index',
+        icon: 'alarm',
+        permission: 'system:task:list',
+        sort: 8,
+        visible: Status.ENABLED,
+        keepAlive: 1,
+        children: [
+          {
+            key: 'system:task:run',
+            menuName: '立即执行',
+            menuType: MenuType.BUTTON,
+            permission: 'system:task:run',
+            sort: 1,
+          },
+        ],
+      },
+      {
         key: 'system:notice',
         menuName: '通知中心',
         menuType: MenuType.MENU,
@@ -718,6 +739,9 @@ const ROLE_SEEDS: RoleSeed[] = [
       'system:config:add',
       'system:config:edit',
       'system:config:remove',
+      // 定时任务：admin 仅可**查看**任务列表与执行记录（只读观察调度状况）。
+      // 手动执行（system:task:run）属系统级动作，仅超管持有——与 log:http:clear 同级。
+      'system:task',
       'log',
       'log:login',
       'log:login:export',
@@ -766,6 +790,8 @@ const ROLE_SEEDS: RoleSeed[] = [
       'system:dept',
       // 参数管理：只读角色仅授予菜单节点（即只读的 system:config:list），不含任何写权限码
       'system:config',
+      // 定时任务：只读角色仅授予菜单节点（即只读的 system:task:list），不含手动执行（system:task:run）
+      'system:task',
       'log',
       'log:login',
       'log:operation',

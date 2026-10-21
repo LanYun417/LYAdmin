@@ -66,7 +66,8 @@ export const ModelName = {
   UserRole: 'UserRole',
   RoleMenu: 'RoleMenu',
   RoleDept: 'RoleDept',
-  UserMenu: 'UserMenu'
+  UserMenu: 'UserMenu',
+  TaskLog: 'TaskLog'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -330,6 +331,23 @@ export const UserMenuScalarFieldEnum = {
 export type UserMenuScalarFieldEnum = (typeof UserMenuScalarFieldEnum)[keyof typeof UserMenuScalarFieldEnum]
 
 
+export const TaskLogScalarFieldEnum = {
+  id: 'id',
+  taskName: 'taskName',
+  taskTitle: 'taskTitle',
+  triggerType: 'triggerType',
+  status: 'status',
+  startedAt: 'startedAt',
+  finishedAt: 'finishedAt',
+  duration: 'duration',
+  errorMessage: 'errorMessage',
+  operator: 'operator',
+  createdAt: 'createdAt'
+} as const
+
+export type TaskLogScalarFieldEnum = (typeof TaskLogScalarFieldEnum)[keyof typeof TaskLogScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -509,4 +527,14 @@ export const DeptOrderByRelevanceFieldEnum = {
 } as const
 
 export type DeptOrderByRelevanceFieldEnum = (typeof DeptOrderByRelevanceFieldEnum)[keyof typeof DeptOrderByRelevanceFieldEnum]
+
+
+export const TaskLogOrderByRelevanceFieldEnum = {
+  taskName: 'taskName',
+  taskTitle: 'taskTitle',
+  errorMessage: 'errorMessage',
+  operator: 'operator'
+} as const
+
+export type TaskLogOrderByRelevanceFieldEnum = (typeof TaskLogOrderByRelevanceFieldEnum)[keyof typeof TaskLogOrderByRelevanceFieldEnum]
 

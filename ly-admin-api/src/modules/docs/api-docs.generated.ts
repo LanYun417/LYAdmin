@@ -174,7 +174,7 @@ export const API_DOCS: ApiDocGroup[] = [
       {
         "method": "GET",
         "path": "/api/auth/menus",
-        "summary": "当前用户菜单树（仅目录/菜单节点，按角色过滤）",
+        "summary": "当前用户菜单树（仅目录/菜单节点，按角色 + 用户级额外权限覆盖过滤）",
         "permission": [],
         "isPublic": false,
         "action": "",
@@ -445,6 +445,32 @@ export const API_DOCS: ApiDocGroup[] = [
       },
       {
         "method": "GET",
+        "path": "/api/users/:id/menus",
+        "summary": "用户的菜单权限概况：角色自带 / 额外授予 / 额外撤销 / 最终有效。 用于「额外权限」抽屉回填：最终有效用于勾选，角色自带用于标注来源",
+        "permission": [
+          "system:user:assignPerm"
+        ],
+        "isPublic": false,
+        "action": "",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/users/1/menus\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "id": "1"
+          }
+        }
+      },
+      {
+        "method": "GET",
         "path": "/api/users/import/template",
         "summary": "下载 CSV 导入模板。 必须声明在 `@Get(':id')` **之前**：Nest 按声明顺序匹配，否则 `import/template` 会被 `:id` 吃掉",
         "permission": [
@@ -682,6 +708,47 @@ export const API_DOCS: ApiDocGroup[] = [
             ],
             "deptId": 1,
             "remark": "示例备注"
+          }
+        }
+      },
+      {
+        "method": "PUT",
+        "path": "/api/users/:id/menus",
+        "summary": "保存用户的额外菜单权限。 入参为「期望的最终有效菜单集合」，服务端与角色自带集合求差得出额外授予 / 额外撤销",
+        "permission": [
+          "system:user:assignPerm"
+        ],
+        "isPublic": false,
+        "action": "用户管理 · 额外权限",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          },
+          {
+            "name": "menuIds",
+            "in": "body",
+            "type": "number[]",
+            "required": false,
+            "description": "",
+            "example": [
+              1
+            ]
+          }
+        ],
+        "examples": {
+          "curl": "curl -X PUT \"http://localhost:3000/api/users/1/menus\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"menuIds\": [\n        1\n      ]\n    }'",
+          "pathParams": {
+            "id": "1"
+          },
+          "requestBody": {
+            "menuIds": [
+              1
+            ]
           }
         }
       },
@@ -1048,6 +1115,36 @@ export const API_DOCS: ApiDocGroup[] = [
               1
             ],
             "remark": "示例备注"
+          }
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/api/roles/reset-menus",
+        "summary": "按种子定义恢复角色的默认菜单授权（「恢复默认授权」）。 为什么需要它：启动种子只负责**首次创建**角色并写授权，不再每次重启都覆盖 （那会把运维调好的授权静默回滚）；所以\"想回到种子默认\"必须由运维显式触发。 权限码复用 `system:role:assignMenu`：这与「授权菜单」是同一种能力（写角色菜单授权）， 只是数据来源换成种子定义；按项目「同一能力不拆权限码」的约定不新增码",
+        "permission": [
+          "system:role:assignMenu"
+        ],
+        "isPublic": false,
+        "action": "角色管理 · 恢复默认授权",
+        "params": [
+          {
+            "name": "roleIds",
+            "in": "body",
+            "type": "number[]",
+            "required": false,
+            "description": "目标角色 id；不传 / 传空数组 = 全部种子角色",
+            "example": [
+              1
+            ]
+          }
+        ],
+        "examples": {
+          "curl": "curl -X POST \"http://localhost:3000/api/roles/reset-menus\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"roleIds\": [\n        1\n      ]\n    }'",
+          "requestBody": {
+            "roleIds": [
+              1
+            ]
           }
         }
       },
@@ -2446,6 +2543,98 @@ export const API_DOCS: ApiDocGroup[] = [
           "curl": "curl -X DELETE \"http://localhost:3000/api/configs/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
             "id": "1"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "group": "定时任务",
+    "endpoints": [
+      {
+        "method": "GET",
+        "path": "/api/tasks",
+        "summary": "定时任务列表（含调度状态与上次执行摘要）",
+        "permission": [
+          "system:task:list"
+        ],
+        "isPublic": false,
+        "action": "",
+        "params": [
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "页码，从 1 开始",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "每页条数",
+            "example": 10
+          }
+        ],
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/tasks?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "page": 1,
+            "pageSize": 10
+          }
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/api/tasks/:name/logs",
+        "summary": "某任务的执行记录（分页）。 查询参数用 `Record<string, unknown>` 而非 DTO：全局 ValidationPipe 开了 whitelist， DTO 里未声明的字段（page / pageSize）会被剥掉，导致分页参数丢失。 故与日志模块保持一致，筛选条件的解析放在 service 层",
+        "permission": [
+          "system:task:list"
+        ],
+        "isPublic": false,
+        "action": "",
+        "params": [
+          {
+            "name": "name",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "log-archive"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3000/api/tasks/log-archive/logs\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "name": "log-archive"
+          }
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/api/tasks/:name/run",
+        "summary": "手动触发任务（同步等待执行结果）",
+        "permission": [
+          "system:task:run"
+        ],
+        "isPublic": false,
+        "action": "定时任务 · 手动执行",
+        "params": [
+          {
+            "name": "name",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "log-archive"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X POST \"http://localhost:3000/api/tasks/log-archive/run\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "name": "log-archive"
           }
         }
       }

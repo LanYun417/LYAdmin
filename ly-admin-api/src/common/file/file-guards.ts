@@ -3,8 +3,11 @@
  * 模块职责：
  * - `HotlinkGuard`：拦截外站盗链请求（Referer 白名单）
  * - `ImageScaleService`：按 `?scale=` 参数生成缩略图并缓存
+ *
+ * ⚠️ 缩略图缓存的**周期清理**已收编到 TaskModule 的「缩略图缓存清理」任务，
+ * 本服务只保留 sweep() 这个「怎么做」，不再自带 setInterval 定时器。
  */
-import { Injectable, Logger, type NestMiddleware, type OnModuleDestroy, type OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, type NestMiddleware } from '@nestjs/common';
 import type { NextFunction, Request, Response } from 'express';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync } from 'node:fs';
@@ -56,39 +59,12 @@ export class HotlinkGuardMiddleware implements NestMiddleware {
 }
 
 @Injectable()
-export class ImageScaleService implements OnModuleInit, OnModuleDestroy {
+export class ImageScaleService {
   private readonly logger = new Logger(ImageScaleService.name);
-  private sweepTimer: NodeJS.Timeout | null = null;
 
   constructor() {
     if (!existsSync(config.upload.cacheDir)) {
       mkdirSync(config.upload.cacheDir, { recursive: true });
-    }
-  }
-
-  /** 启动时先清一轮（上次进程可能没机会清理），随后按间隔周期性清理。 */
-  onModuleInit(): void {
-    if (!config.upload.cacheSweepEnabled) {
-      this.logger.warn('[ImageCache] 缓存清理任务已关闭（UPLOAD_CACHE_SWEEP_ENABLED=false）');
-      return;
-    }
-    void this.sweep().catch((error: unknown) => {
-      this.logger.warn(`[ImageCache] 启动清理失败: ${error instanceof Error ? error.message : String(error)}`);
-    });
-    const intervalMs = Math.max(config.upload.cacheSweepIntervalHours, 1) * 60 * 60 * 1000;
-    this.sweepTimer = setInterval(() => {
-      void this.sweep().catch((error: unknown) => {
-        this.logger.warn(`[ImageCache] 周期清理失败: ${error instanceof Error ? error.message : String(error)}`);
-      });
-    }, intervalMs);
-    // 清理任务不应阻止进程退出
-    this.sweepTimer.unref?.();
-  }
-
-  onModuleDestroy(): void {
-    if (this.sweepTimer) {
-      clearInterval(this.sweepTimer);
-      this.sweepTimer = null;
     }
   }
 
@@ -141,6 +117,8 @@ export class ImageScaleService implements OnModuleInit, OnModuleDestroy {
 
   /**
    * 缓存清理：先按 TTL 删除过期条目，再按体积上限淘汰最久未访问的条目。
+   *
+   * 由 TaskModule 的「缩略图缓存清理」任务按 cron 调用，不自带定时器。
    * @returns 删除的文件数与释放的字节数（供日志与测试断言）
    */
   async sweep(): Promise<{ removed: number; freedBytes: number }> {

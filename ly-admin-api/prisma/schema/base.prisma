@@ -37,6 +37,7 @@
 //   file.prisma         文件管理
 //   log.prisma          登录日志 / 操作日志 / HTTP 访问日志
 //   system.prisma       用户 / 角色 / 菜单 / 部门 + 三张关联表
+//   task.prisma         定时任务执行记录
 //   generated.prisma    代码生成器注入区（[GEN-ANCHOR]），勿手工在此放业务模型
 //
 // 为什么拆：这是开源基础工程，接手方通常会继续加自己的业务表；单文件会随模型数量线性膨胀，
@@ -44,7 +45,7 @@
 //
 // 关于合并顺序（重要）：Prisma 的目录式 schema **没有** include / 顺序声明，CLI 按**文件名字典序**
 // 合并，而合并顺序会体现在生成客户端的模型顺序上。故本目录按上述字典序读入
-// （base → dict-config → file → generated → log → system）。
+// （base → dict-config → file → generated → log → system → task）。
 // 这里刻意不加数字前缀：顺序只影响生成物的排列、不影响语义；若某天确实需要固定顺序，
 // 加 `NN-` 前缀即可（字典序即顺序，建议留间隔以便插入新文件）。
 // 注意：各文件内容合并后必须唯一（模型名不可重复），文件内字段顺序则不受跨文件影响。
