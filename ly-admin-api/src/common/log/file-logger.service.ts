@@ -1,6 +1,6 @@
 /**
  * 文件日志服务。
- * 模块职责：按天分文件写入 JSON Lines 日志，提供定时归档与保留期清理。
+ * 模块职责：按天分文件写入 JSON Lines 日志，并提供日志归档与保留期清理能力。
  *
  * 目录结构：
  * - <logDir>/app-YYYY-MM-DD.log      应用日志
@@ -8,6 +8,11 @@
  * - <logDir>/access-YYYY-MM-DD.log   HTTP 访问日志
  * - <logDir>/db-YYYY-MM-DD.log       慢 SQL 日志
  * - <logDir>/archive/YYYY-MM-DD/     归档后的历史日志
+ *
+ * ⚠️ 归档与保留清理的**调度**已收编到 TaskModule（见 src/modules/task/），
+ * 本服务只负责「怎么做」，不再自带 setInterval 定时器——否则同一件事会有两套调度，
+ * 出现重复执行且无法在管理端统一观察。此处保留 archiveYesterday / cleanExpiredLogs 为 public，
+ * 供 TaskService 调用。
  */
 import { Injectable, Logger, type OnModuleDestroy, type OnModuleInit } from '@nestjs/common';
 import { createWriteStream, existsSync, mkdirSync, type WriteStream } from 'node:fs';
@@ -21,20 +26,41 @@ import { PrismaService } from '../../prisma/prisma.service.js';
 /** 日志类型。 */
 export type LogKind = 'app' | 'error' | 'access' | 'db';
 
+/**
+ * 拼 tar 归档参数。
+ *
+ * 为什么单独抽成纯函数：Windows 上 GNU tar 会把带盘符的绝对路径（C:\...）当成
+ * 「主机:路径」解析，直接报 `tar (child): Cannot connect to C: resolve failed`
+ * 并以退出码 2 结束——这个坑只有把参数摊开看才发现，必须由测试跨平台钉住
+ * （真机打包测试只在 Windows 上能暴露）。Unix 上不加这个 GNU 专属选项（BSD/bsdtar 不认）。
+ *
+ * @param params 打包目标
+ * @param params.tarPath 产物 .tar.gz 路径
+ * @param params.workDir 变更目录（对应 -C）
+ * @param params.names 要打包的文件名（相对 workDir）
+ * @param params.platform 运行平台，默认取 process.platform（测试注入用）
+ * @returns tar 命令行参数数组
+ */
+export function buildArchiveArgs(params: {
+  tarPath: string;
+  workDir: string;
+  names: string[];
+  platform?: string;
+}): string[] {
+  const localFlag = (params.platform ?? process.platform) === 'win32' ? ['--force-local'] : [];
+  return [...localFlag, '-czf', params.tarPath, '-C', params.workDir, ...params.names];
+}
+
 @Injectable()
 export class FileLoggerService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(FileLoggerService.name);
   private readonly streams = new Map<string, WriteStream>();
-  private archiveTimer: NodeJS.Timeout | null = null;
-  private retentionTimer: NodeJS.Timeout | null = null;
 
   constructor(private readonly prisma: PrismaService) {}
 
   onModuleInit(): void {
     this.ensureDirs();
     this.subscribeSlowSql();
-    this.startArchiveScheduler();
-    this.startRetentionScheduler();
   }
 
   /**
@@ -53,12 +79,6 @@ export class FileLoggerService implements OnModuleInit, OnModuleDestroy {
   }
 
   onModuleDestroy(): void {
-    if (this.archiveTimer) {
-      clearInterval(this.archiveTimer);
-    }
-    if (this.retentionTimer) {
-      clearInterval(this.retentionTimer);
-    }
     this.streams.forEach((stream) => stream.end());
     this.streams.clear();
   }
@@ -123,37 +143,16 @@ export class FileLoggerService implements OnModuleInit, OnModuleDestroy {
     this.write('db', { sql: sql.slice(0, 4000), duration: durationMs, threshold: config.log.slowSqlMs });
   }
 
-  /* --------------------------- 归档调度 --------------------------- */
-
-  /** 启动每日归档调度（启动补跑 + 定时）。 */
-  private startArchiveScheduler(): void {
-    const run = (): void => {
-      void this.archiveYesterday().catch((err: unknown) => {
-        this.logger.error(`[FileLogger] 归档失败: ${err instanceof Error ? err.message : String(err)}`);
-      });
-    };
-    // 启动补跑：仅在已过归档时刻时执行，避免刚启动就重复归档
-    const now = new Date();
-    const pastArchiveTime =
-      now.getHours() > config.log.archiveHour ||
-      (now.getHours() === config.log.archiveHour && now.getMinutes() >= config.log.archiveMinute);
-    if (pastArchiveTime) {
-      run();
-    }
-    // 每 30 分钟检查一次是否到达归档时刻
-    this.archiveTimer = setInterval(run, 30 * 60 * 1000);
-  }
+  /* --------------------------- 归档 --------------------------- */
 
   /**
    * 归档昨日日志：把昨日各类型 .log 用 tar 打包到 archive/日期/ 下，
    * 默认归档后删除源文件（LOG_ARCHIVE_KEEP_SOURCE=true 时保留）。
+   *
+   * 由 TaskModule 的「日志归档」任务按 cron 调用，不自带定时器。
    */
   async archiveYesterday(): Promise<void> {
     const yesterday = dayjs().subtract(1, 'day').format('YYYY-MM-DD');
-    const archiveDir = path.join(config.log.archiveDir, yesterday);
-    if (!existsSync(archiveDir)) {
-      mkdirSync(archiveDir, { recursive: true });
-    }
 
     const kinds: LogKind[] = ['app', 'error', 'access', 'db'];
     const targets: string[] = [];
@@ -163,19 +162,26 @@ export class FileLoggerService implements OnModuleInit, OnModuleDestroy {
         targets.push(filePath);
       }
     }
+    // 空跑直接返回：连日期目录都不建（任务每天执行，建一堆空目录只会污染 logs/archive）
     if (targets.length === 0) {
       return;
     }
 
+    const archiveDir = path.join(config.log.archiveDir, yesterday);
+    if (!existsSync(archiveDir)) {
+      mkdirSync(archiveDir, { recursive: true });
+    }
+
     const tarPath = path.join(archiveDir, `${yesterday}.tar.gz`);
     await new Promise<void>((resolve, reject) => {
-      const child = spawn(config.log.tarBin, [
-        '-czf',
-        tarPath,
-        '-C',
-        config.log.dir,
-        ...targets.map((t) => path.basename(t)),
-      ]);
+      const child = spawn(
+        config.log.tarBin,
+        buildArchiveArgs({
+          tarPath,
+          workDir: config.log.dir,
+          names: targets.map((t) => path.basename(t)),
+        }),
+      );
       let stderr = '';
       child.stderr.on('data', (chunk: Buffer) => {
         stderr += chunk.toString();
@@ -187,7 +193,15 @@ export class FileLoggerService implements OnModuleInit, OnModuleDestroy {
           reject(new Error(`tar 退出码 ${code}: ${stderr}`));
         }
       });
-      child.on('error', reject);
+      child.on('error', (error: NodeJS.ErrnoException) => {
+        // Windows 开发机常见：PATH 里没有 tar.exe，spawn 直接 ENOENT。
+        // 裸抛 "spawn tar ENOENT" 没人知道要装什么、怎么配，故补一句可操作提示。
+        if (error.code === 'ENOENT') {
+          reject(new Error(`未找到 tar 可执行文件（${config.log.tarBin}），可用环境变量 TAR_BIN 指定绝对路径`));
+          return;
+        }
+        reject(error);
+      });
     });
 
     if (!config.log.keepSourceAfterArchive) {
@@ -198,35 +212,14 @@ export class FileLoggerService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  /* --------------------------- 保留清理调度 --------------------------- */
-
-  /** 启动每日保留清理调度（启动补跑 + 定时）。 */
-  private startRetentionScheduler(): void {
-    if (!config.log.retentionEnabled) {
-      this.logger.warn('[LogRetention] 日志保留清理已禁用');
-      return;
-    }
-
-    const run = (): void => {
-      void this.cleanExpiredLogs().catch((err: unknown) => {
-        this.logger.error(`[LogRetention] 清理失败: ${err instanceof Error ? err.message : String(err)}`);
-      });
-    };
-
-    const now = new Date();
-    const pastRetentionTime =
-      now.getHours() > config.log.retentionHour ||
-      (now.getHours() === config.log.retentionHour && now.getMinutes() >= config.log.retentionMinute);
-    if (pastRetentionTime) {
-      run();
-    }
-    this.retentionTimer = setInterval(run, 30 * 60 * 1000);
-  }
+  /* --------------------------- 保留清理 --------------------------- */
 
   /**
    * 按保留天数分批 DELETE 清理过期数据库日志。
    *
    * 分批是为避免单条大 DELETE 长时间锁表（InnoDB 会锁住扫描到的行）。
+   *
+   * 由 TaskModule 的「日志保留清理」任务按 cron 调用，不自带定时器。
    */
   async cleanExpiredLogs(): Promise<void> {
     if (!config.log.retentionEnabled) {
