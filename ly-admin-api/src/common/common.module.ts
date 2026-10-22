@@ -18,7 +18,6 @@ import { FileLoggerService } from './log/file-logger.service.js';
 import { HttpLogQueueService } from './log/http-log-queue.service.js';
 import { FileService } from './file/file.service.js';
 import { ImageScaleService, HotlinkGuardMiddleware, ImageScaleMiddleware } from './file/file-guards.js';
-import { StaticAuthMiddleware } from './http/static-auth.middleware.js';
 import { IpRegionService } from './ip/ip-region.service.js';
 
 @Global()
@@ -39,8 +38,7 @@ import { IpRegionService } from './ip/ip-region.service.js';
     FileService,
     ImageScaleService,
     IpRegionService,
-    // 静态资源链的三个中间件：由 app.setup.ts 显式挂到 express 上，需要能被 app.get 解析
-    StaticAuthMiddleware,
+    // 静态资源链的中间件：由 app.setup.ts 显式挂到 express 上，需要能被 app.get 解析
     HotlinkGuardMiddleware,
     ImageScaleMiddleware,
   ],

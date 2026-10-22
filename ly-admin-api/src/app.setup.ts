@@ -18,7 +18,6 @@ import compression from 'compression';
 import express, { type NextFunction, type Request, type Response } from 'express';
 import { config } from './common/config/config.js';
 import { HotlinkGuardMiddleware, ImageScaleMiddleware } from './common/file/file-guards.js';
-import { StaticAuthMiddleware } from './common/http/static-auth.middleware.js';
 import { securityHeaders } from './common/http/security-headers.js';
 
 /** 构建期预压缩副本可覆盖的文本类型（扩展名 → Content-Type）。 */
@@ -144,7 +143,7 @@ export function configureApp(app: NestExpressApplication, options: AppSetupOptio
     return;
   }
 
-  // 上传静态资源：鉴权 → 防盗链 → 图片缩放 → 静态出图。
+  // 上传静态资源：防盗链 → 图片缩放 → 静态出图。
   //
   // 为什么不用 `consumer.apply(...).forRoutes('static/...')` 挂 Nest 中间件：
   // 1) 中间件路由会被全局前缀改写成 `/api/static/...`，而静态资源实际挂在 `/static/...`，
@@ -157,15 +156,11 @@ export function configureApp(app: NestExpressApplication, options: AppSetupOptio
       let value: T | undefined;
       return () => (value ??= factory()) as T;
     };
-    const auth = lazy(() => app.get(StaticAuthMiddleware));
     const hotlink = lazy(() => app.get(HotlinkGuardMiddleware));
     const scale = lazy(() => app.get(ImageScaleMiddleware));
 
     app.use(
       `/${config.upload.route}`,
-      (req: Request, res: Response, next: NextFunction) => {
-        void auth().use(req, res, next);
-      },
       (req: Request, res: Response, next: NextFunction) => {
         hotlink().use(req, res, next);
       },
@@ -178,7 +173,7 @@ export function configureApp(app: NestExpressApplication, options: AppSetupOptio
         immutable: true,
       }),
     );
-    logger.log(`静态资源目录: ${config.upload.dir} → /${config.upload.route}/（鉴权 → 防盗链 → 缩放）`);
+    logger.log(`静态资源目录: ${config.upload.dir} → /${config.upload.route}/（防盗链 → 缩放，免登录）`);
   } else {
     logger.warn(`上传目录不存在（${config.upload.dir}），/static 将 404；上传时会自动创建`);
   }
