@@ -117,7 +117,7 @@ docker compose -f deploy/docker-compose.yml up -d --build
 `deploy/nginx.conf` 是可直接套用的示例：nginx 托管前端产物、反代 `/api` 与 `/static`。
 两个必须注意的点：
 
-1. `/static/` 要**反代给 api**，不要把 uploads 目录映射成 nginx 静态目录 —— 否则绕过静态鉴权、防盗链与缩放；
+1. `/static/` 要**反代给 api**，不要把 uploads 目录映射成 nginx 静态目录 —— 否则绕过防盗链与缩放；
 2. 反代后必须在 api 侧设置 `TRUST_PROXY=1`（compose 已内置），否则限流与审计日志记录的是网关 IP。
 
 ## 7. 已知限制
