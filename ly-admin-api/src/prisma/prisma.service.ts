@@ -4,7 +4,7 @@
  *
  * Prisma 7 约定：
  * - 连接串不写在 schema 中，需通过 driver adapter 在构造 PrismaClient 时注入；
- * - 本项目使用 MySQL（经 @prisma/adapter-mariadb 驱动 mysql2 连接池）。
+ * - 本项目使用 MySQL（经 @prisma/adapter-mariadb 驱动 mariadb 连接池）。
  */
 import { Injectable, Logger, type OnModuleDestroy, type OnModuleInit } from '@nestjs/common';
 import { PrismaMariaDb } from '@prisma/adapter-mariadb';
@@ -29,6 +29,10 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
       database: name,
       // 连接池上限：避免高并发下耗尽 MySQL 连接数（DB_CONNECTION_LIMIT，默认 10）
       connectionLimit: config.db.connectionLimit,
+      // MySQL 8 默认 caching_sha2_password 认证，握手时驱动需要 RSA 公钥：
+      // 既未预置公钥、又不允许从服务器取回时，认证直接失败，表现为「连接池超时」（P2039 / 45044）。
+      // 本机 / 内网 MySQL 无 TLS，故允许取回公钥（比维护公钥文件简单，同内网部署同样适用）。
+      allowPublicKeyRetrieval: true,
     });
     super({
       adapter,
