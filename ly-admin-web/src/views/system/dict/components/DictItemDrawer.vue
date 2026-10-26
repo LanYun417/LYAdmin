@@ -179,93 +179,110 @@ watch(
 
 <template>
   <el-drawer :model-value="modelValue" :title="`字典项 · ${dictName}`" :size="drawerSize" @close="handleClose">
-    <div class="mb-3 flex flex-wrap items-center gap-2">
-      <el-input
-        v-model="query.dictLabel"
-        placeholder="请输入字典标签"
-        clearable
-        style="width: 200px"
-        @keyup.enter="search"
+    <div class="flex h-full flex-col">
+      <!-- 搜索栏：固定高度，留在顶部 -->
+      <div class="mb-3 flex flex-wrap items-center gap-2">
+        <el-input
+          v-model="query.dictLabel"
+          placeholder="请输入字典标签"
+          clearable
+          style="width: 200px"
+          @keyup.enter="search"
+        />
+        <el-button type="primary" @click="search">查询</el-button>
+        <el-button @click="reset">重置</el-button>
+        <el-button v-permission="'system:dict:add'" type="primary" class="ml-auto" @click="handleAddItem">
+          <template #icon><i class="bi bi-plus" /></template>
+          新增字典项
+        </el-button>
+      </div>
+
+      <!-- 滚动交给 el-scrollbar（与全局内容区一致），避免抽屉里出现原生滚动条 -->
+      <el-scrollbar v-loading="loading" class="min-h-0 flex-1">
+        <el-table :data="list">
+          <el-table-column prop="dictLabel" label="字典标签" min-width="140" show-overflow-tooltip />
+          <el-table-column prop="dictValue" label="字典值" min-width="120" show-overflow-tooltip />
+          <el-table-column prop="sort" label="排序" width="80" align="center" />
+          <el-table-column label="状态" width="90" align="center">
+            <template #default="{ row }">
+              <el-switch
+                :model-value="row.status === 1"
+                :disabled="!hasPermission('system:dict:edit')"
+                @change="handleToggleStatus(row as DictItem)"
+              />
+            </template>
+          </el-table-column>
+          <el-table-column prop="remark" label="备注" min-width="140" show-overflow-tooltip />
+          <el-table-column label="创建时间" width="170">
+            <template #default="{ row }">{{ formatDateTime(row.createdAt) }}</template>
+          </el-table-column>
+          <el-table-column label="操作" width="140" fixed="right">
+            <template #default="{ row }">
+              <div class="table-action">
+                <el-button
+                  v-permission="'system:dict:edit'"
+                  type="primary"
+                  link
+                  @click="handleEditItem(row as DictItem)"
+                >
+                  编辑
+                </el-button>
+                <el-button
+                  v-permission="'system:dict:remove'"
+                  type="danger"
+                  link
+                  @click="handleDelete(row as DictItem)"
+                >
+                  删除
+                </el-button>
+              </div>
+            </template>
+          </el-table-column>
+        </el-table>
+      </el-scrollbar>
+
+      <!-- 分页：固定高度，留在底部 -->
+      <Pagination
+        v-model:current-page="query.page"
+        v-model:page-size="query.pageSize"
+        :total="total"
+        @size-change="changePageSize"
+        @current-change="changePage"
       />
-      <el-button type="primary" @click="search">查询</el-button>
-      <el-button @click="reset">重置</el-button>
-      <el-button v-permission="'system:dict:add'" type="primary" class="ml-auto" @click="handleAddItem">
-        <template #icon><i class="bi bi-plus" /></template>
-        新增字典项
-      </el-button>
+
+      <BasicDialog
+        v-model="itemFormVisible"
+        :title="editingItem ? '编辑字典项' : '新增字典项'"
+        width="520px"
+        append-to-body
+        :confirm-loading="itemSubmitting"
+        @confirm="handleItemSubmit"
+      >
+        <el-form ref="itemFormRef" :model="itemForm" :rules="itemRules" label-width="110px">
+          <el-form-item label="所属类型">
+            <el-input :model-value="dictType" disabled />
+          </el-form-item>
+          <el-form-item label="字典标签" prop="dictLabel">
+            <el-input v-model="itemForm.dictLabel" placeholder="展示文案，如 男" />
+          </el-form-item>
+          <el-form-item label="字典值" prop="dictValue">
+            <el-input v-model="itemForm.dictValue" placeholder="业务存储值，如 1（同类型内唯一）" />
+          </el-form-item>
+          <el-form-item label="排序">
+            <el-input-number v-model="itemForm.sort" :min="0" :max="9999" />
+          </el-form-item>
+          <el-form-item label="状态">
+            <el-radio-group v-model="itemForm.status">
+              <el-radio v-for="option in statusOptions" :key="option.value" :value="option.value">
+                {{ option.label }}
+              </el-radio>
+            </el-radio-group>
+          </el-form-item>
+          <el-form-item label="备注">
+            <el-input v-model="itemForm.remark" type="textarea" :rows="2" placeholder="请输入备注" />
+          </el-form-item>
+        </el-form>
+      </BasicDialog>
     </div>
-
-    <el-table v-loading="loading" :data="list" max-height="400">
-      <el-table-column prop="dictLabel" label="字典标签" min-width="140" show-overflow-tooltip />
-      <el-table-column prop="dictValue" label="字典值" min-width="120" show-overflow-tooltip />
-      <el-table-column prop="sort" label="排序" width="80" align="center" />
-      <el-table-column label="状态" width="90" align="center">
-        <template #default="{ row }">
-          <el-switch
-            :model-value="row.status === 1"
-            :disabled="!hasPermission('system:dict:edit')"
-            @change="handleToggleStatus(row as DictItem)"
-          />
-        </template>
-      </el-table-column>
-      <el-table-column prop="remark" label="备注" min-width="140" show-overflow-tooltip />
-      <el-table-column label="创建时间" width="170">
-        <template #default="{ row }">{{ formatDateTime(row.createdAt) }}</template>
-      </el-table-column>
-      <el-table-column label="操作" width="140" fixed="right">
-        <template #default="{ row }">
-          <div class="table-action">
-            <el-button v-permission="'system:dict:edit'" type="primary" link @click="handleEditItem(row as DictItem)">
-              编辑
-            </el-button>
-            <el-button v-permission="'system:dict:remove'" type="danger" link @click="handleDelete(row as DictItem)">
-              删除
-            </el-button>
-          </div>
-        </template>
-      </el-table-column>
-    </el-table>
-
-    <Pagination
-      v-model:current-page="query.page"
-      v-model:page-size="query.pageSize"
-      :total="total"
-      @size-change="changePageSize"
-      @current-change="changePage"
-    />
-
-    <BasicDialog
-      v-model="itemFormVisible"
-      :title="editingItem ? '编辑字典项' : '新增字典项'"
-      width="520px"
-      append-to-body
-      :confirm-loading="itemSubmitting"
-      @confirm="handleItemSubmit"
-    >
-      <el-form ref="itemFormRef" :model="itemForm" :rules="itemRules" label-width="110px">
-        <el-form-item label="所属类型">
-          <el-input :model-value="dictType" disabled />
-        </el-form-item>
-        <el-form-item label="字典标签" prop="dictLabel">
-          <el-input v-model="itemForm.dictLabel" placeholder="展示文案，如 男" />
-        </el-form-item>
-        <el-form-item label="字典值" prop="dictValue">
-          <el-input v-model="itemForm.dictValue" placeholder="业务存储值，如 1（同类型内唯一）" />
-        </el-form-item>
-        <el-form-item label="排序">
-          <el-input-number v-model="itemForm.sort" :min="0" :max="9999" />
-        </el-form-item>
-        <el-form-item label="状态">
-          <el-radio-group v-model="itemForm.status">
-            <el-radio v-for="option in statusOptions" :key="option.value" :value="option.value">
-              {{ option.label }}
-            </el-radio>
-          </el-radio-group>
-        </el-form-item>
-        <el-form-item label="备注">
-          <el-input v-model="itemForm.remark" type="textarea" :rows="2" placeholder="请输入备注" />
-        </el-form-item>
-      </el-form>
-    </BasicDialog>
   </el-drawer>
 </template>

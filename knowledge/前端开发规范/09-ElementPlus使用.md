@@ -202,3 +202,50 @@ for (const id of ids) {
 | 首屏体积异常增大    | 从 `'element-plus'` 整库引入命令 API | 改为从 `@/utils/element` 引入                 |
 | DatePicker 显示英文 | 未配置语言包                         | 确认 `el-config-provider` 已注入 `zh-cn`      |
 | Tailwind 下按钮透明 | preflight 关闭后 base 未补齐 border  | 勿删 `index.css` 的 `@layer base` border 重置 |
+
+## 抽屉 / 弹窗 / 内容区滚动必须用 `el-scrollbar`
+
+**约定**：所有内部内容可能超出可视高度的滚动区（抽屉 body、弹窗 body、页面卡片内长列表）**统一用 `<el-scrollbar>` 接管滚动**，禁止依赖浏览器原生滚动条（`overflow: auto` 暴露出的带上下箭头、满高轨道的滚动条）。
+
+### 背景（真实踩坑）
+
+Element Plus 的 `.el-drawer__body` 默认 `overflow: auto`。若抽屉内容直接堆在 body 下、没有用 `el-scrollbar` 包裹，在 **Windows** 下会**常驻显示原生滚动条**（即便内容实际并未溢出）——像一条从标题区贯穿到底部的灰色滚动条，观感脏、且与站内其它抽屉（统一用 `el-scrollbar`）不一致。字典项抽屉（`DictItemDrawer.vue`）曾因此出现该问题。
+
+### 正确写法（参照 `TaskLogDrawer` / `PermissionDrawer` / `UserPermissionDrawer`）
+
+```vue
+<el-drawer :model-value="modelValue" :size="drawerSize" @close="handleClose">
+  <!-- 外层约束高度：内容严格等于 body 高度，body 自身永不溢出 -->
+  <div class="flex h-full flex-col">
+    <!-- 固定区：搜索栏留在顶部 -->
+    <div class="mb-3 flex flex-wrap items-center gap-2"> ... </div>
+
+    <!-- 滚动区：交给 el-scrollbar，min-h-0 防止 flex 子项撑破，flex-1 占满剩余高度 -->
+    <el-scrollbar v-loading="loading" class="min-h-0 flex-1">
+      <el-table :data="list"> ... </el-table>
+    </el-scrollbar>
+
+    <!-- 固定区：分页留在底部，放在 el-scrollbar 之外 -->
+    <Pagination v-model:current-page="query.page" :total="total" ... />
+  </div>
+</el-drawer>
+```
+
+要点：
+
+- 外层 `<div class="flex h-full flex-col">` 让内容高度严格等于 body，body 自身不溢出；
+- 表格**不要**再写 `max-height`，滚动交给 `el-scrollbar`（`min-h-0 flex-1` 是关键，否则 flex 子项会被内容撑高）；
+- `Pagination` 放在 `el-scrollbar` **之外**，避免分页被滚动区吞掉。
+
+### 全局兜底
+
+`src/styles/element.scss` 已加一条防御重置，从根上杜绝未包裹的抽屉漏出原生滚动条：
+
+```scss
+/* 抽屉 body 不再自带原生滚动，滚动统一交给内部 el-scrollbar */
+.el-drawer__body {
+  overflow: hidden;
+}
+```
+
+> 任何新增 / 修改抽屉、弹窗时，先确认内部是否已用 `el-scrollbar` 包裹；未包裹即视为违反本约定。有界小弹层（`max-h-*` 限高的下拉，如列设置、通知铃铛）视场景也可用 `el-scrollbar` 替代原生 `overflow`，保持风格统一。

@@ -141,3 +141,15 @@
   background-color: var(--el-bg-color);
   border-radius: 4px;
 }
+
+/* ============================================================
+ * 抽屉 body 不再自带原生滚动条。
+ * 背景：Element Plus 的 .el-drawer__body 默认 overflow: auto，
+ * 若抽屉内容没用 el-scrollbar 包裹（如本项目早期 DictItemDrawer），
+ * 在 Windows 下会常驻显示原生滚动条（带上下箭头、满高轨道），
+ * 即便内容未溢出。滚动统一交给内部 el-scrollbar（与全局内容区一致），
+ * 既消除原生滚动条，也防止未来新增抽屉重犯同一错误。
+ * ========================================================== */
+.el-drawer__body {
+  overflow: hidden;
+}
