@@ -142,6 +142,38 @@ export const useTagsViewStore = defineStore(
       cachedViews.value = [];
     }
 
+    /**
+     * 关闭左侧标签：保留固定标签、右键目标标签及其右侧所有标签，
+     * 仅移除目标标签左侧的非固定标签。
+     */
+    function delLeftViews(view: TagView): void {
+      const index = visitedViews.value.findIndex((item) => item.path === view.path);
+      // 目标在最左（或找不到）：左侧无可关闭标签，直接返回
+      if (index <= 0) {
+        return;
+      }
+      const removed = visitedViews.value.filter((item, i) => i < index && !item.affix);
+      const removedNames = new Set(removed.map((item) => item.name));
+      visitedViews.value = visitedViews.value.filter((item, i) => !(i < index && !item.affix));
+      cachedViews.value = cachedViews.value.filter((name) => !removedNames.has(name));
+    }
+
+    /**
+     * 关闭右侧标签：保留固定标签、右键目标标签及其左侧所有标签，
+     * 仅移除目标标签右侧的非固定标签。
+     */
+    function delRightViews(view: TagView): void {
+      const index = visitedViews.value.findIndex((item) => item.path === view.path);
+      // 目标在最右（或找不到）：右侧无可关闭标签，直接返回
+      if (index < 0 || index >= visitedViews.value.length - 1) {
+        return;
+      }
+      const removed = visitedViews.value.filter((item, i) => i > index && !item.affix);
+      const removedNames = new Set(removed.map((item) => item.name));
+      visitedViews.value = visitedViews.value.filter((item, i) => !(i > index && !item.affix));
+      cachedViews.value = cachedViews.value.filter((name) => !removedNames.has(name));
+    }
+
     return {
       visitedViews,
       cachedViews,
@@ -153,6 +185,8 @@ export const useTagsViewStore = defineStore(
       delView,
       delOthersViews,
       delAllViews,
+      delLeftViews,
+      delRightViews,
     };
   },
   {

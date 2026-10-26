@@ -83,6 +83,54 @@ function handleCloseAll(): void {
   closeContextMenu();
 }
 
+/** 关闭左侧标签 */
+function handleCloseLeft(): void {
+  const view = contextMenu.view;
+  if (!view) {
+    return;
+  }
+  const activePath = route.path;
+  tagsViewStore.delLeftViews(view);
+  // 仅当激活标签被顺带关闭（位于左侧）时，跳转到右键目标标签
+  if (!tagsViewStore.visitedViews.some((v) => v.path === activePath)) {
+    void router.push(view.fullPath);
+  }
+  closeContextMenu();
+}
+
+/** 关闭右侧标签 */
+function handleCloseRight(): void {
+  const view = contextMenu.view;
+  if (!view) {
+    return;
+  }
+  const activePath = route.path;
+  tagsViewStore.delRightViews(view);
+  // 仅当激活标签被顺带关闭（位于右侧）时，跳转到右键目标标签
+  if (!tagsViewStore.visitedViews.some((v) => v.path === activePath)) {
+    void router.push(view.fullPath);
+  }
+  closeContextMenu();
+}
+
+/** 右键目标标签左侧是否还有可关闭（非固定）标签 */
+const hasLeft = computed(() => {
+  if (!contextMenu.view) {
+    return false;
+  }
+  const index = visitedViews.value.findIndex((v) => v.path === contextMenu.view!.path);
+  return visitedViews.value.some((v, i) => i < index && !v.affix);
+});
+
+/** 右键目标标签右侧是否还有可关闭（非固定）标签 */
+const hasRight = computed(() => {
+  if (!contextMenu.view) {
+    return false;
+  }
+  const index = visitedViews.value.findIndex((v) => v.path === contextMenu.view!.path);
+  return visitedViews.value.some((v, i) => i > index && !v.affix);
+});
+
 /** 关闭当前标签 */
 function handleCloseCurrent(): void {
   if (contextMenu.view) {
@@ -141,6 +189,8 @@ onBeforeUnmount(() => {
       :style="{ left: `${contextMenu.left}px`, top: `${contextMenu.top}px` }"
     >
       <div class="context-item" @click="handleCloseCurrent">关闭当前</div>
+      <div v-show="hasLeft" class="context-item" @click="handleCloseLeft">关闭左侧</div>
+      <div v-show="hasRight" class="context-item" @click="handleCloseRight">关闭右侧</div>
       <div class="context-item" @click="handleCloseOthers">关闭其他</div>
       <div class="context-item" @click="handleCloseAll">关闭全部</div>
     </div>
