@@ -6,8 +6,9 @@
   "description": "蓝云后台管理系统（LYAdmin）前端",
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc --noEmit && vite build",
-    "build:only": "vite build",
+    "build": "vue-tsc --noEmit && vite build && node scripts/sync-web-dist.mjs",
+    "build:only": "vite build && node scripts/sync-web-dist.mjs",
+    "sync:api": "node scripts/sync-web-dist.mjs",
     "preview": "vite preview",
     "type-check": "vue-tsc --noEmit",
     "test": "vitest run",

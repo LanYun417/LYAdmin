@@ -87,6 +87,15 @@ ESM 标准写法，避免 `__dirname`（ESM 中不存在）。该别名必须与
 
 `manualChunks` 把 `echarts` / `vditor` / `element-plus` / 核心运行时（vue/vue-router/pinia/@vueuse）单独成块，提升浏览器长缓存命中；`chunkSizeWarningLimit` 调低至 600 kB，避免超大 chunk 被静默放行。
 
+### 7. 产物同步到后端托管目录（同源部署）
+
+生产「同源部署」时后端从 `config.web.distDir`（默认 `ly-admin-api/web`，可用 `WEB_DIST_DIR` 覆盖）托管前端产物。构建脚本 `npm run build` / `build:only` 结束会**自动**调用 `ly-admin-web/scripts/sync-web-dist.mjs`，把 `dist/` **只读拷贝**（清空重建）到该目录，**同时保留 `ly-admin-web/dist/` 本身**（本地 `preview` / 交给 Nginx 时照旧可用）。
+
+- **目标目录解析对齐后端**：shell 环境变量 `WEB_DIST_DIR` > `ly-admin-api/.env` 的 `WEB_DIST_DIR` > 默认 `web`，相对路径一律以 `ly-admin-api/` 为基准 —— 保证「脚本同步到哪 = 后端从哪托管」，两者永不漂移。
+- **清空重建**：产物文件名带内容哈希，必须删旧文件否则历史资源无限累积；故脚本对解析结果做白名单校验，拒绝任何指向源码 / 仓库根 / 盘根的路径。
+- **镜像构建阶段自动跳过**：Dockerfile 的 web-builder 阶段不存在 `ly-admin-api/`，脚本直接跳过并成功退出（那一步由 Dockerfile 的 `COPY --from=web-builder` 负责）。
+- 单独重同步：`npm --prefix ly-admin-web run sync:api`。
+
 ## 最佳实践
 
 1. 环境变量一律 `VITE_` 前缀，类型在 `src/vite-env.d.ts` 中声明（如有需要）。

@@ -128,6 +128,9 @@ docker compose -f deploy/docker-compose.yml up -d --build
 - **镜像不含 `prisma` CLI**：运行时阶段只装 `dependencies`，迁移由 `migrate` 服务
   （`api-builder` 阶段镜像，含 devDependencies）执行，这也是它能用 `npx prisma` 的原因。
 - **前端产物是构建期烘焙的**：改了前端代码必须重新 `--build`，没有「挂载宿主 dist 热更」的用法。
+- **本地原生同源部署**：`npm --prefix ly-admin-web run build`（或 `build:only`）会自动把产物同步到
+  `ly-admin-api/web/`（后端 `WEB_DIST_DIR` 默认值），无需手工复制，`dist/` 本身也保留；
+  只改了产物想单独重同步时执行 `npm --prefix ly-admin-web run sync:api`。
 - **部署链路由 CI 的 `compose-smoke` job 持续验证**：它会在每次 push 时真的把整套 compose 跑起来
   （构建镜像 → 迁移 → api 就绪 → 登录冒烟 → 前端 index.html 可达），失败即红。
   本地同样可以直接跑：`docker compose -f deploy/docker-compose.yml up -d --build` 后按第 2 节探活。
