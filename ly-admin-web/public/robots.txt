@@ -1,0 +1,5 @@
+# 蓝云后台管理系统 —— 内部管理后台，禁止一切搜索引擎抓取与收录。
+# 本文件随构建产物发布到站点根目录；另在 index.html 下发 noindex meta、
+# 后端与 nginx 下发 X-Robots-Tag 响应头，三层兜底（详见 knowledge/后端开发规范/03-环境与配置.md）。
+User-agent: *
+Disallow: /

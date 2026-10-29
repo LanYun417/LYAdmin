@@ -32,6 +32,8 @@ describe('应用装配冒烟 (e2e)', () => {
     expect(ok.headers['x-frame-options']).toBe('SAMEORIGIN');
     expect(ok.headers['referrer-policy']).toBe('strict-origin-when-cross-origin');
     expect(ok.headers['permissions-policy']).toContain('geolocation=()');
+    // 内部管理后台：禁止搜索引擎收录
+    expect(ok.headers['x-robots-tag']).toBe('noindex, nofollow, noarchive, nosnippet');
     // 框架标识不暴露
     expect(ok.headers['x-powered-by']).toBeUndefined();
 
@@ -96,6 +98,7 @@ describe('同源部署静态托管 (e2e)', () => {
   beforeAll(async () => {
     webDistDir = mkdtempSync(join(tmpdir(), 'ly-admin-web-'));
     writeFileSync(join(webDistDir, 'index.html'), '<!doctype html><title>static-fallback</title>');
+    writeFileSync(join(webDistDir, 'robots.txt'), 'User-agent: *\nDisallow: /\n');
     app = await createTestApp({ serveStatic: true, webDistDir });
   });
 
@@ -129,5 +132,14 @@ describe('同源部署静态托管 (e2e)', () => {
 
     const index = await request(app.getHttpServer()).get('/').expect(200);
     expect(index.headers['cache-control']).toContain('no-cache');
+  });
+
+  it('站点根 robots.txt 直出（禁止收录），且不被 history 回退吞成 index.html', async () => {
+    // 爬虫取 robots.txt 时 Accept 不含 text/html，必须由静态托管返回真实文件而非回退壳
+    const res = await request(app.getHttpServer()).get('/robots.txt').set('Accept', 'text/plain,*/*').expect(200);
+    expect(res.text).toContain('Disallow: /');
+    expect(res.text).not.toContain('static-fallback');
+    // robots 响应同样带 noindex 头（全局安全头中间件覆盖静态响应）
+    expect(res.headers['x-robots-tag']).toBe('noindex, nofollow, noarchive, nosnippet');
   });
 });
