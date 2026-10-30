@@ -63,8 +63,10 @@ function handleCurrentChange(current: number): void {
 
 <template>
   <!-- 外层 el-scrollbar：移动端分页器超宽时，在自身区域内横向滚动，避免被裁剪或撑破页面布局
-       （桌面端分页器能放下时不会出现滚动条） -->
-  <el-scrollbar>
+       （桌面端分页器能放下时不会出现滚动条）。
+       class 不可省：el-scrollbar 自带 height:100%，作为 flex 列的子项会按「容器满高」参与分配，
+       把同级的 flex-1 内容区挤成 0 高（字典项 / 任务日志抽屉的表格曾因此整块消失）。 -->
+  <el-scrollbar class="pagination-scrollbar">
     <div class="pagination-container inline-flex w-max min-w-full items-center justify-end whitespace-nowrap mt-4">
       <el-pagination
         :current-page="currentPage"
@@ -80,3 +82,13 @@ function handleCurrentChange(current: number): void {
     </div>
   </el-scrollbar>
 </template>
+
+<style scoped>
+/* 分页器只占自身内容高度，不参与父级 flex 剩余空间的分配。
+   el-scrollbar 默认 height:100%（flex-basis 取容器满高），在 flex-col 里会把兄弟 flex-1 压成 0；
+   此处回退成内容高度，横向滚动仍由内部 .el-scrollbar__wrap 负责。 */
+.pagination-scrollbar {
+  flex: none;
+  height: auto;
+}
+</style>

@@ -197,12 +197,12 @@ watch(
         </el-button>
       </div>
 
-      <!-- 滚动交给 el-scrollbar（与全局内容区一致），避免抽屉里出现原生滚动条。
-           el-table 不要设 max-height/height：el-scrollbar 内部 view 是 inline-block，
-           「100%」会解析成相对内容高度而塌成 0，导致表头与数据整体消失。
-           fixed 列依靠 Element Plus 自身的 sticky 定位即可，无需表格定高。 -->
-      <el-scrollbar v-loading="loading" class="min-h-0 flex-1">
-        <el-table :data="list">
+      <!-- 表格撑满剩余高度：flex-1 + min-h-0 给出确定高度，el-table 的 height="100%"
+           才能解析出来（表头固定、表体内部滚动、fixed 列 sticky 定位）。
+           不要再外套 el-scrollbar：el-table 定高后自己就是滚动容器，多包一层只会
+           形成嵌套滚动，且 .el-scrollbar__view 是 inline-block，容易把表格量成 0 高。 -->
+      <div class="min-h-0 flex-1">
+        <el-table v-loading="loading" :data="list" height="100%">
           <el-table-column prop="dictLabel" label="字典标签" min-width="140" show-overflow-tooltip />
           <el-table-column prop="dictValue" label="字典值" min-width="120" show-overflow-tooltip />
           <el-table-column prop="sort" label="排序" width="80" align="center" />
@@ -242,7 +242,7 @@ watch(
             </template>
           </el-table-column>
         </el-table>
-      </el-scrollbar>
+      </div>
 
       <!-- 分页：固定高度，留在底部 -->
       <Pagination
