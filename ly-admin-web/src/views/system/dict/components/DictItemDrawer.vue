@@ -197,9 +197,11 @@ watch(
         </el-button>
       </div>
 
-      <!-- 滚动交给 el-scrollbar（与全局内容区一致），避免抽屉里出现原生滚动条 -->
+      <!-- 滚动交给 el-scrollbar（与全局内容区一致），避免抽屉里出现原生滚动条。
+           注意：带 fixed 列的 el-table 需要自身有确定高度才能正确计算固定列布局，
+           故给表格 max-height="100%" 让其填满滚动区、由自身管理滚动，否则表体会塌成 0 高度导致数据不可见。 -->
       <el-scrollbar v-loading="loading" class="min-h-0 flex-1">
-        <el-table :data="list">
+        <el-table :data="list" max-height="100%">
           <el-table-column prop="dictLabel" label="字典标签" min-width="140" show-overflow-tooltip />
           <el-table-column prop="dictValue" label="字典值" min-width="120" show-overflow-tooltip />
           <el-table-column prop="sort" label="排序" width="80" align="center" />
