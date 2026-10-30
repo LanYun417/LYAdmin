@@ -56,21 +56,23 @@ function isChecked(option: TableColumnOption): boolean {
       <span class="text-sm font-medium text-ink">显示列</span>
       <el-button type="primary" link size="small" @click="emit('reset')">重置</el-button>
     </div>
-    <!-- 列表超长时用 el-scrollbar 接管滚动（与全局内容区一致），避免面板里出现原生滚动条。
-         勾选项只用 flex、不加 w-full：el-checkbox 自带 margin-right: 30px，
-         再叠 width:100% 会让每行比面板宽 30px，凭空多出一条横向滚动条。 -->
+    <!-- 一行一个字段 + 竖向滚动：
+         - 外层 flex-col 让每个勾选项各占一行（flex 子项会被块级化，不依赖覆盖 el-checkbox 的 inline-flex）；
+         - el-scrollbar 的 max-height 兜住高度，列多了在面板内竖向滚动，不会把弹层撑长；
+         - 勾选项不写 w-full：el-checkbox 自带 margin-right: 30px，叠 width:100% 会多出横向滚动条。 -->
     <el-scrollbar max-height="256px">
-      <el-checkbox
-        v-for="option in columns"
-        :key="option.key"
-        class="flex"
-        :model-value="isChecked(option)"
-        :disabled="option.fixed"
-        :title="option.fixed ? '该列固定显示，不可隐藏' : ''"
-        @update:model-value="(value: boolean | string | number) => toggle(option, Boolean(value))"
-      >
-        {{ option.label }}
-      </el-checkbox>
+      <div class="flex flex-col">
+        <el-checkbox
+          v-for="option in columns"
+          :key="option.key"
+          :model-value="isChecked(option)"
+          :disabled="option.fixed"
+          :title="option.fixed ? '该列固定显示，不可隐藏' : ''"
+          @update:model-value="(value: boolean | string | number) => toggle(option, Boolean(value))"
+        >
+          {{ option.label }}
+        </el-checkbox>
+      </div>
     </el-scrollbar>
   </el-popover>
 </template>
