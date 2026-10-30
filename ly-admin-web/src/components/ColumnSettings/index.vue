@@ -56,12 +56,14 @@ function isChecked(option: TableColumnOption): boolean {
       <span class="text-sm font-medium text-ink">显示列</span>
       <el-button type="primary" link size="small" @click="emit('reset')">重置</el-button>
     </div>
-    <!-- 列表超长时用 el-scrollbar 接管滚动（与全局内容区一致），避免面板里出现原生滚动条 -->
+    <!-- 列表超长时用 el-scrollbar 接管滚动（与全局内容区一致），避免面板里出现原生滚动条。
+         勾选项只用 flex、不加 w-full：el-checkbox 自带 margin-right: 30px，
+         再叠 width:100% 会让每行比面板宽 30px，凭空多出一条横向滚动条。 -->
     <el-scrollbar max-height="256px">
       <el-checkbox
         v-for="option in columns"
         :key="option.key"
-        class="flex w-full"
+        class="flex"
         :model-value="isChecked(option)"
         :disabled="option.fixed"
         :title="option.fixed ? '该列固定显示，不可隐藏' : ''"
