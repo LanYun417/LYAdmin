@@ -20,44 +20,15 @@ import { fileURLToPath } from 'node:url';
 import { existsSync, readFileSync } from 'node:fs';
 
 /**
- * 解析项目根目录（<root>，即 ly-admin-api/）。
+ * 项目根目录（<root>，即 ly-admin-api/）。
  *
- * 历史上用 `path.resolve(__dirname, '../../..')` 写死「common/config 往上 3 级」，
- * 这依赖「根目录下必须有一层 src|dist 包裹」——开发 / 构建 / Docker 都满足，但一旦把
- * 产物扁平打包（把 dist/* 直接平铺进部署目录 ly-admin/，丢掉 dist 这一层），
- * env-parse.js 就落在 <root>/common/config/，往上 3 级会越过根目录、指到父级，
- * 导致 uploads / logs / cache 以及 .env 被错误地建在 ly-admin/ 的上一级。
- *
- * 改为向上查找「含 package.json 且 name === 'ly-admin-api'」的目录作为根，
- * 彻底摆脱对目录层级的假设；万一中途找不到再回退到历史写法，避免回归。
+ * ⚠️ 依赖目录层级约定：编译产物必须保留 `dist` 这一层 —— 即 env-parse.js
+ * 始终位于 `<root>/dist/common/config/` 下。这样 `../../..` 才能正确解析到 `<root>`。
+ * 若把 dist/* 直接平铺进部署目录（丢掉 dist 层），往上 3 级会越过根、指到父级，
+ * 导致 uploads / logs / cache 与 .env 被建在部署目录的上一级。不要扁平打包，
+ * 参见项目记忆「后端 ROOT_DIR 解析」约定。
  */
-function resolveRootDir(): string {
-  const start = path.dirname(fileURLToPath(import.meta.url));
-  let dir = start;
-  while (true) {
-    const pkgPath = path.join(dir, 'package.json');
-    if (existsSync(pkgPath)) {
-      try {
-        const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8')) as { name?: string };
-        if (pkg && pkg.name === 'ly-admin-api') {
-          return dir;
-        }
-      } catch {
-        // package.json 解析失败则继续向上，不中断查找
-      }
-    }
-    const parent = path.dirname(dir);
-    if (parent === dir) {
-      break; // 已抵达盘根
-    }
-    dir = parent;
-  }
-  // 回退：历史相对层级（兼容非标准布局，等价于旧实现）
-  return path.resolve(start, '../../..');
-}
-
-/** 项目根目录（<root>，即 ly-admin-api/）。 */
-export const ROOT_DIR = path.resolve(resolveRootDir());
+export const ROOT_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 
 /**
  * 极简 .env 解析器。
