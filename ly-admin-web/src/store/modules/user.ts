@@ -7,6 +7,12 @@ import type { LoginParams, MenuNode, UserDetail } from '@/types/api';
 import { getAccessToken, getRefreshToken, removeToken, setToken } from '@/utils/auth';
 import { clearMenuCache, getMenuCache, setMenuCache } from '@/utils/menuCache';
 
+/**
+ * 只读访客角色编码，与后端 `constants.ts` 的 `GUEST_ROLE_CODES` 保持一致。
+ * 持有该角色的用户不允许自助修改密码，只能由超级管理员在「用户管理 → 重置密码」处理。
+ */
+const READONLY_ROLE_CODES = ['viewer'];
+
 export const useUserStore = defineStore(
   'user',
   () => {
@@ -31,6 +37,11 @@ export const useUserStore = defineStore(
     const nickname = computed<string>(() => userInfo.value?.nickname || userInfo.value?.username || '');
     /** 头像地址 */
     const avatar = computed<string>(() => userInfo.value?.avatar ?? '');
+    /**
+     * 是否为只读访客：后端会拒绝其自助改密（409），前端据此隐藏修改密码入口。
+     * 仅用于交互呈现，真正的拦截在 `profile.service.ts`。
+     */
+    const isReadonlyGuest = computed<boolean>(() => roles.value.some((code) => READONLY_ROLE_CODES.includes(code)));
 
     /**
      * 登录：调用接口并写入 Token 与用户信息。
@@ -122,6 +133,7 @@ export const useUserStore = defineStore(
       isLogin,
       nickname,
       avatar,
+      isReadonlyGuest,
       login,
       fetchProfile,
       fetchMenus,

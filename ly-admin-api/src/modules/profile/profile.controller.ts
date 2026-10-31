@@ -37,7 +37,7 @@ export class ProfileController {
     @Body() dto: ChangePasswordDto,
     @CurrentUser() user: AuthUserContext,
   ): Promise<ResponseEnvelope<null>> {
-    await this.profileService.changePassword(user.userId, dto);
+    await this.profileService.changePassword(user.userId, dto, user.roles);
     return { __raw: true, data: null, message: '密码修改成功，请重新登录' };
   }
 

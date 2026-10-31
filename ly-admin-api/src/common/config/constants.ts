@@ -36,6 +36,25 @@ export const ERROR_MESSAGE = {
   SERVICE_UNAVAILABLE: '服务暂不可用',
 } as const;
 
+/**
+ * 访客账号（演示 / 试用用的只读账号）：**禁止自助修改密码**，只能由管理员在
+ * 「用户管理 → 重置密码」里改。
+ *
+ * 与 `users.service.ts` 的 `BUILTIN_ADMIN` 同一思路：用常量白名单保护特定账号。
+ * 区别是这里防的不是误删，而是「访客把演示账号的密码改掉后，其他体验者再也登不进来」。
+ * 账号不存在时该名单不生效，无需额外判断。
+ */
+export const GUEST_USERNAMES: readonly string[] = ['visitor'];
+
+/**
+ * 只读访客角色编码：持有该角色的用户同样**禁止自助修改密码**，只能由管理员重置。
+ *
+ * 与 {@link GUEST_USERNAMES} 互补：用户名白名单只能保护固定的演示账号，
+ * 而「只读访客」是一种角色——管理员新建的只读账号换个用户名就能绕过白名单。
+ * 两个条件任一命中即拒绝（见 `profile.service.ts` 的 `changePassword`）。
+ */
+export const GUEST_ROLE_CODES: readonly string[] = ['viewer'];
+
 /** 通用状态枚举：1 启用/成功，0 禁用/失败。 */
 export enum Status {
   DISABLED = 0,

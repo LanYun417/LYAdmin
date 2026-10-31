@@ -108,7 +108,11 @@ async function handleAvatarUpload(options: UploadRequestOptions): Promise<void> 
         </el-card>
         <el-card shadow="never" class="mt-4">
           <template #header>修改密码</template>
-          <PasswordForm />
+          <!-- 只读访客不允许自助改密：后端会直接拒绝（409），这里提前收口，避免填完表单才报错 -->
+          <p v-if="userStore.isReadonlyGuest" class="text-[13px] text-muted">
+            只读访客账号不支持自助修改密码，如需变更请联系超级管理员在「用户管理 → 重置密码」中处理。
+          </p>
+          <PasswordForm v-else />
         </el-card>
       </el-col>
     </el-row>

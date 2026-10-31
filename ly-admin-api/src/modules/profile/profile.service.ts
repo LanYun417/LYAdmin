@@ -4,6 +4,7 @@
  */
 import { Injectable } from '@nestjs/common';
 import { AppException } from '../../common/exception/app.exception.js';
+import { GUEST_ROLE_CODES, GUEST_USERNAMES } from '../../common/config/constants.js';
 import { lookupDeptName } from '../../common/utils/dept-lookup.js';
 import { comparePassword, hashPassword } from '../../common/utils/utils.js';
 import type { UserBrief } from '../../common/types.js';
@@ -102,11 +103,27 @@ export class ProfileService {
     });
   }
 
-  /** 修改密码：校验原密码，写入新哈希并更新 passwordChangedAt（旧 Token 失效）。 */
-  async changePassword(userId: number, input: ChangePasswordInput): Promise<void> {
+  /**
+   * 修改密码：校验原密码，写入新哈希并更新 passwordChangedAt（旧 Token 失效）。
+   *
+   * @param userId 当前用户 id
+   * @param input 原密码 + 新密码
+   * @param roleCodes 当前用户的角色编码（用于识别只读访客）
+   */
+  async changePassword(userId: number, input: ChangePasswordInput, roleCodes: string[]): Promise<void> {
     const user = await this.prisma.user.findUnique({ where: { id: BigInt(userId) } });
     if (!user) {
       throw AppException.notFound('用户不存在');
+    }
+    // 只读访客不允许自助改密：演示账号的密码是公开共享的，被改掉后其他体验者就登不进来了。
+    // 判定「访客」有两条：固定的演示用户名白名单 + 只读访客角色（viewer）——后者覆盖管理员
+    // 新建的任意只读账号，避免换个用户名绕过白名单。
+    // 需要变更时由管理员在「用户管理 → 重置密码」处理（见 users.service.resetPassword）。
+    //
+    // 用 409 而非 403：403 会被前端拦截器判定为「越权」并整页跳 /403，而这里只是
+    // 「该账号类型不支持这个操作」，与内置字典/内置参数的保护规则同级（见 dict/config service）。
+    if (GUEST_USERNAMES.includes(user.username) || roleCodes.some((code) => GUEST_ROLE_CODES.includes(code))) {
+      throw AppException.conflict('只读访客账号不支持自助修改密码，请联系管理员重置');
     }
     const matched = await comparePassword(input.oldPassword, user.password);
     if (!matched) {
