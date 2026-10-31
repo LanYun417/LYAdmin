@@ -328,6 +328,14 @@ service.interceptors.response.use(
 
     // 401：无感刷新
     if (status === UNAUTHORIZED_CODE || businessCode === UNAUTHORIZED_CODE) {
+      // 登录接口的 401 是业务失败（账号或密码错误 / 账号已禁用），不是 Token 失效。
+      // 必须在这里截住：否则会走进无感刷新，登录页没有 refreshToken → 刷新必然失败 →
+      // handleAuthFailure 发现当前已在 /login 就静默返回，后端的提示文案被整个吞掉，
+      // 用户只看到验证码刷新了一次，没有任何报错。
+      if (originalConfig?.url?.includes('/auth/login')) {
+        notifyError(originalConfig, errorPayload?.message || '账号或密码错误');
+        return Promise.reject(error);
+      }
       if (!originalConfig || originalConfig.url?.includes('/auth/refresh')) {
         handleAuthFailure();
         return Promise.reject(error);
