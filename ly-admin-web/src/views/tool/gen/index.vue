@@ -17,6 +17,7 @@ import { formatDateTime } from '@/utils/format';
 import { downloadBlob } from '@/utils/download';
 import type { GenColumn, GenConfig, GenCreateResult, GenFile, GenHtmlType, GenTable } from '@/api/gen';
 import SearchForm from '@/components/SearchForm/index.vue';
+import { useFillContentHeight } from '@/composables/useFillContentHeight';
 
 defineOptions({ name: 'ToolGen' });
 
@@ -32,10 +33,29 @@ const isNarrowScreen = useMediaQuery('(max-width: 1023px)');
 /** 移动端（< 768px）：弹窗等进一步放宽 */
 const isMobileScreen = useMediaQuery('(max-width: 767px)');
 
-/** 数据表列表高度：窄屏降低，避免单页过长 */
-const tableHeight = computed<number>(() => (isNarrowScreen.value ? 400 : 560));
+/**
+ * 宽屏下整页撑满内容区：根节点高度由 useFillContentHeight 实测（口径与 TablePage 一致），
+ * 左右两栏各占一半宽度、内部表格滚动；窄屏（< 1024px）回退为上下堆叠的自然高度。
+ */
+const { rootRef, rootHeight } = useFillContentHeight({
+  minHeight: 560,
+  enabled: computed(() => !isNarrowScreen.value),
+});
+
+/** 左右两侧的表格容器：宽屏时 flex-1，实测高度再喂给 el-table 的 height */
+const tableWrapRef = ref<HTMLElement>();
+const columnWrapRef = ref<HTMLElement>();
+const { height: tableWrapHeight } = useElementSize(tableWrapRef);
+const { height: columnWrapHeight } = useElementSize(columnWrapRef);
+
+/** 数据表列表高度：宽屏吃满剩余高度；窄屏固定值，避免单页过长 */
+const tableHeight = computed<number>(() =>
+  isNarrowScreen.value ? 400 : Math.max(Math.floor(tableWrapHeight.value || 0), 240),
+);
 /** 字段列表高度：同上 */
-const columnHeight = computed<number>(() => (isNarrowScreen.value ? 400 : 440));
+const columnHeight = computed<number>(() =>
+  isNarrowScreen.value ? 400 : Math.max(Math.floor(columnWrapHeight.value || 0), 240),
+);
 /** 预览弹窗宽度：移动端放宽到 94% */
 const previewWidth = computed<string>(() => (isMobileScreen.value ? '94%' : '70%'));
 
@@ -354,8 +374,8 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="gen-page">
-    <SearchForm @search="handleSearch" @reset="handleReset">
+  <div ref="rootRef" class="gen-page flex flex-col" :style="rootHeight ? { height: `${rootHeight}px` } : undefined">
+    <SearchForm class="shrink-0" @search="handleSearch" @reset="handleReset">
       <el-form-item label="表名/注释">
         <el-input
           v-model="keyword"
@@ -367,39 +387,41 @@ onMounted(() => {
       </el-form-item>
     </SearchForm>
 
-    <div class="flex flex-col gap-3 lg:flex-row">
-      <!-- 左：数据表列表 -->
-      <el-card shadow="never" class="w-full lg:w-120 lg:flex-none">
-        <div class="flex flex-wrap items-center justify-between gap-y-2 mb-3">
+    <div class="flex flex-col gap-3 lg:min-h-0 lg:flex-1 lg:flex-row">
+      <!-- 左：数据表列表（宽屏时撑满高度、内部滚动） -->
+      <el-card shadow="never" class="gen-card w-full lg:w-120 lg:flex-none">
+        <div class="mb-3 flex shrink-0 flex-wrap items-center justify-between gap-y-2">
           <span class="text-[15px] font-semibold text-ink">数据表（{{ filteredTables.length }}）</span>
           <el-button @click="loadTables">
             <template #icon><i class="bi bi-arrow-clockwise" /></template>刷新</el-button
           >
         </div>
 
-        <el-table
-          v-loading="tableLoading"
-          :data="filteredTables"
-          highlight-current-row
-          :height="tableHeight"
-          border
-          @current-change="handleCurrentChange"
-        >
-          <el-table-column prop="tableName" label="表名" min-width="150" show-overflow-tooltip />
-          <el-table-column prop="tableComment" label="注释" min-width="130" show-overflow-tooltip />
-          <el-table-column prop="engine" label="引擎" width="90" align="center" />
-          <el-table-column label="创建时间" width="170">
-            <template #default="{ row }">{{ formatDateTime(row.createTime) }}</template>
-          </el-table-column>
-          <template #empty>
-            <span class="text-[13px] text-muted">暂无数据表</span>
-          </template>
-        </el-table>
+        <div ref="tableWrapRef" class="min-h-0 lg:flex-1 lg:overflow-hidden">
+          <el-table
+            v-loading="tableLoading"
+            :data="filteredTables"
+            highlight-current-row
+            :height="tableHeight"
+            border
+            @current-change="handleCurrentChange"
+          >
+            <el-table-column prop="tableName" label="表名" min-width="150" show-overflow-tooltip />
+            <el-table-column prop="tableComment" label="注释" min-width="130" show-overflow-tooltip />
+            <el-table-column prop="engine" label="引擎" width="90" align="center" />
+            <el-table-column label="创建时间" width="170">
+              <template #default="{ row }">{{ formatDateTime(row.createTime) }}</template>
+            </el-table-column>
+            <template #empty>
+              <span class="text-[13px] text-muted">暂无数据表</span>
+            </template>
+          </el-table>
+        </div>
       </el-card>
 
-      <!-- 右：生成选项 + 字段列表 -->
-      <el-card shadow="never" class="flex-1 min-w-0">
-        <div class="flex flex-wrap items-center justify-between gap-y-2 mb-3">
+      <!-- 右：生成选项 + 字段列表（宽屏时撑满高度，字段表内部滚动） -->
+      <el-card shadow="never" class="gen-card min-w-0 flex-1">
+        <div class="mb-3 flex shrink-0 flex-wrap items-center justify-between gap-y-2">
           <span class="text-[15px] font-semibold text-ink">
             生成配置
             <el-tag v-if="currentTable" size="small" type="info" class="ml-2">{{ currentTable.tableName }}</el-tag>
@@ -439,7 +461,7 @@ onMounted(() => {
           </div>
         </div>
 
-        <el-form :inline="true" class="mb-1" @submit.prevent>
+        <el-form :inline="true" class="mb-1 shrink-0" @submit.prevent>
           <el-form-item label="模块名">
             <el-input
               v-model="config.moduleName"
@@ -478,61 +500,69 @@ onMounted(() => {
           type="info"
           :closable="false"
           show-icon
+          class="shrink-0"
           title="请先在左侧选择数据表，并填写模块名与业务名（作者可留空）"
         />
 
-        <el-table v-loading="columnLoading" :data="columns" :height="columnHeight" border>
-          <el-table-column prop="columnName" label="列名" min-width="140" show-overflow-tooltip />
-          <el-table-column prop="fieldName" label="字段名" min-width="130" show-overflow-tooltip />
-          <el-table-column prop="columnType" label="列类型" min-width="120" show-overflow-tooltip />
-          <el-table-column label="TS 类型" width="100" align="center">
-            <template #default="{ row }">
-              <el-tag :type="tsTypeTag(row.tsType)" size="small">{{ row.tsType }}</el-tag>
+        <div ref="columnWrapRef" class="mt-3 min-h-0 lg:flex-1 lg:overflow-hidden">
+          <el-table v-loading="columnLoading" :data="columns" :height="columnHeight" border>
+            <el-table-column prop="columnName" label="列名" min-width="140" show-overflow-tooltip />
+            <el-table-column prop="fieldName" label="字段名" min-width="130" show-overflow-tooltip />
+            <el-table-column prop="columnType" label="列类型" min-width="120" show-overflow-tooltip />
+            <el-table-column label="TS 类型" width="100" align="center">
+              <template #default="{ row }">
+                <el-tag :type="tsTypeTag(row.tsType)" size="small">{{ row.tsType }}</el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column label="控件" width="130">
+              <template #default="{ row }">
+                <el-select
+                  v-model="row.htmlType"
+                  size="small"
+                  :disabled="row.isPk"
+                  @change="handleHtmlTypeChange(row as GenColumn)"
+                >
+                  <el-option
+                    v-for="item in htmlTypeOptions"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value"
+                  />
+                </el-select>
+              </template>
+            </el-table-column>
+            <el-table-column label="字典类型" min-width="170">
+              <template #default="{ row }">
+                <el-input
+                  v-model="row.dictType"
+                  size="small"
+                  placeholder="如 sys_common_status"
+                  :disabled="row.htmlType !== 'select'"
+                />
+              </template>
+            </el-table-column>
+            <el-table-column prop="columnComment" label="注释" min-width="140" show-overflow-tooltip />
+            <el-table-column label="主键" width="80" align="center">
+              <template #default="{ row }">
+                <el-tag v-if="row.isPk" type="danger" size="small">主键</el-tag>
+                <span v-else>-</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="必填" width="90" align="center">
+              <template #default="{ row }">
+                <el-tag :type="row.isNullable ? 'info' : 'warning'" size="small">
+                  {{ row.isNullable ? '可选' : '必填' }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            <template #empty>
+              <el-empty v-if="!currentTable" description="请选择左侧数据表以查看字段" :image-size="80">
+                <el-icon aria-hidden="true"><i class="bi bi-table" /></el-icon>
+              </el-empty>
+              <span v-else class="text-[13px] text-muted">该表暂无字段</span>
             </template>
-          </el-table-column>
-          <el-table-column label="控件" width="130">
-            <template #default="{ row }">
-              <el-select
-                v-model="row.htmlType"
-                size="small"
-                :disabled="row.isPk"
-                @change="handleHtmlTypeChange(row as GenColumn)"
-              >
-                <el-option v-for="item in htmlTypeOptions" :key="item.value" :label="item.label" :value="item.value" />
-              </el-select>
-            </template>
-          </el-table-column>
-          <el-table-column label="字典类型" min-width="170">
-            <template #default="{ row }">
-              <el-input
-                v-model="row.dictType"
-                size="small"
-                placeholder="如 sys_common_status"
-                :disabled="row.htmlType !== 'select'"
-              />
-            </template>
-          </el-table-column>
-          <el-table-column prop="columnComment" label="注释" min-width="140" show-overflow-tooltip />
-          <el-table-column label="主键" width="80" align="center">
-            <template #default="{ row }">
-              <el-tag v-if="row.isPk" type="danger" size="small">主键</el-tag>
-              <span v-else>-</span>
-            </template>
-          </el-table-column>
-          <el-table-column label="必填" width="90" align="center">
-            <template #default="{ row }">
-              <el-tag :type="row.isNullable ? 'info' : 'warning'" size="small">
-                {{ row.isNullable ? '可选' : '必填' }}
-              </el-tag>
-            </template>
-          </el-table-column>
-          <template #empty>
-            <el-empty v-if="!currentTable" description="请选择左侧数据表以查看字段" :image-size="80">
-              <el-icon aria-hidden="true"><i class="bi bi-table" /></el-icon>
-            </el-empty>
-            <span v-else class="text-[13px] text-muted">该表暂无字段</span>
-          </template>
-        </el-table>
+          </el-table>
+        </div>
       </el-card>
     </div>
 
@@ -577,6 +607,20 @@ onMounted(() => {
 </template>
 
 <style scoped>
+/* 宽屏两栏卡片：自身纵向 flex，body 接管剩余高度，内部表格才能吃到确定高度。
+   （窄屏下这些声明无害，卡片仍按内容自然高度排布） */
+.gen-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.gen-card :deep(.el-card__body) {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
 /* 预览弹窗：左侧文件列表 + 右侧代码。
    复杂嵌套 flex 布局 + 多处响应式断点，Tailwind 表达收益低，按规范 §3.5 保留 scoped 样式。 */
 .gen-preview {

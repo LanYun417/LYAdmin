@@ -20,9 +20,10 @@
  * 兜底：可视高度不足 `minHeight`（矮屏 / 移动端横屏）时按 `minHeight` 渲染，允许整页滚动，
  * 避免表格被压成只剩表头。
  */
-import { useElementSize, useResizeObserver } from '@vueuse/core';
+import { useElementSize } from '@vueuse/core';
 import Pagination from '@/components/Pagination/index.vue';
 import SearchForm from '@/components/SearchForm/index.vue';
+import { useFillContentHeight } from '@/composables/useFillContentHeight';
 
 defineOptions({ name: 'TablePage', inheritAttrs: false });
 
@@ -72,15 +73,13 @@ const emit = defineEmits<{
   (e: 'current-change', value: number): void;
 }>();
 
-/** 整块根节点（高度在这里落地） */
-const rootRef = ref<HTMLElement>();
 /** 表格容器：其尺寸变化会驱动 el-table 的 height */
 const tableWrapRef = ref<HTMLElement>();
 /** 表格实例（供调用方做 clearSelection / toggleRowSelection 等） */
 const tableRef = ref<{ doLayout?: () => void; clearSelection?: () => void }>();
 
-/** 量出来的整块高度（px）；undefined 表示未测量（交给内容自然高度） */
-const rootHeight = ref<number>();
+/** 整块高度：统一由 useFillContentHeight 实测（与代码生成页共用同一套口径） */
+const { rootRef, rootHeight, measure } = useFillContentHeight({ minHeight: props.minHeight });
 
 const { height: wrapHeight } = useElementSize(tableWrapRef);
 
@@ -90,50 +89,6 @@ const { height: wrapHeight } = useElementSize(tableWrapRef);
  * 超出部分由外层 `overflow: hidden` 裁掉（此时整块已按 minHeight 兜底，允许整页滚动）。
  */
 const tableHeight = computed(() => Math.max(Math.floor(wrapHeight.value || 0), props.tableMinHeight));
-
-/** 读取 `.app-main` 的下内边距：内容区底部留白不能算进可用高度，否则分页会被切掉一条 */
-function getPaddingBottom(el: HTMLElement): number {
-  const appMain = el.closest('.app-main');
-  if (!appMain) {
-    return 0;
-  }
-  const value = Number.parseFloat(getComputedStyle(appMain).paddingBottom);
-  return Number.isFinite(value) ? value : 0;
-}
-
-/** 计算并写入整块高度：可用高度 = 滚动容器可视高度 − 本块顶部偏移 − 内容区底部内边距 */
-function measure(): void {
-  const root = rootRef.value;
-  if (!root) {
-    return;
-  }
-  // 标准场景：页面在布局的 .content-scrollbar 内。找不到（如被放进抽屉）则不接管高度
-  const scroller = root.closest('.el-scrollbar__wrap') as HTMLElement | null;
-  if (!scroller) {
-    rootHeight.value = undefined;
-    return;
-  }
-  const offsetTop = root.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
-  const available = Math.floor(scroller.clientHeight - offsetTop - getPaddingBottom(root));
-  const next = Math.max(available, props.minHeight);
-  // 1px 容差：避免因小数像素反复触发 ResizeObserver 造成抖动
-  if (rootHeight.value === undefined || Math.abs(rootHeight.value - next) > 1) {
-    rootHeight.value = next;
-  }
-}
-
-// 内容区尺寸变化（窗口缩放 / 标签页增减 / 侧边栏折叠导致换行）都要重算
-const scrollerEl = shallowRef<HTMLElement>();
-onMounted(() => {
-  scrollerEl.value = (rootRef.value?.closest('.el-scrollbar__wrap') as HTMLElement | null) ?? undefined;
-  measure();
-});
-useResizeObserver(scrollerEl, () => measure());
-useResizeObserver(rootRef, () => measure());
-// keep-alive 切回来时容器尺寸可能已变化
-onActivated(() => {
-  void nextTick(measure);
-});
 
 // 高度变化后让 el-table 重算列宽/固定列布局（否则固定列会停在旧位置）
 watch(tableHeight, async () => {

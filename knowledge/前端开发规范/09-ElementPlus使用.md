@@ -303,3 +303,23 @@ Element Plus 的 `.el-drawer__body` 默认 `overflow: auto`。若抽屉内容直
 - 高度不足时按 `min-height`（默认 480px）兜底并允许整页滚动，避免矮屏下表格只剩表头。
 - **抽屉里不要用它**：抽屉的可视容器是 `.el-drawer__body`，不是 `.content-scrollbar`，
   抽屉内仍按上一节「flex + el-scrollbar」的写法处理。
+
+### 双栏 / 非三段式页面同样可以撑满：`useFillContentHeight`
+
+`src/composables/useFillContentHeight.ts` 把「量出内容区可用高度」抽成公共逻辑（`TablePage` 也用它）：
+
+```ts
+const { rootRef, rootHeight } = useFillContentHeight({
+  minHeight: 560,
+  enabled: computed(() => !isNarrowScreen.value), // 窄屏回退自然高度时传 false
+});
+```
+
+- 返回的 `rootHeight` 直接绑到页面根节点 `:style="{ height: rootHeight + 'px' }"`；
+- 根节点 `flex flex-col`，头部（筛选项等）`shrink-0`，主体 `lg:flex-1 lg:min-h-0`；
+- 主体里的卡片要 `display:flex; flex-direction:column`，并让 `:deep(.el-card__body)` 变成
+  `flex:1; min-height:0` 的纵向容器，表格才有"确定高度"可吃；
+- 表格高度用 `useElementSize` 量容器得到，不要写死（代码生成页原先写死 560/440）。
+
+> 示例：`views/tool/gen/index.vue` —— 宽屏左右两栏等高撑满、各自内部滚动；窄屏（< 1024px）
+> 仍为上下堆叠的自然高度，`enabled` 传 `!isNarrowScreen` 即可自动切换。
