@@ -1,9 +1,10 @@
 <script setup lang="ts">
 /**
- * 顶栏通知铃铛（未读红点 + 最近通知下拉）。
+ * 顶栏通知铃铛（未读红点 + 最近通知下拉 + 详情弹窗）。
  *
- * 取最近 5 条：铃铛是"提醒入口"而不是完整列表，正文要能在下拉里读完，
- * 更多请进通知中心。点击某条即标记已读，有 link 的顺带跳转。
+ * 取最近 5 条：铃铛是"提醒入口"而不是完整列表，下拉里只做摘要（正文截两行），
+ * **点击任意一条打开详情弹窗**看全文——通知正文可能很长，下拉里塞不下；
+ * 有 link 的在弹窗里提供「前往查看」。更多请进通知中心。
  */
 import { ElMessage } from '@/utils/element';
 import { useRouter } from 'vue-router';
@@ -12,6 +13,7 @@ import { getNoticeListApi, markAllNoticesReadApi, markNoticeReadApi } from '@/ap
 import { useNoticeStore } from '@/store/modules/notice';
 import { formatDateTime } from '@/utils/format';
 import type { NoticeItem } from '@/types/api';
+import BasicDialog from '@/components/BasicDialog/index.vue';
 
 const router = useRouter();
 const noticeStore = useNoticeStore();
@@ -56,16 +58,40 @@ onMounted(async () => {
   }
 });
 
-/** 点击一条：标记已读 + 按需跳转 */
+/** 下拉是否展开（打开详情前先收起，避免浮层叠在一起） */
+const popoverVisible = ref(false);
+/** 详情弹窗 */
+const detailVisible = ref(false);
+/** 当前查看的通知 */
+const detailItem = ref<NoticeItem | null>(null);
+
+/**
+ * 点击一条：打开详情弹窗并标记已读。
+ * 不在下拉里直接跳转——正文被截断的情况下用户看不到内容，先看全文再决定是否前往。
+ */
 async function handleClick(item: NoticeItem): Promise<void> {
+  popoverVisible.value = false;
+  detailItem.value = item;
+  detailVisible.value = true;
   if (item.isRead === 0) {
-    await markNoticeReadApi(item.id);
-    item.isRead = 1;
-    noticeStore.decreaseUnread();
+    try {
+      await markNoticeReadApi(item.id);
+      item.isRead = 1;
+      noticeStore.decreaseUnread();
+    } catch {
+      // 标记失败不影响阅读详情，下次打开下拉还会再试
+    }
   }
-  if (item.link) {
-    await router.push(item.link);
+}
+
+/** 详情弹窗里「前往查看」 */
+async function handleOpenLink(): Promise<void> {
+  const link = detailItem.value?.link;
+  if (!link) {
+    return;
   }
+  detailVisible.value = false;
+  await router.push(link);
 }
 
 /** 全部已读 */
@@ -87,7 +113,13 @@ function handleViewAll(): void {
        （tooltip 在外层、popover 在内层，两者触发方式不同，互不干扰）。 -->
   <el-tooltip :content="t('nav.notice')" placement="bottom">
     <span class="inline-flex items-center">
-      <el-popover placement="bottom-end" :width="360" trigger="click" @show="handleOpen">
+      <el-popover
+        v-model:visible="popoverVisible"
+        placement="bottom-end"
+        :width="360"
+        trigger="click"
+        @show="handleOpen"
+      >
         <template #reference>
           <el-badge :value="noticeStore.unreadCount" :hidden="noticeStore.unreadCount === 0" :max="99">
             <el-icon class="text-lg text-ink cursor-pointer" role="button" tabindex="0" :aria-label="t('nav.notice')">
@@ -133,4 +165,32 @@ function handleViewAll(): void {
       </el-popover>
     </span>
   </el-tooltip>
+
+  <!--
+    详情弹窗：通知正文可能很长，下拉里只截两行，全文在这里看。
+    滚动统一交给 el-scrollbar（项目约定，避免原生滚动条）。
+  -->
+  <BasicDialog v-model="detailVisible" title="通知详情" width="560px" :show-footer="false" append-to-body>
+    <div v-if="detailItem" class="flex flex-col gap-3">
+      <div class="flex flex-wrap items-center gap-2 text-xs text-muted">
+        <el-tag :type="TYPE_META[detailItem.noticeType]?.type ?? 'primary'" size="small">
+          {{ TYPE_META[detailItem.noticeType]?.label ?? '通知' }}
+        </el-tag>
+        <span>{{ formatDateTime(detailItem.createdAt) }}</span>
+      </div>
+
+      <h3 class="text-base font-semibold text-ink">{{ detailItem.title }}</h3>
+
+      <el-scrollbar class="max-h-[52vh]">
+        <p class="pr-3 text-sm leading-6 text-ink-regular whitespace-pre-wrap break-words">
+          {{ detailItem.content }}
+        </p>
+      </el-scrollbar>
+
+      <div class="flex justify-end gap-2">
+        <el-button @click="detailVisible = false">关闭</el-button>
+        <el-button v-if="detailItem.link" type="primary" @click="handleOpenLink">前往查看</el-button>
+      </div>
+    </div>
+  </BasicDialog>
 </template>
