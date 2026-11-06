@@ -28,7 +28,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/dashboard/login-trend?days=7\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/dashboard/login-trend?days=7\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
             "days": 7
           }
@@ -60,7 +60,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/dashboard/operation-distribution?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/dashboard/operation-distribution?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
             "page": 1,
             "pageSize": 10
@@ -93,7 +93,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/dashboard/role-user-count?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/dashboard/role-user-count?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
             "page": 1,
             "pageSize": 10
@@ -126,7 +126,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/dashboard/stats?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/dashboard/stats?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
             "page": 1,
             "pageSize": 10
@@ -164,7 +164,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/auth/captcha?page=1&pageSize=10\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/auth/captcha?page=1&pageSize=10\"",
           "query": {
             "page": 1,
             "pageSize": 10
@@ -197,7 +197,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/auth/menus?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/auth/menus?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
             "page": 1,
             "pageSize": 10
@@ -230,7 +230,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/auth/permissions?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/auth/permissions?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
             "page": 1,
             "pageSize": 10
@@ -263,7 +263,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/auth/profile?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/auth/profile?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
             "page": 1,
             "pageSize": 10
@@ -312,7 +312,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X POST \"http://localhost:3000/api/auth/login\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"username\": \"admin\",\n      \"password\": \"123456\",\n      \"captchaId\": \"b7f3c1a2-0000-4a1b-9c3d-8e6f5a4b3c2d\",\n      \"captchaCode\": \"A1B2\"\n    }'",
+          "curl": "curl -X POST \"http://localhost:3100/api/auth/login\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"username\": \"admin\",\n      \"password\": \"123456\",\n      \"captchaId\": \"b7f3c1a2-0000-4a1b-9c3d-8e6f5a4b3c2d\",\n      \"captchaCode\": \"A1B2\"\n    }'",
           "requestBody": {
             "username": "admin",
             "password": "123456",
@@ -329,7 +329,7 @@ export const API_DOCS: ApiDocGroup[] = [
         "isPublic": false,
         "action": "",
         "examples": {
-          "curl": "curl -X POST \"http://localhost:3000/api/auth/logout\" \\\n  -H \"Authorization: Bearer <accessToken>\""
+          "curl": "curl -X POST \"http://localhost:3100/api/auth/logout\" \\\n  -H \"Authorization: Bearer <accessToken>\""
         }
       },
       {
@@ -350,7 +350,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X POST \"http://localhost:3000/api/auth/refresh\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"refreshToken\": \"<登录返回的 refreshToken>\"\n    }'",
+          "curl": "curl -X POST \"http://localhost:3100/api/auth/refresh\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"refreshToken\": \"<登录返回的 refreshToken>\"\n    }'",
           "requestBody": {
             "refreshToken": "<登录返回的 refreshToken>"
           }
@@ -410,7 +410,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/users?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/users?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
             "page": 1,
             "pageSize": 10
@@ -437,7 +437,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/users/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/users/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
             "id": "1"
           }
@@ -463,7 +463,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/users/1/menus\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/users/1/menus\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
             "id": "1"
           }
@@ -479,7 +479,7 @@ export const API_DOCS: ApiDocGroup[] = [
         "isPublic": false,
         "action": "",
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/users/import/template\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/users/import/template\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "isRawResponse": true
         }
       },
@@ -577,7 +577,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X POST \"http://localhost:3000/api/users\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"username\": \"admin\",\n      \"password\": \"123456\",\n      \"nickname\": \"示例用户\",\n      \"email\": \"demo@example.com\",\n      \"phone\": \"13800138000\",\n      \"gender\": \"1\",\n      \"status\": 1,\n      \"roleIds\": [\n        1\n      ],\n      \"deptId\": 1,\n      \"remark\": \"示例备注\"\n    }'",
+          "curl": "curl -X POST \"http://localhost:3100/api/users\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"username\": \"admin\",\n      \"password\": \"123456\",\n      \"nickname\": \"示例用户\",\n      \"email\": \"demo@example.com\",\n      \"phone\": \"13800138000\",\n      \"gender\": \"1\",\n      \"status\": 1,\n      \"roleIds\": [\n        1\n      ],\n      \"deptId\": 1,\n      \"remark\": \"示例备注\"\n    }'",
           "requestBody": {
             "username": "admin",
             "password": "123456",
@@ -604,7 +604,7 @@ export const API_DOCS: ApiDocGroup[] = [
         "isPublic": false,
         "action": "用户管理 · 批量导入",
         "examples": {
-          "curl": "curl -X POST \"http://localhost:3000/api/users/import\" \\\n  -H \"Authorization: Bearer <accessToken>\""
+          "curl": "curl -X POST \"http://localhost:3100/api/users/import\" \\\n  -H \"Authorization: Bearer <accessToken>\""
         }
       },
       {
@@ -693,7 +693,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X PUT \"http://localhost:3000/api/users/1\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"nickname\": \"示例用户\",\n      \"email\": \"demo@example.com\",\n      \"phone\": \"13800138000\",\n      \"gender\": \"1\",\n      \"status\": 1,\n      \"roleIds\": [\n        1\n      ],\n      \"deptId\": 1,\n      \"remark\": \"示例备注\"\n    }'",
+          "curl": "curl -X PUT \"http://localhost:3100/api/users/1\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"nickname\": \"示例用户\",\n      \"email\": \"demo@example.com\",\n      \"phone\": \"13800138000\",\n      \"gender\": \"1\",\n      \"status\": 1,\n      \"roleIds\": [\n        1\n      ],\n      \"deptId\": 1,\n      \"remark\": \"示例备注\"\n    }'",
           "pathParams": {
             "id": "1"
           },
@@ -741,7 +741,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X PUT \"http://localhost:3000/api/users/1/menus\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"menuIds\": [\n        1\n      ]\n    }'",
+          "curl": "curl -X PUT \"http://localhost:3100/api/users/1/menus\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"menuIds\": [\n        1\n      ]\n    }'",
           "pathParams": {
             "id": "1"
           },
@@ -780,7 +780,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X PUT \"http://localhost:3000/api/users/1/password\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"password\": \"123456\"\n    }'",
+          "curl": "curl -X PUT \"http://localhost:3100/api/users/1/password\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"password\": \"123456\"\n    }'",
           "pathParams": {
             "id": "1"
           },
@@ -819,7 +819,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X PUT \"http://localhost:3000/api/users/1/roles\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"roleIds\": [\n        1\n      ]\n    }'",
+          "curl": "curl -X PUT \"http://localhost:3100/api/users/1/roles\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"roleIds\": [\n        1\n      ]\n    }'",
           "pathParams": {
             "id": "1"
           },
@@ -858,7 +858,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X PUT \"http://localhost:3000/api/users/1/status\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"status\": 1\n    }'",
+          "curl": "curl -X PUT \"http://localhost:3100/api/users/1/status\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"status\": 1\n    }'",
           "pathParams": {
             "id": "1"
           },
@@ -887,7 +887,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X DELETE \"http://localhost:3000/api/users\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"ids\": []\n    }'",
+          "curl": "curl -X DELETE \"http://localhost:3100/api/users\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"ids\": []\n    }'",
           "requestBody": {
             "ids": []
           }
@@ -913,7 +913,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X DELETE \"http://localhost:3000/api/users/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X DELETE \"http://localhost:3100/api/users/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
             "id": "1"
           }
@@ -966,7 +966,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/roles?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/roles?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
             "page": 1,
             "pageSize": 10
@@ -993,7 +993,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/roles/1/menus\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/roles/1/menus\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
             "id": "1"
           }
@@ -1027,7 +1027,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/roles/all?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/roles/all?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
             "page": 1,
             "pageSize": 10
@@ -1104,7 +1104,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X POST \"http://localhost:3000/api/roles\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"roleName\": \"示例角色\",\n      \"roleCode\": \"demo_role\",\n      \"sort\": 1,\n      \"status\": 1,\n      \"dataScope\": 1,\n      \"deptIds\": [\n        1\n      ],\n      \"remark\": \"示例备注\"\n    }'",
+          "curl": "curl -X POST \"http://localhost:3100/api/roles\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"roleName\": \"示例角色\",\n      \"roleCode\": \"demo_role\",\n      \"sort\": 1,\n      \"status\": 1,\n      \"dataScope\": 1,\n      \"deptIds\": [\n        1\n      ],\n      \"remark\": \"示例备注\"\n    }'",
           "requestBody": {
             "roleName": "示例角色",
             "roleCode": "demo_role",
@@ -1140,7 +1140,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X POST \"http://localhost:3000/api/roles/reset-menus\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"roleIds\": [\n        1\n      ]\n    }'",
+          "curl": "curl -X POST \"http://localhost:3100/api/roles/reset-menus\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"roleIds\": [\n        1\n      ]\n    }'",
           "requestBody": {
             "roleIds": [
               1
@@ -1218,7 +1218,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X PUT \"http://localhost:3000/api/roles/1\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"roleName\": \"示例角色\",\n      \"sort\": 1,\n      \"status\": 1,\n      \"dataScope\": 1,\n      \"deptIds\": [\n        1\n      ],\n      \"remark\": \"示例备注\"\n    }'",
+          "curl": "curl -X PUT \"http://localhost:3100/api/roles/1\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"roleName\": \"示例角色\",\n      \"sort\": 1,\n      \"status\": 1,\n      \"dataScope\": 1,\n      \"deptIds\": [\n        1\n      ],\n      \"remark\": \"示例备注\"\n    }'",
           "pathParams": {
             "id": "1"
           },
@@ -1264,7 +1264,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X PUT \"http://localhost:3000/api/roles/1/menus\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"menuIds\": [\n        1\n      ]\n    }'",
+          "curl": "curl -X PUT \"http://localhost:3100/api/roles/1/menus\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"menuIds\": [\n        1\n      ]\n    }'",
           "pathParams": {
             "id": "1"
           },
@@ -1295,7 +1295,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X DELETE \"http://localhost:3000/api/roles\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"ids\": []\n    }'",
+          "curl": "curl -X DELETE \"http://localhost:3100/api/roles\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"ids\": []\n    }'",
           "requestBody": {
             "ids": []
           }
@@ -1321,7 +1321,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X DELETE \"http://localhost:3000/api/roles/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X DELETE \"http://localhost:3100/api/roles/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
             "id": "1"
           }
@@ -1381,7 +1381,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/menus?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/menus?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
             "page": 1,
             "pageSize": 10
@@ -1408,7 +1408,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/menus/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/menus/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
             "id": "1"
           }
@@ -1443,7 +1443,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/menus/tree?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/menus/tree?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
             "page": 1,
             "pageSize": 10
@@ -1558,7 +1558,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X POST \"http://localhost:3000/api/menus\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"parentId\": 1,\n      \"menuName\": \"示例菜单\",\n      \"menuType\": \"C\",\n      \"path\": \"示例值\",\n      \"component\": \"示例值\",\n      \"icon\": \"示例值\",\n      \"permission\": \"示例值\",\n      \"sort\": 1,\n      \"visible\": 1,\n      \"status\": 1,\n      \"redirect\": \"示例值\",\n      \"keepAlive\": 1\n    }'",
+          "curl": "curl -X POST \"http://localhost:3100/api/menus\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"parentId\": 1,\n      \"menuName\": \"示例菜单\",\n      \"menuType\": \"C\",\n      \"path\": \"示例值\",\n      \"component\": \"示例值\",\n      \"icon\": \"示例值\",\n      \"permission\": \"示例值\",\n      \"sort\": 1,\n      \"visible\": 1,\n      \"status\": 1,\n      \"redirect\": \"示例值\",\n      \"keepAlive\": 1\n    }'",
           "requestBody": {
             "parentId": 1,
             "menuName": "示例菜单",
@@ -1691,7 +1691,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X PUT \"http://localhost:3000/api/menus/1\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"parentId\": 1,\n      \"menuName\": \"示例菜单\",\n      \"menuType\": \"C\",\n      \"path\": \"示例值\",\n      \"component\": \"示例值\",\n      \"icon\": \"示例值\",\n      \"permission\": \"示例值\",\n      \"sort\": 1,\n      \"visible\": 1,\n      \"status\": 1,\n      \"redirect\": \"示例值\",\n      \"keepAlive\": 1\n    }'",
+          "curl": "curl -X PUT \"http://localhost:3100/api/menus/1\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"parentId\": 1,\n      \"menuName\": \"示例菜单\",\n      \"menuType\": \"C\",\n      \"path\": \"示例值\",\n      \"component\": \"示例值\",\n      \"icon\": \"示例值\",\n      \"permission\": \"示例值\",\n      \"sort\": 1,\n      \"visible\": 1,\n      \"status\": 1,\n      \"redirect\": \"示例值\",\n      \"keepAlive\": 1\n    }'",
           "pathParams": {
             "id": "1"
           },
@@ -1731,7 +1731,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X DELETE \"http://localhost:3000/api/menus/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X DELETE \"http://localhost:3100/api/menus/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
             "id": "1"
           }
@@ -1760,7 +1760,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/dict/data/sys_demo\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/dict/data/sys_demo\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
             "dictType": "sys_demo"
           }
@@ -1815,7 +1815,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/dict/items?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/dict/items?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
             "page": 1,
             "pageSize": 10
@@ -1871,7 +1871,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/dict/types?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/dict/types?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
             "page": 1,
             "pageSize": 10
@@ -1938,7 +1938,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X POST \"http://localhost:3000/api/dict/items\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"dictType\": \"sys_demo\",\n      \"dictLabel\": \"示例标签\",\n      \"dictValue\": \"1\",\n      \"sort\": 1,\n      \"status\": 1,\n      \"remark\": \"示例备注\"\n    }'",
+          "curl": "curl -X POST \"http://localhost:3100/api/dict/items\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"dictType\": \"sys_demo\",\n      \"dictLabel\": \"示例标签\",\n      \"dictValue\": \"1\",\n      \"sort\": 1,\n      \"status\": 1,\n      \"remark\": \"示例备注\"\n    }'",
           "requestBody": {
             "dictType": "sys_demo",
             "dictLabel": "示例标签",
@@ -1993,7 +1993,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X POST \"http://localhost:3000/api/dict/types\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"dictName\": \"示例字典\",\n      \"dictType\": \"sys_demo\",\n      \"status\": 1,\n      \"remark\": \"示例备注\"\n    }'",
+          "curl": "curl -X POST \"http://localhost:3100/api/dict/types\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"dictName\": \"示例字典\",\n      \"dictType\": \"sys_demo\",\n      \"status\": 1,\n      \"remark\": \"示例备注\"\n    }'",
           "requestBody": {
             "dictName": "示例字典",
             "dictType": "sys_demo",
@@ -2062,7 +2062,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X PUT \"http://localhost:3000/api/dict/items/1\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"dictLabel\": \"示例标签\",\n      \"dictValue\": \"1\",\n      \"sort\": 1,\n      \"status\": 1,\n      \"remark\": \"示例备注\"\n    }'",
+          "curl": "curl -X PUT \"http://localhost:3100/api/dict/items/1\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"dictLabel\": \"示例标签\",\n      \"dictValue\": \"1\",\n      \"sort\": 1,\n      \"status\": 1,\n      \"remark\": \"示例备注\"\n    }'",
           "pathParams": {
             "id": "1"
           },
@@ -2103,7 +2103,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X PUT \"http://localhost:3000/api/dict/items/1/status\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"status\": 1\n    }'",
+          "curl": "curl -X PUT \"http://localhost:3100/api/dict/items/1/status\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"status\": 1\n    }'",
           "pathParams": {
             "id": "1"
           },
@@ -2156,7 +2156,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X PUT \"http://localhost:3000/api/dict/types/1\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"dictName\": \"示例字典\",\n      \"status\": 1,\n      \"remark\": \"示例备注\"\n    }'",
+          "curl": "curl -X PUT \"http://localhost:3100/api/dict/types/1\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"dictName\": \"示例字典\",\n      \"status\": 1,\n      \"remark\": \"示例备注\"\n    }'",
           "pathParams": {
             "id": "1"
           },
@@ -2195,7 +2195,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X PUT \"http://localhost:3000/api/dict/types/1/status\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"status\": 1\n    }'",
+          "curl": "curl -X PUT \"http://localhost:3100/api/dict/types/1/status\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"status\": 1\n    }'",
           "pathParams": {
             "id": "1"
           },
@@ -2224,7 +2224,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X DELETE \"http://localhost:3000/api/dict/items\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"ids\": []\n    }'",
+          "curl": "curl -X DELETE \"http://localhost:3100/api/dict/items\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"ids\": []\n    }'",
           "requestBody": {
             "ids": []
           }
@@ -2250,7 +2250,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X DELETE \"http://localhost:3000/api/dict/items/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X DELETE \"http://localhost:3100/api/dict/items/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
             "id": "1"
           }
@@ -2276,7 +2276,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X DELETE \"http://localhost:3000/api/dict/types\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"ids\": []\n    }'",
+          "curl": "curl -X DELETE \"http://localhost:3100/api/dict/types\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"ids\": []\n    }'",
           "requestBody": {
             "ids": []
           }
@@ -2302,7 +2302,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X DELETE \"http://localhost:3000/api/dict/types/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X DELETE \"http://localhost:3100/api/dict/types/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
             "id": "1"
           }
@@ -2355,7 +2355,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/configs?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/configs?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
             "page": 1,
             "pageSize": 10
@@ -2382,7 +2382,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/configs/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/configs/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
             "id": "1"
           }
@@ -2406,7 +2406,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/configs/data/sys.demo.key\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/configs/data/sys.demo.key\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
             "configKey": "sys.demo.key"
           }
@@ -2456,7 +2456,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X POST \"http://localhost:3000/api/configs\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"configName\": \"示例参数\",\n      \"configKey\": \"sys.demo.key\",\n      \"configValue\": \"示例值\",\n      \"remark\": \"示例备注\"\n    }'",
+          "curl": "curl -X POST \"http://localhost:3100/api/configs\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"configName\": \"示例参数\",\n      \"configKey\": \"sys.demo.key\",\n      \"configValue\": \"示例值\",\n      \"remark\": \"示例备注\"\n    }'",
           "requestBody": {
             "configName": "示例参数",
             "configKey": "sys.demo.key",
@@ -2509,7 +2509,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X PUT \"http://localhost:3000/api/configs/1\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"configName\": \"示例参数\",\n      \"configValue\": \"示例值\",\n      \"remark\": \"示例备注\"\n    }'",
+          "curl": "curl -X PUT \"http://localhost:3100/api/configs/1\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"configName\": \"示例参数\",\n      \"configValue\": \"示例值\",\n      \"remark\": \"示例备注\"\n    }'",
           "pathParams": {
             "id": "1"
           },
@@ -2540,7 +2540,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X DELETE \"http://localhost:3000/api/configs/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X DELETE \"http://localhost:3100/api/configs/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
             "id": "1"
           }
@@ -2579,7 +2579,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/tasks?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/tasks?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
             "page": 1,
             "pageSize": 10
@@ -2606,7 +2606,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/tasks/log-archive/logs\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/tasks/log-archive/logs\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
             "name": "log-archive"
           }
@@ -2632,7 +2632,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X POST \"http://localhost:3000/api/tasks/log-archive/run\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X POST \"http://localhost:3100/api/tasks/log-archive/run\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
             "name": "log-archive"
           }
@@ -2671,7 +2671,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/logs/http?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/logs/http?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
             "page": 1,
             "pageSize": 10
@@ -2698,7 +2698,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/logs/http/detail/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/logs/http/detail/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
             "id": "1"
           }
@@ -2714,7 +2714,7 @@ export const API_DOCS: ApiDocGroup[] = [
         "isPublic": false,
         "action": "",
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/logs/http/export\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/logs/http/export\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "isRawResponse": true
         }
       },
@@ -2746,7 +2746,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/logs/login?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/logs/login?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
             "page": 1,
             "pageSize": 10
@@ -2763,7 +2763,7 @@ export const API_DOCS: ApiDocGroup[] = [
         "isPublic": false,
         "action": "",
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/logs/login/export\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/logs/login/export\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "isRawResponse": true
         }
       },
@@ -2795,7 +2795,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/logs/operation?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/logs/operation?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
             "page": 1,
             "pageSize": 10
@@ -2812,7 +2812,7 @@ export const API_DOCS: ApiDocGroup[] = [
         "isPublic": false,
         "action": "",
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/logs/operation/export\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/logs/operation/export\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "isRawResponse": true
         }
       },
@@ -2826,7 +2826,7 @@ export const API_DOCS: ApiDocGroup[] = [
         "isPublic": false,
         "action": "日志管理 · 清空 HTTP 日志",
         "examples": {
-          "curl": "curl -X DELETE \"http://localhost:3000/api/logs/http\" \\\n  -H \"Authorization: Bearer <accessToken>\""
+          "curl": "curl -X DELETE \"http://localhost:3100/api/logs/http\" \\\n  -H \"Authorization: Bearer <accessToken>\""
         }
       },
       {
@@ -2849,7 +2849,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X DELETE \"http://localhost:3000/api/logs/http/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X DELETE \"http://localhost:3100/api/logs/http/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
             "id": "1"
           }
@@ -2875,7 +2875,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X DELETE \"http://localhost:3000/api/logs/http/batch\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"ids\": []\n    }'",
+          "curl": "curl -X DELETE \"http://localhost:3100/api/logs/http/batch\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"ids\": []\n    }'",
           "requestBody": {
             "ids": []
           }
@@ -2901,7 +2901,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X DELETE \"http://localhost:3000/api/logs/login/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X DELETE \"http://localhost:3100/api/logs/login/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
             "id": "1"
           }
@@ -2927,7 +2927,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X DELETE \"http://localhost:3000/api/logs/login/batch\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"ids\": []\n    }'",
+          "curl": "curl -X DELETE \"http://localhost:3100/api/logs/login/batch\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"ids\": []\n    }'",
           "requestBody": {
             "ids": []
           }
@@ -2953,7 +2953,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X DELETE \"http://localhost:3000/api/logs/operation/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X DELETE \"http://localhost:3100/api/logs/operation/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
             "id": "1"
           }
@@ -2979,7 +2979,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X DELETE \"http://localhost:3000/api/logs/operation/batch\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"ids\": []\n    }'",
+          "curl": "curl -X DELETE \"http://localhost:3100/api/logs/operation/batch\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"ids\": []\n    }'",
           "requestBody": {
             "ids": []
           }
@@ -3081,7 +3081,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/files?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/files?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
             "page": 1,
             "pageSize": 10
@@ -3108,7 +3108,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/files/1/download\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/files/1/download\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
             "id": "1"
           },
@@ -3135,7 +3135,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/files/check?hash=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/files/check?hash=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
             "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
           }
@@ -3169,7 +3169,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/files/quota?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/files/quota?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
             "page": 1,
             "pageSize": 10
@@ -3204,7 +3204,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/files/types?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/files/types?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
             "page": 1,
             "pageSize": 10
@@ -3239,7 +3239,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/files/uploaders?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/files/uploaders?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
             "page": 1,
             "pageSize": 10
@@ -3274,7 +3274,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X POST \"http://localhost:3000/api/files/upload\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"bizType\": \"示例值\",\n      \"bizId\": 1\n    }'",
+          "curl": "curl -X POST \"http://localhost:3100/api/files/upload\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"bizType\": \"示例值\",\n      \"bizId\": 1\n    }'",
           "requestBody": {
             "bizType": "示例值",
             "bizId": 1
@@ -3301,7 +3301,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X DELETE \"http://localhost:3000/api/files/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X DELETE \"http://localhost:3100/api/files/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
             "id": "1"
           }
@@ -3340,7 +3340,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/gen/tables?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/gen/tables?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
             "page": 1,
             "pageSize": 10
@@ -3367,7 +3367,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/gen/tables/sys_config\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/gen/tables/sys_config\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
             "tableName": "sys_config"
           }
@@ -3393,7 +3393,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X POST \"http://localhost:3000/api/gen/create\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"overwrite\": false\n    }'",
+          "curl": "curl -X POST \"http://localhost:3100/api/gen/create\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"overwrite\": false\n    }'",
           "requestBody": {
             "overwrite": false
           }
@@ -3473,7 +3473,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X POST \"http://localhost:3000/api/gen/download\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"tableName\": \"sys_config\",\n      \"moduleName\": \"demo\",\n      \"businessName\": \"demo\",\n      \"author\": \"作者\",\n      \"isTree\": false,\n      \"treeParentField\": \"示例值\",\n      \"columnOptions\": []\n    }'",
+          "curl": "curl -X POST \"http://localhost:3100/api/gen/download\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"tableName\": \"sys_config\",\n      \"moduleName\": \"demo\",\n      \"businessName\": \"demo\",\n      \"author\": \"作者\",\n      \"isTree\": false,\n      \"treeParentField\": \"示例值\",\n      \"columnOptions\": []\n    }'",
           "requestBody": {
             "tableName": "sys_config",
             "moduleName": "demo",
@@ -3560,7 +3560,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X POST \"http://localhost:3000/api/gen/preview\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"tableName\": \"sys_config\",\n      \"moduleName\": \"demo\",\n      \"businessName\": \"demo\",\n      \"author\": \"作者\",\n      \"isTree\": false,\n      \"treeParentField\": \"示例值\",\n      \"columnOptions\": []\n    }'",
+          "curl": "curl -X POST \"http://localhost:3100/api/gen/preview\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"tableName\": \"sys_config\",\n      \"moduleName\": \"demo\",\n      \"businessName\": \"demo\",\n      \"author\": \"作者\",\n      \"isTree\": false,\n      \"treeParentField\": \"示例值\",\n      \"columnOptions\": []\n    }'",
           "requestBody": {
             "tableName": "sys_config",
             "moduleName": "demo",
@@ -3585,7 +3585,7 @@ export const API_DOCS: ApiDocGroup[] = [
         "isPublic": false,
         "action": "个人中心 · 更换头像",
         "examples": {
-          "curl": "curl -X POST \"http://localhost:3000/api/profile/avatar\" \\\n  -H \"Authorization: Bearer <accessToken>\""
+          "curl": "curl -X POST \"http://localhost:3100/api/profile/avatar\" \\\n  -H \"Authorization: Bearer <accessToken>\""
         }
       },
       {
@@ -3638,7 +3638,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X PUT \"http://localhost:3000/api/profile\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"nickname\": \"示例用户\",\n      \"email\": \"demo@example.com\",\n      \"phone\": \"13800138000\",\n      \"gender\": \"1\",\n      \"avatar\": \"/static/2026/avatar.png\"\n    }'",
+          "curl": "curl -X PUT \"http://localhost:3100/api/profile\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"nickname\": \"示例用户\",\n      \"email\": \"demo@example.com\",\n      \"phone\": \"13800138000\",\n      \"gender\": \"1\",\n      \"avatar\": \"/static/2026/avatar.png\"\n    }'",
           "requestBody": {
             "nickname": "示例用户",
             "email": "demo@example.com",
@@ -3674,7 +3674,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X PUT \"http://localhost:3000/api/profile/password\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"oldPassword\": \"123456\",\n      \"newPassword\": \"123456\"\n    }'",
+          "curl": "curl -X PUT \"http://localhost:3100/api/profile/password\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"oldPassword\": \"123456\",\n      \"newPassword\": \"123456\"\n    }'",
           "requestBody": {
             "oldPassword": "123456",
             "newPassword": "123456"
@@ -3712,7 +3712,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/docs?page=1&pageSize=10\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/docs?page=1&pageSize=10\"",
           "query": {
             "page": 1,
             "pageSize": 10
@@ -3727,7 +3727,7 @@ export const API_DOCS: ApiDocGroup[] = [
         "isPublic": true,
         "action": "",
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/docs/openapi.json\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/docs/openapi.json\"",
           "isRawResponse": true
         }
       }
@@ -3778,7 +3778,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/monitor/online?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/monitor/online?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
             "page": 1,
             "pageSize": 10
@@ -3805,7 +3805,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X DELETE \"http://localhost:3000/api/monitor/online/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X DELETE \"http://localhost:3100/api/monitor/online/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
             "sid": "1"
           }
@@ -3831,7 +3831,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X DELETE \"http://localhost:3000/api/monitor/online/user/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X DELETE \"http://localhost:3100/api/monitor/online/user/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
             "userId": "1"
           }
@@ -3870,7 +3870,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/monitor/server?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/monitor/server?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
             "page": 1,
             "pageSize": 10
@@ -3929,7 +3929,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/notices?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/notices?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
             "page": 1,
             "pageSize": 10
@@ -3962,7 +3962,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/notices/unread-count?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/notices/unread-count?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
             "page": 1,
             "pageSize": 10
@@ -3979,7 +3979,7 @@ export const API_DOCS: ApiDocGroup[] = [
         "isPublic": false,
         "action": "通知中心 · 发布通知",
         "examples": {
-          "curl": "curl -X POST \"http://localhost:3000/api/notices\" \\\n  -H \"Authorization: Bearer <accessToken>\""
+          "curl": "curl -X POST \"http://localhost:3100/api/notices\" \\\n  -H \"Authorization: Bearer <accessToken>\""
         }
       },
       {
@@ -4000,7 +4000,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X PUT \"http://localhost:3000/api/notices/1/read\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X PUT \"http://localhost:3100/api/notices/1/read\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
             "id": "1"
           }
@@ -4014,7 +4014,7 @@ export const API_DOCS: ApiDocGroup[] = [
         "isPublic": false,
         "action": "通知中心 · 全部已读",
         "examples": {
-          "curl": "curl -X PUT \"http://localhost:3000/api/notices/read-all\" \\\n  -H \"Authorization: Bearer <accessToken>\""
+          "curl": "curl -X PUT \"http://localhost:3100/api/notices/read-all\" \\\n  -H \"Authorization: Bearer <accessToken>\""
         }
       },
       {
@@ -4025,7 +4025,7 @@ export const API_DOCS: ApiDocGroup[] = [
         "isPublic": false,
         "action": "通知中心 · 清空通知",
         "examples": {
-          "curl": "curl -X DELETE \"http://localhost:3000/api/notices\" \\\n  -H \"Authorization: Bearer <accessToken>\""
+          "curl": "curl -X DELETE \"http://localhost:3100/api/notices\" \\\n  -H \"Authorization: Bearer <accessToken>\""
         }
       },
       {
@@ -4046,7 +4046,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X DELETE \"http://localhost:3000/api/notices/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X DELETE \"http://localhost:3100/api/notices/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
             "id": "1"
           }
@@ -4083,7 +4083,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api?page=1&pageSize=10\"",
+          "curl": "curl -X GET \"http://localhost:3100/api?page=1&pageSize=10\"",
           "query": {
             "page": 1,
             "pageSize": 10
@@ -4116,7 +4116,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/health/live?page=1&pageSize=10\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/health/live?page=1&pageSize=10\"",
           "query": {
             "page": 1,
             "pageSize": 10
@@ -4149,7 +4149,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/health/ready?page=1&pageSize=10\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/health/ready?page=1&pageSize=10\"",
           "query": {
             "page": 1,
             "pageSize": 10
@@ -4210,7 +4210,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/depts?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/depts?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
             "page": 1,
             "pageSize": 10
@@ -4237,7 +4237,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/depts/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/depts/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
             "id": "1"
           }
@@ -4271,7 +4271,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X GET \"http://localhost:3000/api/depts/tree?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X GET \"http://localhost:3100/api/depts/tree?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "query": {
             "page": 1,
             "pageSize": 10
@@ -4354,7 +4354,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X POST \"http://localhost:3000/api/depts\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"parentId\": 1,\n      \"deptType\": 1,\n      \"deptName\": \"示例部门\",\n      \"leader\": \"张三\",\n      \"phone\": \"13800138000\",\n      \"email\": \"demo@example.com\",\n      \"sort\": 1,\n      \"status\": 1\n    }'",
+          "curl": "curl -X POST \"http://localhost:3100/api/depts\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"parentId\": 1,\n      \"deptType\": 1,\n      \"deptName\": \"示例部门\",\n      \"leader\": \"张三\",\n      \"phone\": \"13800138000\",\n      \"email\": \"demo@example.com\",\n      \"sort\": 1,\n      \"status\": 1\n    }'",
           "requestBody": {
             "parentId": 1,
             "deptType": 1,
@@ -4451,7 +4451,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X PUT \"http://localhost:3000/api/depts/1\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"parentId\": 1,\n      \"deptType\": 1,\n      \"deptName\": \"示例部门\",\n      \"leader\": \"张三\",\n      \"phone\": \"13800138000\",\n      \"email\": \"demo@example.com\",\n      \"sort\": 1,\n      \"status\": 1\n    }'",
+          "curl": "curl -X PUT \"http://localhost:3100/api/depts/1\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"parentId\": 1,\n      \"deptType\": 1,\n      \"deptName\": \"示例部门\",\n      \"leader\": \"张三\",\n      \"phone\": \"13800138000\",\n      \"email\": \"demo@example.com\",\n      \"sort\": 1,\n      \"status\": 1\n    }'",
           "pathParams": {
             "id": "1"
           },
@@ -4487,7 +4487,7 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X DELETE \"http://localhost:3000/api/depts/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "curl": "curl -X DELETE \"http://localhost:3100/api/depts/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
             "id": "1"
           }

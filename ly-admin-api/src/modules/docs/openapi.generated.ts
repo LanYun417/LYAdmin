@@ -14,7 +14,7 @@ export const OPENAPI_DOC: Record<string, unknown> = {
   },
   "servers": [
     {
-      "url": "http://localhost:3000",
+      "url": "http://localhost:3100",
       "description": "本地开发环境"
     }
   ],

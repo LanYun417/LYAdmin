@@ -108,8 +108,8 @@ function requireEnv(name: string, hint?: string): string {
 export const config = {
   /** 运行环境 */
   env: process.env.NODE_ENV ?? 'development',
-  /** 服务端口 */
-  port: toNumber(process.env.PORT, 3000),
+  /** 服务端口（默认 3100，与 ly-admin-api/.env、前端 proxy、dev.mjs 保持一致） */
+  port: toNumber(process.env.PORT, 3100),
   /**
    * 反向代理信任跳数。默认 0 = 不信任 `X-Forwarded-For`，仅当服务确实部署在
    * 反向代理之后才设置。默认不启用可避免攻击者伪造来源 IP、绕过频率限制并污染审计日志。

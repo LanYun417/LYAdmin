@@ -62,9 +62,8 @@ export default defineConfig(({ mode }) => {
       strictPort: true,
       open: true,
       proxy: {
-        // 后端开发端口 3100：与同机其它项目的后端（如 short-sentence 占 3000）隔离。
-        // ⚠️ 改这里必须同步 ly-admin-api/.env 的 PORT 与 scripts/dev.mjs 的 API_PORT，
-        // 否则 dev 脚本会「复用」端口上的别的后端，导致菜单/数据串台。
+        // 后端端口 3100：与 ly-admin-api/.env 的 PORT、scripts/dev.mjs 的 API_PORT 保持一致。
+        // ⚠️ 改端口必须三处同步，否则 dev 脚本会把端口上已有的服务当成后端复用。
         '/api': {
           target: 'http://localhost:3100',
           changeOrigin: true,

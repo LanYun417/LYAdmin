@@ -51,9 +51,7 @@ history 模式需服务端回退。同源部署由后端托管 `ly-admin-api/web
 菜单由后端按角色下发。空说明种子未写入，`cd ly-admin-api && npm run seed`（幂等）；普通角色在「角色管理 → 菜单授权」勾选。
 
 **Q15：端口被占用（3100 / 5173）？**
-`vite.config.ts` 为 `strictPort: true`，端口占用直接报错。后端改 `ly-admin-api/.env` 的 `PORT`，前端改 `VITE_PORT`，并同步 `vite.config.ts` 的 proxy `target` 与 `scripts/dev.mjs` 的 `API_PORT`（默认都是 **3100**）。
-
-> ⚠️ 别把开发端口改回 3000：同机其它项目（如 short-sentence）常占着 3000，而 `dev.mjs` 在端口有响应时会「复用已有后端」，结果本项目连到别人的库——典型症状是侧边栏冒出不属于本项目的菜单。
+`vite.config.ts` 为 `strictPort: true`，端口占用直接报错。后端改 `ly-admin-api/.env` 的 `PORT`，前端改 `VITE_PORT`，并同步 `vite.config.ts` 的 proxy `target` 与 `scripts/dev.mjs` 的 `API_PORT`（默认都是 **3100**）。三处不一致时，`dev.mjs` 会把端口上已有的服务当成后端复用，表现为数据串台。
 
 **Q16：点菜单后内容区整块空白，刷新页面又正常？**
 这是 `<transition>` 包 `<keep-alive>` 的已知冲突：导航到**本次会话首次访问**的页面时，旧页面已移除、新页面永不挂载，

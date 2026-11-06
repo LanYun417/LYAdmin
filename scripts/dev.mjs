@@ -40,9 +40,8 @@ const ROOT_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'
 /**
  * 后端端口：与 ly-admin-api/.env 的 PORT 保持一致，可用 API_PORT 覆盖。
  *
- * 默认 3100 而非 3000，是为了与同机其它项目的后端隔离（例如 short-sentence 项目固定占 3000）。
- * 本脚本在端口已有响应时会「复用该后端」，若两者共用 3000，会把别的项目后端当成自己的，
- * 表现为菜单、字典等数据串台（曾把短句项目的「短句管理」菜单串进 ly-admin）。
+ * 默认 3100。本脚本在端口已有响应时会「复用该后端」，
+ * 所以端口必须与 vite.config.ts 的 proxy.target 一致，否则会连到端口上别的服务。
  */
 const API_PORT = Number(process.env.API_PORT ?? 3100);
 

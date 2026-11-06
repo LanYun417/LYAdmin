@@ -164,7 +164,7 @@ function joinPath(controllerPath, methodPath) {
 /* ----------------------------- 请求 / 响应示例 ----------------------------- */
 
 /** 示例用的主机地址（仅文档展示，不影响运行）。 */
-const DOC_BASE_URL = 'http://localhost:3000';
+const DOC_BASE_URL = 'http://localhost:3100';
 
 /** 字段名 → 更贴合业务语义的示例值；未命中则按类型给通用值。 */
 const SAMPLE_VALUES = {
