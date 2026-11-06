@@ -202,7 +202,7 @@ watch(
            不要再外套 el-scrollbar：el-table 定高后自己就是滚动容器，多包一层只会
            形成嵌套滚动，且 .el-scrollbar__view 是 inline-block，容易把表格量成 0 高。 -->
       <div class="min-h-0 flex-1">
-        <el-table v-loading="loading" :data="list" height="100%">
+        <el-table v-loading="loading" :data="list" height="100%" border>
           <el-table-column prop="dictLabel" label="字典标签" min-width="140" show-overflow-tooltip />
           <el-table-column prop="dictValue" label="字典值" min-width="120" show-overflow-tooltip />
           <el-table-column prop="sort" label="排序" width="80" align="center" />

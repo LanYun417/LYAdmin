@@ -9,8 +9,7 @@ import { formatDate, formatDateTime, formatDuration } from '@/utils/format';
 import { downloadBlob } from '@/utils/download';
 import type { OperationLog } from '@/types/api';
 import BasicDialog from '@/components/BasicDialog/index.vue';
-import Pagination from '@/components/Pagination/index.vue';
-import SearchForm from '@/components/SearchForm/index.vue';
+import TablePage from '@/components/TablePage/index.vue';
 
 defineOptions({ name: 'LogOperation' });
 
@@ -146,15 +145,31 @@ function methodTag(method: string): EpTagType {
 </script>
 
 <template>
+  <!-- 保持单根：AppMain 的 <transition> 要求页面只有一个根元素 -->
   <div class="log-operation-page">
-    <SearchForm @search="search" @reset="reset">
-      <el-form-item label="模块">
-        <el-input v-model="query.module" placeholder="请输入模块" clearable />
-      </el-form-item>
-      <el-form-item label="操作人">
-        <el-input v-model="query.username" placeholder="请输入操作人" clearable @keyup.enter="search" />
-      </el-form-item>
-      <template #advanced>
+    <TablePage
+      v-model:current-page="query.page"
+      v-model:page-size="query.pageSize"
+      title="操作日志"
+      :loading="loading"
+      :data="list"
+      :total="total"
+      @search="search"
+      @reset="reset"
+      @size-change="changePageSize"
+      @current-change="changePage"
+      @selection-change="handleSelectionChange"
+    >
+      <template #filter>
+        <el-form-item label="模块">
+          <el-input v-model="query.module" placeholder="请输入模块" clearable />
+        </el-form-item>
+        <el-form-item label="操作人">
+          <el-input v-model="query.username" placeholder="请输入操作人" clearable @keyup.enter="search" />
+        </el-form-item>
+      </template>
+
+      <template #filterAdvanced>
         <el-form-item label="结果">
           <el-select v-model="query.result" placeholder="全部" clearable style="width: 140px">
             <el-option label="成功" :value="1" />
@@ -172,11 +187,8 @@ function methodTag(method: string): EpTagType {
           />
         </el-form-item>
       </template>
-    </SearchForm>
 
-    <el-card shadow="never">
-      <div class="flex flex-wrap items-center justify-between gap-y-2 mb-3">
-        <span class="text-[15px] font-semibold text-ink">操作日志</span>
+      <template #toolbar>
         <div class="flex flex-wrap items-center gap-2">
           <el-button @click="getList">
             <template #icon><i class="bi bi-arrow-clockwise" /></template>刷新</el-button
@@ -197,67 +209,57 @@ function methodTag(method: string): EpTagType {
             删除{{ selected.length > 0 ? `（${selected.length}）` : '' }}
           </el-button>
         </div>
-      </div>
+      </template>
 
-      <el-table v-loading="loading" :data="list" @selection-change="handleSelectionChange">
-        <el-table-column type="selection" width="48" align="center" />
-        <el-table-column prop="module" label="模块" width="120" />
-        <el-table-column prop="action" label="动作" width="110" />
-        <el-table-column prop="username" label="操作人" width="120" />
-        <el-table-column prop="method" label="方法" width="90" align="center">
-          <template #default="{ row }">
-            <el-tag :type="methodTag(row.method)" size="small">{{ row.method }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="url" label="URL" min-width="180" show-overflow-tooltip />
-        <el-table-column prop="params" label="参数" min-width="200" show-overflow-tooltip />
-        <el-table-column label="变更留痕" width="110" align="center">
-          <template #default="{ row }">
-            <el-button
-              v-if="hasSnapshot(row as OperationLog)"
-              type="primary"
-              link
-              @click="openSnapshot(row as OperationLog)"
-            >
-              查看变更
-            </el-button>
-            <span v-else class="text-muted">-</span>
-          </template>
-        </el-table-column>
-        <el-table-column label="耗时" width="100" align="center">
-          <template #default="{ row }">{{ formatDuration(row.duration) }}</template>
-        </el-table-column>
-        <el-table-column label="结果" width="90" align="center">
-          <template #default="{ row }">
-            <el-tag :type="row.result === 1 ? 'success' : 'danger'" size="small">
-              {{ row.result === 1 ? '成功' : '失败' }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="ip" label="IP" width="140" />
-        <el-table-column prop="location" label="归属地" width="160" show-overflow-tooltip>
-          <template #default="{ row }">{{ row.location || '-' }}</template>
-        </el-table-column>
-        <el-table-column label="操作时间" width="180">
-          <template #default="{ row }">{{ formatDateTime(row.createdAt) }}</template>
-        </el-table-column>
-        <el-table-column label="操作" width="80" fixed="right" align="center">
-          <template #default="{ row }">
-            <el-button v-permission="'log:operation:remove'" type="danger" link @click="removeOne(row as OperationLog)">
-              删除
-            </el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-
-      <Pagination
-        v-model:current-page="query.page"
-        v-model:page-size="query.pageSize"
-        :total="total"
-        @size-change="changePageSize"
-        @current-change="changePage"
-      />
-    </el-card>
+      <el-table-column type="selection" width="48" align="center" />
+      <el-table-column prop="module" label="模块" width="120" />
+      <el-table-column prop="action" label="动作" width="110" />
+      <el-table-column prop="username" label="操作人" width="120" />
+      <el-table-column prop="method" label="方法" width="90" align="center">
+        <template #default="{ row }">
+          <el-tag :type="methodTag(row.method)" size="small">{{ row.method }}</el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column prop="url" label="URL" min-width="180" show-overflow-tooltip />
+      <el-table-column prop="params" label="参数" min-width="200" show-overflow-tooltip />
+      <el-table-column label="变更留痕" width="110" align="center">
+        <template #default="{ row }">
+          <el-button
+            v-if="hasSnapshot(row as OperationLog)"
+            type="primary"
+            link
+            @click="openSnapshot(row as OperationLog)"
+          >
+            查看变更
+          </el-button>
+          <span v-else class="text-muted">-</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="耗时" width="100" align="center">
+        <template #default="{ row }">{{ formatDuration(row.duration) }}</template>
+      </el-table-column>
+      <el-table-column label="结果" width="90" align="center">
+        <template #default="{ row }">
+          <el-tag :type="row.result === 1 ? 'success' : 'danger'" size="small">
+            {{ row.result === 1 ? '成功' : '失败' }}
+          </el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column prop="ip" label="IP" width="140" />
+      <el-table-column prop="location" label="归属地" width="160" show-overflow-tooltip>
+        <template #default="{ row }">{{ row.location || '-' }}</template>
+      </el-table-column>
+      <el-table-column label="操作时间" width="180">
+        <template #default="{ row }">{{ formatDateTime(row.createdAt) }}</template>
+      </el-table-column>
+      <el-table-column label="操作" width="80" fixed="right" align="center">
+        <template #default="{ row }">
+          <el-button v-permission="'log:operation:remove'" type="danger" link @click="removeOne(row as OperationLog)">
+            删除
+          </el-button>
+        </template>
+      </el-table-column>
+    </TablePage>
 
     <!-- 变更留痕：字段级前后对比（只对比值是否相等，不做文本 diff） -->
     <BasicDialog v-model="snapshotVisible" title="变更留痕" width="720px" :show-footer="false">

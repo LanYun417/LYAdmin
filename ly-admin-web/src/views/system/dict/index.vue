@@ -9,8 +9,7 @@ import { clearDictCache, useStatusDict } from '@/composables/useDict';
 import { formatDateTime } from '@/utils/format';
 import { hasPermission } from '@/utils/permission';
 import type { DictType } from '@/types/api';
-import Pagination from '@/components/Pagination/index.vue';
-import SearchForm from '@/components/SearchForm/index.vue';
+import TablePage from '@/components/TablePage/index.vue';
 import DictTypeForm from './components/DictTypeForm.vue';
 import DictItemDrawer from './components/DictItemDrawer.vue';
 
@@ -119,25 +118,37 @@ async function handleDelete(row: DictType): Promise<void> {
 </script>
 
 <template>
+  <!-- 保持单根：AppMain 的 <transition> 要求页面只有一个根元素 -->
   <div class="dict-page">
-    <SearchForm @search="search" @reset="reset">
-      <el-form-item label="字典名称">
-        <el-input v-model="query.dictName" placeholder="请输入字典名称" clearable @keyup.enter="search" />
-      </el-form-item>
-      <el-form-item label="类型编码">
-        <el-input v-model="query.dictType" placeholder="请输入类型编码" clearable @keyup.enter="search" />
-      </el-form-item>
-      <el-form-item label="状态">
-        <el-select v-model="query.status" placeholder="全部" clearable style="width: 140px">
-          <el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value" />
-        </el-select>
-      </el-form-item>
-    </SearchForm>
+    <TablePage
+      v-model:current-page="query.page"
+      v-model:page-size="query.pageSize"
+      title="字典类型"
+      :loading="loading"
+      :data="list"
+      :total="total"
+      @search="search"
+      @reset="reset"
+      @size-change="changePageSize"
+      @current-change="changePage"
+      @selection-change="handleSelectionChange"
+    >
+      <template #filter>
+        <el-form-item label="字典名称">
+          <el-input v-model="query.dictName" placeholder="请输入字典名称" clearable @keyup.enter="search" />
+        </el-form-item>
+        <el-form-item label="类型编码">
+          <el-input v-model="query.dictType" placeholder="请输入类型编码" clearable @keyup.enter="search" />
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-select v-model="query.status" placeholder="全部" clearable style="width: 140px">
+            <el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+        </el-form-item>
+      </template>
 
-    <el-card shadow="never">
-      <div class="flex flex-wrap items-center justify-between gap-y-2 mb-3">
-        <span class="text-[15px] font-semibold text-ink">字典类型</span>
-        <div class="flex items-center gap-2">
+      <template #toolbar>
+        <div class="flex flex-wrap items-center gap-2">
           <el-button
             v-permission="'system:dict:remove'"
             type="danger"
@@ -153,50 +164,40 @@ async function handleDelete(row: DictType): Promise<void> {
             新增字典类型
           </el-button>
         </div>
-      </div>
+      </template>
 
-      <el-table v-loading="loading" :data="list" @selection-change="handleSelectionChange">
-        <el-table-column type="selection" width="48" align="center" />
-        <el-table-column prop="dictName" label="字典名称" min-width="150" show-overflow-tooltip />
-        <el-table-column prop="dictType" label="类型编码" min-width="180" show-overflow-tooltip />
-        <el-table-column label="状态" width="100" align="center">
-          <template #default="{ row }">
-            <el-switch
-              :model-value="row.status === 1"
-              :disabled="!hasPermission('system:dict:edit')"
-              @change="handleToggleStatus(row as DictType)"
-            />
-          </template>
-        </el-table-column>
-        <el-table-column prop="remark" label="备注" min-width="160" show-overflow-tooltip />
-        <el-table-column label="创建时间" width="180">
-          <template #default="{ row }">{{ formatDateTime(row.createdAt) }}</template>
-        </el-table-column>
-        <el-table-column label="操作" width="220" fixed="right">
-          <template #default="{ row }">
-            <div class="table-action">
-              <el-button v-permission="'system:dict:edit'" type="primary" link @click="handleEdit(row as DictType)">
-                编辑
-              </el-button>
-              <el-button v-permission="'system:dict:list'" type="warning" link @click="handleItems(row as DictType)">
-                字典项
-              </el-button>
-              <el-button v-permission="'system:dict:remove'" type="danger" link @click="handleDelete(row as DictType)">
-                删除
-              </el-button>
-            </div>
-          </template>
-        </el-table-column>
-      </el-table>
-
-      <Pagination
-        v-model:current-page="query.page"
-        v-model:page-size="query.pageSize"
-        :total="total"
-        @size-change="changePageSize"
-        @current-change="changePage"
-      />
-    </el-card>
+      <el-table-column type="selection" width="48" align="center" />
+      <el-table-column prop="dictName" label="字典名称" min-width="150" show-overflow-tooltip />
+      <el-table-column prop="dictType" label="类型编码" min-width="180" show-overflow-tooltip />
+      <el-table-column label="状态" width="100" align="center">
+        <template #default="{ row }">
+          <el-switch
+            :model-value="row.status === 1"
+            :disabled="!hasPermission('system:dict:edit')"
+            @change="handleToggleStatus(row as DictType)"
+          />
+        </template>
+      </el-table-column>
+      <el-table-column prop="remark" label="备注" min-width="160" show-overflow-tooltip />
+      <el-table-column label="创建时间" width="180">
+        <template #default="{ row }">{{ formatDateTime(row.createdAt) }}</template>
+      </el-table-column>
+      <el-table-column label="操作" width="220" fixed="right">
+        <template #default="{ row }">
+          <div class="table-action">
+            <el-button v-permission="'system:dict:edit'" type="primary" link @click="handleEdit(row as DictType)">
+              编辑
+            </el-button>
+            <el-button v-permission="'system:dict:list'" type="warning" link @click="handleItems(row as DictType)">
+              字典项
+            </el-button>
+            <el-button v-permission="'system:dict:remove'" type="danger" link @click="handleDelete(row as DictType)">
+              删除
+            </el-button>
+          </div>
+        </template>
+      </el-table-column>
+    </TablePage>
 
     <DictTypeForm v-model="formVisible" :row="editingRow" @success="getList" />
 

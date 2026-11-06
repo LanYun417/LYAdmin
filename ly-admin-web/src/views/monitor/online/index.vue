@@ -12,8 +12,7 @@ import { forceLogoutSessionApi, forceLogoutUserApi, getOnlineSessionsApi } from 
 import { useTable } from '@/composables/useTable';
 import { formatDateTime } from '@/utils/format';
 import type { OnlineSession } from '@/types/api';
-import Pagination from '@/components/Pagination/index.vue';
-import SearchForm from '@/components/SearchForm/index.vue';
+import TablePage from '@/components/TablePage/index.vue';
 
 defineOptions({ name: 'MonitorOnline' });
 
@@ -62,76 +61,80 @@ async function handleForceLogoutAll(row: OnlineSession): Promise<void> {
 </script>
 
 <template>
+  <!-- 保持单根：AppMain 的 <transition> 要求页面只有一个根元素 -->
   <div class="monitor-online-page">
-    <SearchForm @search="search" @reset="reset">
-      <el-form-item label="账号">
-        <el-input
-          v-model="query.username"
-          placeholder="请输入账号"
-          clearable
-          style="width: 160px"
-          @keyup.enter="search"
-        />
-      </el-form-item>
-      <el-form-item label="登录 IP">
-        <el-input v-model="query.ip" placeholder="精确匹配" clearable style="width: 160px" @keyup.enter="search" />
-      </el-form-item>
-    </SearchForm>
+    <TablePage
+      v-model:current-page="query.page"
+      v-model:page-size="query.pageSize"
+      :loading="loading"
+      :data="list"
+      :total="total"
+      @search="search"
+      @reset="reset"
+      @size-change="changePageSize"
+      @current-change="changePage"
+    >
+      <template #filter>
+        <el-form-item label="账号">
+          <el-input
+            v-model="query.username"
+            placeholder="请输入账号"
+            clearable
+            style="width: 160px"
+            @keyup.enter="search"
+          />
+        </el-form-item>
+        <el-form-item label="登录 IP">
+          <el-input v-model="query.ip" placeholder="精确匹配" clearable style="width: 160px" @keyup.enter="search" />
+        </el-form-item>
+      </template>
 
-    <el-card shadow="never" class="mt-4">
-      <div class="flex flex-wrap items-center justify-between gap-y-2 mb-3">
+      <template #title>
         <span class="text-[15px] font-semibold text-ink">在线会话（{{ total }}）</span>
+      </template>
+
+      <template #toolbar>
         <el-button :loading="loading" @click="getList">
           <template #icon><i class="bi bi-arrow-clockwise" /></template>
           刷新
         </el-button>
-      </div>
+      </template>
 
-      <el-table v-loading="loading" :data="list">
-        <el-table-column prop="username" label="账号" min-width="120" />
-        <el-table-column prop="nickname" label="昵称" min-width="120" />
-        <el-table-column prop="ip" label="登录 IP" width="140" />
-        <el-table-column prop="location" label="归属地" width="160" show-overflow-tooltip>
-          <template #default="{ row }">{{ row.location || '-' }}</template>
-        </el-table-column>
-        <el-table-column label="客户端" min-width="160" show-overflow-tooltip>
-          <template #default="{ row }">{{ [row.browser, row.os].filter(Boolean).join(' / ') || '-' }}</template>
-        </el-table-column>
-        <el-table-column label="登录时间" width="180">
-          <template #default="{ row }">{{ formatDateTime(row.loginAt) }}</template>
-        </el-table-column>
-        <el-table-column label="最后活跃" width="180">
-          <template #default="{ row }">{{ formatDateTime(row.lastSeenAt) }}</template>
-        </el-table-column>
-        <el-table-column label="操作" width="180" fixed="right" align="center">
-          <template #default="{ row }">
-            <el-button
-              v-permission="'monitor:online:forceLogout'"
-              type="danger"
-              link
-              @click="handleForceLogout(row as OnlineSession)"
-            >
-              强制下线
-            </el-button>
-            <el-button
-              v-permission="'monitor:online:forceLogout'"
-              type="warning"
-              link
-              @click="handleForceLogoutAll(row as OnlineSession)"
-            >
-              全部下线
-            </el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-
-      <Pagination
-        v-model:current-page="query.page"
-        v-model:page-size="query.pageSize"
-        :total="total"
-        @size-change="changePageSize"
-        @current-change="changePage"
-      />
-    </el-card>
+      <el-table-column prop="username" label="账号" min-width="120" />
+      <el-table-column prop="nickname" label="昵称" min-width="120" />
+      <el-table-column prop="ip" label="登录 IP" width="140" />
+      <el-table-column prop="location" label="归属地" width="160" show-overflow-tooltip>
+        <template #default="{ row }">{{ row.location || '-' }}</template>
+      </el-table-column>
+      <el-table-column label="客户端" min-width="160" show-overflow-tooltip>
+        <template #default="{ row }">{{ [row.browser, row.os].filter(Boolean).join(' / ') || '-' }}</template>
+      </el-table-column>
+      <el-table-column label="登录时间" width="180">
+        <template #default="{ row }">{{ formatDateTime(row.loginAt) }}</template>
+      </el-table-column>
+      <el-table-column label="最后活跃" width="180">
+        <template #default="{ row }">{{ formatDateTime(row.lastSeenAt) }}</template>
+      </el-table-column>
+      <el-table-column label="操作" width="180" fixed="right" align="center">
+        <template #default="{ row }">
+          <el-button
+            v-permission="'monitor:online:forceLogout'"
+            type="danger"
+            link
+            @click="handleForceLogout(row as OnlineSession)"
+          >
+            强制下线
+          </el-button>
+          <el-button
+            v-permission="'monitor:online:forceLogout'"
+            type="warning"
+            link
+            @click="handleForceLogoutAll(row as OnlineSession)"
+          >
+            全部下线
+          </el-button>
+        </template>
+      </el-table-column>
+    </TablePage>
   </div>
 </template>

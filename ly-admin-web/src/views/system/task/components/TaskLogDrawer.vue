@@ -89,7 +89,7 @@ function handleClose(): void {
 
       <!-- 滚动交给 el-scrollbar（与全局内容区一致），避免抽屉里出现原生滚动条 -->
       <el-scrollbar v-loading="loading" class="min-h-0 flex-1">
-        <el-table :data="list">
+        <el-table :data="list" border>
           <el-table-column label="状态" width="90" align="center">
             <template #default="{ row }">
               <el-tag :type="STATUS_TAG[row.status as TaskLogItem['status']]?.type ?? 'primary'" size="small">

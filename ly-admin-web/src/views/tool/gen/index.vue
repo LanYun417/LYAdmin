@@ -382,6 +382,7 @@ onMounted(() => {
           :data="filteredTables"
           highlight-current-row
           :height="tableHeight"
+          border
           @current-change="handleCurrentChange"
         >
           <el-table-column prop="tableName" label="表名" min-width="150" show-overflow-tooltip />
@@ -480,7 +481,7 @@ onMounted(() => {
           title="请先在左侧选择数据表，并填写模块名与业务名（作者可留空）"
         />
 
-        <el-table v-loading="columnLoading" :data="columns" :height="columnHeight">
+        <el-table v-loading="columnLoading" :data="columns" :height="columnHeight" border>
           <el-table-column prop="columnName" label="列名" min-width="140" show-overflow-tooltip />
           <el-table-column prop="fieldName" label="字段名" min-width="130" show-overflow-tooltip />
           <el-table-column prop="columnType" label="列类型" min-width="120" show-overflow-tooltip />

@@ -155,6 +155,10 @@ defineExpose({ tableRef, refreshLayout, measure });
     <div v-if="$slots.filter" class="table-page__filter shrink-0">
       <SearchForm @search="emit('search')" @reset="emit('reset')">
         <slot name="filter" />
+        <!-- 高级筛选（如登录/操作日志的时间范围），透传给 SearchForm 的 #advanced -->
+        <template v-if="$slots.filterAdvanced" #advanced>
+          <slot name="filterAdvanced" />
+        </template>
       </SearchForm>
     </div>
 
@@ -174,7 +178,7 @@ defineExpose({ tableRef, refreshLayout, measure });
       <!-- ③ 表格区：吃掉剩余高度，溢出裁掉；表体滚动由 el-table 自己负责。
            data / selection-change 等表格配置经 $attrs 透传（组件只管骨架与高度）。 -->
       <div ref="tableWrapRef" class="min-h-0 flex-1 overflow-hidden">
-        <el-table ref="tableRef" v-bind="$attrs" v-loading="loading" :height="tableHeight">
+        <el-table ref="tableRef" v-bind="$attrs" v-loading="loading" :height="tableHeight" border>
           <slot />
           <template v-if="$slots.empty" #empty>
             <slot name="empty" />

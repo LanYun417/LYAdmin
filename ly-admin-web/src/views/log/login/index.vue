@@ -8,8 +8,7 @@ import { useBatchDelete } from '@/composables/useBatchDelete';
 import { formatDate, formatDateTime } from '@/utils/format';
 import { downloadBlob } from '@/utils/download';
 import type { LoginLog } from '@/types/api';
-import Pagination from '@/components/Pagination/index.vue';
-import SearchForm from '@/components/SearchForm/index.vue';
+import TablePage from '@/components/TablePage/index.vue';
 
 defineOptions({ name: 'LogLogin' });
 
@@ -64,18 +63,34 @@ async function handleExport(): Promise<void> {
 </script>
 
 <template>
+  <!-- 保持单根：AppMain 的 <transition> 要求页面只有一个根元素 -->
   <div class="log-login-page">
-    <SearchForm @search="search" @reset="reset">
-      <el-form-item label="账号">
-        <el-input v-model="query.username" placeholder="请输入账号" clearable @keyup.enter="search" />
-      </el-form-item>
-      <el-form-item label="结果">
-        <el-select v-model="query.status" placeholder="全部" clearable style="width: 140px">
-          <el-option label="成功" :value="1" />
-          <el-option label="失败" :value="0" />
-        </el-select>
-      </el-form-item>
-      <template #advanced>
+    <TablePage
+      v-model:current-page="query.page"
+      v-model:page-size="query.pageSize"
+      title="登录日志"
+      :loading="loading"
+      :data="list"
+      :total="total"
+      @search="search"
+      @reset="reset"
+      @size-change="changePageSize"
+      @current-change="changePage"
+      @selection-change="handleSelectionChange"
+    >
+      <template #filter>
+        <el-form-item label="账号">
+          <el-input v-model="query.username" placeholder="请输入账号" clearable @keyup.enter="search" />
+        </el-form-item>
+        <el-form-item label="结果">
+          <el-select v-model="query.status" placeholder="全部" clearable style="width: 140px">
+            <el-option label="成功" :value="1" />
+            <el-option label="失败" :value="0" />
+          </el-select>
+        </el-form-item>
+      </template>
+
+      <template #filterAdvanced>
         <el-form-item label="登录时间">
           <el-date-picker
             v-model="dateRange"
@@ -87,11 +102,8 @@ async function handleExport(): Promise<void> {
           />
         </el-form-item>
       </template>
-    </SearchForm>
 
-    <el-card shadow="never">
-      <div class="flex flex-wrap items-center justify-between gap-y-2 mb-3">
-        <span class="text-[15px] font-semibold text-ink">登录日志</span>
+      <template #toolbar>
         <div class="flex flex-wrap items-center gap-2">
           <el-button @click="getList">
             <template #icon><i class="bi bi-arrow-clockwise" /></template>刷新</el-button
@@ -112,43 +124,33 @@ async function handleExport(): Promise<void> {
             删除{{ selected.length > 0 ? `（${selected.length}）` : '' }}
           </el-button>
         </div>
-      </div>
+      </template>
 
-      <el-table v-loading="loading" :data="list" @selection-change="handleSelectionChange">
-        <el-table-column type="selection" width="48" align="center" />
-        <el-table-column prop="username" label="账号" min-width="120" />
-        <el-table-column prop="ip" label="IP 地址" width="140" />
-        <el-table-column prop="location" label="归属地" min-width="160" show-overflow-tooltip>
-          <template #default="{ row }">{{ row.location || '-' }}</template>
-        </el-table-column>
-        <el-table-column prop="userAgent" label="User-Agent" min-width="220" show-overflow-tooltip />
-        <el-table-column label="结果" width="90" align="center">
-          <template #default="{ row }">
-            <el-tag :type="row.status === 1 ? 'success' : 'danger'" size="small">
-              {{ row.status === 1 ? '成功' : '失败' }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="message" label="描述" min-width="160" show-overflow-tooltip />
-        <el-table-column label="登录时间" width="180">
-          <template #default="{ row }">{{ formatDateTime(row.loginAt) }}</template>
-        </el-table-column>
-        <el-table-column label="操作" width="80" fixed="right" align="center">
-          <template #default="{ row }">
-            <el-button v-permission="'log:login:remove'" type="danger" link @click="removeOne(row as LoginLog)">
-              删除
-            </el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-
-      <Pagination
-        v-model:current-page="query.page"
-        v-model:page-size="query.pageSize"
-        :total="total"
-        @size-change="changePageSize"
-        @current-change="changePage"
-      />
-    </el-card>
+      <el-table-column type="selection" width="48" align="center" />
+      <el-table-column prop="username" label="账号" min-width="120" />
+      <el-table-column prop="ip" label="IP 地址" width="140" />
+      <el-table-column prop="location" label="归属地" min-width="160" show-overflow-tooltip>
+        <template #default="{ row }">{{ row.location || '-' }}</template>
+      </el-table-column>
+      <el-table-column prop="userAgent" label="User-Agent" min-width="220" show-overflow-tooltip />
+      <el-table-column label="结果" width="90" align="center">
+        <template #default="{ row }">
+          <el-tag :type="row.status === 1 ? 'success' : 'danger'" size="small">
+            {{ row.status === 1 ? '成功' : '失败' }}
+          </el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column prop="message" label="描述" min-width="160" show-overflow-tooltip />
+      <el-table-column label="登录时间" width="180">
+        <template #default="{ row }">{{ formatDateTime(row.loginAt) }}</template>
+      </el-table-column>
+      <el-table-column label="操作" width="80" fixed="right" align="center">
+        <template #default="{ row }">
+          <el-button v-permission="'log:login:remove'" type="danger" link @click="removeOne(row as LoginLog)">
+            删除
+          </el-button>
+        </template>
+      </el-table-column>
+    </TablePage>
   </div>
 </template>

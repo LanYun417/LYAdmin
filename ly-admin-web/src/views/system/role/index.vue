@@ -8,8 +8,7 @@ import { useBatchDelete } from '@/composables/useBatchDelete';
 import { useTable } from '@/composables/useTable';
 import { formatDateTime } from '@/utils/format';
 import { DATA_SCOPE_OPTIONS, type Role } from '@/types/api';
-import Pagination from '@/components/Pagination/index.vue';
-import SearchForm from '@/components/SearchForm/index.vue';
+import TablePage from '@/components/TablePage/index.vue';
 import RoleForm from './components/RoleForm.vue';
 import PermissionDrawer from './components/PermissionDrawer.vue';
 
@@ -115,21 +114,33 @@ async function handleResetMenus(row: Role): Promise<void> {
 </script>
 
 <template>
+  <!-- 保持单根：AppMain 的 <transition> 要求页面只有一个根元素 -->
   <div class="role-page">
-    <SearchForm @search="search" @reset="reset">
-      <el-form-item label="角色名称">
-        <el-input v-model="query.roleName" placeholder="请输入角色名称" clearable @keyup.enter="search" />
-      </el-form-item>
-      <el-form-item label="状态">
-        <el-select v-model="query.status" placeholder="全部" clearable style="width: 140px">
-          <el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value" />
-        </el-select>
-      </el-form-item>
-    </SearchForm>
+    <TablePage
+      v-model:current-page="query.page"
+      v-model:page-size="query.pageSize"
+      title="角色列表"
+      :loading="loading"
+      :data="list"
+      :total="total"
+      @search="search"
+      @reset="reset"
+      @size-change="changePageSize"
+      @current-change="changePage"
+      @selection-change="handleSelectionChange"
+    >
+      <template #filter>
+        <el-form-item label="角色名称">
+          <el-input v-model="query.roleName" placeholder="请输入角色名称" clearable @keyup.enter="search" />
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-select v-model="query.status" placeholder="全部" clearable style="width: 140px">
+            <el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+        </el-form-item>
+      </template>
 
-    <el-card shadow="never">
-      <div class="flex flex-wrap items-center justify-between gap-y-2 mb-3">
-        <span class="text-[15px] font-semibold text-ink">角色列表</span>
+      <template #toolbar>
         <div class="flex flex-wrap items-center gap-2">
           <el-button
             v-permission="'system:role:remove'"
@@ -146,65 +157,50 @@ async function handleResetMenus(row: Role): Promise<void> {
             新增角色
           </el-button>
         </div>
-      </div>
+      </template>
 
-      <el-table v-loading="loading" :data="list" @selection-change="handleSelectionChange">
-        <el-table-column type="selection" width="48" align="center" />
-        <el-table-column prop="roleName" label="角色名称" min-width="140" />
-        <el-table-column prop="roleCode" label="角色编码" min-width="140" />
-        <el-table-column prop="sort" label="排序" width="80" align="center" />
-        <el-table-column label="状态" width="90" align="center">
-          <template #default="{ row }">
-            <el-tag :type="row.status === 1 ? 'success' : 'danger'" size="small">
-              {{ statusLabel(row.status) }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="数据范围" width="130" align="center">
-          <template #default="{ row }">{{ dataScopeLabel((row as Role).dataScope) }}</template>
-        </el-table-column>
-        <el-table-column prop="remark" label="备注" min-width="160" show-overflow-tooltip />
-        <el-table-column label="创建时间" width="180">
-          <template #default="{ row }">{{ formatDateTime(row.createdAt) }}</template>
-        </el-table-column>
-        <el-table-column label="操作" width="300" fixed="right">
-          <template #default="{ row }">
-            <div class="table-action">
-              <el-button v-permission="'system:role:edit'" type="primary" link @click="handleEdit(row as Role)">
-                编辑
-              </el-button>
-              <el-button
-                v-permission="'system:role:assignMenu'"
-                type="warning"
-                link
-                @click="handlePermission(row as Role)"
-              >
-                权限
-              </el-button>
-              <el-button
-                v-permission="'system:role:assignMenu'"
-                type="info"
-                link
-                @click="handleResetMenus(row as Role)"
-              >
-                恢复默认
-              </el-button>
-              <el-button v-permission="'system:role:remove'" type="danger" link @click="handleDelete(row as Role)">
-                删除
-              </el-button>
-            </div>
-          </template>
-        </el-table-column>
-      </el-table>
-
-      <Pagination
-        v-model:current-page="query.page"
-        v-model:page-size="query.pageSize"
-        :total="total"
-        @size-change="changePageSize"
-        @current-change="changePage"
-      />
-    </el-card>
+      <el-table-column type="selection" width="48" align="center" />
+      <el-table-column prop="roleName" label="角色名称" min-width="140" />
+      <el-table-column prop="roleCode" label="角色编码" min-width="140" />
+      <el-table-column prop="sort" label="排序" width="80" align="center" />
+      <el-table-column label="状态" width="90" align="center">
+        <template #default="{ row }">
+          <el-tag :type="row.status === 1 ? 'success' : 'danger'" size="small">
+            {{ statusLabel(row.status) }}
+          </el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column label="数据范围" width="130" align="center">
+        <template #default="{ row }">{{ dataScopeLabel((row as Role).dataScope) }}</template>
+      </el-table-column>
+      <el-table-column prop="remark" label="备注" min-width="160" show-overflow-tooltip />
+      <el-table-column label="创建时间" width="180">
+        <template #default="{ row }">{{ formatDateTime(row.createdAt) }}</template>
+      </el-table-column>
+      <el-table-column label="操作" width="300" fixed="right">
+        <template #default="{ row }">
+          <div class="table-action">
+            <el-button v-permission="'system:role:edit'" type="primary" link @click="handleEdit(row as Role)">
+              编辑
+            </el-button>
+            <el-button
+              v-permission="'system:role:assignMenu'"
+              type="warning"
+              link
+              @click="handlePermission(row as Role)"
+            >
+              权限
+            </el-button>
+            <el-button v-permission="'system:role:assignMenu'" type="info" link @click="handleResetMenus(row as Role)">
+              恢复默认
+            </el-button>
+            <el-button v-permission="'system:role:remove'" type="danger" link @click="handleDelete(row as Role)">
+              删除
+            </el-button>
+          </div>
+        </template>
+      </el-table-column>
+    </TablePage>
 
     <RoleForm v-model="formVisible" :role-id="editId" @success="getList" />
 

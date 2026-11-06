@@ -21,8 +21,7 @@ import { downloadBlob } from '@/utils/download';
 import { formatDate, formatDateTime, formatDuration } from '@/utils/format';
 import type { DeptNode, HttpLog } from '@/types/api';
 import BasicDialog from '@/components/BasicDialog/index.vue';
-import Pagination from '@/components/Pagination/index.vue';
-import SearchForm from '@/components/SearchForm/index.vue';
+import TablePage from '@/components/TablePage/index.vue';
 
 defineOptions({ name: 'LogHttp' });
 
@@ -218,29 +217,46 @@ onMounted(() => {
 </script>
 
 <template>
+  <!-- 保持单根：AppMain 的 <transition> 要求页面只有一个根元素 -->
   <div class="log-http-page">
-    <SearchForm @search="search" @reset="reset">
-      <el-form-item label="请求方法">
-        <el-select v-model="query.method" placeholder="全部" clearable style="width: 140px">
-          <el-option label="GET" value="GET" />
-          <el-option label="POST" value="POST" />
-          <el-option label="PUT" value="PUT" />
-          <el-option label="DELETE" value="DELETE" />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="状态码">
-        <el-input-number v-model="query.statusCode" :min="100" :max="599" placeholder="全部" />
-      </el-form-item>
-      <el-form-item label="操作账号">
-        <el-input
-          v-model="query.username"
-          placeholder="请输入账号前缀"
-          clearable
-          style="width: 160px"
-          @keyup.enter="search"
-        />
-      </el-form-item>
-      <template #advanced>
+    <TablePage
+      v-model:current-page="query.page"
+      v-model:page-size="query.pageSize"
+      title="HTTP 访问日志"
+      :loading="loading"
+      :data="list"
+      :total="total"
+      @search="search"
+      @reset="reset"
+      @size-change="changePageSize"
+      @current-change="changePage"
+      @expand-change="handleExpand"
+      @selection-change="handleSelectionChange"
+    >
+      <template #filter>
+        <el-form-item label="请求方法">
+          <el-select v-model="query.method" placeholder="全部" clearable style="width: 140px">
+            <el-option label="GET" value="GET" />
+            <el-option label="POST" value="POST" />
+            <el-option label="PUT" value="PUT" />
+            <el-option label="DELETE" value="DELETE" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="状态码">
+          <el-input-number v-model="query.statusCode" :min="100" :max="599" placeholder="全部" />
+        </el-form-item>
+        <el-form-item label="操作账号">
+          <el-input
+            v-model="query.username"
+            placeholder="请输入账号前缀"
+            clearable
+            style="width: 160px"
+            @keyup.enter="search"
+          />
+        </el-form-item>
+      </template>
+
+      <template #filterAdvanced>
         <el-form-item label="所属部门">
           <el-tree-select
             v-model="query.deptId"
@@ -265,11 +281,8 @@ onMounted(() => {
           />
         </el-form-item>
       </template>
-    </SearchForm>
 
-    <el-card shadow="never">
-      <div class="flex flex-wrap items-center justify-between gap-y-2 mb-3">
-        <span class="text-[15px] font-semibold text-ink">HTTP 访问日志</span>
+      <template #toolbar>
         <div class="flex flex-wrap items-center gap-2">
           <el-button @click="getList">
             <template #icon><i class="bi bi-arrow-clockwise" /></template>刷新</el-button
@@ -293,85 +306,70 @@ onMounted(() => {
             <template #icon><i class="bi bi-trash" /></template>清空所有日志</el-button
           >
         </div>
-      </div>
+      </template>
 
-      <el-table
-        v-loading="loading"
-        :data="list"
-        @expand-change="handleExpand"
-        @selection-change="handleSelectionChange"
-      >
-        <el-table-column type="selection" width="48" align="center" />
-        <el-table-column type="expand">
-          <template #default="{ row }">
-            <div v-loading="detailLoading[row.id]" class="py-2 px-4">
-              <div>
-                <p class="mt-2.5 mb-1 text-xs font-semibold text-muted">请求参数（Query + Body，敏感字段已脱敏）</p>
-                <pre
-                  class="max-h-60 m-0 overflow-auto whitespace-pre-wrap break-all rounded bg-fill-light px-3 py-2.5 font-mono text-xs leading-[1.6]"
-                  >{{ formatParams(detailMap[row.id]) }}</pre>
-              </div>
-              <div>
-                <p class="mt-2.5 mb-1 text-xs font-semibold text-muted">User-Agent</p>
-                <pre
-                  class="max-h-60 m-0 overflow-auto whitespace-pre-wrap break-all rounded bg-fill-light px-3 py-2.5 font-mono text-xs leading-[1.6]"
-                  >{{ row.userAgent || '无 User-Agent' }}</pre>
-              </div>
-              <div v-if="detailMap[row.id]?.resBody">
-                <p class="mt-2.5 mb-1 text-xs font-semibold text-muted">响应内容</p>
-                <pre
-                  class="max-h-60 m-0 overflow-auto whitespace-pre-wrap break-all rounded bg-fill-light px-3 py-2.5 font-mono text-xs leading-[1.6]"
-                  >{{ detailMap[row.id]?.resBody }}</pre>
-              </div>
+      <el-table-column type="selection" width="48" align="center" />
+      <el-table-column type="expand">
+        <template #default="{ row }">
+          <div v-loading="detailLoading[row.id]" class="py-2 px-4">
+            <div>
+              <p class="mt-2.5 mb-1 text-xs font-semibold text-muted">请求参数（Query + Body，敏感字段已脱敏）</p>
+              <pre
+                class="max-h-60 m-0 overflow-auto whitespace-pre-wrap break-all rounded bg-fill-light px-3 py-2.5 font-mono text-xs leading-[1.6]"
+                >{{ formatParams(detailMap[row.id]) }}</pre>
             </div>
-          </template>
-        </el-table-column>
-        <el-table-column prop="method" label="方法" width="100" align="center" />
-        <el-table-column prop="url" label="URL" min-width="260" show-overflow-tooltip />
-        <el-table-column label="状态码" width="100" align="center">
-          <template #default="{ row }">
-            <el-tag :type="statusType(row.statusCode)" size="small">{{ row.statusCode }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="耗时" width="110" align="center">
-          <template #default="{ row }">{{ formatDuration(row.duration) }}</template>
-        </el-table-column>
-        <el-table-column label="操作人" width="130" show-overflow-tooltip>
-          <template #default="{ row }">{{ displayOrDash(row.username) }}</template>
-        </el-table-column>
-        <el-table-column label="所属部门" width="130" show-overflow-tooltip>
-          <template #default="{ row }">{{ displayOrDash(row.deptName) }}</template>
-        </el-table-column>
-        <el-table-column label="浏览器" width="150" show-overflow-tooltip>
-          <template #default="{ row }">{{ row.browser || '未知' }}</template>
-        </el-table-column>
-        <el-table-column label="操作系统" width="150" show-overflow-tooltip>
-          <template #default="{ row }">{{ row.os || '未知' }}</template>
-        </el-table-column>
-        <el-table-column prop="ip" label="IP" width="150" />
-        <el-table-column label="归属地" width="160" show-overflow-tooltip>
-          <template #default="{ row }">{{ row.location || '-' }}</template>
-        </el-table-column>
-        <el-table-column label="时间" width="180">
-          <template #default="{ row }">{{ formatDateTime(row.time) }}</template>
-        </el-table-column>
-        <el-table-column label="操作" width="80" fixed="right" align="center">
-          <template #default="{ row }">
-            <el-button v-permission="'log:http:remove'" type="danger" link @click="removeOne(row as HttpLog)">
-              删除
-            </el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-
-      <Pagination
-        v-model:current-page="query.page"
-        v-model:page-size="query.pageSize"
-        :total="total"
-        @size-change="changePageSize"
-        @current-change="changePage"
-      />
-    </el-card>
+            <div>
+              <p class="mt-2.5 mb-1 text-xs font-semibold text-muted">User-Agent</p>
+              <pre
+                class="max-h-60 m-0 overflow-auto whitespace-pre-wrap break-all rounded bg-fill-light px-3 py-2.5 font-mono text-xs leading-[1.6]"
+                >{{ row.userAgent || '无 User-Agent' }}</pre>
+            </div>
+            <div v-if="detailMap[row.id]?.resBody">
+              <p class="mt-2.5 mb-1 text-xs font-semibold text-muted">响应内容</p>
+              <pre
+                class="max-h-60 m-0 overflow-auto whitespace-pre-wrap break-all rounded bg-fill-light px-3 py-2.5 font-mono text-xs leading-[1.6]"
+                >{{ detailMap[row.id]?.resBody }}</pre>
+            </div>
+          </div>
+        </template>
+      </el-table-column>
+      <el-table-column prop="method" label="方法" width="100" align="center" />
+      <el-table-column prop="url" label="URL" min-width="260" show-overflow-tooltip />
+      <el-table-column label="状态码" width="100" align="center">
+        <template #default="{ row }">
+          <el-tag :type="statusType(row.statusCode)" size="small">{{ row.statusCode }}</el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column label="耗时" width="110" align="center">
+        <template #default="{ row }">{{ formatDuration(row.duration) }}</template>
+      </el-table-column>
+      <el-table-column label="操作人" width="130" show-overflow-tooltip>
+        <template #default="{ row }">{{ displayOrDash(row.username) }}</template>
+      </el-table-column>
+      <el-table-column label="所属部门" width="130" show-overflow-tooltip>
+        <template #default="{ row }">{{ displayOrDash(row.deptName) }}</template>
+      </el-table-column>
+      <el-table-column label="浏览器" width="150" show-overflow-tooltip>
+        <template #default="{ row }">{{ row.browser || '未知' }}</template>
+      </el-table-column>
+      <el-table-column label="操作系统" width="150" show-overflow-tooltip>
+        <template #default="{ row }">{{ row.os || '未知' }}</template>
+      </el-table-column>
+      <el-table-column prop="ip" label="IP" width="150" />
+      <el-table-column label="归属地" width="160" show-overflow-tooltip>
+        <template #default="{ row }">{{ row.location || '-' }}</template>
+      </el-table-column>
+      <el-table-column label="时间" width="180">
+        <template #default="{ row }">{{ formatDateTime(row.time) }}</template>
+      </el-table-column>
+      <el-table-column label="操作" width="80" fixed="right" align="center">
+        <template #default="{ row }">
+          <el-button v-permission="'log:http:remove'" type="danger" link @click="removeOne(row as HttpLog)">
+            删除
+          </el-button>
+        </template>
+      </el-table-column>
+    </TablePage>
 
     <!-- 清空确认：必须逐字手动输入确认文案，确定按钮才可用；输入框禁用粘贴 -->
     <BasicDialog

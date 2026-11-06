@@ -296,6 +296,10 @@ Element Plus 的 `.el-drawer__body` 默认 `overflow: auto`。若抽屉内容直
 - 页面**必须保持单根**（`<transition>` 要求），`TablePage` 放在一个普通 `<div>` 里即可。
 - `data` / `selection-change` / `row-key` 等表格配置经 `$attrs` 透传，页面照常写 `:data="list"`。
 - 筛选栏用 `#filter` 插槽（内部复用 `SearchForm`，自带查询/重置按钮）；没有该插槽则不渲染。
+  需要 `SearchForm` 的「高级筛选」时用 `#filterAdvanced` 插槽（如日志页的时间范围）。
+- **表格统一带框线**：组件内固定写死 `border`，页面不需要也不应该再传 `border`；
+  抽屉 / 代码生成等少量直接使用 `el-table` 的地方，同样要显式加 `border`，保持全站一致。
+- 分页样式可覆盖：`:page-sizes="[10, 20, 50]"`、`pagination-layout="total, sizes, prev, pager, next"`。
 - 高度不足时按 `min-height`（默认 480px）兜底并允许整页滚动，避免矮屏下表格只剩表头。
 - **抽屉里不要用它**：抽屉的可视容器是 `.el-drawer__body`，不是 `.content-scrollbar`，
   抽屉内仍按上一节「flex + el-scrollbar」的写法处理。
