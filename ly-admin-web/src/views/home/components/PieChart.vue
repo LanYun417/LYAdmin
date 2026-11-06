@@ -79,6 +79,8 @@ function render(): void {
         type: 'pie',
         // 玫瑰图：半径随数值变化（角度均分），比普通饼图更能看出量级差
         roseType: 'radius',
+        // 逆时针排布（默认顺时针）：从 12 点开始按数值从大到小向左铺开
+        clockwise: false,
         radius: ['32%', '72%'],
         center: ['50%', '44%'],
         avoidLabelOverlap: true,
