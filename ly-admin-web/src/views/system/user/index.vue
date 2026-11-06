@@ -22,8 +22,7 @@ import { hasPermission } from '@/utils/permission';
 import { formatDateTime } from '@/utils/format';
 import { PASSWORD_MESSAGE, PASSWORD_REGEX } from '@/utils/validate';
 import type { DeptNode, RoleBrief, UserDetail } from '@/types/api';
-import Pagination from '@/components/Pagination/index.vue';
-import SearchForm from '@/components/SearchForm/index.vue';
+import TablePage from '@/components/TablePage/index.vue';
 import ColumnSettings from '@/components/ColumnSettings/index.vue';
 import UserForm from './components/UserForm.vue';
 import AssignRoleDialog from './components/AssignRoleDialog.vue';
@@ -232,34 +231,46 @@ onMounted(() => {
 </script>
 
 <template>
+  <!-- 保持单根：AppMain 的 <transition> 要求页面只有一个根元素 -->
   <div class="user-page">
-    <SearchForm @search="search" @reset="reset">
-      <el-form-item label="用户名">
-        <el-input v-model="query.username" placeholder="请输入用户名" clearable @keyup.enter="search" />
-      </el-form-item>
-      <el-form-item label="状态">
-        <el-select v-model="query.status" placeholder="全部" clearable style="width: 140px">
-          <el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value" />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="部门">
-        <el-tree-select
-          v-model="query.deptId"
-          :data="deptTree"
-          :props="{ label: 'deptName', children: 'children' }"
-          node-key="id"
-          check-strictly
-          :render-after-expand="false"
-          placeholder="全部"
-          clearable
-          style="width: 180px"
-        />
-      </el-form-item>
-    </SearchForm>
+    <TablePage
+      v-model:current-page="query.page"
+      v-model:page-size="query.pageSize"
+      title="用户列表"
+      :loading="loading"
+      :data="list"
+      :total="total"
+      @search="search"
+      @reset="reset"
+      @size-change="changePageSize"
+      @current-change="changePage"
+      @selection-change="handleSelectionChange"
+    >
+      <template #filter>
+        <el-form-item label="用户名">
+          <el-input v-model="query.username" placeholder="请输入用户名" clearable @keyup.enter="search" />
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-select v-model="query.status" placeholder="全部" clearable style="width: 140px">
+            <el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="部门">
+          <el-tree-select
+            v-model="query.deptId"
+            :data="deptTree"
+            :props="{ label: 'deptName', children: 'children' }"
+            node-key="id"
+            check-strictly
+            :render-after-expand="false"
+            placeholder="全部"
+            clearable
+            style="width: 180px"
+          />
+        </el-form-item>
+      </template>
 
-    <el-card shadow="never">
-      <div class="flex flex-wrap items-center justify-between gap-y-2 mb-3">
-        <span class="text-[15px] font-semibold text-ink">用户列表</span>
+      <template #toolbar>
         <div class="flex flex-wrap items-center gap-2">
           <el-button v-permission="'system:user:add'" plain @click="handleImport">
             <template #icon><i class="bi bi-upload" /></template>
@@ -286,102 +297,92 @@ onMounted(() => {
             @reset="resetColumns"
           />
         </div>
-      </div>
+      </template>
 
-      <el-table v-loading="loading" :data="list" @selection-change="handleSelectionChange">
-        <el-table-column type="selection" width="48" align="center" :selectable="selectableUser" />
-        <el-table-column v-if="isVisible('avatar')" label="头像" width="80" align="center">
-          <template #default="{ row }">
-            <el-avatar :size="36" :src="withUploadToken(row.avatar)">
-              <el-icon aria-hidden="true"><i class="bi bi-person-fill" /></el-icon>
-            </el-avatar>
-          </template>
-        </el-table-column>
-        <el-table-column prop="username" label="账号" min-width="120" />
-        <el-table-column v-if="isVisible('nickname')" prop="nickname" label="昵称" min-width="120" />
-        <el-table-column v-if="isVisible('dept')" label="部门 / 岗位" min-width="140" show-overflow-tooltip>
-          <template #default="{ row }">{{ row.deptName || '-' }}</template>
-        </el-table-column>
-        <el-table-column v-if="isVisible('roles')" label="角色" min-width="180">
-          <template #default="{ row }">
-            <el-tag v-for="role in row.roles || []" :key="role.id" size="small" class="mr-1">
-              {{ role.roleName }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column v-if="isVisible('email')" prop="email" label="邮箱" min-width="180" show-overflow-tooltip />
-        <el-table-column v-if="isVisible('phone')" prop="phone" label="手机号" width="130" />
-        <el-table-column v-if="isVisible('gender')" label="性别" width="80" align="center">
-          <template #default="{ row }">
-            <span>{{ genderLabel(row.gender) || '-' }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column v-if="isVisible('status')" label="状态" width="90" align="center">
-          <template #default="{ row }">
-            <el-switch
-              :model-value="row.status === 1"
+      <el-table-column type="selection" width="48" align="center" :selectable="selectableUser" />
+      <el-table-column v-if="isVisible('avatar')" label="头像" width="80" align="center">
+        <template #default="{ row }">
+          <el-avatar :size="36" :src="withUploadToken(row.avatar)">
+            <el-icon aria-hidden="true"><i class="bi bi-person-fill" /></el-icon>
+          </el-avatar>
+        </template>
+      </el-table-column>
+      <el-table-column prop="username" label="账号" min-width="120" />
+      <el-table-column v-if="isVisible('nickname')" prop="nickname" label="昵称" min-width="120" />
+      <el-table-column v-if="isVisible('dept')" label="部门 / 岗位" min-width="140" show-overflow-tooltip>
+        <template #default="{ row }">{{ row.deptName || '-' }}</template>
+      </el-table-column>
+      <el-table-column v-if="isVisible('roles')" label="角色" min-width="180">
+        <template #default="{ row }">
+          <el-tag v-for="role in row.roles || []" :key="role.id" size="small" class="mr-1">
+            {{ role.roleName }}
+          </el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column v-if="isVisible('email')" prop="email" label="邮箱" min-width="180" show-overflow-tooltip />
+      <el-table-column v-if="isVisible('phone')" prop="phone" label="手机号" width="130" />
+      <el-table-column v-if="isVisible('gender')" label="性别" width="80" align="center">
+        <template #default="{ row }">
+          <span>{{ genderLabel(row.gender) || '-' }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column v-if="isVisible('status')" label="状态" width="90" align="center">
+        <template #default="{ row }">
+          <el-switch
+            :model-value="row.status === 1"
+            :disabled="row.isSuperAdmin"
+            :title="row.isSuperAdmin ? '超级管理员不可禁用' : ''"
+            @change="handleStatusChange(row as UserDetail)"
+          />
+        </template>
+      </el-table-column>
+      <el-table-column v-if="isVisible('lastLogin')" label="最后登录" width="180">
+        <template #default="{ row }">{{ formatDateTime(row.lastLoginAt) }}</template>
+      </el-table-column>
+      <el-table-column label="操作" width="340" fixed="right">
+        <template #default="{ row }">
+          <div class="table-action">
+            <el-button v-permission="'system:user:edit'" type="primary" link @click="handleEdit(row as UserDetail)">
+              编辑
+            </el-button>
+            <el-button
+              v-permission="'system:user:assignRole'"
+              type="warning"
+              link
+              @click="handleAssignRole(row as UserDetail)"
+            >
+              角色
+            </el-button>
+            <el-button
+              v-permission="'system:user:assignPerm'"
+              type="success"
+              link
+              @click="handlePermission(row as UserDetail)"
+            >
+              权限
+            </el-button>
+            <el-button
+              v-permission="'system:user:resetPwd'"
+              type="info"
+              link
+              @click="handleResetPwd(row as UserDetail)"
+            >
+              重置
+            </el-button>
+            <el-button
+              v-permission="'system:user:remove'"
+              type="danger"
+              link
               :disabled="row.isSuperAdmin"
-              :title="row.isSuperAdmin ? '超级管理员不可禁用' : ''"
-              @change="handleStatusChange(row as UserDetail)"
-            />
-          </template>
-        </el-table-column>
-        <el-table-column v-if="isVisible('lastLogin')" label="最后登录" width="180">
-          <template #default="{ row }">{{ formatDateTime(row.lastLoginAt) }}</template>
-        </el-table-column>
-        <el-table-column label="操作" width="340" fixed="right">
-          <template #default="{ row }">
-            <div class="table-action">
-              <el-button v-permission="'system:user:edit'" type="primary" link @click="handleEdit(row as UserDetail)">
-                编辑
-              </el-button>
-              <el-button
-                v-permission="'system:user:assignRole'"
-                type="warning"
-                link
-                @click="handleAssignRole(row as UserDetail)"
-              >
-                角色
-              </el-button>
-              <el-button
-                v-permission="'system:user:assignPerm'"
-                type="success"
-                link
-                @click="handlePermission(row as UserDetail)"
-              >
-                权限
-              </el-button>
-              <el-button
-                v-permission="'system:user:resetPwd'"
-                type="info"
-                link
-                @click="handleResetPwd(row as UserDetail)"
-              >
-                重置
-              </el-button>
-              <el-button
-                v-permission="'system:user:remove'"
-                type="danger"
-                link
-                :disabled="row.isSuperAdmin"
-                :title="row.isSuperAdmin ? '超级管理员不可删除' : ''"
-                @click="handleDelete(row as UserDetail)"
-              >
-                删除
-              </el-button>
-            </div>
-          </template>
-        </el-table-column>
-      </el-table>
-
-      <Pagination
-        v-model:current-page="query.page"
-        v-model:page-size="query.pageSize"
-        :total="total"
-        @size-change="changePageSize"
-        @current-change="changePage"
-      />
-    </el-card>
+              :title="row.isSuperAdmin ? '超级管理员不可删除' : ''"
+              @click="handleDelete(row as UserDetail)"
+            >
+              删除
+            </el-button>
+          </div>
+        </template>
+      </el-table-column>
+    </TablePage>
 
     <UserImportDialog v-model="importVisible" @imported="getList" />
     <UserForm v-model="formVisible" :user-id="editId" :role-options="roleOptions" @success="handleFormSuccess" />

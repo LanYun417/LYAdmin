@@ -10,6 +10,12 @@
   "rules": {
     "prettier/prettier": true,
     "selector-class-pattern": null,
+    "selector-pseudo-class-no-unknown": [
+      true,
+      {
+        "ignorePseudoClasses": ["deep", "global", "slotted"]
+      }
+    ],
     "custom-property-pattern": null,
     "no-descending-specificity": null,
     "import-notation": null,

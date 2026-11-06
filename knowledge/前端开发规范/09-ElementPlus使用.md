@@ -249,3 +249,53 @@ Element Plus 的 `.el-drawer__body` 默认 `overflow: auto`。若抽屉内容直
 ```
 
 > 任何新增 / 修改抽屉、弹窗时，先确认内部是否已用 `el-scrollbar` 包裹；未包裹即视为违反本约定。有界小弹层（`max-h-*` 限高的下拉，如列设置、通知铃铛）视场景也可用 `el-scrollbar` 替代原生 `overflow`，保持风格统一。
+
+## 列表页骨架：`TablePage`（筛选 + 卡片头 + 表格 + 分页）
+
+`src/components/TablePage/index.vue` 统一「筛选栏 / 卡片工具条 / 表格 / 分页」四段结构，
+并让**三者相加刚好撑满内容区**：筛选栏、卡片头、分页固定，**只有表体内部滚动**（表头固定）。
+
+```vue
+<TablePage
+  title="用户列表"
+  :loading="loading"
+  :data="list"
+  :total="total"
+  v-model:current-page="query.page"
+  v-model:page-size="query.pageSize"
+  @search="search"
+  @reset="reset"
+  @size-change="changePageSize"
+  @current-change="changePage"
+  @selection-change="handleSelectionChange"
+>
+  <template #filter><el-form-item label="用户名">…</el-form-item></template>
+  <template #toolbar><el-button …>新增</el-button></template>
+
+  <!-- 默认插槽 = 列定义，写法与 el-table 完全一致 -->
+  <el-table-column prop="username" label="账号" />
+</TablePage>
+```
+
+### 为什么高度要「JS 量像素」而不是百分比
+
+`el-table` 的 `height` 必须是**确定高度**才能固定表头、让表体滚动、并正确计算 `fixed` 列。
+而内容区滚动容器是 `el-scrollbar`，其 `.el-scrollbar__view` 是 `display:inline-block`、高度由内容撑开：
+写 `height="100%"` / `max-height="100%"` 会解析成「相对一个由内容决定高度的父级」→ 循环依赖 → **0**，
+表头与表体一起塌陷（字典项抽屉曾连续踩两次）。
+
+因此组件在 `onMounted` / `onActivated` / 容器 resize 时实测：
+
+```
+整块高度 = 滚动容器 clientHeight − 本块顶部偏移 − .app-main 的 padding-bottom
+表格高度 = 表格容器实测高度（ResizeObserver 驱动，变化时对 el-table 调 doLayout）
+```
+
+### 使用注意
+
+- 页面**必须保持单根**（`<transition>` 要求），`TablePage` 放在一个普通 `<div>` 里即可。
+- `data` / `selection-change` / `row-key` 等表格配置经 `$attrs` 透传，页面照常写 `:data="list"`。
+- 筛选栏用 `#filter` 插槽（内部复用 `SearchForm`，自带查询/重置按钮）；没有该插槽则不渲染。
+- 高度不足时按 `min-height`（默认 480px）兜底并允许整页滚动，避免矮屏下表格只剩表头。
+- **抽屉里不要用它**：抽屉的可视容器是 `.el-drawer__body`，不是 `.content-scrollbar`，
+  抽屉内仍按上一节「flex + el-scrollbar」的写法处理。
