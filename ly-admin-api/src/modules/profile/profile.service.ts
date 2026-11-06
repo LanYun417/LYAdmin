@@ -78,11 +78,21 @@ export class ProfileService {
     return deptName === null ? null : { deptName };
   }
 
+  /** 判断是否为只读访客（固定演示用户名或只读访客角色），用于拦截自助改密 / 改资料 / 换头像。 */
+  private isReadonlyGuest(user: { username: string }, roleCodes: string[]): boolean {
+    return GUEST_USERNAMES.includes(user.username) || roleCodes.some((code) => GUEST_ROLE_CODES.includes(code));
+  }
+
   /** 修改个人资料。 */
-  async updateProfile(userId: number, input: UpdateProfileInput): Promise<UserBrief> {
+  async updateProfile(userId: number, input: UpdateProfileInput, roleCodes: string[]): Promise<UserBrief> {
     const user = await this.prisma.user.findUnique({ where: { id: BigInt(userId) } });
     if (!user) {
       throw AppException.notFound('用户不存在');
+    }
+    // 只读访客不允许修改个人资料：其身份为公开共享的只读演示账号，资料不应被改掉。
+    // 判定规则与「修改密码」一致（见 isReadonlyGuest），需要变更时由管理员处理。
+    if (this.isReadonlyGuest(user, roleCodes)) {
+      throw AppException.conflict('只读访客账号不支持修改个人资料，如需变更请联系超级管理员');
     }
     await this.prisma.user.update({
       where: { id: BigInt(userId) },
@@ -122,7 +132,7 @@ export class ProfileService {
     //
     // 用 409 而非 403：403 会被前端拦截器判定为「越权」并整页跳 /403，而这里只是
     // 「该账号类型不支持这个操作」，与内置字典/内置参数的保护规则同级（见 dict/config service）。
-    if (GUEST_USERNAMES.includes(user.username) || roleCodes.some((code) => GUEST_ROLE_CODES.includes(code))) {
+    if (this.isReadonlyGuest(user, roleCodes)) {
       throw AppException.conflict('只读访客账号不支持自助修改密码，请联系管理员重置');
     }
     const matched = await comparePassword(input.oldPassword, user.password);
@@ -145,10 +155,14 @@ export class ProfileService {
   }
 
   /** 更换头像（复用上传能力并即时更新用户头像）。 */
-  async updateAvatar(userId: number, file: Express.Multer.File): Promise<{ avatar: string }> {
+  async updateAvatar(userId: number, file: Express.Multer.File, roleCodes: string[]): Promise<{ avatar: string }> {
     const user = await this.prisma.user.findUnique({ where: { id: BigInt(userId) } });
     if (!user) {
       throw AppException.notFound('用户不存在');
+    }
+    // 只读访客不允许更换头像，理由同「修改个人资料」。
+    if (this.isReadonlyGuest(user, roleCodes)) {
+      throw AppException.conflict('只读访客账号不支持更换头像，如需变更请联系超级管理员');
     }
     const [saved] = await this.filesService.saveFiles([file], userId);
     if (!saved) {

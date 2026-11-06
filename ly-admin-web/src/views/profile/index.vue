@@ -66,6 +66,7 @@ async function handleAvatarUpload(options: UploadRequestOptions): Promise<void> 
           <template #header>个人信息</template>
           <div class="py-2 flex flex-col items-center">
             <el-upload
+              v-if="!userStore.isReadonlyGuest"
               class="cursor-pointer"
               :show-file-list="false"
               accept="image/*"
@@ -76,7 +77,10 @@ async function handleAvatarUpload(options: UploadRequestOptions): Promise<void> 
                 <el-icon aria-hidden="true"><i class="bi bi-plus" /></el-icon>
               </el-avatar>
             </el-upload>
-            <div class="mt-2 text-xs text-muted">点击更换头像</div>
+            <el-avatar v-else :size="100" :src="withUploadToken(avatar)" />
+            <div class="mt-2 text-xs text-muted">
+              {{ userStore.isReadonlyGuest ? '只读访客不支持更换头像' : '点击更换头像' }}
+            </div>
             <p class="mt-3 text-base font-semibold text-ink">{{ nickname }}</p>
             <p class="text-[13px] text-muted">@{{ username }}</p>
           </div>
@@ -104,7 +108,11 @@ async function handleAvatarUpload(options: UploadRequestOptions): Promise<void> 
       <el-col :xs="24" :md="16">
         <el-card shadow="never">
           <template #header>修改资料</template>
-          <ProfileForm />
+          <!-- 只读访客不允许修改个人资料：后端会直接拒绝（409），这里提前收口，避免填完表单才报错 -->
+          <p v-if="userStore.isReadonlyGuest" class="text-[13px] text-muted">
+            只读访客账号不支持修改个人资料，如需变更请联系超级管理员。
+          </p>
+          <ProfileForm v-else />
         </el-card>
         <el-card shadow="never" class="mt-4">
           <template #header>修改密码</template>

@@ -38,7 +38,8 @@ export const useUserStore = defineStore(
     /** 头像地址 */
     const avatar = computed<string>(() => userInfo.value?.avatar ?? '');
     /**
-     * 是否为只读访客：后端会拒绝其自助改密（409），前端据此隐藏修改密码入口。
+     * 是否为只读访客：后端会拒绝其自助修改密码 / 个人资料 / 头像（409），
+     * 前端据此隐藏「修改密码」「修改资料」入口并禁用头像上传。
      * 仅用于交互呈现，真正的拦截在 `profile.service.ts`。
      */
     const isReadonlyGuest = computed<boolean>(() => roles.value.some((code) => READONLY_ROLE_CODES.includes(code)));
