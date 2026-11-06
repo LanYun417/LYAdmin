@@ -9,9 +9,13 @@ export function getNoticeListApi(params: NoticeQuery): Promise<PageResult<Notice
   return get<PageResult<NoticeItem>>('/notices', params);
 }
 
-/** 未读数（顶栏红点） */
+/**
+ * 未读数（顶栏红点）。
+ * 走 `silent`：这是挂载时就会发的"背景查询"，失败只需静默保持原值，
+ * 不该因为一次查询失败在右上角弹一条错误提示打断用户。
+ */
 export function getNoticeUnreadCountApi(): Promise<{ count: number }> {
-  return get<{ count: number }>('/notices/unread-count');
+  return get<{ count: number }>('/notices/unread-count', undefined, { silent: true });
 }
 
 /** 标记单条已读 */

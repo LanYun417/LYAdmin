@@ -28,7 +28,7 @@ const TYPE_META: Record<number, { label: string; type: 'primary' | 'success' | '
   3: { label: '安全', type: 'warning' },
 };
 
-/** 下拉展开时拉取（点击即触发，避免挂载就请求） */
+/** 下拉展开时拉取（点击即触发，避免重复请求） */
 async function handleOpen(): Promise<void> {
   loading.value = true;
   try {
@@ -39,6 +39,22 @@ async function handleOpen(): Promise<void> {
     loading.value = false;
   }
 }
+
+/**
+ * 挂载即拉一次未读数。
+ * 红点是"常驻提醒"，不能等用户点开下拉才出现——否则进页面时看起来没有未读，
+ * 点一下才突然冒出数字。失败静默：通知查询不该打断用户当前操作。
+ */
+onMounted(async () => {
+  if (noticeStore.loaded) {
+    return;
+  }
+  try {
+    await noticeStore.refreshUnread();
+  } catch {
+    // 静默失败：保持红点隐藏，下次打开下拉时还会再试
+  }
+});
 
 /** 点击一条：标记已读 + 按需跳转 */
 async function handleClick(item: NoticeItem): Promise<void> {
