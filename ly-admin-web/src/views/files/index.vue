@@ -21,7 +21,8 @@ import { downloadBlob } from '@/utils/download';
 import { sha256Hex } from '@/utils/hash';
 import { formatFileSize, formatDateTime } from '@/utils/format';
 import type { FileItem, FileQuota, FileUploaderOption } from '@/types/api';
-import TablePage from '@/components/TablePage/index.vue';
+import Pagination from '@/components/Pagination/index.vue';
+import SearchForm from '@/components/SearchForm/index.vue';
 import { withUploadToken } from '@/utils/uploadToken';
 
 defineOptions({ name: 'Files' });
@@ -216,101 +217,84 @@ onMounted(() => {
       </el-upload>
     </el-card>
 
-    <div class="mt-4">
-      <TablePage
-        v-model:current-page="query.page"
-        v-model:page-size="query.pageSize"
-        title="文件列表"
-        :loading="loading"
-        :data="fileList"
-        :total="total"
-        :page-sizes="[10, 20, 50]"
-        pagination-layout="total, sizes, prev, pager, next"
-        @search="search"
-        @reset="reset"
-        @size-change="changePageSize"
-        @current-change="changePage"
-      >
-        <template #filter>
-          <el-form-item label="文件名">
-            <el-input
-              v-model="query.originName"
-              placeholder="请输入文件名"
-              clearable
-              style="width: 160px"
-              @keyup.enter="search"
-            />
-          </el-form-item>
-          <el-form-item label="文件类型">
-            <el-select v-model="query.mimeType" placeholder="全部" clearable style="width: 190px">
-              <el-option v-for="item in typeOptions" :key="item" :label="item" :value="item" />
-            </el-select>
-          </el-form-item>
-          <el-form-item label="上传人">
-            <el-select v-model="query.uploaderId" placeholder="全部" clearable style="width: 150px">
-              <el-option
-                v-for="item in uploaderOptions"
-                :key="item.id"
-                :label="item.nickname || item.username"
-                :value="item.id"
-              />
-            </el-select>
-          </el-form-item>
-          <el-form-item label="业务类型">
-            <el-input
-              v-model="query.bizType"
-              placeholder="如 avatar / notice"
-              clearable
-              style="width: 160px"
-              @keyup.enter="search"
-            />
-          </el-form-item>
-          <el-form-item label="业务ID">
-            <el-input-number
-              v-model="query.bizId"
-              :min="1"
-              :controls="false"
-              placeholder="业务主键"
-              style="width: 130px"
-            />
-          </el-form-item>
-          <el-form-item label="上传时间">
-            <el-date-picker
-              v-model="dateRange"
-              type="datetimerange"
-              value-format="YYYY-MM-DD HH:mm:ss"
-              range-separator="至"
-              start-placeholder="开始时间"
-              end-placeholder="结束时间"
-            />
-          </el-form-item>
-          <el-form-item label="大小(KB)">
-            <div class="flex items-center gap-1">
-              <el-input-number
-                v-model="query.minSizeKB"
-                :min="0"
-                :controls="false"
-                placeholder="最小"
-                style="width: 80px"
-              />
-              <span class="text-muted">-</span>
-              <el-input-number
-                v-model="query.maxSizeKB"
-                :min="0"
-                :controls="false"
-                placeholder="最大"
-                style="width: 80px"
-              />
-            </div>
-          </el-form-item>
-        </template>
+    <SearchForm class="mt-4" @search="search" @reset="reset">
+      <el-form-item label="文件名">
+        <el-input
+          v-model="query.originName"
+          placeholder="请输入文件名"
+          clearable
+          style="width: 160px"
+          @keyup.enter="search"
+        />
+      </el-form-item>
+      <el-form-item label="文件类型">
+        <el-select v-model="query.mimeType" placeholder="全部" clearable style="width: 190px">
+          <el-option v-for="item in typeOptions" :key="item" :label="item" :value="item" />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="上传人">
+        <el-select v-model="query.uploaderId" placeholder="全部" clearable style="width: 150px">
+          <el-option
+            v-for="item in uploaderOptions"
+            :key="item.id"
+            :label="item.nickname || item.username"
+            :value="item.id"
+          />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="业务类型">
+        <el-input
+          v-model="query.bizType"
+          placeholder="如 avatar / notice"
+          clearable
+          style="width: 160px"
+          @keyup.enter="search"
+        />
+      </el-form-item>
+      <el-form-item label="业务ID">
+        <el-input-number v-model="query.bizId" :min="1" :controls="false" placeholder="业务主键" style="width: 130px" />
+      </el-form-item>
+      <el-form-item label="上传时间">
+        <el-date-picker
+          v-model="dateRange"
+          type="datetimerange"
+          value-format="YYYY-MM-DD HH:mm:ss"
+          range-separator="至"
+          start-placeholder="开始时间"
+          end-placeholder="结束时间"
+        />
+      </el-form-item>
+      <el-form-item label="大小(KB)">
+        <div class="flex items-center gap-1">
+          <el-input-number
+            v-model="query.minSizeKB"
+            :min="0"
+            :controls="false"
+            placeholder="最小"
+            style="width: 80px"
+          />
+          <span class="text-muted">-</span>
+          <el-input-number
+            v-model="query.maxSizeKB"
+            :min="0"
+            :controls="false"
+            placeholder="最大"
+            style="width: 80px"
+          />
+        </div>
+      </el-form-item>
+    </SearchForm>
 
-        <template #toolbar>
-          <el-button @click="getList">
+    <el-card shadow="never" class="mt-4">
+      <template #header>
+        <div class="flex items-center justify-between">
+          <span>文件列表</span>
+          <el-button size="small" @click="getList">
             <template #icon><i class="bi bi-arrow-clockwise" /></template>刷新</el-button
           >
-        </template>
-
+        </div>
+      </template>
+      <el-table v-loading="loading" :data="fileList" border>
         <el-table-column label="预览" width="88" align="center">
           <template #default="{ row }">
             <el-image
@@ -365,7 +349,16 @@ onMounted(() => {
             </el-button>
           </template>
         </el-table-column>
-      </TablePage>
-    </div>
+      </el-table>
+      <Pagination
+        v-model:current-page="query.page"
+        v-model:page-size="query.pageSize"
+        :total="total"
+        :page-sizes="[10, 20, 50]"
+        layout="total, sizes, prev, pager, next"
+        @size-change="changePageSize"
+        @current-change="changePage"
+      />
+    </el-card>
   </div>
 </template>
