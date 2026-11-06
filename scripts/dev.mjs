@@ -3,7 +3,7 @@
  * 一键开发启动器（根目录 `npm run dev`）。
  *
  * 解决的核心问题：原实现用 concurrently 并行拉起前后端，前端往往先于后端就绪——
- * 首次打开页面时 Vite 代理打到尚未监听的 :3000，登录 / 初始化请求直接失败，
+ * 首次打开页面时 Vite 代理打到尚未监听的 :3100（后端端口），登录 / 初始化请求直接失败，
  * 表现为「页面白屏或一片红」，需要手动刷新才恢复。
  *
  * 本脚本的顺序编排：
@@ -23,7 +23,7 @@
  *   npm run dev -- --help    # 查看帮助
  *
  * 可用环境变量：
- *   API_PORT              后端端口（默认 3000，需与 ly-admin-api/.env 的 PORT 一致）
+ *   API_PORT              后端端口（默认 3100，需与 ly-admin-api/.env 的 PORT 一致）
  *   WEB_PORT              前端端口（默认 5173，需与 ly-admin-web/.env 的 VITE_PORT 一致）
  *   DEV_WAIT_TIMEOUT_MS   等待后端就绪的超时（默认 180000）
  *   DEV_WAIT_INTERVAL_MS  健康检查轮询间隔（默认 500）
@@ -37,8 +37,14 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-/** 后端端口：与 ly-admin-api/.env 的 PORT 保持一致，可用 API_PORT 覆盖。 */
-const API_PORT = Number(process.env.API_PORT ?? 3000);
+/**
+ * 后端端口：与 ly-admin-api/.env 的 PORT 保持一致，可用 API_PORT 覆盖。
+ *
+ * 默认 3100 而非 3000，是为了与同机其它项目的后端隔离（例如 short-sentence 项目固定占 3000）。
+ * 本脚本在端口已有响应时会「复用该后端」，若两者共用 3000，会把别的项目后端当成自己的，
+ * 表现为菜单、字典等数据串台（曾把短句项目的「短句管理」菜单串进 ly-admin）。
+ */
+const API_PORT = Number(process.env.API_PORT ?? 3100);
 
 /** 前端端口：与 ly-admin-web/.env 的 VITE_PORT 保持一致，可用 WEB_PORT 覆盖。 */
 const WEB_PORT = Number(process.env.WEB_PORT ?? 5173);

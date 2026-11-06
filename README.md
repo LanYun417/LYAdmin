@@ -271,7 +271,7 @@ npm run seed              # 写入默认数据（可选：服务启动时也会�
 ### 5. 启动
 
 ```bash
-# 根目录：有序启动前后端（后端 :3000，前端 :5173）
+# 根目录：有序启动前后端（后端 :3100，前端 :5173）
 npm run dev
 ```
 
@@ -282,6 +282,9 @@ npm run dev
 3. 前端 vite 端口是 `strictPort`，被占用必失败，故动工前先查，报错直接带 PID；
 4. 任一子进程退出即整棵进程树回收；Ctrl+C 干净退出，复用的后端不会被误杀。
 
+> **⚠️ 端口必须三处一致**：`ly-admin-api/.env` 的 `PORT`、`ly-admin-web/vite.config.ts` 的 `proxy.target`、`scripts/dev.mjs` 的 `API_PORT`（默认 **3100**）。
+> 三者不一致时，`npm run dev` 会把端口上「别的项目」的后端当成自己的复用（曾把 short-sentence 项目的「短句管理」菜单串进本项目）。
+
 ```bash
 npm run dev -- --fresh   # 忽略已在运行的后端，强制新起一个
 ```
@@ -289,18 +292,18 @@ npm run dev -- --fresh   # 忽略已在运行的后端，强制新起一个
 或分别启动：
 
 ```bash
-npm run dev:api    # 后端 http://localhost:3000（等价 cd ly-admin-api && npm run start:dev）
+npm run dev:api    # 后端 http://localhost:3100（等价 cd ly-admin-api && npm run start:dev）
 npm run dev:web   # 前端 http://localhost:5173（等价 cd ly-admin-web && npm run dev）
 ```
 
 启动后可访问：
 
 - 前端页面：<http://localhost:5173>
-- 健康检查（探针）：`GET http://localhost:3000/api/health/live`（只证明进程可响应）、
-  `GET http://localhost:3000/api/health/ready`（探测 MySQL / Redis，MySQL 不可用返回 503）
-- 根探活：`GET http://localhost:3000/api`（返回服务名、状态、版本、uptime）
+- 健康检查（探针）：`GET http://localhost:3100/api/health/live`（只证明进程可响应）、
+  `GET http://localhost:3100/api/health/ready`（探测 MySQL / Redis，MySQL 不可用返回 503）
+- 根探活：`GET http://localhost:3100/api`（返回服务名、状态、版本、uptime）
 
-> 前端 dev server 通过 Vite 代理把 `/api`、`/static` 转发到 `http://localhost:3000`，开发期同源、无跨域。
+> 前端 dev server 通过 Vite 代理把 `/api`、`/static` 转发到 `http://localhost:3100`，开发期同源、无跨域。
 
 ## 默认账号
 
@@ -350,7 +353,7 @@ npm run dev:web   # 前端 http://localhost:5173（等价 cd ly-admin-web && npm
 
 | 命令                            | 说明                                                       |
 | ------------------------------- | ---------------------------------------------------------- |
-| `npm run start:dev`             | Nest watch 模式热重载（:3000）                             |
+| `npm run start:dev`             | Nest watch 模式热重载（:3100，随 `.env` 的 `PORT`）        |
 | `npm run start:debug`           | 同样的 watch 模式，附带 Node 调试端口                      |
 | `npm run build`                 | 编译到 `dist/`                                             |
 | `npm run start:prod`            | 运行编译产物 `node dist/main`                              |
@@ -381,7 +384,7 @@ npm run dev:web   # 前端 http://localhost:5173（等价 cd ly-admin-web && npm
 | 变量                                | 示例值                  | 说明                                                                                                                                 |
 | ----------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
 | `NODE_ENV`                          | `development`           | 运行环境                                                                                                                             |
-| `PORT`                              | `3000`                  | 后端端口                                                                                                                             |
+| `PORT`                              | `3100`                  | 后端端口（开发 3100；生产 PM2/Docker 仍用 3000，与 `deploy/nginx.conf` 反代一致）                                                    |
 | `DB_HOST` / `DB_PORT`               | `localhost` / `3306`    | MySQL 主机 / 端口                                                                                                                    |
 | `DB_NAME` / `DB_USER`               | `ly_admin` / `root`     | 数据库名 / 账号                                                                                                                      |
 | `DB_PASSWORD`                       | `your_password`         | 数据库密码（改成实际值）                                                                                                             |
@@ -506,8 +509,10 @@ NODE_ENV=production node dist/main.js
 
 ## 常见问题
 
-**Q1：端口被占用（3000 / 5173）？**
-后端改 `ly-admin-api/.env` 的 `PORT`；前端改 `ly-admin-web/.env.development` 的 `VITE_PORT`（`vite.config.ts` 为 `strictPort: true`，端口占用会直接报错而非自动切换）；同时同步 `vite.config.ts` 中 proxy 的 `target` 端口。
+**Q1：端口被占用（3100 / 5173）？**
+后端改 `ly-admin-api/.env` 的 `PORT`；前端改 `ly-admin-web/.env.development` 的 `VITE_PORT`（`vite.config.ts` 为 `strictPort: true`，端口占用会直接报错而非自动切换）；同时同步 `vite.config.ts` 中 proxy 的 `target` 端口与 `scripts/dev.mjs` 的 `API_PORT`。
+
+> 开发默认 **3100** 而非 3000，是为了和同机其它项目（如 short-sentence 固定占 3000）隔离——共用端口会让 `npm run dev` 复用别人家的后端，出现菜单/数据串台。
 
 **Q2：启动即报 JWT 相关错误？**
 `JWT_ACCESS_SECRET` / `JWT_REFRESH_SECRET` 为**必填**且需互不相同。按[第 3 步](#3-配置环境变量)生成随机值填入 `ly-admin-api/.env`。

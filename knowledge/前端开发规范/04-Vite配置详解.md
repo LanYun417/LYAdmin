@@ -35,8 +35,8 @@ export default defineConfig(({ mode }) => {
       strictPort: true,
       open: true,
       proxy: {
-        '/api': { target: 'http://localhost:3000', changeOrigin: true },
-        '/static': { target: 'http://localhost:3000', changeOrigin: true },
+        '/api': { target: 'http://localhost:3100', changeOrigin: true },
+        '/static': { target: 'http://localhost:3100', changeOrigin: true },
       },
     },
     build: {
@@ -71,7 +71,9 @@ ESM 标准写法，避免 `__dirname`（ESM 中不存在）。该别名必须与
 
 ### 3. 代理
 
-`/api`、`/static` 代理到后端（默认 `http://localhost:3000`，以 `vite.config.ts` 中 `proxy.target` 为准）。与 `src/api/request.ts` 的 `baseURL: import.meta.env.VITE_API_BASE_URL || '/api'` 对应；生产环境通过 `VITE_API_BASE_URL` 环境变量覆盖。
+`/api`、`/static` 代理到后端（默认 `http://localhost:3100`，以 `vite.config.ts` 中 `proxy.target` 为准；**必须与 `ly-admin-api/.env` 的 `PORT`、`scripts/dev.mjs` 的 `API_PORT` 三处一致**）。与 `src/api/request.ts` 的 `baseURL: import.meta.env.VITE_API_BASE_URL || '/api'` 对应；生产环境通过 `VITE_API_BASE_URL` 环境变量覆盖。
+
+> 开发端口用 3100 而非 3000：同机常有其它项目的后端占着 3000（如 short-sentence），而 `scripts/dev.mjs` 在端口已有响应时会**复用该后端**，端口撞车会让本项目连到别人家的库，表现为菜单/数据串台。
 
 > `strictPort: true`：端口被占用会直接报错，而非自动切到 +1 端口。改端口需同步 `ly-admin-api/.env` 的 `PORT` 与 `VITE_PORT`。
 
