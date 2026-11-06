@@ -188,11 +188,15 @@ onBeforeUnmount(() => {
       class="tags-context-menu"
       :style="{ left: `${contextMenu.left}px`, top: `${contextMenu.top}px` }"
     >
-      <div class="context-item" @click="handleCloseCurrent">关闭当前</div>
-      <div v-show="hasLeft" class="context-item" @click="handleCloseLeft">关闭左侧</div>
-      <div v-show="hasRight" class="context-item" @click="handleCloseRight">关闭右侧</div>
-      <div class="context-item" @click="handleCloseOthers">关闭其他</div>
-      <div class="context-item" @click="handleCloseAll">关闭全部</div>
+      <div class="context-item" @click="handleCloseCurrent"><i class="bi bi-x-lg" aria-hidden="true" />关闭当前</div>
+      <div v-show="hasLeft" class="context-item" @click="handleCloseLeft">
+        <i class="bi bi-arrow-bar-left" aria-hidden="true" />关闭左侧
+      </div>
+      <div v-show="hasRight" class="context-item" @click="handleCloseRight">
+        <i class="bi bi-arrow-bar-right" aria-hidden="true" />关闭右侧
+      </div>
+      <div class="context-item" @click="handleCloseOthers"><i class="bi bi-x-square" aria-hidden="true" />关闭其他</div>
+      <div class="context-item" @click="handleCloseAll"><i class="bi bi-x-octagon" aria-hidden="true" />关闭全部</div>
     </div>
   </div>
 </template>
@@ -269,13 +273,26 @@ onBeforeUnmount(() => {
 }
 
 .context-item {
+  display: flex;
+  gap: 8px;
+  align-items: center;
   padding: 6px 16px;
   font-size: 13px;
   cursor: pointer;
 }
 
+/* 图标弱化一档：不抢文字，hover 时跟随主色 */
+.context-item .bi {
+  font-size: 13px;
+  color: var(--el-text-color-secondary);
+}
+
 .context-item:hover {
   color: var(--el-color-primary);
   background-color: var(--el-fill-color-light);
+}
+
+.context-item:hover .bi {
+  color: inherit;
 }
 </style>
