@@ -122,7 +122,10 @@ const todayText = new Intl.DateTimeFormat('zh-CN', {
       </el-col>
       <el-col :xs="24" :md="8">
         <el-card shadow="never">
-          <template #header>操作类型分布</template>
+          <!-- 括注的是「全部操作类型」的数量（图表只画 Top5），未加载完不显示，避免闪一下「共 0 种」 -->
+          <template #header>
+            <span>操作类型分布{{ distribution.length > 0 ? `（共 ${distribution.length} 种）` : '' }}</span>
+          </template>
           <PieChart :data="distribution" />
         </el-card>
       </el-col>
