@@ -2,7 +2,7 @@
  * 标签页 Store：维护已访问标签与 keep-alive 缓存组件名列表。
  */
 
-import type { RouteLocationNormalizedLoaded, RouteRecordNormalized } from 'vue-router';
+import type { RouteLocationNormalized, RouteLocationNormalizedLoaded, RouteRecordNormalized } from 'vue-router';
 /** 标签页项 */
 export interface TagView {
   /** 路由名（用于 keep-alive include） */
@@ -43,8 +43,12 @@ export const useTagsViewStore = defineStore(
       });
     }
 
-    /** 新增缓存标签 */
-    function addCachedView(route: RouteLocationNormalizedLoaded): void {
+    /**
+     * 新增缓存标签。
+     * 参数取 `RouteLocationNormalized`（而非 Loaded）：路由守卫里拿到的 `to` 就是这个类型，
+     * 本方法只读 `name` 与 `meta.keepAlive`，用更宽的入参避免调用处强转。
+     */
+    function addCachedView(route: RouteLocationNormalized): void {
       if (!route.meta.keepAlive || !route.name) {
         return;
       }

@@ -8,6 +8,7 @@
 import type { Router } from 'vue-router';
 import { useUserStore } from '@/store/modules/user';
 import { usePermissionStore } from '@/store/modules/permission';
+import { useTagsViewStore } from '@/store/modules/tagsView';
 import { hasPermission } from '@/utils/permission';
 
 /** 免登录白名单 */
@@ -51,6 +52,10 @@ export function setupRouterGuard(router: Router): void {
         // 路由内跳转（返回目标路径），不做整页刷新，保留 tagsView 已打开标签与表单状态
         return '/403';
       }
+      // ⚠️ 必须在导航确认前把组件名写入 keep-alive 名单。
+      // 若留到导航后的 TagsView watcher 里追加，include 会在 <transition mode="out-in"> 的
+      // 过渡窗口内变化 → keep-alive 重算 → 进入过渡永不触发 → 内容区整块空白（刷新才恢复）。
+      useTagsViewStore().addCachedView(to);
       return true;
     }
 

@@ -293,7 +293,7 @@ Element Plus 的 `.el-drawer__body` 默认 `overflow: auto`。若抽屉内容直
 
 ### 使用注意
 
-- 页面**必须保持单根**（`<transition>` 要求），`TablePage` 放在一个普通 `<div>` 里即可。
+- 页面**保持单根**：`<keep-alive>` 缓存按组件名匹配，多根节点会让缓存与切换行为变得不可预期。
 - `data` / `selection-change` / `row-key` 等表格配置经 `$attrs` 透传，页面照常写 `:data="list"`。
 - 筛选栏用 `#filter` 插槽（内部复用 `SearchForm`，自带查询/重置按钮）；没有该插槽则不渲染。
   需要 `SearchForm` 的「高级筛选」时用 `#filterAdvanced` 插槽（如日志页的时间范围）。
