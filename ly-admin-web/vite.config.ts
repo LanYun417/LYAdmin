@@ -12,7 +12,7 @@ import { ElementPlusResolver } from 'unplugin-vue-components/resolvers';
  *
  * 关键点：
  * - 路径别名 `@` → `src`
- * - dev server 固定 5173 端口，代理 `/api`、`/static` 到后端 `http://localhost:3100`
+ * - dev server 默认 5173 端口（占用时顺延 +1），代理 `/api`、`/static` 到后端 `http://localhost:3100`
  * - Element Plus 按需引入（unplugin-auto-import + unplugin-vue-components）
  * - Tailwind CSS v4 通过 `@tailwindcss/vite` 插件接入（无需 postcss.config.js）；
  *   主题令牌与 preflight 决策写在 `src/styles/index.css`
@@ -58,8 +58,9 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       host: 'localhost',
+      // 首选端口来自 VITE_PORT（默认 5173）。不写 strictPort（默认 false）：
+      // 端口被占用时 vite 自动顺延 +1 找空闲端口，而非启动失败。
       port: Number(env.VITE_PORT) || 5173,
-      strictPort: true,
       open: true,
       proxy: {
         // 后端端口 3100：与 ly-admin-api/.env 的 PORT、scripts/dev.mjs 的 API_PORT 保持一致。

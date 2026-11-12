@@ -8,7 +8,7 @@
  *
  * 本脚本的顺序编排：
  *   1. 启动前预检：后端健康检查端点已有响应 → 复用该实例（顺带避免端口占用报错）；
- *      前端 dev server 端口（strictPort，占用了必失败）被占 → 直接带 PID 报错，不白跑一趟；
+ *      前端端口被占用 → 只告警（vite 未配 strictPort，会自动顺延到下一个空闲端口）；
  *   2. 否则拉起后端 dev server，轮询健康检查直到返回 200（Nest 已完成监听、路由已挂载）；
  *   3. 后端就绪后才启动前端 dev server；
  *   4. 任一子进程退出 → 全量回收整棵进程树；Ctrl+C 同样干净退出；
@@ -24,7 +24,7 @@
  *
  * 可用环境变量：
  *   API_PORT              后端端口（默认 3100，需与 ly-admin-api/.env 的 PORT 一致）
- *   WEB_PORT              前端端口（默认 5173，需与 ly-admin-web/.env 的 VITE_PORT 一致）
+ *   WEB_PORT              前端首选端口（默认 5173，需与 ly-admin-web/.env 的 VITE_PORT 一致；被占用时 vite 自动顺延）
  *   DEV_WAIT_TIMEOUT_MS   等待后端就绪的超时（默认 180000）
  *   DEV_WAIT_INTERVAL_MS  健康检查轮询间隔（默认 500）
  *   NO_COLOR              置任意值即关闭彩色前缀
@@ -45,7 +45,11 @@ const ROOT_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'
  */
 const API_PORT = Number(process.env.API_PORT ?? 3100);
 
-/** 前端端口：与 ly-admin-web/.env 的 VITE_PORT 保持一致，可用 WEB_PORT 覆盖。 */
+/**
+ * 前端端口：与 ly-admin-web/.env 的 VITE_PORT 保持一致，可用 WEB_PORT 覆盖。
+ * vite 未配 strictPort，该端口被占用时会自动顺延 +1，因此这里的 WEB_PORT 只作为
+ * 「首选端口」用于预检提示与 help 展示，不代表最终监听端口。
+ */
 const WEB_PORT = Number(process.env.WEB_PORT ?? 5173);
 
 /** 存活探针地址（只证明进程可响应；就绪探针另行软校验）。 */
@@ -351,18 +355,15 @@ async function checkBackendReady() {
 }
 
 /**
- * 预检前端端口。vite 配了 strictPort，被占用必失败，故在动工前先查。
- * @returns {void}
- * @throws 端口被占用时抛出（报错带 PID）
+ * 预检前端端口。vite 未配 strictPort，被占用会自动顺延 +1，不再阻断启动，
+ * 这里只提前给出提示（含占用者 PID），让「为什么地址不是 5173」有迹可查。
+ * @returns {Promise<void>}
  */
 async function preflightWebPort() {
   const occupied = (await isPortOpen(WEB_PORT)) || (await probe(WEB_PORT, '/'));
   if (!occupied) return;
   const pid = findListenerPid(WEB_PORT);
-  throw new Error(
-    `前端端口 ${WEB_PORT} 已被占用${pid ? `（PID ${pid}）` : ''}，而 vite 配置了 strictPort，无法自动换端口。\n` +
-      `      请先结束占用进程后重试；若确需并存，可用 WEB_PORT 指定其他端口。`,
-  );
+  warn(`前端首选端口 ${WEB_PORT} 已被占用${pid ? `（PID ${pid}）` : ''}，vite 将自动顺延到下一个可用端口。`);
 }
 
 /** 打印帮助。 */
@@ -378,7 +379,7 @@ function printHelp() {
       '',
       '环境变量：',
       `  API_PORT=${API_PORT}              后端端口`,
-      `  WEB_PORT=${WEB_PORT}              前端端口`,
+      `  WEB_PORT=${WEB_PORT}              前端首选端口（被占用时 vite 自动顺延）`,
       `  DEV_WAIT_TIMEOUT_MS=${WAIT_TIMEOUT_MS}   等待后端就绪的超时（毫秒）`,
       '  NO_COLOR                关闭彩色输出前缀',
       '',
@@ -424,7 +425,7 @@ async function main() {
   log('启动前端（vite）…');
   // 前端独占 stdin，便于使用 Vite 的 r / q 等快捷键（后端不需要交互输入）
   startTask('web', { stdin: 'inherit' });
-  log(`全部就绪 → 前端 http://localhost:${WEB_PORT} （Ctrl+C 退出）\n`);
+  log(`全部就绪 → 前端地址见上方 [web] 的 Local 行（Ctrl+C 退出）\n`);
 }
 
 for (const signal of ['SIGINT', 'SIGTERM']) {
