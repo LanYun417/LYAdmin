@@ -1087,6 +1087,18 @@ const CONFIG_SEEDS: ConfigSeed[] = [
     configValue: '15',
     remark: '登录锁定持续时间，超过后自动解除锁定',
   },
+  {
+    configName: '登录设备数上限',
+    configKey: 'sys.login.maxDevices',
+    configValue: '3',
+    remark: '非访客用户的并发登录设备上限；新登录达到上限时自动回收最旧会话，0 = 不限制',
+  },
+  {
+    configName: '豁免设备限制的角色',
+    configKey: 'sys.login.guestRoleCodes',
+    configValue: 'viewer',
+    remark: '命中这些角色编码的用户不限制并发登录（允许多设备同时在线），编码逗号分隔',
+  },
 ];
 
 /** 写入内置系统参数（幂等：按 configKey 去重，已存在的键不覆盖现值，便于运维自行调参）。 */

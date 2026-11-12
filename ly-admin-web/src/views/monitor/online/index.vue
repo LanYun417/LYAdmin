@@ -10,7 +10,7 @@
 import { ElMessage, ElMessageBox } from '@/utils/element';
 import { forceLogoutSessionApi, forceLogoutUserApi, getOnlineSessionsApi } from '@/api/monitor';
 import { useTable } from '@/composables/useTable';
-import { formatDateTime } from '@/utils/format';
+import { formatDateTime, formatOnlineDuration } from '@/utils/format';
 import type { OnlineSession } from '@/types/api';
 import TablePage from '@/components/TablePage/index.vue';
 
@@ -111,6 +111,9 @@ async function handleForceLogoutAll(row: OnlineSession): Promise<void> {
       </el-table-column>
       <el-table-column label="登录时间" width="180">
         <template #default="{ row }">{{ formatDateTime(row.loginAt) }}</template>
+      </el-table-column>
+      <el-table-column label="在线时长" width="120">
+        <template #default="{ row }">{{ formatOnlineDuration(row.loginAt) }}</template>
       </el-table-column>
       <el-table-column label="最后活跃" width="180">
         <template #default="{ row }">{{ formatDateTime(row.lastSeenAt) }}</template>

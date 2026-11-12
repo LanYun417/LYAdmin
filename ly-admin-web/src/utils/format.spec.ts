@@ -6,6 +6,7 @@ import {
   formatDateTime,
   formatDuration,
   formatFileSize,
+  formatOnlineDuration,
   formatTimeOnly,
 } from '@/utils/format';
 
@@ -65,6 +66,46 @@ describe('format utils', () => {
       expect(formatDuration(500)).toBe('500 ms');
       expect(formatDuration(1000)).toBe('1.00 s');
       expect(formatDuration(1500)).toBe('1.50 s');
+    });
+  });
+
+  describe('formatOnlineDuration', () => {
+    it('returns "-" for missing values', () => {
+      expect(formatOnlineDuration(undefined)).toBe('-');
+      expect(formatOnlineDuration(null)).toBe('-');
+      expect(formatOnlineDuration('')).toBe('-');
+    });
+
+    it('returns "-" for unparseable values', () => {
+      expect(formatOnlineDuration('not-a-date')).toBe('-');
+    });
+
+    it('renders seconds below 1 minute', () => {
+      expect(formatOnlineDuration(new Date(Date.now() - 5_000))).toBe('5 秒');
+    });
+
+    it('renders minutes below 1 hour', () => {
+      expect(formatOnlineDuration(new Date(Date.now() - 45 * 60_000))).toBe('45 分钟');
+    });
+
+    it('renders hours and minutes below 1 day', () => {
+      expect(formatOnlineDuration(new Date(Date.now() - (3 * 3600 + 25 * 60) * 1000))).toBe('3 小时 25 分钟');
+    });
+
+    it('renders days and hours', () => {
+      expect(formatOnlineDuration(new Date(Date.now() - (2 * 24 + 3) * 3600 * 1000))).toBe('2 天 3 小时');
+    });
+
+    it('renders whole days without zero hours', () => {
+      expect(formatOnlineDuration(new Date(Date.now() - 2 * 24 * 3600 * 1000))).toBe('2 天');
+    });
+
+    it('clamps future timestamps to 0 seconds', () => {
+      expect(formatOnlineDuration(new Date(Date.now() + 60_000))).toBe('0 秒');
+    });
+
+    it('accepts ISO strings', () => {
+      expect(formatOnlineDuration(new Date(Date.now() - 30_000).toISOString())).toBe('30 秒');
     });
   });
 });

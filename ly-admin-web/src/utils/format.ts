@@ -62,3 +62,35 @@ export function formatDuration(ms?: number | null): string {
   }
   return `${(ms / 1000).toFixed(2)} s`;
 }
+
+/**
+ * 在线时长：登录时刻距现在的人读时长（如「3 天 2 小时」「45 分钟」「12 秒」）。
+ * 与 formatDuration 区分：后者面向「毫秒级耗时」（任务执行等），粒度到秒已足够；
+ * 本函数面向「会话存活时长」，跨度从秒到天，按人读习惯取舍。
+ *
+ * @param startedAt 登录时间（ISO 串 / 时间戳 / Date）
+ */
+export function formatOnlineDuration(startedAt?: string | number | Date | null): string {
+  if (startedAt === null || startedAt === undefined || startedAt === '') {
+    return '-';
+  }
+  const started = startedAt instanceof Date ? startedAt.getTime() : new Date(startedAt).getTime();
+  if (!Number.isFinite(started)) {
+    return '-';
+  }
+  // 未来时间（客户端时钟回拨）按 0 处理，不显示负数
+  const seconds = Math.max(0, Math.floor((Date.now() - started) / 1000));
+  if (seconds < 60) {
+    return `${seconds} 秒`;
+  }
+  const days = Math.floor(seconds / 86400);
+  const hours = Math.floor((seconds % 86400) / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  if (days > 0) {
+    return hours > 0 ? `${days} 天 ${hours} 小时` : `${days} 天`;
+  }
+  if (hours > 0) {
+    return minutes > 0 ? `${hours} 小时 ${minutes} 分钟` : `${hours} 小时`;
+  }
+  return `${minutes} 分钟`;
+}

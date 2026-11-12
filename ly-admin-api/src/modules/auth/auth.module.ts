@@ -6,9 +6,11 @@ import { Module } from '@nestjs/common';
 import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
 import { MenuModule } from '../menu/menu.module.js';
+import { ConfigModule } from '../config/config.module.js';
+import { NoticeModule } from '../notice/notice.module.js';
 
 @Module({
-  imports: [MenuModule],
+  imports: [MenuModule, ConfigModule, NoticeModule],
   controllers: [AuthController],
   providers: [AuthService],
   exports: [AuthService],

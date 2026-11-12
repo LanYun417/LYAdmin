@@ -6,7 +6,7 @@
  * 2. 需要构造「索引里残留了已过期 sid」的脏数据，真实例上要等 TTL 到期。
  */
 import { beforeEach, describe, expect, it } from 'vitest';
-import { SessionService } from '../src/common/auth/session.service.js';
+import { SessionService, type SessionRecord } from '../src/common/auth/session.service.js';
 import type { RedisService } from '../src/common/redis/redis.service.js';
 
 /** 内存版 Redis（覆盖 SessionService 用到的全部方法）。 */
@@ -156,5 +156,92 @@ describe('SessionService', () => {
 
     expect(records.map((item) => item.sid)).toEqual([alive]);
     expect(await service.listAllSids()).not.toContain('00000000-0000-4000-8000-000000000000');
+  });
+
+  describe('enforceDeviceLimit（登录设备并发控制）', () => {
+    /**
+     * 按「从旧到新」造 n 个会话：create 的 lastSeenAt 都是 now，无法区分先后，
+     * 借 __raw 改写 lastSeenAt 为确定的时间戳（index 越小越旧），让回收顺序可预期。
+     */
+    async function seedSessions(count: number): Promise<string[]> {
+      const sids: string[] = [];
+      for (let index = 0; index < count; index += 1) {
+        const sid = String(await service.create(sessionInput({ ip: `10.0.0.${index + 1}` })));
+        const raw = redis.__raw.get(`auth:session:${sid}`);
+        if (raw) {
+          const record = JSON.parse(raw) as SessionRecord;
+          record.lastSeenAt = 1000 + index;
+          redis.__raw.set(`auth:session:${sid}`, JSON.stringify(record));
+        }
+        sids.push(sid);
+      }
+      return sids;
+    }
+
+    it('未达上限不回收任何会话', async () => {
+      const sids = await seedSessions(2);
+
+      expect(await service.enforceDeviceLimit(1, 3)).toEqual([]);
+      for (const sid of sids) {
+        expect(await service.isAlive(sid)).toBe(true);
+      }
+    });
+
+    it('达到上限只回收最旧的一台，为即将登记的新会话保留名额', async () => {
+      const sids = await seedSessions(3); // lastSeenAt 1000 / 1001 / 1002
+
+      const evicted = await service.enforceDeviceLimit(1, 3);
+
+      expect(evicted.map((item) => item.sid)).toEqual([sids[0]]);
+      expect(evicted[0]?.ip).toBe('10.0.0.1');
+      expect(await service.isAlive(sids[0])).toBe(false);
+      expect(await service.isAlive(sids[1])).toBe(true);
+      expect(await service.isAlive(sids[2])).toBe(true);
+      // 索引也要同步清理
+      expect(await service.listSidsOfUser(1)).not.toContain(sids[0]);
+      // 回收后剩 2 台 + 新会话 = 3 台，正好到上限
+      expect(await service.listSidsOfUser(1)).toHaveLength(2);
+    });
+
+    it('超出多台时按从旧到新依次回收', async () => {
+      const sids = await seedSessions(5);
+
+      const evicted = await service.enforceDeviceLimit(1, 3);
+
+      expect(evicted.map((item) => item.sid)).toEqual(sids.slice(0, 3));
+      expect(await service.listSidsOfUser(1)).toEqual(expect.arrayContaining([sids[3], sids[4]]));
+    });
+
+    it('maxDevices 为 1 时全部回收（新会话独占）', async () => {
+      const sids = await seedSessions(3);
+
+      const evicted = await service.enforceDeviceLimit(1, 1);
+
+      expect(evicted).toHaveLength(3);
+      for (const sid of sids) {
+        expect(await service.isAlive(sid)).toBe(false);
+      }
+    });
+
+    it('maxDevices ≤ 0 视为不限制，一台都不回收', async () => {
+      const sids = await seedSessions(5);
+
+      expect(await service.enforceDeviceLimit(1, 0)).toEqual([]);
+      for (const sid of sids) {
+        expect(await service.isAlive(sid)).toBe(true);
+      }
+    });
+
+    it('只回收目标用户的会话，其他人的在线状态不受影响', async () => {
+      const mine = await seedSessions(3);
+      const others = String(await service.create(sessionInput({ userId: 2, username: 'tom' })));
+
+      const evicted = await service.enforceDeviceLimit(1, 2);
+
+      expect(evicted).toHaveLength(2);
+      expect(await service.isAlive(mine[2])).toBe(true);
+      expect(await service.isAlive(others)).toBe(true);
+      expect(await service.listSidsOfUser(2)).toEqual([others]);
+    });
   });
 });

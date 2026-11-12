@@ -160,6 +160,37 @@ export class SessionService {
     return this.redis.sMembers(`${USER_INDEX_PREFIX}${userId}`);
   }
 
+  /**
+   * 登录时的设备并发控制：回收「超出上限」的最旧会话。
+   *
+   * 调用时机在**新会话登记之前**：此时在线的会话数为 N，新会话登记后将变为 N+1，
+   * 因此需要回收至 N+1 ≤ max，即保留 count = max - 1 台、其余从旧到新依次回收，
+   * 否则登录成功后仍然超限。
+   *
+   * @param userId 用户 id
+   * @param maxDevices 允许的最大并发会话数；≤0 表示不限制（直接返回空）
+   * @returns 被回收的会话记录（按从旧到新顺序），供调用方记录日志 / 通知本人
+   */
+  async enforceDeviceLimit(userId: number, maxDevices: number): Promise<SessionRecord[]> {
+    if (maxDevices <= 0) {
+      return [];
+    }
+    const sids = await this.listSidsOfUser(userId);
+    if (sids.length + 1 <= maxDevices) {
+      return [];
+    }
+    const records = await Promise.all(sids.map((sid) => this.read(sid)));
+    const alive = records.filter((record): record is SessionRecord => record !== null);
+    // 从旧到新（lastSeenAt 升序，同毫秒用 sid 兜底保证稳定，同 list() 的口径）
+    alive.sort((left, right) => left.lastSeenAt - right.lastSeenAt || left.sid.localeCompare(right.sid));
+    // 保留 maxDevices - 1 台，腾出 1 个名额给即将登记的新会话
+    const victims = alive.slice(0, alive.length - maxDevices + 1);
+    for (const victim of victims) {
+      await this.remove(victim.sid, victim.userId);
+    }
+    return victims;
+  }
+
   /** 全部会话 id（带上限，防止历史脏索引导致一次性拉取过多）。 */
   async listAllSids(limit = 2000): Promise<string[]> {
     const sids = await this.redis.sMembers(GLOBAL_INDEX_KEY);

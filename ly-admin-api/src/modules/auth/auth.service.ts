@@ -16,6 +16,8 @@ import { RedisService } from '../../common/redis/redis.service.js';
 import { comparePassword } from '../../common/utils/utils.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { AuthUserService } from '../../common/auth/auth-user.service.js';
+import { ConfigService } from '../config/config.service.js';
+import { NOTICE_TYPE, NoticeService } from '../notice/notice.service.js';
 import type { AuthContext, JwtPayload, UserBrief } from '../../common/types.js';
 
 /** 登录结果。 */
@@ -29,6 +31,30 @@ export interface LoginResult {
 export interface TokenPair {
   accessToken: string;
   refreshToken: string;
+}
+
+/** 登录设备数上限参数键（值 0 = 不限制）。 */
+const MAX_DEVICES_CONFIG_KEY = 'sys.login.maxDevices';
+/** 豁免设备数上限的角色编码参数键（逗号分隔，如 `viewer,readonly`）。 */
+const GUEST_ROLE_CONFIG_KEY = 'sys.login.guestRoleCodes';
+/** 参数缺失 / 非法时的设备数上限兜底值。 */
+const DEFAULT_MAX_DEVICES = 3;
+
+/** 解析设备数上限：非数字 / 负数回退默认值，0 表示不限制。 */
+function parseMaxDevices(raw: string | undefined): number {
+  const value = Number.parseInt(raw ?? '', 10);
+  if (!Number.isFinite(value) || value < 0) {
+    return DEFAULT_MAX_DEVICES;
+  }
+  return value;
+}
+
+/** 解析逗号分隔的编码列表（去空白、去空项）。 */
+function parseCodeList(raw: string | undefined): string[] {
+  return (raw ?? '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0);
 }
 
 @Injectable()
@@ -45,6 +71,8 @@ export class AuthService {
     private readonly ipRegion: IpRegionService,
     private readonly sessionService: SessionService,
     private readonly redis: RedisService,
+    private readonly configService: ConfigService,
+    private readonly noticeService: NoticeService,
   ) {}
 
   /** 将用户记录转换为对外简要信息。 */
@@ -134,7 +162,11 @@ export class AuthService {
     // 归属地解析一次即可：登录成功/失败共用（解析失败返回空串，不影响登录流程）
     const location = await this.ipRegion.locate(ip);
 
-    const user = await this.prisma.user.findUnique({ where: { username } });
+    // 连带读角色编码：设备并发控制需要用它判定「访客豁免」（见 applyDeviceLimit）
+    const user = await this.prisma.user.findUnique({
+      where: { username },
+      include: { userRoles: { select: { role: { select: { roleCode: true } } } } },
+    });
     if (!user) {
       await this.writeLoginLog(username, ip, userAgent, LogResult.FAIL, ERROR_MESSAGE.LOGIN_FAILED, location);
       throw AppException.unauthorized(ERROR_MESSAGE.LOGIN_FAILED);
@@ -160,6 +192,9 @@ export class AuthService {
     // 登录会更新 lastLoginAt：失效该用户鉴权缓存，避免 /auth/profile 在 TTL 内返回陈旧值
     this.authCache.invalidate(Number(user.id));
 
+    // 设备并发控制：非访客角色达到在线设备上限时，回收最旧会话后放行新登录（访客豁免）
+    await this.applyDeviceLimit(user);
+
     const payload = { userId: Number(user.id), username: user.username };
     // 登记在线会话：成功后令牌带上 sid（可被在线用户页强制下线）；
     // Redis 不可用时 create 返回 null，此时签发不带 sid 的令牌——宁可失去会话管理能力，
@@ -179,6 +214,63 @@ export class AuthService {
       refreshToken: await this.jwtService.signRefreshToken(payload, sid),
       user: this.toUserBrief({ ...user, dept: await this.deptRef(user.deptId) }),
     };
+  }
+
+  /**
+   * 登录时的设备并发控制。
+   *
+   * 策略：非访客角色默认最多同时在线 `sys.login.maxDevices` 台（参数管理可调，0 = 不限制）；
+   * 新登录会先回收「最旧」的会话腾出名额（新设备顺利进入，旧设备下一次请求即失效），
+   * 命中 `sys.login.guestRoleCodes` 的角色（如只读访客 viewer）完全豁免，允许多设备同时在线。
+   *
+   * 降级：Redis 不可用（本就不登记会话）、参数读取失败一律放行——
+   * 设备控制是安全增强，绝不能成为登录失败的诱因。
+   */
+  private async applyDeviceLimit(user: {
+    id: bigint;
+    username: string;
+    userRoles?: Array<{ role: { roleCode: string } }>;
+  }): Promise<void> {
+    if (!this.redis.isReady()) {
+      return;
+    }
+    try {
+      const [limitRow, guestRow] = await Promise.all([
+        this.configService.getConfigData(MAX_DEVICES_CONFIG_KEY),
+        this.configService.getConfigData(GUEST_ROLE_CONFIG_KEY),
+      ]);
+      const maxDevices = parseMaxDevices(limitRow?.configValue);
+      if (maxDevices <= 0) {
+        return;
+      }
+      const roleCodes = (user.userRoles ?? []).map((link) => link.role.roleCode);
+      if (roleCodes.some((code) => parseCodeList(guestRow?.configValue).includes(code))) {
+        // 访客角色：不限制并发登录
+        return;
+      }
+      const evicted = await this.sessionService.enforceDeviceLimit(Number(user.id), maxDevices);
+      if (evicted.length === 0) {
+        return;
+      }
+      this.logger.warn(
+        `[AuthService] 设备上限 ${maxDevices}：${user.username} 的 ${evicted.length} 台旧会话被回收` +
+          `（${evicted.map((session) => session.ip || '未知 IP').join('、')}）`,
+      );
+      // 被回收设备的人应当收到提醒：给他留一条安全通知（publish 内部吞异常，不影响登录）
+      await this.noticeService.publish({
+        title: '登录设备数已达上限',
+        content:
+          `你在新设备登录时，较早的登录会话（${evicted.map((session) => session.ip || '未知 IP').join('、')}）` +
+          '已被自动下线。如非本人操作，请及时修改密码。',
+        noticeType: NOTICE_TYPE.SECURITY,
+        userIds: [...new Set(evicted.map((session) => session.userId))],
+        createdBy: null,
+      });
+    } catch (error) {
+      this.logger.error(
+        `[AuthService] 设备并发控制失败（不影响本次登录）: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
   }
 
   /**
