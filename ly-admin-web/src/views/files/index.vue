@@ -4,12 +4,11 @@
  * 模块职责：文件上传（哈希预检秒传）、条件查询、缩略图预览、下载与删除。
  */
 
-import { ElMessage, ElMessageBox } from '@/utils/element';
+import { ElMessage, ElMessageBox, ElLoading } from '@/utils/element';
 import type { UploadRequestOptions } from 'element-plus';
 import {
   checkFileApi,
   deleteFileApi,
-  downloadFileApi,
   getFileListApi,
   getFileQuotaApi,
   getFileTypesApi,
@@ -17,12 +16,13 @@ import {
   uploadFilesApi,
 } from '@/api/file';
 import { useTable } from '@/composables/useTable';
-import { downloadBlob } from '@/utils/download';
+import { downloadFileResumable } from '@/utils/download';
 import { sha256Hex } from '@/utils/hash';
 import { formatFileSize, formatDateTime } from '@/utils/format';
 import type { FileItem, FileQuota, FileUploaderOption } from '@/types/api';
 import Pagination from '@/components/Pagination/index.vue';
 import SearchForm from '@/components/SearchForm/index.vue';
+import ChunkUploadDialog from './components/ChunkUploadDialog.vue';
 import { withUploadToken } from '@/utils/uploadToken';
 
 defineOptions({ name: 'Files' });
@@ -159,10 +159,18 @@ async function customUpload(options: UploadRequestOptions): Promise<void> {
   }
 }
 
-/** 下载文件：拉二进制流后由浏览器落盘（文件名用原始文件名） */
+/** 下载文件：分片（Range）拉取，断点续传 + 进度提示 */
 async function handleDownload(row: FileItem): Promise<void> {
-  const blob = await downloadFileApi(row.id);
-  downloadBlob(blob, row.originName);
+  const loading = ElLoading.service({ text: `下载中 0%`, background: 'transparent' });
+  try {
+    await downloadFileResumable(row.id, row.originName, {
+      onProgress: (loaded, total) => {
+        loading.setText(`下载中 ${Math.round((loaded / total) * 100)}%`);
+      },
+    });
+  } finally {
+    loading.close();
+  }
 }
 
 /** 删除文件 */
@@ -181,6 +189,16 @@ async function handleDelete(row: FileItem): Promise<void> {
   await loadQuota();
 }
 
+/** 大文件分片上传对话框 */
+const chunkDialogVisible = ref(false);
+
+/** 分片上传完成：刷新列表、配额与筛选项（与直传成功后的刷新保持一致） */
+async function handleChunkUploaded(): Promise<void> {
+  await getList();
+  await loadFilterOptions();
+  await loadQuota();
+}
+
 onMounted(() => {
   void loadFilterOptions();
   void loadQuota();
@@ -193,11 +211,16 @@ onMounted(() => {
       <template #header>
         <div class="flex items-center justify-between">
           <span>文件上传</span>
-          <span v-if="quota" class="text-sm text-muted">
-            已用 {{ formatFileSize(quota.usedBytes) }}
-            <template v-if="quota.unlimited">（不限量）</template>
-            <template v-else>/ {{ formatFileSize(quota.quotaBytes) }}</template>
-          </span>
+          <div class="flex items-center gap-3">
+            <span v-if="quota" class="text-sm text-muted">
+              已用 {{ formatFileSize(quota.usedBytes) }}
+              <template v-if="quota.unlimited">（不限量）</template>
+              <template v-else>/ {{ formatFileSize(quota.quotaBytes) }}</template>
+            </span>
+            <el-button v-permission="'file:upload'" size="small" @click="chunkDialogVisible = true">
+              <template #icon><i class="bi bi-files" /></template>大文件上传
+            </el-button>
+          </div>
         </div>
       </template>
       <el-upload
@@ -212,7 +235,9 @@ onMounted(() => {
         <el-icon class="text-5xl text-faint" aria-hidden="true"><i class="bi bi-upload" /></el-icon>
         <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
         <template #tip>
-          <div class="el-upload__tip">支持图片 / 文档 / 压缩包，单个文件不超过 10MB，单次最多 10 个</div>
+          <div class="el-upload__tip">
+            支持图片 / 文档 / 压缩包，单个文件不超过 10MB，单次最多 10 个；更大文件点右上角「大文件上传」分片续传
+          </div>
         </template>
       </el-upload>
     </el-card>
@@ -360,5 +385,7 @@ onMounted(() => {
         @current-change="changePage"
       />
     </el-card>
+
+    <ChunkUploadDialog v-model="chunkDialogVisible" @uploaded="handleChunkUploaded" />
   </div>
 </template>

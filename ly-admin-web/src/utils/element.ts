@@ -10,6 +10,7 @@
  */
 export { default as ElMessage } from 'element-plus/es/components/message/index';
 export { default as ElMessageBox } from 'element-plus/es/components/message-box/index';
+export { default as ElLoading } from 'element-plus/es/components/loading/index';
 
 import 'element-plus/es/components/message/style/css';
 import 'element-plus/es/components/message-box/style/css';
