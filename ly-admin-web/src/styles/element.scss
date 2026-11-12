@@ -153,3 +153,30 @@
 .el-drawer__body {
   overflow: hidden;
 }
+
+/* ============================================================
+ * 全站原生滚动条统一为 el-scrollbar 风格（细条、圆角、无箭头按钮）。
+ * 背景：弹窗打开时 Element Plus 的锁屏（useLockscreen 给 body 加
+ * overflow:hidden）会让页面右侧露出原生 Win32 滚动条（灰轨道 + 上下箭头），
+ * 与站内 el-scrollbar 的观感割裂。这里把文档与弹层内的原生滚动条统一细条化：
+ * Chromium/WebKit 走 ::-webkit-scrollbar，Firefox 走 scrollbar-width/color。
+ * 注意：el-scrollbar 自身的滚动条是自绘 div，不受影响。
+ * ========================================================== */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--el-scrollbar-bg-color, var(--el-text-color-disabled));
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+html {
+  scrollbar-color: var(--el-scrollbar-bg-color, var(--el-text-color-disabled)) transparent;
+  scrollbar-width: thin;
+}
