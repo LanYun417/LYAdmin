@@ -17,6 +17,7 @@ import { formatDateTime } from '@/utils/format';
 import { downloadBlob } from '@/utils/download';
 import type { GenColumn, GenConfig, GenCreateResult, GenFile, GenHtmlType, GenTable } from '@/api/gen';
 import SearchForm from '@/components/SearchForm/index.vue';
+import BasicDialog from '@/components/BasicDialog/index.vue';
 import { useFillContentHeight } from '@/composables/useFillContentHeight';
 
 defineOptions({ name: 'ToolGen' });
@@ -30,8 +31,6 @@ const htmlTypeOptions: Array<{ label: string; value: GenHtmlType }> = [
 
 /** 窄屏（< 1024px）：左右两栏改为上下堆叠，避免右侧内容被挤压 */
 const isNarrowScreen = useMediaQuery('(max-width: 1023px)');
-/** 移动端（< 768px）：弹窗等进一步放宽 */
-const isMobileScreen = useMediaQuery('(max-width: 767px)');
 
 /**
  * 宽屏下整页撑满内容区：根节点高度由 useFillContentHeight 实测（口径与 TablePage 一致），
@@ -56,8 +55,6 @@ const tableHeight = computed<number>(() =>
 const columnHeight = computed<number>(() =>
   isNarrowScreen.value ? 400 : Math.max(Math.floor(columnWrapHeight.value || 0), 240),
 );
-/** 预览弹窗宽度：移动端放宽到 94% */
-const previewWidth = computed<string>(() => (isMobileScreen.value ? '94%' : '70%'));
 
 /** 表列表加载态 */
 const tableLoading = ref(false);
@@ -566,11 +563,11 @@ onMounted(() => {
       </el-card>
     </div>
 
-    <!-- 代码预览弹窗 -->
-    <el-dialog
+    <!-- 代码预览弹窗：BasicDialog 统一响应式宽度（≤768px 自动压缩 98%），桌面端 70% -->
+    <BasicDialog
       v-model="previewVisible"
       :title="`代码预览 - ${currentTable?.tableName ?? ''}`"
-      :width="previewWidth"
+      width="70%"
       top="6vh"
       destroy-on-close
     >
@@ -602,7 +599,7 @@ onMounted(() => {
       <template #footer>
         <el-button @click="previewVisible = false">关闭</el-button>
       </template>
-    </el-dialog>
+    </BasicDialog>
   </div>
 </template>
 
