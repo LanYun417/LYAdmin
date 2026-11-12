@@ -163,8 +163,8 @@
  * 注意：el-scrollbar 自身的滚动条是自绘 div，不受影响。
  * ========================================================== */
 ::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
+  width: 5px;
+  height: 5px;
 }
 
 /* 去掉轨道两端的上/下（左/右）箭头按钮 */
@@ -183,7 +183,13 @@
   background-color: transparent;
 }
 
-html {
-  scrollbar-color: var(--el-scrollbar-bg-color, var(--el-text-color-disabled)) transparent;
-  scrollbar-width: thin;
+/* Chromium 121+ 起，只要元素上设置了标准属性 scrollbar-width / scrollbar-color，
+   就会整体禁用 ::-webkit-scrollbar 伪元素样式；且 scrollbar-color 会继承到所有
+   后代元素。为了避免「两套写法互相打架导致样式完全不生效」，标准属性只在
+   Firefox（没有 webkit 伪元素）下启用。 */
+@supports (-moz-appearance: none) {
+  html {
+    scrollbar-color: var(--el-scrollbar-bg-color, var(--el-text-color-disabled)) transparent;
+    scrollbar-width: thin;
+  }
 }
