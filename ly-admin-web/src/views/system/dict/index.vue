@@ -8,12 +8,15 @@ import { useBatchDelete } from '@/composables/useBatchDelete';
 import { clearDictCache, useStatusDict } from '@/composables/useDict';
 import { formatDateTime } from '@/utils/format';
 import { hasPermission } from '@/utils/permission';
+import { useAppStore } from '@/store/modules/app';
 import type { DictType } from '@/types/api';
 import TablePage from '@/components/TablePage/index.vue';
 import DictTypeForm from './components/DictTypeForm.vue';
 import DictItemDrawer from './components/DictItemDrawer.vue';
 
 defineOptions({ name: 'SystemDict' });
+
+const appStore = useAppStore();
 
 /** 状态字典（字典管理 → 通用状态 sys_common_status），驱动状态筛选与提示文案 */
 const { statusOptions, statusLabel } = useStatusDict();
@@ -182,18 +185,42 @@ async function handleDelete(row: DictType): Promise<void> {
       <el-table-column label="创建时间" width="180">
         <template #default="{ row }">{{ formatDateTime(row.createdAt) }}</template>
       </el-table-column>
-      <el-table-column label="操作" width="220" fixed="right">
+      <!-- 操作列：移动端只保留「编辑」，其余操作收进「更多」下拉，避免按钮换行挤压 -->
+      <el-table-column label="操作" :width="appStore.isMobile ? 120 : 220" fixed="right">
         <template #default="{ row }">
           <div class="table-action">
             <el-button v-permission="'system:dict:edit'" type="primary" link @click="handleEdit(row as DictType)">
               编辑
             </el-button>
-            <el-button v-permission="'system:dict:list'" type="warning" link @click="handleItems(row as DictType)">
-              字典项
-            </el-button>
-            <el-button v-permission="'system:dict:remove'" type="danger" link @click="handleDelete(row as DictType)">
-              删除
-            </el-button>
+            <template v-if="appStore.isMobile">
+              <el-dropdown trigger="click">
+                <el-button type="primary" link>
+                  更多<el-icon class="ml-0.5"><i class="bi bi-chevron-down" /></el-icon>
+                </el-button>
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item v-permission="'system:dict:list'" @click="handleItems(row as DictType)">
+                      字典项
+                    </el-dropdown-item>
+                    <el-dropdown-item
+                      v-permission="'system:dict:remove'"
+                      divided
+                      @click="handleDelete(row as DictType)"
+                    >
+                      删除
+                    </el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
+            </template>
+            <template v-else>
+              <el-button v-permission="'system:dict:list'" type="warning" link @click="handleItems(row as DictType)">
+                字典项
+              </el-button>
+              <el-button v-permission="'system:dict:remove'" type="danger" link @click="handleDelete(row as DictType)">
+                删除
+              </el-button>
+            </template>
           </div>
         </template>
       </el-table-column>
