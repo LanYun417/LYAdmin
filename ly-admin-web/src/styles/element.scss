@@ -164,6 +164,56 @@
 }
 
 /* ============================================================
+ * 移动端日期范围面板（点开选择器后的 popper）：
+ * EP 面板默认固定 646px 宽（.el-date-range-picker），body 还有
+ * min-width: 513px，手机上展开日历会横向超出屏幕。
+ * 改为：面板宽度 = 视口宽度、两个月上下堆叠、起止时间输入行纵向
+ * 排列；内容超高时面板内部滚动。
+ * 选择器统一带 .el-picker-panel 前缀提升优先级——EP 按需样式在
+ * 开发模式下加载更晚，同优先级会覆盖本文件的规则。
+ * ========================================================== */
+@media (width <= 767px) {
+  .el-picker-panel.el-date-range-picker {
+    width: calc(100vw - 16px);
+  }
+
+  .el-picker-panel.el-date-range-picker .el-picker-panel__body {
+    min-width: 0;
+  }
+
+  .el-picker-panel.el-date-range-picker .el-picker-panel__body-wrapper {
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+
+  /* 左右两个月份：并排 → 上下堆叠，分隔线改到底部 */
+  .el-picker-panel.el-date-range-picker .el-date-range-picker__content {
+    display: block;
+    width: 100%;
+    padding: 12px 8px;
+  }
+
+  .el-picker-panel.el-date-range-picker .el-date-range-picker__content.is-left {
+    border-right: 0;
+    border-bottom: 1px solid var(--el-datepicker-inner-border-color);
+  }
+
+  /* 起止时间输入行：两列 → 逐行（日期与时间输入保持同一行） */
+  .el-picker-panel.el-date-range-picker .el-date-range-picker__time-header,
+  .el-picker-panel.el-date-range-picker .el-date-range-picker__editors-wrap {
+    display: block;
+  }
+
+  .el-picker-panel.el-date-range-picker .el-date-range-picker__editors-wrap.is-right {
+    text-align: left;
+  }
+
+  .el-picker-panel.el-date-range-picker .el-date-range-picker__time-picker-wrap {
+    display: inline-block;
+  }
+}
+
+/* ============================================================
  * 抽屉 body 不再自带原生滚动条。
  * 背景：Element Plus 的 .el-drawer__body 默认 overflow: auto，
  * 若抽屉内容没用 el-scrollbar 包裹（如本项目早期 DictItemDrawer），
