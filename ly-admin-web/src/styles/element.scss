@@ -143,6 +143,27 @@
 }
 
 /* ============================================================
+ * 筛选栏内的日期范围选择器：EP 默认固定 350px
+ * （.el-date-editor--daterange / --datetimerange），移动端/窄容器下
+ * 必然溢出筛选栏。移动端（≤767px）改为「每个筛选项独占一行、
+ * 范围选择器占满剩余宽度」，桌面端保持默认宽度不变。
+ * 覆盖范围：所有通过 SearchForm 渲染的筛选项（含 #filterAdvanced）。
+ * ========================================================== */
+@media (width <= 767px) {
+  .search-form .search-fields .el-form-item {
+    width: 100%;
+
+    /* 覆盖 el-form--inline 的 32px 右外边距，否则 100% 宽度会横向溢出 */
+    margin-right: 0;
+  }
+
+  .search-form .el-date-editor--daterange,
+  .search-form .el-date-editor--datetimerange {
+    width: 100%;
+  }
+}
+
+/* ============================================================
  * 抽屉 body 不再自带原生滚动条。
  * 背景：Element Plus 的 .el-drawer__body 默认 overflow: auto，
  * 若抽屉内容没用 el-scrollbar 包裹（如本项目早期 DictItemDrawer），
