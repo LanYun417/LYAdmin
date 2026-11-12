@@ -185,7 +185,7 @@ for (const id of ids) {
 
 1. 表格 Header 背景色等视觉规范通过 CSS 变量 / 命名空间类统一，不在每个页面写内联样式。
 2. `ElMessage` 文案统一中文、句尾不加标点（与 commitlint subject 风格一致的约定）。
-3. 弹窗类组件优先用 `v-model` 控制显隐；固定尺寸弹层必须走响应式封装（`useResponsiveSize` / `BasicDialog`，见 17）。
+3. **弹窗必须用 `<BasicDialog>`、分页必须用 `<Pagination>`**（列表页用 `<TablePage>`，已内嵌分页）——禁止裸写 `el-dialog` / `el-pagination`，详见文末「弹窗 / 分页必须用封装组件」。
 4. **纯图标交互必须配 `el-tooltip`**：只有图标、没有文字标签的按钮（顶栏侧边栏开关 / 语言 /
    通知铃铛 / 全屏 / 暗黑切换等）一律套 `<el-tooltip placement="bottom">`，
    否则新用户无从判断图标含义。配套要求：
@@ -323,3 +323,57 @@ const { rootRef, rootHeight } = useFillContentHeight({
 
 > 示例：`views/tool/gen/index.vue` —— 宽屏左右两栏等高撑满、各自内部滚动；窄屏（< 1024px）
 > 仍为上下堆叠的自然高度，`enabled` 传 `!isNarrowScreen` 即可自动切换。
+
+## 弹窗 / 分页必须用封装组件：`BasicDialog` / `Pagination`
+
+**全站禁止直接写 `el-dialog` / `el-pagination`**，按场景选封装：
+
+| 场景                             | 组件                                                                          |
+| -------------------------------- | ----------------------------------------------------------------------------- |
+| 弹窗                             | `src/components/BasicDialog/index.vue`                                        |
+| 分页                             | `src/components/Pagination/index.vue`                                         |
+| 列表页（筛选 + 表格 + 分页四段） | `src/components/TablePage/index.vue`（分页已内嵌，不要再套一层 `Pagination`） |
+
+例外只有两个：`BasicDialog` / `Pagination` 自身（它们就是包装层）。
+抽屉（`el-drawer`）不在此列——按上文「抽屉 / 弹窗 / 内容区滚动必须用 `el-scrollbar`」的既有写法直接使用。
+
+### 为什么强制
+
+- **响应式是默认要求**（README 设计取向）：`BasicDialog` 在视口 ≤768px 自动压缩为 98% 宽；`Pagination` 窄屏自动切 `small` 并挂 `el-scrollbar` 防横向溢出。各页面各自 `computed` 算宽度必然口径漂移——代码生成页就曾自写过 `isMobileScreen ? '94%' : '70%'`，本次已收回封装。
+- **交互语义统一**：`BasicDialog` 默认禁点击空白关闭（防误触丢表单）、默认 footer 为取消/确定（确定只 emit `confirm`，**关不关由调用方决定**——表单校验失败时不应关闭）。
+- `Pagination` 在切换每页条数时同步回到第 1 页，避免停留在越界页码。
+
+### `BasicDialog` 速查
+
+```vue
+<BasicDialog v-model="visible" title="编辑用户" width="560px" :confirm-loading="submitting" @confirm="handleSubmit">
+  <!-- 默认插槽 = 内容；自定义按钮用 #footer 插槽 -->
+  <el-form> ... </el-form>
+</BasicDialog>
+```
+
+- 显隐用 `v-model`；确定按钮 loading / 禁用用 `:confirm-loading` / `:confirm-disabled`；
+- 不需要默认 footer 时传 `:show-footer="false"` 或用 `#footer` 插槽（两者都出现时插槽优先）；
+- 其余 `el-dialog` 属性（`top` / `destroy-on-close` / `append-to-body` / `@open` / `@closed` …）经 `$attrs` 全量透传，直接写在标签上即可（参照 `NoticeBell.vue` / `IconSelect.vue` 的 `append-to-body`）。
+
+### `Pagination` 速查
+
+```vue
+<Pagination
+  v-model:current-page="query.page"
+  v-model:page-size="query.pageSize"
+  :total="total"
+  @current-change="fetchList"
+/>
+```
+
+- 受控式封装：分页状态归父组件；切条数时组件自己把页码重置为 1；
+- 抽屉 / 卡片内的分页放在滚动区（`el-scrollbar`）**之外**，避免被滚动区吞掉。
+
+### 自检（Code Review 卡点）
+
+```bash
+# 两条命令都应只剩封装组件内部的原始标签，无其它命中
+grep -rn '<el-dialog'    src --include='*.vue' | grep -v 'components/BasicDialog'
+grep -rn '<el-pagination' src --include='*.vue' | grep -v 'components/Pagination'
+```
