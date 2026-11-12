@@ -354,35 +354,24 @@ onMounted(() => {
                 <el-button type="primary" link>更多</el-button>
                 <template #dropdown>
                   <el-dropdown-menu>
-                    <el-dropdown-item
-                      v-permission="'system:user:assignRole'"
-                      class="text-[var(--el-color-warning)]"
-                      @click="handleAssignRole(row as UserDetail)"
-                    >
-                      分配角色
+                    <el-dropdown-item v-permission="'system:user:assignRole'">
+                      <el-button type="warning" link @click="handleAssignRole(row as UserDetail)">分配角色</el-button>
                     </el-dropdown-item>
-                    <el-dropdown-item
-                      v-permission="'system:user:assignPerm'"
-                      class="text-[var(--el-color-success)]"
-                      @click="handlePermission(row as UserDetail)"
-                    >
-                      单独授权
+                    <el-dropdown-item v-permission="'system:user:assignPerm'">
+                      <el-button type="success" link @click="handlePermission(row as UserDetail)">单独授权</el-button>
                     </el-dropdown-item>
-                    <el-dropdown-item
-                      v-permission="'system:user:resetPwd'"
-                      class="text-[var(--el-color-info)]"
-                      @click="handleResetPwd(row as UserDetail)"
-                    >
-                      重置密码
+                    <el-dropdown-item v-permission="'system:user:resetPwd'">
+                      <el-button type="info" link @click="handleResetPwd(row as UserDetail)">重置密码</el-button>
                     </el-dropdown-item>
-                    <el-dropdown-item
-                      v-permission="'system:user:remove'"
-                      divided
-                      :disabled="row.isSuperAdmin"
-                      :class="row.isSuperAdmin ? undefined : 'text-[var(--el-color-danger)]'"
-                      @click="handleDelete(row as UserDetail)"
-                    >
-                      删除
+                    <el-dropdown-item v-permission="'system:user:remove'" divided :disabled="row.isSuperAdmin">
+                      <el-button
+                        type="danger"
+                        link
+                        :disabled="row.isSuperAdmin"
+                        @click="handleDelete(row as UserDetail)"
+                      >
+                        删除
+                      </el-button>
                     </el-dropdown-item>
                   </el-dropdown-menu>
                 </template>

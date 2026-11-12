@@ -192,27 +192,14 @@ async function handleResetMenus(row: Role): Promise<void> {
                 <el-button type="primary" link>更多</el-button>
                 <template #dropdown>
                   <el-dropdown-menu>
-                    <el-dropdown-item
-                      v-permission="'system:role:assignMenu'"
-                      class="text-[var(--el-color-warning)]"
-                      @click="handlePermission(row as Role)"
-                    >
-                      菜单权限
+                    <el-dropdown-item v-permission="'system:role:assignMenu'">
+                      <el-button type="warning" link @click="handlePermission(row as Role)">菜单权限</el-button>
                     </el-dropdown-item>
-                    <el-dropdown-item
-                      v-permission="'system:role:assignMenu'"
-                      class="text-[var(--el-color-info)]"
-                      @click="handleResetMenus(row as Role)"
-                    >
-                      恢复默认授权
+                    <el-dropdown-item v-permission="'system:role:assignMenu'">
+                      <el-button type="info" link @click="handleResetMenus(row as Role)">恢复默认授权</el-button>
                     </el-dropdown-item>
-                    <el-dropdown-item
-                      v-permission="'system:role:remove'"
-                      divided
-                      class="text-[var(--el-color-danger)]"
-                      @click="handleDelete(row as Role)"
-                    >
-                      删除
+                    <el-dropdown-item v-permission="'system:role:remove'" divided>
+                      <el-button type="danger" link @click="handleDelete(row as Role)">删除</el-button>
                     </el-dropdown-item>
                   </el-dropdown-menu>
                 </template>

@@ -197,20 +197,11 @@ async function handleDelete(row: DictType): Promise<void> {
                 <el-button type="primary" link>更多</el-button>
                 <template #dropdown>
                   <el-dropdown-menu>
-                    <el-dropdown-item
-                      v-permission="'system:dict:list'"
-                      class="text-[var(--el-color-warning)]"
-                      @click="handleItems(row as DictType)"
-                    >
-                      字典项
+                    <el-dropdown-item v-permission="'system:dict:list'">
+                      <el-button type="warning" link @click="handleItems(row as DictType)">字典项</el-button>
                     </el-dropdown-item>
-                    <el-dropdown-item
-                      v-permission="'system:dict:remove'"
-                      divided
-                      class="text-[var(--el-color-danger)]"
-                      @click="handleDelete(row as DictType)"
-                    >
-                      删除
+                    <el-dropdown-item v-permission="'system:dict:remove'" divided>
+                      <el-button type="danger" link @click="handleDelete(row as DictType)">删除</el-button>
                     </el-dropdown-item>
                   </el-dropdown-menu>
                 </template>
