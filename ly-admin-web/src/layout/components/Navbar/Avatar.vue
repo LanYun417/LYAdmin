@@ -106,10 +106,12 @@ function handlePrimaryColorChange(color: string | null): void {
 
     <el-dropdown trigger="click">
       <div class="cursor-pointer outline-none flex items-center gap-2">
-        <el-avatar :size="32" :src="withUploadToken(avatar)">
+        <!-- shrink-0：头像是指定尺寸的 flex 子项，窄屏时必须禁止收缩，否则会被挤成椭圆 -->
+        <el-avatar :size="32" class="shrink-0" :src="withUploadToken(avatar)">
           <el-icon aria-hidden="true"><i class="bi bi-person" /></el-icon>
         </el-avatar>
-        <span class="text-sm text-ink">{{ nickname }}</span>
+        <!-- 移动端隐藏昵称，把宽度让给图标与头像（isMobile = 视口 ≤767px） -->
+        <span v-if="!appStore.isMobile" class="text-sm text-ink whitespace-nowrap">{{ nickname }}</span>
       </div>
       <template #dropdown>
         <el-dropdown-menu>

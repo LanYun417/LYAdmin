@@ -39,11 +39,12 @@ function handleToggle(): void {
 
 <template>
   <div class="h-12.5 px-4 border-b border-line-light flex items-center justify-between shadow">
-    <div class="flex items-center gap-3">
+    <!-- 左侧（开关 + 面包屑）允许压缩：窄屏时面包屑截断，把宽度让给右侧控件 -->
+    <div class="flex min-w-0 items-center gap-3">
       <!-- 纯图标交互必须有文字提示：与全屏 / 暗黑切换保持一致 -->
       <el-tooltip :content="toggleLabel" placement="bottom">
         <el-icon
-          class="text-lg text-ink cursor-pointer"
+          class="shrink-0 text-lg text-ink cursor-pointer"
           role="button"
           tabindex="0"
           :aria-label="toggleLabel"
@@ -54,9 +55,10 @@ function handleToggle(): void {
           <i v-else class="bi bi-layout-sidebar" />
         </el-icon>
       </el-tooltip>
-      <Breadcrumb />
+      <Breadcrumb class="min-w-0 overflow-hidden whitespace-nowrap" />
     </div>
-    <div class="flex items-center gap-3">
+    <!-- 右侧控件组固定尺寸：不参与 flex 收缩，避免头像等被挤扁 -->
+    <div class="flex shrink-0 items-center gap-3">
       <LocaleSwitcher />
       <NoticeBell />
       <Avatar />
