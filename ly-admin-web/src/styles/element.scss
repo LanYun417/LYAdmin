@@ -163,13 +163,20 @@
  * 注意：el-scrollbar 自身的滚动条是自绘 div，不受影响。
  * ========================================================== */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 4px;
+  height: 4px;
+}
+
+/* 去掉轨道两端的上/下（左/右）箭头按钮 */
+::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 ::-webkit-scrollbar-thumb {
   background-color: var(--el-scrollbar-bg-color, var(--el-text-color-disabled));
-  border-radius: 3px;
+  border-radius: 2px;
 }
 
 ::-webkit-scrollbar-track {
