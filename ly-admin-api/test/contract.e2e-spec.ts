@@ -20,6 +20,7 @@ import type { NestExpressApplication } from '@nestjs/platform-express';
 import request from 'supertest';
 import { config } from '../src/common/config/config.js';
 import { RedisService } from '../src/common/redis/redis.service.js';
+import { PrismaService } from '../src/prisma/prisma.service.js';
 import { createTestApp } from './setup-app.js';
 import { resolveSeedAdminPassword } from '../src/prisma/seed.service.js';
 
@@ -141,6 +142,22 @@ describe('接口契约快照 (e2e)', () => {
   beforeAll(async () => {
     app = await createTestApp();
     redis = app.get(RedisService);
+    const prisma = app.get(PrismaService);
+
+    // 关闭登录设备上限（sys.login.maxDevices = 0）：本套件需要「无限多个 admin
+    // 会话」来验证会话管理自身（beforeAll 一次登录 + 用例内多次 loginFreshSession），
+    // 否则第 4 次登录起最早会话被回收，后续请求集体 401。
+    // 设备上限的正确语义由 device-limit.e2e-spec.ts 专门覆盖，这里不重复。
+    await prisma.sysConfig.upsert({
+      where: { configKey: 'sys.login.maxDevices' },
+      update: { configValue: '0' },
+      create: {
+        configName: '登录设备数上限',
+        configKey: 'sys.login.maxDevices',
+        configValue: '0',
+        systemFlag: 1,
+      },
+    });
 
     // 真实登录：验证码答案存在 Redis，取出来回填（验证码单次有效，登录后即被删除）
     const captcha = await request(app.getHttpServer()).get(`${API}/auth/captcha`).expect(200);
@@ -159,6 +176,11 @@ describe('接口契约快照 (e2e)', () => {
   });
 
   afterAll(async () => {
+    // 恢复设备上限为种子默认值（3 台），避免影响后续套件与本机开发库
+    const prisma = app.get(PrismaService);
+    await prisma.sysConfig
+      .update({ where: { configKey: 'sys.login.maxDevices' }, data: { configValue: '3' } })
+      .catch(() => undefined);
     await app.close();
   });
 

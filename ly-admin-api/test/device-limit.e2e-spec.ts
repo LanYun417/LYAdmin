@@ -34,6 +34,7 @@ describe('登录设备并发控制 (e2e)', () => {
   let app: NestExpressApplication;
   let redis: RedisService;
   let prisma: PrismaService;
+  let token: string;
 
   /** 登录一次（验证码答案从 Redis 取回填，与 contract e2e 同构）。 */
   async function login(): Promise<TokenPair> {
@@ -56,27 +57,42 @@ describe('登录设备并发控制 (e2e)', () => {
     return response.status === 200;
   }
 
-  /** 测试期间直接改系统参数（恢复在 afterAll 统一做）。 */
-  async function setConfig(configKey: string, configValue: string): Promise<void> {
-    await prisma.sysConfig.upsert({
-      where: { configKey },
-      update: { configValue },
-      create: { configName: configKey, configKey, configValue, systemFlag: 1 },
-    });
+  /** 测试期间经参数管理接口改配置：ConfigService 写后会失效缓存，避免 5s TTL 让测试读到旧值。 */
+  async function setConfigViaApi(configKey: string, configValue: string): Promise<void> {
+    // 每次换一个新会话调用：设备上限会回收最旧会话，复用旧 token 随时可能 401
+    token = (await login()).accessToken;
+    const list = await request(app.getHttpServer())
+      .get(`${API}/configs`)
+      .set('authorization', `Bearer ${token}`)
+      .query({ configKey, page: 1, pageSize: 10 })
+      .expect(200);
+    const row = (list.body.data.list as Array<{ id: number; configName: string }>)[0];
+    expect(row, `参数 ${configKey} 应已由种子写入`).toBeTruthy();
+    await request(app.getHttpServer())
+      .put(`${API}/configs/${row.id}`)
+      .set('authorization', `Bearer ${token}`)
+      .send({ configName: row.configName, configValue })
+      .expect(200);
   }
 
   beforeAll(async () => {
     app = await createTestApp();
     redis = app.get(RedisService);
     prisma = app.get(PrismaService);
-    // 复位到默认策略，防止此前用例的改动残留
-    await setConfig(MAX_DEVICES_KEY, '3');
-    await setConfig(GUEST_ROLE_KEY, 'viewer');
+    token = (await login()).accessToken;
+    // 复位到默认策略（防止此前用例的改动残留；经接口改，缓存同步失效）
+    await setConfigViaApi(MAX_DEVICES_KEY, '3');
+    await setConfigViaApi(GUEST_ROLE_KEY, 'viewer');
   });
 
   afterAll(async () => {
-    await setConfig(MAX_DEVICES_KEY, '3');
-    await setConfig(GUEST_ROLE_KEY, 'viewer');
+    // 恢复种子默认值（直改库即可：本应用实例即将关闭，下一个实例缓存是新的）
+    await prisma.sysConfig
+      .update({ where: { configKey: MAX_DEVICES_KEY }, data: { configValue: '3' } })
+      .catch(() => undefined);
+    await prisma.sysConfig
+      .update({ where: { configKey: GUEST_ROLE_KEY }, data: { configValue: 'viewer' } })
+      .catch(() => undefined);
     await app?.close();
   });
 
@@ -92,7 +108,7 @@ describe('登录设备并发控制 (e2e)', () => {
   });
 
   it('访客豁免：guestRoleCodes 命中角色编码时不限制并发', async () => {
-    await setConfig(GUEST_ROLE_KEY, 'super_admin');
+    await setConfigViaApi(GUEST_ROLE_KEY, 'super_admin');
     const sessions = [await login(), await login(), await login(), await login(), await login()];
 
     // 超管命中豁免名单：5 台全部可用
@@ -100,17 +116,17 @@ describe('登录设备并发控制 (e2e)', () => {
       expect(await isSessionAlive(session.refreshToken)).toBe(true);
     }
 
-    await setConfig(GUEST_ROLE_KEY, 'viewer');
+    await setConfigViaApi(GUEST_ROLE_KEY, 'viewer');
   });
 
   it('maxDevices = 0：完全关闭限制，登录数不设上限', async () => {
-    await setConfig(MAX_DEVICES_KEY, '0');
+    await setConfigViaApi(MAX_DEVICES_KEY, '0');
     const sessions = [await login(), await login(), await login(), await login()];
 
     for (const session of sessions) {
       expect(await isSessionAlive(session.refreshToken)).toBe(true);
     }
 
-    await setConfig(MAX_DEVICES_KEY, '3');
+    await setConfigViaApi(MAX_DEVICES_KEY, '3');
   });
 });
