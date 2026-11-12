@@ -141,6 +141,8 @@ jobs:
       - name: 构建产物
         working-directory: ly-admin-web
         run: npm run build
+      - name: 构建预算（产物体积门禁）
+        run: npm run guard:bundle
 
   docker:
     name: 镜像可构建（仅 push 时跑）

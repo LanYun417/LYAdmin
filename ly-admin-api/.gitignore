@@ -61,5 +61,8 @@ pids
 # 只写 /data/*.xdb 时，一次失败下载留下的 .tmp 曾被误提交进去（11MB 二进制）。
 /data/*
 
+# 数据库备份目录（scripts/db-backup.mjs 产物，含全量数据的压缩包，绝不入库）
+/backups
+
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json

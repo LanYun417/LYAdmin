@@ -336,6 +336,9 @@ npm run dev:web   # 前端 http://localhost:5173（等价 cd ly-admin-web && npm
 | `npm run guard:deps:update` | 依赖基线有变更时，先生成新基线再提交                       |
 | `npm run guard:imports`     | 校验已入库文件的相对导入可解析（干净克隆可构建）           |
 | `npm run guard:locale`      | 校验 zh-CN / en-US 语言包 key 与占位符一致                 |
+| `npm run guard:bundle`      | 前端产物体积预算门禁（超预算即失败，见下）                 |
+| `npm run slow-sql`          | 慢 SQL 聚合报告（读 `ly-admin-api/logs/db-*.log`）         |
+| `npm run backup:db`         | 数据库备份（mysqldump → gzip，默认保留 7 份）              |
 | `npm run commit`            | cz-git 交互式生成规范提交                                  |
 | `npm run prepare`           | 装配 husky 钩子（`npm install` 后自动执行）                |
 
@@ -471,6 +474,18 @@ NODE_ENV=production node dist/main.js
 
 > 生产环境建议将 `NODE_ENV=production`，并通过进程管理器（systemd / pm2 / 容器）托管；`UPLOAD_DIR`、`LOG_DIR`、`cache` 目录需保证可写与持久化。
 > 首次部署记得执行 `npm run prisma:push` 与 `npm run prisma:comments`（Prisma 7 不在启动时建表）。
+
+### 数据库备份（运维必配）
+
+```bash
+npm run backup:db                # mysqldump → gzip → ly-admin-api/backups/，默认保留 7 份
+npm run backup:db -- --keep 14   # 覆盖保留份数
+npm run backup:db -- --list      # 查看已有备份
+```
+
+- 口令从 `ly-admin-api/.env` 读，不进命令行；依赖机器上有 `mysqldump`；产物 `*.sql.gz`（`/backups` 已 gitignore）。
+- 建议配 crontab / 计划任务每日执行（保留份数按 RPO 定），备份目录与 `UPLOAD_DIR` 一样保证可写、异地留存。
+- 慢查询治理：`npm run slow-sql` 聚合 `logs/db-*.log`（Prisma 慢 SQL 事件）出 TOP N 归一化语句，按报告补索引（`SLOW_SQL_MS` 控制记录阈值）。
 
 ## 接口约定
 

@@ -1,0 +1,12 @@
+{
+  "singleFileKb": 1000,
+  "totalAssetsMb": 3.5,
+  "chunks": {
+    "element-plus": 1000,
+    "echarts": 700,
+    "vditor": 350,
+    "vendor": 300,
+    "index": 100,
+    "vue-vendor": 50
+  }
+}
