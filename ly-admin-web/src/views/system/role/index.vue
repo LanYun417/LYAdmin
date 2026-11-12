@@ -189,18 +189,29 @@ async function handleResetMenus(row: Role): Promise<void> {
             </el-button>
             <template v-if="appStore.isMobile">
               <el-dropdown trigger="click">
-                <el-button type="primary" link>
-                  更多<el-icon class="ml-0.5"><i class="bi bi-chevron-down" /></el-icon>
-                </el-button>
+                <el-button type="primary" link>更多</el-button>
                 <template #dropdown>
                   <el-dropdown-menu>
-                    <el-dropdown-item v-permission="'system:role:assignMenu'" @click="handlePermission(row as Role)">
+                    <el-dropdown-item
+                      v-permission="'system:role:assignMenu'"
+                      class="text-[var(--el-color-warning)]"
+                      @click="handlePermission(row as Role)"
+                    >
                       菜单权限
                     </el-dropdown-item>
-                    <el-dropdown-item v-permission="'system:role:assignMenu'" @click="handleResetMenus(row as Role)">
+                    <el-dropdown-item
+                      v-permission="'system:role:assignMenu'"
+                      class="text-[var(--el-color-info)]"
+                      @click="handleResetMenus(row as Role)"
+                    >
                       恢复默认授权
                     </el-dropdown-item>
-                    <el-dropdown-item v-permission="'system:role:remove'" divided @click="handleDelete(row as Role)">
+                    <el-dropdown-item
+                      v-permission="'system:role:remove'"
+                      divided
+                      class="text-[var(--el-color-danger)]"
+                      @click="handleDelete(row as Role)"
+                    >
                       删除
                     </el-dropdown-item>
                   </el-dropdown-menu>

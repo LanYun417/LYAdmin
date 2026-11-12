@@ -129,9 +129,19 @@
   }
 }
 
-/* 表格操作列按钮间距 */
+/* 表格操作列按钮组：flex + gap 统一间距与垂直居中。
+   EP 的 `.el-button + .el-button` 只对相邻按钮生效——操作列里夹了
+   el-dropdown（更多）时，触发器与按钮之间不会产生间距，视觉上贴在一起；
+   改为容器 gap 后，无论按钮还是下拉触发器间距都一致。 */
+.table-action {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
 .table-action .el-button + .el-button {
-  margin-left: 8px;
+  margin-left: 0;
 }
 
 /* 搜索表单区域 */

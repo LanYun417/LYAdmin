@@ -194,17 +194,20 @@ async function handleDelete(row: DictType): Promise<void> {
             </el-button>
             <template v-if="appStore.isMobile">
               <el-dropdown trigger="click">
-                <el-button type="primary" link>
-                  更多<el-icon class="ml-0.5"><i class="bi bi-chevron-down" /></el-icon>
-                </el-button>
+                <el-button type="primary" link>更多</el-button>
                 <template #dropdown>
                   <el-dropdown-menu>
-                    <el-dropdown-item v-permission="'system:dict:list'" @click="handleItems(row as DictType)">
+                    <el-dropdown-item
+                      v-permission="'system:dict:list'"
+                      class="text-[var(--el-color-warning)]"
+                      @click="handleItems(row as DictType)"
+                    >
                       字典项
                     </el-dropdown-item>
                     <el-dropdown-item
                       v-permission="'system:dict:remove'"
                       divided
+                      class="text-[var(--el-color-danger)]"
                       @click="handleDelete(row as DictType)"
                     >
                       删除

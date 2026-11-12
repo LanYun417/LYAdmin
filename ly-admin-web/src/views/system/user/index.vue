@@ -351,30 +351,35 @@ onMounted(() => {
             </el-button>
             <template v-if="appStore.isMobile">
               <el-dropdown trigger="click">
-                <el-button type="primary" link>
-                  更多<el-icon class="ml-0.5"><i class="bi bi-chevron-down" /></el-icon>
-                </el-button>
+                <el-button type="primary" link>更多</el-button>
                 <template #dropdown>
                   <el-dropdown-menu>
                     <el-dropdown-item
                       v-permission="'system:user:assignRole'"
+                      class="text-[var(--el-color-warning)]"
                       @click="handleAssignRole(row as UserDetail)"
                     >
                       分配角色
                     </el-dropdown-item>
                     <el-dropdown-item
                       v-permission="'system:user:assignPerm'"
+                      class="text-[var(--el-color-success)]"
                       @click="handlePermission(row as UserDetail)"
                     >
                       单独授权
                     </el-dropdown-item>
-                    <el-dropdown-item v-permission="'system:user:resetPwd'" @click="handleResetPwd(row as UserDetail)">
+                    <el-dropdown-item
+                      v-permission="'system:user:resetPwd'"
+                      class="text-[var(--el-color-info)]"
+                      @click="handleResetPwd(row as UserDetail)"
+                    >
                       重置密码
                     </el-dropdown-item>
                     <el-dropdown-item
                       v-permission="'system:user:remove'"
                       divided
                       :disabled="row.isSuperAdmin"
+                      :class="row.isSuperAdmin ? undefined : 'text-[var(--el-color-danger)]'"
                       @click="handleDelete(row as UserDetail)"
                     >
                       删除
