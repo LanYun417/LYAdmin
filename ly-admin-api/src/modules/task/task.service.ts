@@ -19,6 +19,7 @@ import { AppException } from '../../common/exception/app.exception.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { FileLoggerService } from '../../common/log/file-logger.service.js';
 import { ImageScaleService } from '../../common/file/file-guards.js';
+import { ChunkUploadService } from '../files/chunk-upload.service.js';
 import { buildPageResult, parsePagination } from '../../common/utils/utils.js';
 import { buildTaskRegistry, cronOf, type TaskContext, type TaskDefinition, type TaskDeps } from './task.registry.js';
 
@@ -116,6 +117,7 @@ export class TaskService implements OnModuleInit, OnModuleDestroy {
     private readonly schedulerRegistry: SchedulerRegistry,
     private readonly fileLogger: FileLoggerService,
     private readonly imageScale: ImageScaleService,
+    private readonly chunkUploadService: ChunkUploadService,
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -124,6 +126,9 @@ export class TaskService implements OnModuleInit, OnModuleDestroy {
       cleanLogs: () => this.fileLogger.cleanExpiredLogs(),
       sweepImageCache: async () => {
         await this.imageScale.sweep();
+      },
+      sweepChunkCache: async () => {
+        await this.chunkUploadService.sweep();
       },
     };
 

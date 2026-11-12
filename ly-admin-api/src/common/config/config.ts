@@ -167,6 +167,21 @@ export const config = {
     /** 单次最多文件数 */
     maxCount: toNumber(process.env.UPLOAD_MAX_COUNT, 10),
     /**
+     * 分片上传暂存目录（绝对路径，默认 <root>/cache/chunks）。
+     * 必须在 upload.dir 之外：分片是半成品，绝不能被 /static 公开访问。
+     */
+    chunkDir: path.resolve(ROOT_DIR, process.env.UPLOAD_CHUNK_DIR ?? 'cache/chunks'),
+    /** 分片大小（字节，默认 5MB）：前端切片与后端分片体积校验共用同一口径 */
+    chunkSize: toNumber(process.env.UPLOAD_CHUNK_SIZE, 5 * 1024 * 1024),
+    /** 分片暂存保留小时数（默认 24）：超过视为废弃，由定时任务清理 */
+    chunkTtlHours: toNumber(process.env.UPLOAD_CHUNK_TTL_HOURS, 24),
+    /** 分片上传的单文件总大小上限（字节，默认 5GB）：防磁盘被超大文件打满 */
+    chunkMaxTotalSize: toNumber(process.env.UPLOAD_CHUNK_MAX_TOTAL_SIZE, 5 * 1024 * 1024 * 1024),
+    /** 是否启用分片清理任务（false 为紧急刹车） */
+    chunkSweepEnabled: toBoolean(process.env.UPLOAD_CHUNK_SWEEP_ENABLED, true),
+    /** 分片清理间隔（小时，默认 6） */
+    chunkSweepIntervalHours: toNumber(process.env.UPLOAD_CHUNK_SWEEP_INTERVAL_HOURS, 6),
+    /**
      * 单个用户的累计上传配额（MB，默认 512；0 表示不限）。
      * 只统计**实际落盘**的字节：命中秒传（内容已存在）的文件不计入。
      */

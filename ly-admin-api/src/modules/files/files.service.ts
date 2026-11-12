@@ -212,9 +212,12 @@ export class FilesService {
 
   /**
    * 校验上传文件的类型白名单，返回小写扩展名。
+   *
+   * public：分片上传链路（ChunkUploadService）在合并前后也要按目标
+   * 文件名校验，与直传共用同一口径，避免白名单在两处漂移。
    * @throws AppException 400 不支持的类型
    */
-  private validateUpload(originalName: string, mimeType: string): string {
+  validateUpload(originalName: string, mimeType: string): string {
     const ext = path.extname(originalName).toLowerCase();
     if (!UPLOAD_ALLOWED_EXT.includes(ext)) {
       throw AppException.badRequest(`不支持的文件类型: ${ext || '未知'}`);
@@ -363,6 +366,71 @@ export class FilesService {
       items.push(this.toFileItem(record));
     }
     return items;
+  }
+
+  /**
+   * 分片上传的合并落库（saveFiles 的单文件版后段）。
+   *
+   * 调用方（ChunkUploadService）已完成：分片拼合 → 大小核对 → 流式哈希 → 移入正式目录。
+   * 本方法负责：类型/幻数校验 → 秒传去重 → 配额预检 → 落库，与直传完全同口径。
+   * 任一校验失败都会清理**传入的物理文件**（防止无记录可寻的孤儿文件）。
+   *
+   * @param input 已移入正式目录的临时文件信息（含流式计算出的内容哈希）
+   * @param uploaderId 上传人 id
+   * @param biz 业务归属
+   * @returns 文件记录（秒传命中时 `deduplicated: true`）
+   */
+  async adoptMergedFile(
+    input: { absPath: string; relPath: string; originName: string; mimeType: string; size: number; hash: string },
+    uploaderId: number | null,
+    biz: FileBizInput = {},
+  ): Promise<FileItem> {
+    const { absPath, relPath, originName, size, hash } = input;
+    const ext = this.validateUpload(originName, input.mimeType);
+    try {
+      await assertFileMagic(absPath, ext);
+    } catch (error) {
+      await fsp.unlink(absPath).catch(() => undefined);
+      throw error;
+    }
+
+    // 秒传去重：同一份内容只保留一份物理文件与一条记录
+    const existing = await this.prisma.file.findFirst({ where: { hash }, orderBy: { id: 'asc' } });
+    if (existing) {
+      await fsp.unlink(absPath).catch(() => undefined);
+      // 与直传一致：已有业务归属不覆盖；既有无归属而本次带了归属 → 补写
+      if (existing.bizType === null && biz.bizType) {
+        const bound = await this.prisma.file.update({
+          where: { id: existing.id },
+          data: { bizType: biz.bizType, bizId: toOptionalBigInt(biz.bizId) },
+        });
+        return { ...this.toFileItem(bound), deduplicated: true };
+      }
+      return { ...this.toFileItem(existing), deduplicated: true };
+    }
+
+    try {
+      await this.assertWithinQuota(uploaderId, size);
+    } catch (error) {
+      await fsp.unlink(absPath).catch(() => undefined);
+      throw error;
+    }
+
+    const record = await this.prisma.file.create({
+      data: {
+        originName: originName.slice(0, 255),
+        fileName: relPath,
+        filePath: toPosixPath(path.join(config.upload.dirName, relPath)),
+        fileUrl: `/${config.upload.route}/${relPath}`,
+        mimeType: input.mimeType.slice(0, 100),
+        size,
+        hash,
+        uploaderId: uploaderId === null ? null : BigInt(uploaderId),
+        bizType: biz.bizType ?? null,
+        bizId: toOptionalBigInt(biz.bizId),
+      },
+    });
+    return this.toFileItem(record);
   }
 
   /**

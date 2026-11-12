@@ -82,6 +82,8 @@ export interface TaskDeps {
   cleanLogs: () => Promise<void>;
   /** 缩略图缓存清理（ImageScaleService.sweep） */
   sweepImageCache: () => Promise<void>;
+  /** 分片上传暂存清理（ChunkUploadService.sweep） */
+  sweepChunkCache: () => Promise<void>;
 }
 
 /** 任务注册表条目（描述 + 执行体工厂）。 */
@@ -132,6 +134,16 @@ export function buildTaskRegistry(): TaskRegistryItem[] {
       enabled: config.upload.cacheSweepEnabled,
       create: (deps) => async () => {
         await deps.sweepImageCache();
+      },
+    },
+    {
+      name: 'chunk-cache-sweep',
+      title: '分片暂存清理',
+      description: '按 TTL 清理分片上传的临时目录（合并成功后即删，这里兜底清理中断/放弃的上传）。',
+      schedule: { kind: 'everyHours', hours: config.upload.chunkSweepIntervalHours },
+      enabled: config.upload.chunkSweepEnabled,
+      create: (deps) => async () => {
+        await deps.sweepChunkCache();
       },
     },
   ];

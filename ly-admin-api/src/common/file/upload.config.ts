@@ -54,6 +54,23 @@ export const UPLOAD_MULTER_OPTIONS = {
 };
 
 /**
+ * 分片上传 multer 配置（memoryStorage）。
+ *
+ * 为什么与 UPLOAD_MULTER_OPTIONS 不同：
+ * 1. 用 memoryStorage：分片只有几 MB、即刻写入分片目录，不需要 diskStorage 的
+ *    扩展名分组逻辑（那片本身不含目标扩展名，分组按 DTO 里的 filename 在服务层做）；
+ * 2. fileFilter 在这里**不能**按扩展名拒绝：浏览器切片后字段名是 `file`、
+ *    originalname 常为 `blob`，拦截会误杀——类型白名单校验挪到服务层，
+ *    按 DTO 的 filename 做（见 ChunkUploadService / FilesService.validateUpload）；
+ * 3. 体积上限留 1MB 余量：前端按 chunkSize 切片，末片可能有余数，
+ *    严格相等会把正常末片判为「文件过大」。
+ */
+export const CHUNK_MULTER_OPTIONS = {
+  storage: multer.memoryStorage(),
+  limits: { fileSize: config.upload.chunkSize + 1024 * 1024, files: 1 },
+};
+
+/**
  * CSV 导入专用 multer 配置。
  *
  * 为什么不复用 `UPLOAD_MULTER_OPTIONS`：
