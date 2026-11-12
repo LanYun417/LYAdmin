@@ -46,8 +46,15 @@ const cachedViews = computed(() => tagsViewStore.cachedViews);
 }
 
 /* 只作用于页面根节点（子组件根元素会继承父级 scope id），不会波及页面内部元素 */
+
+/* ⚠️ fill-mode 只能用 backwards，不能用 both/forwards：
+   forwards 会把终态 transform: translateX(0) 永久留在页面根节点上，而 transform ≠ none
+   的祖先会成为后代的 fixed 定位包含块——页面里的 el-dialog 遮罩（.el-overlay，
+   position: fixed）没加 append-to-body 时定位基准就从视口变成了内容区，表现为
+   「遮罩盖不住侧边栏/顶栏、弹窗在内容区居中并随页面滚动」。此前给 NoticeBell /
+   IconSelect / DictItemDrawer 补 append-to-body 只是症状级修补，根因在此。 */
 .app-main > * {
-  animation: page-in 0.22s ease both;
+  animation: page-in 0.22s ease backwards;
 }
 
 /* 响应式：窄屏收窄内边距，把宽度让给内容；超宽屏适当放大留白 */
