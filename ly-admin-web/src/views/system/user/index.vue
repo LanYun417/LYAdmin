@@ -21,6 +21,7 @@ import { useTable } from '@/composables/useTable';
 import { hasPermission } from '@/utils/permission';
 import { formatDateTime } from '@/utils/format';
 import { PASSWORD_MESSAGE, PASSWORD_REGEX } from '@/utils/validate';
+import { useAppStore } from '@/store/modules/app';
 import type { DeptNode, RoleBrief, UserDetail } from '@/types/api';
 import TablePage from '@/components/TablePage/index.vue';
 import ColumnSettings from '@/components/ColumnSettings/index.vue';
@@ -31,6 +32,8 @@ import UserImportDialog from './components/UserImportDialog.vue';
 import { withUploadToken } from '@/utils/uploadToken';
 
 defineOptions({ name: 'SystemUser' });
+
+const appStore = useAppStore();
 
 const roleOptions = ref<RoleBrief[]>([]);
 const deptTree = ref<DeptNode[]>([]);
@@ -339,46 +342,83 @@ onMounted(() => {
       <el-table-column v-if="isVisible('lastLogin')" label="最后登录" width="180">
         <template #default="{ row }">{{ formatDateTime(row.lastLoginAt) }}</template>
       </el-table-column>
-      <el-table-column label="操作" width="340" fixed="right">
+      <!-- 操作列：移动端只保留「编辑」，其余操作收进「更多」下拉，避免按钮换行挤压 -->
+      <el-table-column label="操作" :width="appStore.isMobile ? 120 : 340" fixed="right">
         <template #default="{ row }">
           <div class="table-action">
             <el-button v-permission="'system:user:edit'" type="primary" link @click="handleEdit(row as UserDetail)">
               编辑
             </el-button>
-            <el-button
-              v-permission="'system:user:assignRole'"
-              type="warning"
-              link
-              @click="handleAssignRole(row as UserDetail)"
-            >
-              角色
-            </el-button>
-            <el-button
-              v-permission="'system:user:assignPerm'"
-              type="success"
-              link
-              @click="handlePermission(row as UserDetail)"
-            >
-              权限
-            </el-button>
-            <el-button
-              v-permission="'system:user:resetPwd'"
-              type="info"
-              link
-              @click="handleResetPwd(row as UserDetail)"
-            >
-              重置
-            </el-button>
-            <el-button
-              v-permission="'system:user:remove'"
-              type="danger"
-              link
-              :disabled="row.isSuperAdmin"
-              :title="row.isSuperAdmin ? '超级管理员不可删除' : ''"
-              @click="handleDelete(row as UserDetail)"
-            >
-              删除
-            </el-button>
+            <template v-if="appStore.isMobile">
+              <el-dropdown trigger="click">
+                <el-button type="primary" link>
+                  更多<el-icon class="ml-0.5"><i class="bi bi-chevron-down" /></el-icon>
+                </el-button>
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item
+                      v-permission="'system:user:assignRole'"
+                      @click="handleAssignRole(row as UserDetail)"
+                    >
+                      分配角色
+                    </el-dropdown-item>
+                    <el-dropdown-item
+                      v-permission="'system:user:assignPerm'"
+                      @click="handlePermission(row as UserDetail)"
+                    >
+                      单独授权
+                    </el-dropdown-item>
+                    <el-dropdown-item v-permission="'system:user:resetPwd'" @click="handleResetPwd(row as UserDetail)">
+                      重置密码
+                    </el-dropdown-item>
+                    <el-dropdown-item
+                      v-permission="'system:user:remove'"
+                      divided
+                      :disabled="row.isSuperAdmin"
+                      @click="handleDelete(row as UserDetail)"
+                    >
+                      删除
+                    </el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
+            </template>
+            <template v-else>
+              <el-button
+                v-permission="'system:user:assignRole'"
+                type="warning"
+                link
+                @click="handleAssignRole(row as UserDetail)"
+              >
+                角色
+              </el-button>
+              <el-button
+                v-permission="'system:user:assignPerm'"
+                type="success"
+                link
+                @click="handlePermission(row as UserDetail)"
+              >
+                权限
+              </el-button>
+              <el-button
+                v-permission="'system:user:resetPwd'"
+                type="info"
+                link
+                @click="handleResetPwd(row as UserDetail)"
+              >
+                重置
+              </el-button>
+              <el-button
+                v-permission="'system:user:remove'"
+                type="danger"
+                link
+                :disabled="row.isSuperAdmin"
+                :title="row.isSuperAdmin ? '超级管理员不可删除' : ''"
+                @click="handleDelete(row as UserDetail)"
+              >
+                删除
+              </el-button>
+            </template>
           </div>
         </template>
       </el-table-column>
