@@ -1,11 +1,10 @@
 /**
- * 系统参数服务。
- * 模块职责：参数分页查询、CRUD、按键取值（唯一操作 SysConfig 的层）。
- *
- * 关键约定：
+ * 参数模块约定：
  * - `configKey` 即业务引用键，创建后不可修改（编辑 DTO 不含该字段）；
  * - `systemFlag=1` 的内置参数禁止删除（防止误删导致依赖方退化为默认行为），但值可改；
- * - 参数不参与鉴权缓存，变更无需清理鉴权缓存（与角色/菜单不同）。
+ * - 参数不参与鉴权缓存，变更无需清理鉴权缓存（与角色/菜单不同）；
+ * - **取值走进程内缓存**（见 getConfigData）：参数表行数极少、读多写少，
+ *   登录链路每次读 2 个键，不缓存等于每次登录白送 2 次查询。
  */
 import { Injectable } from '@nestjs/common';
 import { AppException } from '../../common/exception/app.exception.js';
@@ -33,8 +32,20 @@ export interface ConfigData {
   configValue: string;
 }
 
+/**
+ * 取值缓存 TTL（毫秒）。短 TTL + 写后失效双保险：
+ * 单实例内严格一致，多实例最坏 5 秒延迟（参数调整本就是低频运维动作，可接受）。
+ */
+const CONFIG_CACHE_TTL_MS = 5000;
+
 @Injectable()
 export class ConfigService {
+  /**
+   * 按 key 的取值缓存。
+   * value 为 null 表示「键不存在」的否定缓存——防止不存在的键被反复查询（如拼错的 key）。
+   */
+  private readonly cache = new Map<string, { value: string | null; expiresAt: number }>();
+
   constructor(private readonly prisma: PrismaService) {}
 
   /** Prisma 参数记录 → SysConfigBrief DTO。 */
@@ -104,15 +115,46 @@ export class ConfigService {
 
   /**
    * 按键取参数值（业务取数，仅需登录）。
+   *
+   * 进程内缓存 + 写后失效：命中即省一次数据库往返。缓存只存「键 → 值」最小信息，
+   * 过期时间短（5s），避免参数调整后多实例延迟带来预期外行为。
    * @param configKey 参数键名
    * @returns 键值对；键不存在时返回 null
    */
   async getConfigData(configKey: string): Promise<ConfigData | null> {
+    const cached = this.readCache(configKey);
+    if (cached !== undefined) {
+      return cached === null ? null : { configKey, configValue: cached };
+    }
     const row = await this.prisma.sysConfig.findUnique({ where: { configKey } });
+    this.writeCache(configKey, row?.configValue ?? null);
     if (!row) {
       return null;
     }
     return { configKey: row.configKey, configValue: row.configValue };
+  }
+
+  /** 读缓存：未命中 / 已过期返回 undefined（由调用方查库）。 */
+  private readCache(configKey: string): string | null | undefined {
+    const entry = this.cache.get(configKey);
+    if (!entry) {
+      return undefined;
+    }
+    if (entry.expiresAt <= Date.now()) {
+      this.cache.delete(configKey);
+      return undefined;
+    }
+    return entry.value;
+  }
+
+  /** 写缓存（含否定缓存）。 */
+  private writeCache(configKey: string, value: string | null): void {
+    this.cache.set(configKey, { value, expiresAt: Date.now() + CONFIG_CACHE_TTL_MS });
+  }
+
+  /** 写操作后立即失效对应键，保证同一进程内读到新值。 */
+  private invalidate(configKey: string): void {
+    this.cache.delete(configKey);
   }
 
   /** 新增参数。 */
@@ -130,6 +172,7 @@ export class ConfigService {
         remark: input.remark || null,
       },
     });
+    this.invalidate(input.configKey);
     return this.toSysConfigBrief(row);
   }
 
@@ -160,6 +203,7 @@ export class ConfigService {
       configValue: row.configValue,
       remark: row.remark,
     });
+    this.invalidate(row.configKey);
     return this.toSysConfigBrief(row);
   }
 
@@ -173,5 +217,6 @@ export class ConfigService {
       throw AppException.conflict('内置参数不可删除');
     }
     await this.prisma.sysConfig.delete({ where: { id: BigInt(id) } });
+    this.invalidate(existing.configKey);
   }
 }

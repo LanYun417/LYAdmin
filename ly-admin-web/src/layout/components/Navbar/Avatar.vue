@@ -18,7 +18,15 @@ const permissionStore = usePermissionStore();
 const appStore = useAppStore();
 const { isDark, toggleTheme } = useTheme();
 
-const avatar = computed(() => userStore.avatar);
+const avatar = computed(() => {
+  const raw = userStore.avatar;
+  if (!raw) {
+    return '';
+  }
+  // 头像固定 32px 展示：请求 64px 缩放副本（后端按需缩放 + 缓存），比拉原图小一个量级
+  const separator = raw.includes('?') ? '&' : '?';
+  return `${withUploadToken(raw)}${separator}scale=64`;
+});
 const nickname = computed(() => userStore.nickname);
 
 /** 主题色（双向绑定 app store） */
