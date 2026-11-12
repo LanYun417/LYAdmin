@@ -32,7 +32,6 @@ export default defineConfig(({ mode }) => {
     server: {
       host: 'localhost',
       port: Number(env.VITE_PORT) || 5173,
-      strictPort: true,
       open: true,
       proxy: {
         '/api': { target: 'http://localhost:3100', changeOrigin: true },
@@ -75,7 +74,7 @@ ESM 标准写法，避免 `__dirname`（ESM 中不存在）。该别名必须与
 
 > 后端端口固定 **3100**，三处必须一致（`ly-admin-api/.env` 的 `PORT`、`proxy.target`、`scripts/dev.mjs` 的 `API_PORT`）。`dev.mjs` 在端口已有响应时会**复用该后端**，三处不一致就会连到端口上的其它服务。
 
-> `strictPort: true`：端口被占用会直接报错，而非自动切到 +1 端口。改端口需同步 `ly-admin-api/.env` 的 `PORT` 与 `VITE_PORT`。
+> 端口**不锁死**：不写 `strictPort`（默认 `false`），端口被占用时 vite 自动顺延到 +1 端口（5174 / 5175…），而非启动失败；实际地址以启动日志的 Local 行为准。想固定端口再改 `VITE_PORT`。注意「顺延」只影响前端自身监听端口——proxy `target` 指向的**后端**端口仍固定 3100（三处一致原则只针对后端）。
 
 ### 4. 自动导入 d.ts 落点
 

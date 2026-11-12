@@ -51,7 +51,8 @@ history 模式需服务端回退。同源部署由后端托管 `ly-admin-api/web
 菜单由后端按角色下发。空说明种子未写入，`cd ly-admin-api && npm run seed`（幂等）；普通角色在「角色管理 → 菜单授权」勾选。
 
 **Q15：端口被占用（3100 / 5173）？**
-`vite.config.ts` 为 `strictPort: true`，端口占用直接报错。后端改 `ly-admin-api/.env` 的 `PORT`，前端改 `VITE_PORT`，并同步 `vite.config.ts` 的 proxy `target` 与 `scripts/dev.mjs` 的 `API_PORT`（默认都是 **3100**）。三处不一致时，`dev.mjs` 会把端口上已有的服务当成后端复用，表现为数据串台。
+后端 3100 是固定端口：被占需改 `ly-admin-api/.env` 的 `PORT`，并同步 `vite.config.ts` 的 proxy `target` 与 `scripts/dev.mjs` 的 `API_PORT`（三处一致）。三处不一致时，`dev.mjs` 会把端口上已有的服务当成后端复用，表现为数据串台。
+前端 5173 不锁死（vite 默认 `strictPort: false`）：被占用时自动顺延到 5174 / 5175…，启动不会失败，以 [web] 启动日志的 Local 行为准；想固定端口就改 `ly-admin-web/.env.development` 的 `VITE_PORT`。
 
 **Q16：点菜单后内容区整块空白，刷新页面又正常？**
 这是 `<transition>` 包 `<keep-alive>` 的已知冲突：导航到**本次会话首次访问**的页面时，旧页面已移除、新页面永不挂载，

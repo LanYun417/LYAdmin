@@ -279,7 +279,7 @@ npm run dev
 
 1. 先探 `GET /api/health/live`——已有后端在跑就直接复用，只起前端（顺带避开端口占用报错）；
 2. 否则拉起 `nest start --watch`，轮询健康检查直到 200（进程已监听、路由已挂载）才继续；
-3. 前端 vite 端口是 `strictPort`，被占用必失败，故动工前先查，报错直接带 PID；
+3. 前端 vite 端口默认 5173 且**不锁死**（vite 默认 `strictPort: false`）：被占用时自动顺延 +1，不会启动失败；dev.mjs 会提前告警并提示占用者 PID，实际地址以 [web] 输出的 Local 行为准；
 4. 任一子进程退出即整棵进程树回收；Ctrl+C 干净退出，复用的后端不会被误杀。
 
 > **⚠️ 端口必须三处一致**：`ly-admin-api/.env` 的 `PORT`、`ly-admin-web/vite.config.ts` 的 `proxy.target`、`scripts/dev.mjs` 的 `API_PORT`（默认 **3100**）。
@@ -428,12 +428,12 @@ npm run dev:web   # 前端 http://localhost:5173（等价 cd ly-admin-web && npm
 
 ### 前端 `ly-admin-web/.env.development` / `.env.production`
 
-| 变量                   | 示例值             | 说明                              |
-| ---------------------- | ------------------ | --------------------------------- |
-| `VITE_APP_TITLE`       | `蓝云后台管理系统` | 站点标题                          |
-| `VITE_API_BASE_URL`    | `/api`             | axios baseURL（走代理 / 同源）    |
-| `VITE_UPLOAD_BASE_URL` | `/static`          | 静态资源前缀                      |
-| `VITE_PORT`            | `5173`             | dev server 端口（仅 development） |
+| 变量                   | 示例值             | 说明                                                     |
+| ---------------------- | ------------------ | -------------------------------------------------------- |
+| `VITE_APP_TITLE`       | `蓝云后台管理系统` | 站点标题                                                 |
+| `VITE_API_BASE_URL`    | `/api`             | axios baseURL（走代理 / 同源）                           |
+| `VITE_UPLOAD_BASE_URL` | `/static`          | 静态资源前缀                                             |
+| `VITE_PORT`            | `5173`             | dev server 首选端口（仅 development；被占用自动顺延 +1） |
 
 ## 部署
 
@@ -510,7 +510,8 @@ NODE_ENV=production node dist/main.js
 ## 常见问题
 
 **Q1：端口被占用（3100 / 5173）？**
-后端改 `ly-admin-api/.env` 的 `PORT`；前端改 `ly-admin-web/.env.development` 的 `VITE_PORT`（`vite.config.ts` 为 `strictPort: true`，端口占用会直接报错而非自动切换）；同时同步 `vite.config.ts` 中 proxy 的 `target` 端口与 `scripts/dev.mjs` 的 `API_PORT`。
+后端 3100 是固定端口，三处必须一致：`ly-admin-api/.env` 的 `PORT`、`vite.config.ts` 中 proxy 的 `target`、`scripts/dev.mjs` 的 `API_PORT`——被占需改这三处并同步换掉。
+前端 5173 **不锁死**（vite 默认 `strictPort: false`）：被占用时自动顺延到 5174 / 5175…，启动不会失败，以 [web] 输出的 Local 行为准；想固定端口就改 `ly-admin-web/.env.development` 的 `VITE_PORT`。
 
 > 端口固定 **3100**，与 `vite.config.ts` 的 proxy `target`、`scripts/dev.mjs` 的 `API_PORT` 保持一致。
 
