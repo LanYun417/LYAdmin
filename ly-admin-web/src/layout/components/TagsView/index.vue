@@ -193,14 +193,15 @@ onBeforeUnmount(() => {
       :style="{ left: `${contextMenu.left}px`, top: `${contextMenu.top}px` }"
     >
       <div class="context-item" @click="handleCloseCurrent"><i class="bi bi-x-lg" aria-hidden="true" />关闭当前</div>
+      <div class="context-item" @click="handleCloseOthers"><i class="bi bi-x-square" aria-hidden="true" />关闭其他</div>
+      <div class="context-item" @click="handleCloseAll"><i class="bi bi-x-octagon" aria-hidden="true" />关闭全部</div>
+      <div v-show="hasLeft || hasRight" class="context-divider" />
       <div v-show="hasLeft" class="context-item" @click="handleCloseLeft">
         <i class="bi bi-arrow-bar-left" aria-hidden="true" />关闭左侧
       </div>
       <div v-show="hasRight" class="context-item" @click="handleCloseRight">
         <i class="bi bi-arrow-bar-right" aria-hidden="true" />关闭右侧
       </div>
-      <div class="context-item" @click="handleCloseOthers"><i class="bi bi-x-square" aria-hidden="true" />关闭其他</div>
-      <div class="context-item" @click="handleCloseAll"><i class="bi bi-x-octagon" aria-hidden="true" />关闭全部</div>
     </div>
   </div>
 </template>
@@ -275,6 +276,12 @@ onBeforeUnmount(() => {
   border: 1px solid var(--el-border-color-light);
   border-radius: 4px;
   box-shadow: var(--el-box-shadow-light);
+}
+
+.context-divider {
+  height: 1px;
+  margin: 4px 0;
+  background-color: var(--el-border-color-light);
 }
 
 .context-item {
