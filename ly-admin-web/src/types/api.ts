@@ -560,8 +560,17 @@ export interface NoticePublishPayload {
   content: string;
   noticeType: NoticeTypeValue;
   link?: string;
-  /** 接收人 id；不传表示发给全部启用中的用户 */
+  /** 指定接收人 id；不传表示按 deptIds 解析或发给全部启用中的用户 */
   userIds?: number[];
+  /** 指定部门 id（含其全部子部门）；与 userIds 取并集 */
+  deptIds?: number[];
+}
+
+/** 用户搜索结果（公告「指定用户」选择器）：最小化字段，不暴露敏感信息 */
+export interface UserOption {
+  id: number;
+  username: string;
+  nickname: string;
 }
 
 /* ------------------------------- 在线用户 ------------------------------- */

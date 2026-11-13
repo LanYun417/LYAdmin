@@ -14,10 +14,12 @@ import {
   markNoticeReadApi,
   publishNoticeApi,
 } from '@/api/notice';
+import { searchUsersApi } from '@/api/user';
+import { getDeptTreeApi } from '@/api/dept';
 import { useNoticeStore } from '@/store/modules/notice';
 import { useTable } from '@/composables/useTable';
 import { formatDateTime } from '@/utils/format';
-import type { NoticeItem, NoticePublishPayload } from '@/types/api';
+import type { DeptNode, NoticeItem, NoticePublishPayload, UserOption } from '@/types/api';
 import TablePage from '@/components/TablePage/index.vue';
 import BasicDialog from '@/components/BasicDialog/index.vue';
 
@@ -109,9 +111,44 @@ const publishForm = reactive<NoticePublishPayload>({
   noticeType: 2,
   link: '',
   userIds: undefined,
+  deptIds: undefined,
 });
-/** true = 发给全部启用用户；false = 只发给指定用户 */
+/** true = 发给全部启用用户；false = 发给指定对象（用户 / 部门） */
 const sendToAll = ref(true);
+
+/** 「指定用户」远程搜索选项（累积维护，保证已选项能正常显示 label） */
+const userOptions = ref<UserOption[]>([]);
+const userSearching = ref(false);
+/** 部门树（指定部门多选） */
+const deptTree = ref<DeptNode[]>([]);
+
+/** 打开发布弹窗：加载部门树并重置选择状态 */
+async function openPublish(): Promise<void> {
+  publishVisible.value = true;
+  userOptions.value = [];
+  publishForm.userIds = undefined;
+  publishForm.deptIds = undefined;
+  sendToAll.value = true;
+  const tree = await getDeptTreeApi();
+  deptTree.value = tree ?? [];
+}
+
+/** 按用户名 / 昵称 / id 远程搜索用户 */
+async function remoteSearchUsers(keyword: string): Promise<void> {
+  const kw = keyword.trim();
+  if (!kw) {
+    return;
+  }
+  userSearching.value = true;
+  try {
+    const res = await searchUsersApi(kw);
+    const map = new Map(userOptions.value.map((o) => [o.id, o]));
+    res.forEach((o) => map.set(o.id, o));
+    userOptions.value = [...map.values()];
+  } finally {
+    userSearching.value = false;
+  }
+}
 
 /** 提交发布 */
 async function handlePublish(): Promise<void> {
@@ -126,8 +163,8 @@ async function handlePublish(): Promise<void> {
     ElMessage.error('请填写通知正文');
     return;
   }
-  if (!sendToAll.value && !publishForm.userIds?.length) {
-    ElMessage.error('请至少选择一位接收人');
+  if (!sendToAll.value && !(publishForm.userIds?.length || publishForm.deptIds?.length)) {
+    ElMessage.error('请至少选择一位接收用户或一个部门');
     return;
   }
   publishing.value = true;
@@ -138,6 +175,7 @@ async function handlePublish(): Promise<void> {
       noticeType: publishForm.noticeType,
       link: publishForm.link?.trim() || undefined,
       userIds: sendToAll.value ? undefined : publishForm.userIds,
+      deptIds: sendToAll.value ? undefined : publishForm.deptIds,
     });
     ElMessage.success(`已发送 ${result.count} 条`);
     publishVisible.value = false;
@@ -145,6 +183,7 @@ async function handlePublish(): Promise<void> {
     publishForm.content = '';
     publishForm.link = '';
     publishForm.userIds = undefined;
+    publishForm.deptIds = undefined;
     sendToAll.value = true;
   } finally {
     publishing.value = false;
@@ -197,7 +236,7 @@ async function handlePublish(): Promise<void> {
         <div class="flex flex-wrap items-center gap-2">
           <el-button :disabled="noticeStore.unreadCount === 0" @click="handleReadAll">全部已读</el-button>
           <el-button type="danger" plain @click="handleClear">清空</el-button>
-          <el-button v-permission="'system:notice:add'" type="primary" @click="publishVisible = true">
+          <el-button v-permission="'system:notice:add'" type="primary" @click="openPublish">
             <template #icon><i class="bi bi-megaphone" /></template>
             发布通知
           </el-button>
@@ -237,17 +276,36 @@ async function handlePublish(): Promise<void> {
         <el-form-item label="接收范围">
           <el-radio-group v-model="sendToAll">
             <el-radio :value="true">全部启用用户</el-radio>
-            <el-radio :value="false">指定用户</el-radio>
+            <el-radio :value="false">指定对象（用户 / 部门）</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item v-if="!sendToAll" label="用户 ID">
+        <el-form-item v-if="!sendToAll" label="指定用户">
           <el-select
             v-model="publishForm.userIds"
             multiple
             filterable
-            allow-create
-            default-first-option
-            placeholder="输入用户 ID 后回车，可多个"
+            remote
+            :remote-method="remoteSearchUsers"
+            :loading="userSearching"
+            clearable
+            placeholder="输入用户名或昵称搜索，可多选"
+            style="width: 100%"
+          >
+            <el-option v-for="o in userOptions" :key="o.id" :label="`${o.username}（${o.nickname}）`" :value="o.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item v-if="!sendToAll" label="指定部门">
+          <el-tree-select
+            v-model="publishForm.deptIds"
+            :data="deptTree"
+            :props="{ label: 'deptName', children: 'children' }"
+            node-key="id"
+            multiple
+            :render-after-expand="false"
+            clearable
+            collapse-tags
+            collapse-tags-tooltip
+            placeholder="可多选，选中父级将包含其子部门"
             style="width: 100%"
           />
         </el-form-item>

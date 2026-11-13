@@ -46,8 +46,10 @@ export interface PublishNoticeInput {
   content: string;
   noticeType: NoticeType;
   link?: string;
-  /** 接收人 id 列表；为空表示发给全部启用中的用户 */
+  /** 接收人 id 列表 */
   userIds?: number[];
+  /** 指定部门 id 列表（含其全部子部门）；与 userIds 取并集，二者都为空时发给全部启用中的用户 */
+  deptIds?: number[];
   createdBy: number | null;
 }
 
@@ -66,15 +68,22 @@ export class NoticeService {
    */
   async publish(input: PublishNoticeInput): Promise<number> {
     try {
-      const targets =
-        input.userIds && input.userIds.length > 0
-          ? input.userIds
-          : (
-              await this.prisma.user.findMany({
-                where: { status: 1 },
-                select: { id: true },
-              })
-            ).map((user) => Number(user.id));
+      const explicitUserIds = input.userIds && input.userIds.length > 0 ? input.userIds : [];
+      const deptUserIds = input.deptIds && input.deptIds.length > 0 ? await this.resolveDeptUserIds(input.deptIds) : [];
+
+      let targets: number[];
+      if (explicitUserIds.length > 0 || deptUserIds.length > 0) {
+        // 指定范围：用户与部门取并集（去重）
+        targets = Array.from(new Set([...explicitUserIds, ...deptUserIds]));
+      } else {
+        // 未指定任何范围 → 发给全部启用中的用户（向后兼容）
+        targets = (
+          await this.prisma.user.findMany({
+            where: { status: 1 },
+            select: { id: true },
+          })
+        ).map((user) => Number(user.id));
+      }
 
       if (targets.length === 0) {
         return 0;
@@ -96,6 +105,38 @@ export class NoticeService {
       this.logger.error(`[Notice] 发布通知失败: ${error instanceof Error ? error.message : String(error)}`);
       return 0;
     }
+  }
+
+  /**
+   * 收集部门及其全部后代部门 id（广度优先逐层下钻）。
+   * 选中父部门即视为包含其下所有子部门 / 岗位的用户。
+   */
+  private async expandDeptIds(deptIds: number[]): Promise<number[]> {
+    const result = Array.from(new Set(deptIds));
+    let current: bigint[] = deptIds.map((id) => BigInt(id));
+    while (current.length > 0) {
+      const children = await this.prisma.dept.findMany({
+        where: { parentId: { in: current } },
+        select: { id: true },
+      });
+      const childIds = children.map((child) => Number(child.id)).filter((id) => !result.includes(id));
+      result.push(...childIds);
+      current = childIds.map((id) => BigInt(id));
+    }
+    return result;
+  }
+
+  /** 解析部门（含其全部子部门）下的所有启用用户 id。 */
+  private async resolveDeptUserIds(deptIds: number[]): Promise<number[]> {
+    const expanded = await this.expandDeptIds(deptIds);
+    if (expanded.length === 0) {
+      return [];
+    }
+    const rows = await this.prisma.user.findMany({
+      where: { deptId: { in: expanded.map((id) => BigInt(id)) }, status: 1 },
+      select: { id: true },
+    });
+    return rows.map((row) => Number(row.id));
   }
 
   /**

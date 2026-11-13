@@ -8,6 +8,7 @@ import type {
   UserDetail,
   UserImportResult,
   UserMenuOverview,
+  UserOption,
   UserQuery,
   UserUpsert,
 } from '@/types/api';
@@ -20,6 +21,14 @@ export function getUserListApi(params: UserQuery): Promise<PageResult<UserDetail
 /** 用户详情 */
 export function getUserDetailApi(id: number): Promise<UserDetail> {
   return get<UserDetail>(`/users/${id}`);
+}
+
+/**
+ * 用户搜索（公告「指定用户」选择器）。
+ * 按用户名 / 昵称 / id 模糊匹配，返回最小化字段（id / username / nickname）。
+ */
+export function searchUsersApi(keyword: string): Promise<UserOption[]> {
+  return get<UserOption[]>('/users/search', { keyword });
 }
 
 /** 新增用户 */

@@ -58,6 +58,15 @@ export class PublishNoticeDto {
   @IsInt({ each: true, message: '接收人 id 必须为正整数' })
   @Min(1, { each: true, message: '接收人 id 必须为正整数' })
   userIds?: number[];
+
+  /** 指定部门（含其全部子部门）；与 userIds 取并集，二者都为空表示发给全部启用中的用户 */
+  @IsOptional()
+  @IsArray({ message: '指定部门必须为数组' })
+  @ArrayMaxSize(100, { message: '单次最多指定 100 个部门' })
+  @Type(() => Number)
+  @IsInt({ each: true, message: '部门 id 必须为正整数' })
+  @Min(1, { each: true, message: '部门 id 必须为正整数' })
+  deptIds?: number[];
 }
 
 @Controller('notices')
@@ -98,6 +107,7 @@ export class NoticeController {
       noticeType: dto.noticeType,
       link: dto.link,
       userIds: dto.userIds,
+      deptIds: dto.deptIds,
       createdBy: user.userId,
     });
     return { __raw: true, data: { count }, message: `已发送 ${count} 条` };

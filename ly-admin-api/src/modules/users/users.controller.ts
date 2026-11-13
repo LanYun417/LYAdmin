@@ -88,6 +88,18 @@ export class UsersController {
     };
   }
 
+  /**
+   * 用户搜索（公告「指定用户」选择器）。
+   * 仅登录即可访问（全局鉴权守卫保证），按用户名 / 昵称 / id 模糊匹配，返回最小化字段。
+   * 必须声明在 `@Get(':id')` **之前**，否则 `search` 会被 `:id` 吃掉。
+   */
+  @Get('search')
+  search(
+    @Query('keyword') keyword?: string,
+  ): Promise<ResponseEnvelope<Array<{ id: number; username: string; nickname: string }>>> {
+    return this.usersService.searchUsers(keyword ?? '').then((data) => ({ __raw: true, data, message: 'ok' }));
+  }
+
   /** 用户详情。 */
   @Get(':id')
   @RequirePermissions('system:user:query')

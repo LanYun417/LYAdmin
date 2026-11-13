@@ -379,6 +379,42 @@ export class UsersService {
     });
   }
 
+  /**
+   * 用户搜索（公告「指定用户」选择器）。
+   *
+   * 按用户名 / 昵称模糊匹配，keyword 为纯数字时额外按 id 精确匹配；
+   * 返回最小化字段（id / username / nickname），供前端选择器展示，不泄露邮箱、手机号等敏感信息。
+   * 仅登录即可访问（无需 system:user:list）——它是发布通知的辅助只读接口，与收件箱「元数据接口不加权限」同理。
+   *
+   * @param keyword 用户名 / 昵称 / id
+   * @param limit 最大返回条数（默认 20，防止超大结果集）
+   */
+  async searchUsers(keyword: string, limit = 20): Promise<Array<{ id: number; username: string; nickname: string }>> {
+    const kw = keyword.trim();
+    if (!kw) {
+      return [];
+    }
+    const where: Prisma.UserWhereInput = {};
+    if (/^\d+$/.test(kw)) {
+      // 纯数字：id 精确 + 用户名/昵称模糊（id 超出安全整数范围时退化为仅模糊匹配）
+      const idNum = Number(kw);
+      where.OR = [
+        { username: { contains: kw } },
+        { nickname: { contains: kw } },
+        ...(Number.isSafeInteger(idNum) ? [{ id: BigInt(idNum) }] : []),
+      ];
+    } else {
+      where.OR = [{ username: { contains: kw } }, { nickname: { contains: kw } }];
+    }
+    const rows = await this.prisma.user.findMany({
+      where,
+      select: { id: true, username: true, nickname: true },
+      orderBy: { id: 'asc' },
+      take: limit,
+    });
+    return rows.map((row) => ({ id: Number(row.id), username: row.username, nickname: row.nickname }));
+  }
+
   /** 分配角色（替换式：先清后建）。 */
   async assignRoles(id: number, roleIds: number[]): Promise<void> {
     const user = await this.prisma.user.findUnique({
