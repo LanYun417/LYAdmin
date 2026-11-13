@@ -11,8 +11,10 @@ export interface TagView {
   path: string;
   /** 完整路径（含 query） */
   fullPath: string;
-  /** 标题 */
+  /** 标题（中文） */
   title: string;
+  /** 英文标题（非中文语言优先展示，缺省回退 title） */
+  titleEn?: string;
   /** 是否固定不可关闭 */
   affix?: boolean;
 }
@@ -39,6 +41,7 @@ export const useTagsViewStore = defineStore(
         path: route.path,
         fullPath: route.fullPath,
         title: (route.meta.title as string) || name,
+        titleEn: (route.meta.titleEn as string) || undefined,
         affix: Boolean(route.meta.affix),
       });
     }
@@ -101,6 +104,7 @@ export const useTagsViewStore = defineStore(
           path,
           fullPath: path,
           title: (route.meta.title as string) || name,
+          titleEn: (route.meta.titleEn as string) || undefined,
           affix: true,
         });
       });

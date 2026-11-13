@@ -155,6 +155,8 @@ export interface Menu {
   id: number;
   parentId: number;
   menuName: string;
+  /** 英文名称（界面切到非中文语言时优先展示，缺省回退到 menuName） */
+  menuNameEn?: string | null;
   menuType: MenuType;
   path?: string | null;
   component?: string | null;
@@ -205,6 +207,8 @@ export interface MenuQuery {
 export interface MenuUpsert {
   parentId: number;
   menuName: string;
+  /** 英文名称（界面切到非中文语言时优先展示，缺省回退到 menuName） */
+  menuNameEn?: string;
   menuType: MenuType;
   path?: string;
   component?: string;

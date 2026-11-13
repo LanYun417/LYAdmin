@@ -188,6 +188,7 @@ function buildRoutes(menus: MenuNode[], parentPath: string): RouteRecordRaw[] {
     const routeName = resolveRouteName(fullPath);
     const meta: AppRouteMeta = {
       title: menu.menuName,
+      titleEn: menu.menuNameEn ?? undefined,
       icon: menu.icon ?? undefined,
       keepAlive: menu.keepAlive === 1,
       hidden: menu.visible === 0,

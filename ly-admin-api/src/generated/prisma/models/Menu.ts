@@ -48,6 +48,7 @@ export type MenuMinAggregateOutputType = {
   id: bigint | null
   parentId: bigint | null
   menuName: string | null
+  menuNameEn: string | null
   menuType: string | null
   path: string | null
   component: string | null
@@ -66,6 +67,7 @@ export type MenuMaxAggregateOutputType = {
   id: bigint | null
   parentId: bigint | null
   menuName: string | null
+  menuNameEn: string | null
   menuType: string | null
   path: string | null
   component: string | null
@@ -84,6 +86,7 @@ export type MenuCountAggregateOutputType = {
   id: number
   parentId: number
   menuName: number
+  menuNameEn: number
   menuType: number
   path: number
   component: number
@@ -122,6 +125,7 @@ export type MenuMinAggregateInputType = {
   id?: true
   parentId?: true
   menuName?: true
+  menuNameEn?: true
   menuType?: true
   path?: true
   component?: true
@@ -140,6 +144,7 @@ export type MenuMaxAggregateInputType = {
   id?: true
   parentId?: true
   menuName?: true
+  menuNameEn?: true
   menuType?: true
   path?: true
   component?: true
@@ -158,6 +163,7 @@ export type MenuCountAggregateInputType = {
   id?: true
   parentId?: true
   menuName?: true
+  menuNameEn?: true
   menuType?: true
   path?: true
   component?: true
@@ -263,6 +269,7 @@ export type MenuGroupByOutputType = {
   id: bigint
   parentId: bigint
   menuName: string
+  menuNameEn: string | null
   menuType: string
   path: string | null
   component: string | null
@@ -304,6 +311,7 @@ export type MenuWhereInput = {
   id?: Prisma.BigIntFilter<"Menu"> | bigint | number
   parentId?: Prisma.BigIntFilter<"Menu"> | bigint | number
   menuName?: Prisma.StringFilter<"Menu"> | string
+  menuNameEn?: Prisma.StringNullableFilter<"Menu"> | string | null
   menuType?: Prisma.StringFilter<"Menu"> | string
   path?: Prisma.StringNullableFilter<"Menu"> | string | null
   component?: Prisma.StringNullableFilter<"Menu"> | string | null
@@ -324,6 +332,7 @@ export type MenuOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   parentId?: Prisma.SortOrder
   menuName?: Prisma.SortOrder
+  menuNameEn?: Prisma.SortOrderInput | Prisma.SortOrder
   menuType?: Prisma.SortOrder
   path?: Prisma.SortOrderInput | Prisma.SortOrder
   component?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -348,6 +357,7 @@ export type MenuWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.MenuWhereInput | Prisma.MenuWhereInput[]
   parentId?: Prisma.BigIntFilter<"Menu"> | bigint | number
   menuName?: Prisma.StringFilter<"Menu"> | string
+  menuNameEn?: Prisma.StringNullableFilter<"Menu"> | string | null
   menuType?: Prisma.StringFilter<"Menu"> | string
   path?: Prisma.StringNullableFilter<"Menu"> | string | null
   component?: Prisma.StringNullableFilter<"Menu"> | string | null
@@ -368,6 +378,7 @@ export type MenuOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   parentId?: Prisma.SortOrder
   menuName?: Prisma.SortOrder
+  menuNameEn?: Prisma.SortOrderInput | Prisma.SortOrder
   menuType?: Prisma.SortOrder
   path?: Prisma.SortOrderInput | Prisma.SortOrder
   component?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -394,6 +405,7 @@ export type MenuScalarWhereWithAggregatesInput = {
   id?: Prisma.BigIntWithAggregatesFilter<"Menu"> | bigint | number
   parentId?: Prisma.BigIntWithAggregatesFilter<"Menu"> | bigint | number
   menuName?: Prisma.StringWithAggregatesFilter<"Menu"> | string
+  menuNameEn?: Prisma.StringNullableWithAggregatesFilter<"Menu"> | string | null
   menuType?: Prisma.StringWithAggregatesFilter<"Menu"> | string
   path?: Prisma.StringNullableWithAggregatesFilter<"Menu"> | string | null
   component?: Prisma.StringNullableWithAggregatesFilter<"Menu"> | string | null
@@ -412,6 +424,7 @@ export type MenuCreateInput = {
   id?: bigint | number
   parentId?: bigint | number
   menuName: string
+  menuNameEn?: string | null
   menuType: string
   path?: string | null
   component?: string | null
@@ -432,6 +445,7 @@ export type MenuUncheckedCreateInput = {
   id?: bigint | number
   parentId?: bigint | number
   menuName: string
+  menuNameEn?: string | null
   menuType: string
   path?: string | null
   component?: string | null
@@ -452,6 +466,7 @@ export type MenuUpdateInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   parentId?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   menuName?: Prisma.StringFieldUpdateOperationsInput | string
+  menuNameEn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   menuType?: Prisma.StringFieldUpdateOperationsInput | string
   path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   component?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -472,6 +487,7 @@ export type MenuUncheckedUpdateInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   parentId?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   menuName?: Prisma.StringFieldUpdateOperationsInput | string
+  menuNameEn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   menuType?: Prisma.StringFieldUpdateOperationsInput | string
   path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   component?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -492,6 +508,7 @@ export type MenuCreateManyInput = {
   id?: bigint | number
   parentId?: bigint | number
   menuName: string
+  menuNameEn?: string | null
   menuType: string
   path?: string | null
   component?: string | null
@@ -510,6 +527,7 @@ export type MenuUpdateManyMutationInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   parentId?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   menuName?: Prisma.StringFieldUpdateOperationsInput | string
+  menuNameEn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   menuType?: Prisma.StringFieldUpdateOperationsInput | string
   path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   component?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -528,6 +546,7 @@ export type MenuUncheckedUpdateManyInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   parentId?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   menuName?: Prisma.StringFieldUpdateOperationsInput | string
+  menuNameEn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   menuType?: Prisma.StringFieldUpdateOperationsInput | string
   path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   component?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -552,6 +571,7 @@ export type MenuCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   parentId?: Prisma.SortOrder
   menuName?: Prisma.SortOrder
+  menuNameEn?: Prisma.SortOrder
   menuType?: Prisma.SortOrder
   path?: Prisma.SortOrder
   component?: Prisma.SortOrder
@@ -579,6 +599,7 @@ export type MenuMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   parentId?: Prisma.SortOrder
   menuName?: Prisma.SortOrder
+  menuNameEn?: Prisma.SortOrder
   menuType?: Prisma.SortOrder
   path?: Prisma.SortOrder
   component?: Prisma.SortOrder
@@ -597,6 +618,7 @@ export type MenuMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   parentId?: Prisma.SortOrder
   menuName?: Prisma.SortOrder
+  menuNameEn?: Prisma.SortOrder
   menuType?: Prisma.SortOrder
   path?: Prisma.SortOrder
   component?: Prisma.SortOrder
@@ -657,6 +679,7 @@ export type MenuCreateWithoutRoleMenusInput = {
   id?: bigint | number
   parentId?: bigint | number
   menuName: string
+  menuNameEn?: string | null
   menuType: string
   path?: string | null
   component?: string | null
@@ -676,6 +699,7 @@ export type MenuUncheckedCreateWithoutRoleMenusInput = {
   id?: bigint | number
   parentId?: bigint | number
   menuName: string
+  menuNameEn?: string | null
   menuType: string
   path?: string | null
   component?: string | null
@@ -711,6 +735,7 @@ export type MenuUpdateWithoutRoleMenusInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   parentId?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   menuName?: Prisma.StringFieldUpdateOperationsInput | string
+  menuNameEn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   menuType?: Prisma.StringFieldUpdateOperationsInput | string
   path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   component?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -730,6 +755,7 @@ export type MenuUncheckedUpdateWithoutRoleMenusInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   parentId?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   menuName?: Prisma.StringFieldUpdateOperationsInput | string
+  menuNameEn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   menuType?: Prisma.StringFieldUpdateOperationsInput | string
   path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   component?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -749,6 +775,7 @@ export type MenuCreateWithoutUserMenusInput = {
   id?: bigint | number
   parentId?: bigint | number
   menuName: string
+  menuNameEn?: string | null
   menuType: string
   path?: string | null
   component?: string | null
@@ -768,6 +795,7 @@ export type MenuUncheckedCreateWithoutUserMenusInput = {
   id?: bigint | number
   parentId?: bigint | number
   menuName: string
+  menuNameEn?: string | null
   menuType: string
   path?: string | null
   component?: string | null
@@ -803,6 +831,7 @@ export type MenuUpdateWithoutUserMenusInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   parentId?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   menuName?: Prisma.StringFieldUpdateOperationsInput | string
+  menuNameEn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   menuType?: Prisma.StringFieldUpdateOperationsInput | string
   path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   component?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -822,6 +851,7 @@ export type MenuUncheckedUpdateWithoutUserMenusInput = {
   id?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   parentId?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   menuName?: Prisma.StringFieldUpdateOperationsInput | string
+  menuNameEn?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   menuType?: Prisma.StringFieldUpdateOperationsInput | string
   path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   component?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -881,6 +911,7 @@ export type MenuSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   id?: boolean
   parentId?: boolean
   menuName?: boolean
+  menuNameEn?: boolean
   menuType?: boolean
   path?: boolean
   component?: boolean
@@ -904,6 +935,7 @@ export type MenuSelectScalar = {
   id?: boolean
   parentId?: boolean
   menuName?: boolean
+  menuNameEn?: boolean
   menuType?: boolean
   path?: boolean
   component?: boolean
@@ -918,7 +950,7 @@ export type MenuSelectScalar = {
   updatedAt?: boolean
 }
 
-export type MenuOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "parentId" | "menuName" | "menuType" | "path" | "component" | "icon" | "permission" | "sort" | "visible" | "status" | "redirect" | "keepAlive" | "createdAt" | "updatedAt", ExtArgs["result"]["menu"]>
+export type MenuOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "parentId" | "menuName" | "menuNameEn" | "menuType" | "path" | "component" | "icon" | "permission" | "sort" | "visible" | "status" | "redirect" | "keepAlive" | "createdAt" | "updatedAt", ExtArgs["result"]["menu"]>
 export type MenuInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   roleMenus?: boolean | Prisma.Menu$roleMenusArgs<ExtArgs>
   userMenus?: boolean | Prisma.Menu$userMenusArgs<ExtArgs>
@@ -944,6 +976,10 @@ export type $MenuPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
      * 菜单名称
      */
     menuName: string
+    /**
+     * 英文名称（界面切到非中文语言时优先展示，缺省回退到 menuName）
+     */
+    menuNameEn: string | null
     /**
      * M 目录 / C 菜单 / F 按钮
      */
@@ -1366,6 +1402,7 @@ export interface MenuFieldRefs {
   readonly id: Prisma.FieldRef<"Menu", 'BigInt'>
   readonly parentId: Prisma.FieldRef<"Menu", 'BigInt'>
   readonly menuName: Prisma.FieldRef<"Menu", 'String'>
+  readonly menuNameEn: Prisma.FieldRef<"Menu", 'String'>
   readonly menuType: Prisma.FieldRef<"Menu", 'String'>
   readonly path: Prisma.FieldRef<"Menu", 'String'>
   readonly component: Prisma.FieldRef<"Menu", 'String'>

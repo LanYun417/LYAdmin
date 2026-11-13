@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { MenuNode } from '@/types/api';
+import { pickLocaleText } from '@/utils/i18nText';
 
 defineOptions({ name: 'SidebarItem' });
 
@@ -34,6 +35,9 @@ const isLeaf = computed(() => visibleChildren.value.length === 0);
 
 /** 当前节点完整路径 */
 const fullPath = computed(() => resolvePath(props.item.path));
+
+/** 展示名：非中文语言优先英文名，缺省回退中文名 */
+const displayName = computed(() => pickLocaleText(props.item.menuName, props.item.menuNameEn));
 </script>
 
 <template>
@@ -42,7 +46,7 @@ const fullPath = computed(() => resolvePath(props.item.path));
       <el-icon v-if="item.icon" aria-hidden="true">
         <i :class="`bi bi-${item.icon}`" />
       </el-icon>
-      <span>{{ item.menuName }}</span>
+      <span>{{ displayName }}</span>
     </template>
     <SidebarItem v-for="child in visibleChildren" :key="child.id" :item="child" :base-path="fullPath" />
   </el-sub-menu>
@@ -52,7 +56,7 @@ const fullPath = computed(() => resolvePath(props.item.path));
       <i :class="`bi bi-${item.icon}`" />
     </el-icon>
     <template #title>
-      <span>{{ item.menuName }}</span>
+      <span>{{ displayName }}</span>
     </template>
   </el-menu-item>
 </template>

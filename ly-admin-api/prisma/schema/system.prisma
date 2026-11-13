@@ -87,6 +87,8 @@ model Menu {
   parentId   BigInt   @default(0) @map("parent_id") @db.BigInt
   /// 菜单名称
   menuName   String   @map("menu_name") @db.VarChar(50)
+  /// 英文名称（界面切到非中文语言时优先展示，缺省回退到 menuName）
+  menuNameEn String?  @map("menu_name_en") @db.VarChar(100)
   /// M 目录 / C 菜单 / F 按钮
   menuType   String   @map("menu_type") @db.Char(1)
   /// 路由路径

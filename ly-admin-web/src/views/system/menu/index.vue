@@ -104,6 +104,7 @@ onMounted(() => {
         border
       >
         <el-table-column prop="menuName" label="菜单名称" min-width="180" />
+        <el-table-column prop="menuNameEn" label="英文名称" min-width="140" show-overflow-tooltip />
         <el-table-column label="类型" width="90" align="center">
           <template #default="{ row }">
             <el-tag :type="typeTagType(row.menuType)" size="small">

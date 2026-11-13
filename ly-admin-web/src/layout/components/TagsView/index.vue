@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useTagsViewStore, type TagView } from '@/store/modules/tagsView';
+import { pickLocaleText } from '@/utils/i18nText';
 
 defineOptions({ name: 'TagsView' });
 
@@ -178,7 +179,7 @@ onBeforeUnmount(() => {
           @close="closeView(view)"
           @contextmenu="openContextMenu($event, view)"
         >
-          {{ view.title }}
+          {{ pickLocaleText(view.title, view.titleEn) }}
         </el-tag>
       </TransitionGroup>
     </el-scrollbar>

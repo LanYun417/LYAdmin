@@ -285,6 +285,7 @@ export const MenuScalarFieldEnum = {
   id: 'id',
   parentId: 'parentId',
   menuName: 'menuName',
+  menuNameEn: 'menuNameEn',
   menuType: 'menuType',
   path: 'path',
   component: 'component',
@@ -560,6 +561,7 @@ export type RoleOrderByRelevanceFieldEnum = (typeof RoleOrderByRelevanceFieldEnu
 
 export const MenuOrderByRelevanceFieldEnum = {
   menuName: 'menuName',
+  menuNameEn: 'menuNameEn',
   menuType: 'menuType',
   path: 'path',
   component: 'component',

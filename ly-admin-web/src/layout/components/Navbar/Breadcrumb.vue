@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { BreadcrumbItem } from '@/types/router';
+import { pickLocaleText } from '@/utils/i18nText';
 
 defineOptions({ name: 'Breadcrumb' });
 
@@ -10,6 +11,7 @@ const breadcrumbs = computed<BreadcrumbItem[]>(() => {
   const matched = route.matched.filter((item) => item.meta && item.meta.title);
   return matched.map((item) => ({
     title: item.meta.title as string,
+    titleEn: item.meta.titleEn as string | undefined,
     path: item.path,
     redirect: item.redirect as string | undefined,
   }));
@@ -23,7 +25,7 @@ const breadcrumbs = computed<BreadcrumbItem[]>(() => {
       :key="item.path"
       :to="index < breadcrumbs.length - 1 ? { path: item.redirect || item.path } : undefined"
     >
-      {{ item.title }}
+      {{ pickLocaleText(item.title, item.titleEn) }}
     </el-breadcrumb-item>
   </el-breadcrumb>
 </template>

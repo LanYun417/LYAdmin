@@ -94,6 +94,8 @@ export interface MenuNode {
   id: number;
   parentId: number;
   menuName: string;
+  /** 英文名称（界面切到非中文语言时优先展示，缺省回退到 menuName） */
+  menuNameEn?: string | null;
   menuType: string;
   path: string | null;
   component: string | null;

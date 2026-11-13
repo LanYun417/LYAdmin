@@ -37,6 +37,7 @@ const menuTree = ref<MenuNode[]>([]);
 const defaultForm = (): MenuUpsert => ({
   parentId: 0,
   menuName: '',
+  menuNameEn: '',
   menuType: 'C',
   path: '',
   component: '',
@@ -104,6 +105,7 @@ async function loadData(): Promise<void> {
     Object.assign(form, {
       parentId: detail.parentId,
       menuName: detail.menuName,
+      menuNameEn: detail.menuNameEn ?? '',
       menuType: detail.menuType,
       path: detail.path ?? '',
       component: detail.component ?? '',
@@ -191,6 +193,9 @@ async function handleSubmit(): Promise<void> {
       </el-form-item>
       <el-form-item label="菜单名称" prop="menuName">
         <el-input v-model="form.menuName" placeholder="请输入菜单名称" />
+      </el-form-item>
+      <el-form-item v-if="!isButton" label="英文名称">
+        <el-input v-model="form.menuNameEn" placeholder="切换到英文界面时展示，留空则回退中文名" />
       </el-form-item>
       <el-form-item v-if="!isButton" label="路由路径">
         <el-input v-model="form.path" placeholder="如 user 或 /system/user" />

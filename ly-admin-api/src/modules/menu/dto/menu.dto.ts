@@ -31,6 +31,12 @@ export class MenuUpsertDto {
   @MaxLength(50, { message: MSG.maxLength(50) })
   menuName!: string;
 
+  @IsOptional()
+  @Transform(trimToOptional)
+  @IsString({ message: MSG.isString })
+  @MaxLength(100, { message: MSG.maxLength(100) })
+  menuNameEn?: string;
+
   @IsIn(['M', 'C', 'F'], { message: '菜单类型非法' })
   menuType!: 'M' | 'C' | 'F';
 

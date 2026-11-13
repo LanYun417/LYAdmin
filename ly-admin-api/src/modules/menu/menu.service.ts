@@ -16,6 +16,7 @@ import type { MenuUpsertDto } from './dto/menu.dto.js';
 interface MenuWriteData {
   parentId: bigint;
   menuName: string;
+  menuNameEn: string | null;
   menuType: string;
   path: string | null;
   component: string | null;
@@ -40,6 +41,7 @@ export class MenuService {
     id: bigint;
     parentId: bigint;
     menuName: string;
+    menuNameEn: string | null;
     menuType: string;
     path: string | null;
     component: string | null;
@@ -55,6 +57,7 @@ export class MenuService {
       id: Number(menu.id),
       parentId: Number(menu.parentId),
       menuName: menu.menuName,
+      menuNameEn: menu.menuNameEn,
       menuType: menu.menuType,
       path: menu.path,
       component: menu.component,
@@ -218,6 +221,7 @@ export class MenuService {
     return {
       parentId: BigInt(input.parentId ?? 0),
       menuName: input.menuName,
+      menuNameEn: input.menuNameEn ?? null,
       menuType: input.menuType,
       path: input.path ?? null,
       component: input.component ?? null,

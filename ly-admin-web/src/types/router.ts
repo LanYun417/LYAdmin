@@ -9,6 +9,8 @@ import type { RouteRecordRaw } from 'vue-router';
 export interface AppRouteMeta extends Record<string, unknown> {
   /** 菜单/页面标题 */
   title?: string;
+  /** 英文标题（界面切到非中文语言时优先展示，缺省回退到 title） */
+  titleEn?: string;
   /** Element Plus 图标组件名 */
   icon?: string;
   /** 是否在侧边栏隐藏 */
@@ -31,6 +33,8 @@ export type AppRouteRecordRaw = RouteRecordRaw;
 /** 面包屑项 */
 export interface BreadcrumbItem {
   title: string;
+  /** 英文标题（非中文语言优先展示，缺省回退 title） */
+  titleEn?: string;
   path: string;
   redirect?: string;
 }
