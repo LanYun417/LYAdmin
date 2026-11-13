@@ -176,6 +176,7 @@ export const OperationLogScalarFieldEnum = {
   errorMessage: 'errorMessage',
   ip: 'ip',
   location: 'location',
+  traceId: 'traceId',
   createdAt: 'createdAt'
 } as const
 
@@ -198,7 +199,8 @@ export const HttpLogScalarFieldEnum = {
   deptName: 'deptName',
   query: 'query',
   reqBody: 'reqBody',
-  resBody: 'resBody'
+  resBody: 'resBody',
+  traceId: 'traceId'
 } as const
 
 export type HttpLogScalarFieldEnum = (typeof HttpLogScalarFieldEnum)[keyof typeof HttpLogScalarFieldEnum]
@@ -436,7 +438,8 @@ export const OperationLogOrderByRelevanceFieldEnum = {
   afterData: 'afterData',
   errorMessage: 'errorMessage',
   ip: 'ip',
-  location: 'location'
+  location: 'location',
+  traceId: 'traceId'
 } as const
 
 export type OperationLogOrderByRelevanceFieldEnum = (typeof OperationLogOrderByRelevanceFieldEnum)[keyof typeof OperationLogOrderByRelevanceFieldEnum]
@@ -468,7 +471,8 @@ export const HttpLogOrderByRelevanceFieldEnum = {
   username: 'username',
   deptName: 'deptName',
   reqBody: 'reqBody',
-  resBody: 'resBody'
+  resBody: 'resBody',
+  traceId: 'traceId'
 } as const
 
 export type HttpLogOrderByRelevanceFieldEnum = (typeof HttpLogOrderByRelevanceFieldEnum)[keyof typeof HttpLogOrderByRelevanceFieldEnum]

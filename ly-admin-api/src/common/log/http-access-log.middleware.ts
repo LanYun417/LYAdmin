@@ -11,6 +11,7 @@ import { FileLoggerService } from './file-logger.service.js';
 import type { AuthenticatedRequest } from '../auth/auth.guard.js';
 import { getClientIp } from './operation-log.interceptor.js';
 import { IpRegionService } from '../ip/ip-region.service.js';
+import { getTraceId } from './trace-id.js';
 
 /** 单条日志体上限（2KB），超出截断。 */
 const BODY_LIMIT = 2048;
@@ -105,6 +106,9 @@ export class HttpAccessLoggerMiddleware implements NestMiddleware {
 
     const startAt = Date.now();
     let responseBody: unknown;
+    // traceId 同步预取并闭包持有：`res.on('finish')` 回调已脱离请求的 async 上下文，
+    // ALS.getStore() 在回调里取不到值（与操作日志快照容器同因，见 operation-snapshot.ts 注释）。
+    const traceId = getTraceId() ?? null;
 
     // 捕获响应体（用于日志留痕）
     const originalJson = res.json.bind(res);
@@ -139,6 +143,7 @@ export class HttpAccessLoggerMiddleware implements NestMiddleware {
         query: mask(req.query) as Prisma.InputJsonValue,
         reqBody: safeSerialize(req.body),
         resBody: serializeResponse(responseBody),
+        traceId,
       };
 
       // 归属地解析为异步：先解析再落库，解析失败不影响访问日志写入
@@ -170,6 +175,7 @@ export class HttpAccessLoggerMiddleware implements NestMiddleware {
           query: record.query,
           reqBody: record.reqBody,
           resBody: record.resBody,
+          traceId: record.traceId,
         });
       });
     });

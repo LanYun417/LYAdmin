@@ -15,6 +15,7 @@ import { getOperationMeta, inferAction, type OperationMeta } from './operation-l
 import type { AuthenticatedRequest } from '../auth/auth.guard.js';
 import { IpRegionService } from '../ip/ip-region.service.js';
 import { buildSnapshotFields, runWithSnapshot, type OperationSnapshot } from './operation-snapshot.js';
+import { getTraceId } from './trace-id.js';
 
 /** 读取客户端 IP（受 trust proxy 设置影响）。 */
 export function getClientIp(req: Request): string {
@@ -51,6 +52,9 @@ export class OperationLogInterceptor implements NestInterceptor {
 
     const startAt = Date.now();
     let errorMessage: string | null = null;
+    // traceId 同步预取：finish 回调已脱离 async 上下文，必须闭包持有（原因见
+    // operation-snapshot.ts 顶部注释与 http-access-log.middleware.ts 同款注释）
+    const traceId = getTraceId() ?? null;
     // 变更前后值容器：服务层通过 recordBefore/recordAfter 往里写，响应结束时统一落库。
     // 必须在响应结束后仍可读，故这里持有对象引用（届时已脱离请求的 async 上下文）。
     const snapshot: OperationSnapshot = {};
@@ -67,7 +71,7 @@ export class OperationLogInterceptor implements NestInterceptor {
 
     res.on('finish', () => {
       const statusCode = res.statusCode;
-      void this.recordOperationLog(req, meta, statusCode, errorMessage, Date.now() - startAt, snapshot);
+      void this.recordOperationLog(req, meta, statusCode, errorMessage, Date.now() - startAt, snapshot, traceId);
     });
 
     return runWithSnapshot(snapshot, () => next.handle());
@@ -81,6 +85,7 @@ export class OperationLogInterceptor implements NestInterceptor {
     errorMessage: string | null,
     duration: number,
     snapshot: OperationSnapshot,
+    traceId: string | null,
   ): Promise<void> {
     const ip = getClientIp(req) || null;
     const location = (await this.ipRegion.locate(ip)) || null;
@@ -100,6 +105,7 @@ export class OperationLogInterceptor implements NestInterceptor {
       errorMessage: statusCode < 400 ? null : errorMessage || `HTTP ${statusCode}`,
       ip,
       location,
+      traceId,
     });
   }
 }

@@ -305,7 +305,7 @@ service.interceptors.response.use(
     // 请求已失败返回，先归还它占用的进度（401 重放会在请求拦截器里重新计入）
     finishCountedProgress(originalConfig);
 
-    // 无响应（网络异常 / 超时）
+    // 无响应（网络异常 / 超时）：浏览器到不了服务端，没有响应头可读，只能报网络错误
     if (!response) {
       notifyError(originalConfig, error.message || '网络异常，请稍后重试');
       return Promise.reject(error);
@@ -380,10 +380,25 @@ service.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    notifyError(originalConfig, errorPayload?.message || `请求失败（${status}）`);
+    // 5xx / 其他服务端错误：提示附上排查号（后端 `X-Request-Id`，见 trace-id 中间件）。
+    // 用户报障时贴出这串 id，运维即可在 HTTP / 操作 / 错误日志里对齐同一条请求。
+    const serverMessage = errorPayload?.message || `请求失败（${status}）`;
+    notifyError(originalConfig, withTraceId(serverMessage, response));
     return Promise.reject(error);
   },
 );
+
+/**
+ * 给错误提示追加排查号（后端响应头 `X-Request-Id`）。
+ * 没有头 / 头非法时原样返回，不破坏既有文案。
+ */
+function withTraceId(message: string, response: { headers?: Record<string, unknown> }): string {
+  const traceId = response?.headers?.['x-request-id'];
+  if (typeof traceId === 'string' && /^[A-Za-z0-9-]{8,64}$/.test(traceId)) {
+    return `${message}（排查号 ${traceId}）`;
+  }
+  return message;
+}
 
 /**
  * 通用请求方法（拦截器已解包，直接返回业务 data）。

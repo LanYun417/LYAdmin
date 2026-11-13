@@ -58,6 +58,7 @@ export type HttpLogMinAggregateOutputType = {
   deptName: string | null
   reqBody: string | null
   resBody: string | null
+  traceId: string | null
 }
 
 export type HttpLogMaxAggregateOutputType = {
@@ -76,6 +77,7 @@ export type HttpLogMaxAggregateOutputType = {
   deptName: string | null
   reqBody: string | null
   resBody: string | null
+  traceId: string | null
 }
 
 export type HttpLogCountAggregateOutputType = {
@@ -95,6 +97,7 @@ export type HttpLogCountAggregateOutputType = {
   query: number
   reqBody: number
   resBody: number
+  traceId: number
   _all: number
 }
 
@@ -131,6 +134,7 @@ export type HttpLogMinAggregateInputType = {
   deptName?: true
   reqBody?: true
   resBody?: true
+  traceId?: true
 }
 
 export type HttpLogMaxAggregateInputType = {
@@ -149,6 +153,7 @@ export type HttpLogMaxAggregateInputType = {
   deptName?: true
   reqBody?: true
   resBody?: true
+  traceId?: true
 }
 
 export type HttpLogCountAggregateInputType = {
@@ -168,6 +173,7 @@ export type HttpLogCountAggregateInputType = {
   query?: true
   reqBody?: true
   resBody?: true
+  traceId?: true
   _all?: true
 }
 
@@ -274,6 +280,7 @@ export type HttpLogGroupByOutputType = {
   query: runtime.JsonValue | null
   reqBody: string | null
   resBody: string | null
+  traceId: string | null
   _count: HttpLogCountAggregateOutputType | null
   _avg: HttpLogAvgAggregateOutputType | null
   _sum: HttpLogSumAggregateOutputType | null
@@ -316,6 +323,7 @@ export type HttpLogWhereInput = {
   query?: Prisma.JsonNullableFilter<"HttpLog">
   reqBody?: Prisma.StringNullableFilter<"HttpLog"> | string | null
   resBody?: Prisma.StringNullableFilter<"HttpLog"> | string | null
+  traceId?: Prisma.StringNullableFilter<"HttpLog"> | string | null
 }
 
 export type HttpLogOrderByWithRelationInput = {
@@ -335,6 +343,7 @@ export type HttpLogOrderByWithRelationInput = {
   query?: Prisma.SortOrderInput | Prisma.SortOrder
   reqBody?: Prisma.SortOrderInput | Prisma.SortOrder
   resBody?: Prisma.SortOrderInput | Prisma.SortOrder
+  traceId?: Prisma.SortOrderInput | Prisma.SortOrder
   _relevance?: Prisma.HttpLogOrderByRelevanceInput
 }
 
@@ -358,6 +367,7 @@ export type HttpLogWhereUniqueInput = Prisma.AtLeast<{
   query?: Prisma.JsonNullableFilter<"HttpLog">
   reqBody?: Prisma.StringNullableFilter<"HttpLog"> | string | null
   resBody?: Prisma.StringNullableFilter<"HttpLog"> | string | null
+  traceId?: Prisma.StringNullableFilter<"HttpLog"> | string | null
 }, "id">
 
 export type HttpLogOrderByWithAggregationInput = {
@@ -377,6 +387,7 @@ export type HttpLogOrderByWithAggregationInput = {
   query?: Prisma.SortOrderInput | Prisma.SortOrder
   reqBody?: Prisma.SortOrderInput | Prisma.SortOrder
   resBody?: Prisma.SortOrderInput | Prisma.SortOrder
+  traceId?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.HttpLogCountOrderByAggregateInput
   _avg?: Prisma.HttpLogAvgOrderByAggregateInput
   _max?: Prisma.HttpLogMaxOrderByAggregateInput
@@ -404,6 +415,7 @@ export type HttpLogScalarWhereWithAggregatesInput = {
   query?: Prisma.JsonNullableWithAggregatesFilter<"HttpLog">
   reqBody?: Prisma.StringNullableWithAggregatesFilter<"HttpLog"> | string | null
   resBody?: Prisma.StringNullableWithAggregatesFilter<"HttpLog"> | string | null
+  traceId?: Prisma.StringNullableWithAggregatesFilter<"HttpLog"> | string | null
 }
 
 export type HttpLogCreateInput = {
@@ -423,6 +435,7 @@ export type HttpLogCreateInput = {
   query?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   reqBody?: string | null
   resBody?: string | null
+  traceId?: string | null
 }
 
 export type HttpLogUncheckedCreateInput = {
@@ -442,6 +455,7 @@ export type HttpLogUncheckedCreateInput = {
   query?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   reqBody?: string | null
   resBody?: string | null
+  traceId?: string | null
 }
 
 export type HttpLogUpdateInput = {
@@ -461,6 +475,7 @@ export type HttpLogUpdateInput = {
   query?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   reqBody?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resBody?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  traceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type HttpLogUncheckedUpdateInput = {
@@ -480,6 +495,7 @@ export type HttpLogUncheckedUpdateInput = {
   query?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   reqBody?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resBody?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  traceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type HttpLogCreateManyInput = {
@@ -499,6 +515,7 @@ export type HttpLogCreateManyInput = {
   query?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   reqBody?: string | null
   resBody?: string | null
+  traceId?: string | null
 }
 
 export type HttpLogUpdateManyMutationInput = {
@@ -518,6 +535,7 @@ export type HttpLogUpdateManyMutationInput = {
   query?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   reqBody?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resBody?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  traceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type HttpLogUncheckedUpdateManyInput = {
@@ -537,6 +555,7 @@ export type HttpLogUncheckedUpdateManyInput = {
   query?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   reqBody?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resBody?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  traceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type HttpLogOrderByRelevanceInput = {
@@ -562,6 +581,7 @@ export type HttpLogCountOrderByAggregateInput = {
   query?: Prisma.SortOrder
   reqBody?: Prisma.SortOrder
   resBody?: Prisma.SortOrder
+  traceId?: Prisma.SortOrder
 }
 
 export type HttpLogAvgOrderByAggregateInput = {
@@ -588,6 +608,7 @@ export type HttpLogMaxOrderByAggregateInput = {
   deptName?: Prisma.SortOrder
   reqBody?: Prisma.SortOrder
   resBody?: Prisma.SortOrder
+  traceId?: Prisma.SortOrder
 }
 
 export type HttpLogMinOrderByAggregateInput = {
@@ -606,6 +627,7 @@ export type HttpLogMinOrderByAggregateInput = {
   deptName?: Prisma.SortOrder
   reqBody?: Prisma.SortOrder
   resBody?: Prisma.SortOrder
+  traceId?: Prisma.SortOrder
 }
 
 export type HttpLogSumOrderByAggregateInput = {
@@ -635,6 +657,7 @@ export type HttpLogSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   query?: boolean
   reqBody?: boolean
   resBody?: boolean
+  traceId?: boolean
 }, ExtArgs["result"]["httpLog"]>
 
 
@@ -656,9 +679,10 @@ export type HttpLogSelectScalar = {
   query?: boolean
   reqBody?: boolean
   resBody?: boolean
+  traceId?: boolean
 }
 
-export type HttpLogOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "time" | "method" | "url" | "statusCode" | "duration" | "ip" | "location" | "userAgent" | "userId" | "username" | "deptId" | "deptName" | "query" | "reqBody" | "resBody", ExtArgs["result"]["httpLog"]>
+export type HttpLogOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "time" | "method" | "url" | "statusCode" | "duration" | "ip" | "location" | "userAgent" | "userId" | "username" | "deptId" | "deptName" | "query" | "reqBody" | "resBody" | "traceId", ExtArgs["result"]["httpLog"]>
 
 export type $HttpLogPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "HttpLog"
@@ -728,6 +752,10 @@ export type $HttpLogPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
      * 响应内容（截断 2KB；二进制为占位）
      */
     resBody: string | null
+    /**
+     * 请求 traceId（与操作日志、错误日志串联；响应头 `X-Request-Id` 同值）
+     */
+    traceId: string | null
   }, ExtArgs["result"]["httpLog"]>
   composites: {}
 }
@@ -1113,6 +1141,7 @@ export interface HttpLogFieldRefs {
   readonly query: Prisma.FieldRef<"HttpLog", 'Json'>
   readonly reqBody: Prisma.FieldRef<"HttpLog", 'String'>
   readonly resBody: Prisma.FieldRef<"HttpLog", 'String'>
+  readonly traceId: Prisma.FieldRef<"HttpLog", 'String'>
 }
     
 

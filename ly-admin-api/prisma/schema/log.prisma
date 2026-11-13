@@ -59,6 +59,8 @@ model OperationLog {
   ip           String?  @db.VarChar(50)
   /// IP 归属地（ip2region 离线解析：国家 省份 城市 运营商）
   location     String?  @db.VarChar(100)
+  /// 请求 traceId（与 HTTP 访问日志、错误日志串联，排障时以同一串 id 对齐）
+  traceId      String?  @map("trace_id") @db.VarChar(64)
   /// 创建时间
   createdAt    DateTime @default(now()) @map("created_at")
 
@@ -100,6 +102,8 @@ model HttpLog {
   reqBody    String?  @map("req_body") @db.Text
   /// 响应内容（截断 2KB；二进制为占位）
   resBody    String?  @map("res_body") @db.Text
+  /// 请求 traceId（与操作日志、错误日志串联；响应头 `X-Request-Id` 同值）
+  traceId    String?  @map("trace_id") @db.VarChar(64)
 
   @@index([time])
   @@index([method])

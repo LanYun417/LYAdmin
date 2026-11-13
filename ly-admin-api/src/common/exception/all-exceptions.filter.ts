@@ -6,6 +6,7 @@ import { type ArgumentsHost, type ExceptionFilter, Catch, HttpException, HttpSta
 import { MulterError } from 'multer';
 import { AppException } from './app.exception.js';
 import { ERROR_CODE, ERROR_MESSAGE } from '../config/constants.js';
+import { getTraceId } from '../log/trace-id.js';
 
 /** 从校验异常载荷中提取全部提示文案。
  *
@@ -122,8 +123,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     // 4) 未捕获异常：记录 error 日志并返回统一 500
     const message = exception instanceof Error ? exception.message : ERROR_MESSAGE.INTERNAL;
+    // traceId 前缀进日志：错误日志与 HTTP / 操作日志可按同一串 id 对齐排查
+    const traceId = getTraceId();
     this.logger.error(
-      `[UnhandledError] ${req?.method ?? ''} ${req?.originalUrl ?? req?.url ?? ''} — ${message}`,
+      `[UnhandledError]${traceId ? ` [traceId: ${traceId}]` : ''} ${req?.method ?? ''} ${req?.originalUrl ?? req?.url ?? ''} — ${message}`,
       exception instanceof Error ? exception.stack : undefined,
     );
     res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({

@@ -19,6 +19,7 @@ import express, { type NextFunction, type Request, type Response } from 'express
 import { config } from './common/config/config.js';
 import { HotlinkGuardMiddleware, ImageScaleMiddleware } from './common/file/file-guards.js';
 import { securityHeaders } from './common/http/security-headers.js';
+import { traceIdMiddleware } from './common/log/trace-id.middleware.js';
 
 /** 构建期预压缩副本可覆盖的文本类型（扩展名 → Content-Type）。 */
 const PRECOMPRESSED_TYPES: Record<string, string> = {
@@ -117,6 +118,10 @@ export function configureApp(app: NestExpressApplication, options: AppSetupOptio
     origin: config.corsOrigin === '*' ? true : config.corsOrigin.split(',').map((item) => item.trim()),
     credentials: true,
   });
+
+  // traceId 上下文：必须在所有中间件之前建立，保证后续任何环节（限流、访问日志、
+  // 异常过滤器）都能从上下文拿到同一串 id；响应头 `X-Request-Id` 回带给前端
+  app.use(traceIdMiddleware);
 
   // 响应压缩：>1KB 的可压缩响应（JSON / JS / CSS / SVG）按 Accept-Encoding 协商 br / gzip
   app.use(compression({ threshold: 1024 }));
