@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useTagsViewStore, type TagView } from '@/store/modules/tagsView';
 import { pickLocaleText } from '@/utils/i18nText';
+import MenuSearch from './MenuSearch.vue';
 
 defineOptions({ name: 'TagsView' });
 
@@ -184,6 +185,8 @@ onBeforeUnmount(() => {
       </TransitionGroup>
     </el-scrollbar>
 
+    <MenuSearch />
+
     <div
       v-show="contextMenu.visible"
       class="tags-context-menu"
@@ -209,7 +212,8 @@ onBeforeUnmount(() => {
 }
 
 .tags-scroll {
-  width: 100%;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .tags-wrap {
