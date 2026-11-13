@@ -43,6 +43,7 @@ interface UserWithRelations {
   passwordChangedAt: Date | null;
   remark: string | null;
   deptId: bigint;
+  maxDevices: number | null;
   createdAt: Date;
   updatedAt: Date;
   dept: { deptName: string } | null;
@@ -86,6 +87,7 @@ export class UsersService {
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
       remark: user.remark,
+      maxDevices: user.maxDevices === null ? null : Number(user.maxDevices),
       isSuperAdmin: this.isSuperAdmin(user.username, roles),
       // 只输出 id + roleName：roleCode 仍参与超管判定，但不对外暴露——
       // 前端 UserDetail 类型也只声明这两个字段）
@@ -231,6 +233,7 @@ export class UsersService {
         status: dto.status ?? Status.ENABLED,
         deptId: BigInt(dto.deptId ?? 0),
         remark: dto.remark ?? null,
+        maxDevices: dto.maxDevices ?? null,
       },
     });
 
@@ -260,6 +263,7 @@ export class UsersService {
       status: Number(user.status),
       deptId: Number(user.deptId),
       remark: user.remark,
+      maxDevices: user.maxDevices === null ? null : Number(user.maxDevices),
       roleIds: user.roles.map((role) => role.id),
     });
 
@@ -273,6 +277,7 @@ export class UsersService {
         status,
         deptId: BigInt(dto.deptId ?? 0),
         remark: dto.remark ?? null,
+        maxDevices: dto.maxDevices ?? null,
       },
     });
 
@@ -285,6 +290,7 @@ export class UsersService {
       status,
       deptId: dto.deptId ?? 0,
       remark: dto.remark ?? null,
+      maxDevices: dto.maxDevices ?? null,
       roleIds: dto.roleIds ?? [],
     });
     // 角色 / 状态可能变更：立即失效该用户鉴权缓存，确保权限即时生效

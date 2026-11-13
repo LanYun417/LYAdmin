@@ -32,6 +32,8 @@ model User {
   remark            String?   @db.VarChar(255)
   /// 部门 id（0 表示未分配，故不建外键、也不声明 Prisma 关系）
   deptId            BigInt    @default(0) @map("dept_id") @db.BigInt
+  /// 单用户登录设备数上限；NULL = 走全局 sys.login.maxDevices，0 = 不限制
+  maxDevices        Int?      @map("max_devices")
   /// 创建时间
   createdAt         DateTime  @default(now()) @map("created_at")
   /// 更新时间

@@ -34,8 +34,10 @@ const deptTree = ref<DeptNode[]>([]);
  * 表单内部数据模型。
  * `deptId` 为 `null` 表示未选择部门（提交时归一为 0，即「未分配」）。
  */
-interface UserFormModel extends Omit<UserUpsert, 'deptId'> {
+interface UserFormModel extends Omit<UserUpsert, 'deptId' | 'maxDevices'> {
   deptId: number | null;
+  /** 单用户登录设备数上限；undefined = 清空（走全局），0 = 不限制 */
+  maxDevices?: number;
 }
 
 const defaultForm = (): UserFormModel => ({
@@ -49,6 +51,7 @@ const defaultForm = (): UserFormModel => ({
   roleIds: [],
   deptId: null,
   remark: '',
+  maxDevices: undefined,
 });
 
 const form = reactive<UserFormModel>(defaultForm());
@@ -100,6 +103,7 @@ async function loadDetail(id: number): Promise<void> {
     // 0（未分配）转为 null，避免下拉把 0 当未知节点显示成 "0"
     deptId: detail.deptId ? detail.deptId : null,
     remark: detail.remark ?? '',
+    maxDevices: detail.maxDevices ?? undefined,
   });
   editingSuperAdmin.value = Boolean(detail.isSuperAdmin);
 }
@@ -205,6 +209,16 @@ async function handleSubmit(): Promise<void> {
           <el-radio v-for="item in statusOptions" :key="item.value" :value="item.value">{{ item.label }}</el-radio>
         </el-radio-group>
         <span v-if="editingSuperAdmin" class="ml-2 text-[12px] text-muted">超级管理员不可禁用</span>
+      </el-form-item>
+      <el-form-item label="设备上限">
+        <el-input-number
+          v-model="form.maxDevices"
+          :min="0"
+          :max="99"
+          clearable
+          placeholder="留空走全局，0=不限制"
+          style="width: 100%"
+        />
       </el-form-item>
       <el-form-item label="备注">
         <el-input v-model="form.remark" type="textarea" :rows="2" placeholder="请输入备注" />

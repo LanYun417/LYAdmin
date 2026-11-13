@@ -132,6 +132,8 @@ export interface UserBrief {
 /** 用户详情（含角色信息）。 */
 export interface UserDetail extends UserBrief {
   remark: string | null;
+  /** 单用户登录设备数上限；null = 走全局 sys.login.maxDevices，0 = 不限制 */
+  maxDevices: number | null;
   /** 是否超级管理员（内置 admin 账号，或持有 super_admin 角色） */
   isSuperAdmin: boolean;
   /** 角色对象数组（含 id 与名称） */

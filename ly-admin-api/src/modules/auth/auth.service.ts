@@ -219,7 +219,8 @@ export class AuthService {
   /**
    * 登录时的设备并发控制。
    *
-   * 策略：非访客角色默认最多同时在线 `sys.login.maxDevices` 台（参数管理可调，0 = 不限制）；
+   * 策略：优先取用户单独设置 `sys_user.max_devices`（NULL = 未单独设置，0 = 不限制）；
+   * 未单独设置时，非访客角色默认最多同时在线 `sys.login.maxDevices` 台（参数管理可调，0 = 不限制）；
    * 新登录会先回收「最旧」的会话腾出名额（新设备顺利进入，旧设备下一次请求即失效），
    * 命中 `sys.login.guestRoleCodes` 的角色（如只读访客 viewer）完全豁免，允许多设备同时在线。
    *
@@ -229,23 +230,32 @@ export class AuthService {
   private async applyDeviceLimit(user: {
     id: bigint;
     username: string;
+    /** 单用户设备上限：非空且 >=0 时优先（0 = 不限制），否则回退「角色豁免 → 全局参数」 */
+    maxDevices?: number | null;
     userRoles?: Array<{ role: { roleCode: string } }>;
   }): Promise<void> {
     if (!this.redis.isReady()) {
       return;
     }
     try {
-      const [limitRow, guestRow] = await Promise.all([
-        this.configService.getConfigData(MAX_DEVICES_CONFIG_KEY),
-        this.configService.getConfigData(GUEST_ROLE_CONFIG_KEY),
-      ]);
-      const maxDevices = parseMaxDevices(limitRow?.configValue);
-      if (maxDevices <= 0) {
-        return;
+      // 优先级：用户单独设置 > 角色豁免（guestRoleCodes）> 全局参数 sys.login.maxDevices
+      const userLimit = user.maxDevices === null || user.maxDevices === undefined ? null : Number(user.maxDevices);
+      let maxDevices: number;
+      if (userLimit !== null && userLimit >= 0) {
+        maxDevices = userLimit;
+      } else {
+        const [limitRow, guestRow] = await Promise.all([
+          this.configService.getConfigData(MAX_DEVICES_CONFIG_KEY),
+          this.configService.getConfigData(GUEST_ROLE_CONFIG_KEY),
+        ]);
+        const roleCodes = (user.userRoles ?? []).map((link) => link.role.roleCode);
+        if (roleCodes.some((code) => parseCodeList(guestRow?.configValue).includes(code))) {
+          // 访客角色：不限制并发登录
+          return;
+        }
+        maxDevices = parseMaxDevices(limitRow?.configValue);
       }
-      const roleCodes = (user.userRoles ?? []).map((link) => link.role.roleCode);
-      if (roleCodes.some((code) => parseCodeList(guestRow?.configValue).includes(code))) {
-        // 访客角色：不限制并发登录
+      if (maxDevices <= 0) {
         return;
       }
       const evicted = await this.sessionService.enforceDeviceLimit(Number(user.id), maxDevices);

@@ -106,6 +106,13 @@ export class CreateUserDto {
   @IsString({ message: MSG.isString })
   @MaxLength(255, { message: '备注过长' })
   remark?: string;
+
+  /** 单用户登录设备数上限：留空/null = 走全局 sys.login.maxDevices，0 = 不限制 */
+  @IsOptional()
+  @Transform(({ value }) => (value === undefined || value === null || value === '' ? null : Number(value)))
+  @IsInt({ message: '设备数上限必须为整数' })
+  @Min(0, { message: MSG.min(0) })
+  maxDevices?: number | null;
 }
 
 /** 编辑用户（部分字段，昵称必填，不允许改账号）。 */
@@ -164,6 +171,13 @@ export class UpdateUserDto {
   @IsString({ message: MSG.isString })
   @MaxLength(255, { message: '备注过长' })
   remark?: string;
+
+  /** 单用户登录设备数上限：留空/null = 走全局 sys.login.maxDevices，0 = 不限制 */
+  @IsOptional()
+  @Transform(({ value }) => (value === undefined || value === null || value === '' ? null : Number(value)))
+  @IsInt({ message: '设备数上限必须为整数' })
+  @Min(0, { message: MSG.min(0) })
+  maxDevices?: number | null;
 }
 
 /** 启用/禁用。 */

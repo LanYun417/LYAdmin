@@ -66,6 +66,8 @@ export interface UserDetail extends UserBrief {
   status: number;
   lastLoginAt?: string | null;
   remark?: string | null;
+  /** 单用户登录设备数上限；null = 走全局 sys.login.maxDevices，0 = 不限制 */
+  maxDevices?: number | null;
   /** 是否超级管理员（内置 admin 或持有 super_admin 角色）：不可禁用 / 不可删除 */
   isSuperAdmin?: boolean;
   roles?: RoleBrief[];
@@ -94,6 +96,8 @@ export interface UserUpsert {
   /** 部门 id（0 表示未分配） */
   deptId?: number;
   remark?: string;
+  /** 单用户登录设备数上限；null/留空 = 走全局，0 = 不限制 */
+  maxDevices?: number | null;
 }
 
 /* ------------------------------- 角色 ------------------------------- */

@@ -141,6 +141,7 @@ const {
   { key: 'phone', label: '手机号' },
   { key: 'gender', label: '性别' },
   { key: 'status', label: '状态' },
+  { key: 'maxDevices', label: '设备上限' },
   { key: 'lastLogin', label: '最后登录' },
   { key: 'action', label: '操作', fixed: true },
 ]);
@@ -337,6 +338,17 @@ onMounted(() => {
             :title="row.isSuperAdmin ? '超级管理员不可禁用' : ''"
             @change="handleStatusChange(row as UserDetail)"
           />
+        </template>
+      </el-table-column>
+      <el-table-column v-if="isVisible('maxDevices')" label="设备上限" width="100" align="center">
+        <template #default="{ row }">
+          <span>{{
+            row.maxDevices === null || row.maxDevices === undefined
+              ? '全局'
+              : row.maxDevices === 0
+                ? '不限制'
+                : row.maxDevices
+          }}</span>
         </template>
       </el-table-column>
       <el-table-column v-if="isVisible('lastLogin')" label="最后登录" width="180">
