@@ -214,6 +214,11 @@ async function downloadOpenApi(): Promise<void> {
   }
 }
 
+/** 复制 OpenAPI 规范地址（绝对地址，供第三方 / Swagger UI / Postman 导入）。 */
+async function copyOpenApiUrl(): Promise<void> {
+  await copyText(`${window.location.origin}/api/docs/openapi.json`, '规范地址已复制，可直接导入 Swagger UI / Postman');
+}
+
 /** 示例值格式化：对象序列化为 JSON，其余转字符串；空值显示占位符 */
 function formatExample(val: unknown): string {
   if (val === undefined || val === null) {
@@ -238,6 +243,7 @@ onMounted(loadDocs);
         <!-- 外层定宽：el-input 自身 width:100%，由这层 Tailwind 盒子控制实际宽度（窄屏铺满） -->
         <div class="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto">
           <el-button size="small" @click="downloadOpenApi">下载 OpenAPI</el-button>
+          <el-button size="small" @click="copyOpenApiUrl">复制规范地址</el-button>
           <div class="w-full sm:w-65">
             <el-input v-model="keyword" clearable placeholder="搜索路径 / 说明 / 权限码" />
           </div>
