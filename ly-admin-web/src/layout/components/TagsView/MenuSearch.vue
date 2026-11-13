@@ -7,12 +7,14 @@
 import { useRouter } from 'vue-router';
 import type { InputInstance } from 'element-plus';
 import type { AppRouteMeta } from '@/types/router';
+import { useAppStore } from '@/store/modules/app';
 import { pickLocaleText } from '@/utils/i18nText';
 import BasicDialog from '@/components/BasicDialog/index.vue';
 
 defineOptions({ name: 'MenuSearch' });
 
 const router = useRouter();
+const appStore = useAppStore();
 
 interface MenuSearchItem {
   path: string;
@@ -54,6 +56,12 @@ const results = computed<MenuSearchItem[]>(() => {
     (item) => item.title.toLowerCase().includes(kw) || (item.titleEn ?? '').toLowerCase().includes(kw),
   );
 });
+
+/** 副标题：显示「另一个语言」的名字，中英对照；没有则空串（不渲染）。 */
+function altName(item: MenuSearchItem): string {
+  const showEn = appStore.locale !== 'zh-CN' && Boolean(item.titleEn);
+  return showEn ? item.title : (item.titleEn ?? '');
+}
 
 /** 打开弹窗并聚焦输入框 */
 function open(): void {
@@ -98,6 +106,7 @@ function onEnter(): void {
       <div v-for="item in results" :key="item.path" class="menu-search-item" @click="go(item)">
         <i v-if="item.icon" class="bi" :class="`bi-${item.icon}`" aria-hidden="true" />
         <span class="menu-search-name">{{ pickLocaleText(item.title, item.titleEn) }}</span>
+        <span v-if="altName(item)" class="menu-search-alt">{{ altName(item) }}</span>
         <span class="menu-search-path">{{ item.path }}</span>
       </div>
       <el-empty v-if="results.length === 0" description="无匹配菜单" :image-size="60" />
@@ -153,6 +162,11 @@ function onEnter(): void {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.menu-search-alt {
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
 }
 
 .menu-search-path {
