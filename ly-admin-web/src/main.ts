@@ -5,6 +5,7 @@ import { useAppStore } from './store/modules/app';
 import { setupDirectives } from './directives';
 import { setRequestRouter } from '@/api/request';
 import i18n from '@/locales';
+import { ElLoading, ElMessage, ElMessageBox } from '@/utils/element';
 
 // 样式引入顺序（架构文档 1.4 风险 A）：
 // 1) Element Plus 暗黑变量（组件基础样式由 unplugin 的 ElementPlusResolver 按组件按需注入，不在此全量引入，
@@ -45,6 +46,12 @@ const app = createApp(App);
 setRequestRouter(router);
 
 app.use(pinia);
+// 按需子路径引入的命令式组件（ElMessageBox / ElMessage / ElLoading）必须 app.use 注册，
+// install 会把主 app 的 context 记到组件的 _context，命令式弹窗才能据此拿到
+// el-config-provider 注入的 locale——否则按钮文案回退 Element Plus 默认英文（OK/Cancel）。
+app.use(ElMessage);
+app.use(ElMessageBox);
+app.use(ElLoading);
 // 界面语言：先按持久化偏好设置，再挂载 i18n（否则首屏会用默认语言闪一下）
 i18n.global.locale.value = useAppStore().locale;
 app.use(i18n);
