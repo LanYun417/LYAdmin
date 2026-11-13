@@ -25,6 +25,7 @@ const logger = new Logger('Seed');
 interface MenuSeedNode {
   key: string;
   menuName: string;
+  menuNameEn?: string;
   menuType: MenuType;
   path?: string;
   component?: string;
@@ -43,6 +44,7 @@ const MENU_TREE: MenuSeedNode[] = [
   {
     key: 'dashboard',
     menuName: '首页',
+    menuNameEn: 'Home',
     menuType: MenuType.MENU,
     path: '/home',
     component: 'home/index',
@@ -54,6 +56,7 @@ const MENU_TREE: MenuSeedNode[] = [
   {
     key: 'system',
     menuName: '系统管理',
+    menuNameEn: 'System',
     menuType: MenuType.DIRECTORY,
     path: '/system',
     icon: 'gear',
@@ -64,6 +67,7 @@ const MENU_TREE: MenuSeedNode[] = [
       {
         key: 'system:user',
         menuName: '用户管理',
+        menuNameEn: 'Users',
         menuType: MenuType.MENU,
         path: '/system/user',
         component: 'system/user/index',
@@ -127,6 +131,7 @@ const MENU_TREE: MenuSeedNode[] = [
       {
         key: 'system:role',
         menuName: '角色管理',
+        menuNameEn: 'Roles',
         menuType: MenuType.MENU,
         path: '/system/role',
         component: 'system/role/index',
@@ -183,6 +188,7 @@ const MENU_TREE: MenuSeedNode[] = [
       {
         key: 'system:menu',
         menuName: '菜单管理',
+        menuNameEn: 'Menus',
         menuType: MenuType.MENU,
         path: '/system/menu',
         component: 'system/menu/index',
@@ -225,6 +231,7 @@ const MENU_TREE: MenuSeedNode[] = [
       {
         key: 'system:dict',
         menuName: '字典管理',
+        menuNameEn: 'Dict',
         menuType: MenuType.MENU,
         path: '/system/dict',
         component: 'system/dict/index',
@@ -260,6 +267,7 @@ const MENU_TREE: MenuSeedNode[] = [
       {
         key: 'system:dept',
         menuName: '部门/岗位管理',
+        menuNameEn: 'Departments',
         menuType: MenuType.MENU,
         path: '/system/dept',
         component: 'system/dept/index',
@@ -302,6 +310,7 @@ const MENU_TREE: MenuSeedNode[] = [
       {
         key: 'system:task',
         menuName: '定时任务',
+        menuNameEn: 'Scheduled Tasks',
         menuType: MenuType.MENU,
         path: '/system/task',
         component: 'system/task/index',
@@ -323,6 +332,7 @@ const MENU_TREE: MenuSeedNode[] = [
       {
         key: 'system:notice',
         menuName: '通知中心',
+        menuNameEn: 'Notifications',
         menuType: MenuType.MENU,
         path: '/system/notice',
         component: 'system/notice/index',
@@ -344,6 +354,7 @@ const MENU_TREE: MenuSeedNode[] = [
       {
         key: 'system:config',
         menuName: '参数管理',
+        menuNameEn: 'Parameters',
         menuType: MenuType.MENU,
         path: '/system/config',
         component: 'system/config/index',
@@ -388,6 +399,7 @@ const MENU_TREE: MenuSeedNode[] = [
   {
     key: 'monitor',
     menuName: '监控管理',
+    menuNameEn: 'Monitoring',
     menuType: MenuType.DIRECTORY,
     path: '/monitor',
     icon: 'activity',
@@ -398,6 +410,7 @@ const MENU_TREE: MenuSeedNode[] = [
       {
         key: 'monitor:online',
         menuName: '在线用户',
+        menuNameEn: 'Online Users',
         menuType: MenuType.MENU,
         path: '/monitor/online',
         component: 'monitor/online/index',
@@ -419,6 +432,7 @@ const MENU_TREE: MenuSeedNode[] = [
       {
         key: 'monitor:server',
         menuName: '系统监控',
+        menuNameEn: 'System Monitor',
         menuType: MenuType.MENU,
         path: '/monitor/server',
         component: 'monitor/server/index',
@@ -434,6 +448,7 @@ const MENU_TREE: MenuSeedNode[] = [
   {
     key: 'log',
     menuName: '日志管理',
+    menuNameEn: 'Logs',
     menuType: MenuType.DIRECTORY,
     path: '/log',
     icon: 'file-earmark-text',
@@ -444,6 +459,7 @@ const MENU_TREE: MenuSeedNode[] = [
       {
         key: 'log:login',
         menuName: '登录日志',
+        menuNameEn: 'Login Logs',
         menuType: MenuType.MENU,
         path: '/log/login',
         component: 'log/login/index',
@@ -472,6 +488,7 @@ const MENU_TREE: MenuSeedNode[] = [
       {
         key: 'log:operation',
         menuName: '操作日志',
+        menuNameEn: 'Operation Logs',
         menuType: MenuType.MENU,
         path: '/log/operation',
         component: 'log/operation/index',
@@ -500,6 +517,7 @@ const MENU_TREE: MenuSeedNode[] = [
       {
         key: 'log:http',
         menuName: 'HTTP日志',
+        menuNameEn: 'HTTP Logs',
         menuType: MenuType.MENU,
         path: '/log/http',
         component: 'log/http/index',
@@ -535,6 +553,7 @@ const MENU_TREE: MenuSeedNode[] = [
       {
         key: 'log:download-center',
         menuName: '下载中心',
+        menuNameEn: 'Download Center',
         menuType: MenuType.MENU,
         path: '/log/download-center',
         component: 'log/download-center/index',
@@ -558,6 +577,7 @@ const MENU_TREE: MenuSeedNode[] = [
   {
     key: 'file',
     menuName: '文件管理',
+    menuNameEn: 'Files',
     menuType: MenuType.MENU,
     path: '/files',
     component: 'files/index',
@@ -575,6 +595,7 @@ const MENU_TREE: MenuSeedNode[] = [
   {
     key: 'tool',
     menuName: '系统工具',
+    menuNameEn: 'Tools',
     menuType: MenuType.DIRECTORY,
     path: '/tool',
     icon: 'tools',
@@ -585,6 +606,7 @@ const MENU_TREE: MenuSeedNode[] = [
       {
         key: 'tool:gen',
         menuName: '代码生成',
+        menuNameEn: 'Code Generator',
         menuType: MenuType.MENU,
         path: '/tool/gen',
         component: 'tool/gen/index',
@@ -620,6 +642,7 @@ const MENU_TREE: MenuSeedNode[] = [
       {
         key: 'tool:vditor',
         menuName: 'Vditor 编辑器',
+        menuNameEn: 'Vditor Editor',
         menuType: MenuType.MENU,
         path: '/tool/vditor',
         component: 'tool/vditor/index',
@@ -634,6 +657,7 @@ const MENU_TREE: MenuSeedNode[] = [
   {
     key: 'docs',
     menuName: '接口文档',
+    menuNameEn: 'API Docs',
     menuType: MenuType.MENU,
     path: '/docs',
     component: 'docs/index',
@@ -645,6 +669,7 @@ const MENU_TREE: MenuSeedNode[] = [
   {
     key: 'profile',
     menuName: '个人中心',
+    menuNameEn: 'Profile',
     menuType: MenuType.MENU,
     path: '/profile',
     component: 'profile/index',
@@ -675,6 +700,7 @@ async function seedMenu(prisma: PrismaService): Promise<Map<string, number>> {
           data: {
             parentId: BigInt(parentId),
             menuName: node.menuName,
+            menuNameEn: node.menuNameEn ?? null,
             menuType: node.menuType,
             path: node.path ?? null,
             component: node.component ?? null,
@@ -687,6 +713,10 @@ async function seedMenu(prisma: PrismaService): Promise<Map<string, number>> {
             keepAlive: node.keepAlive ?? 0,
           },
         }));
+      // 既有库自愈：为新加的 menu_name_en 补种英文名——仅补空，不覆盖管理员已填值
+      if (existing && node.menuNameEn && (existing.menuNameEn === null || existing.menuNameEn === '')) {
+        await prisma.menu.update({ where: { id: existing.id }, data: { menuNameEn: node.menuNameEn } });
+      }
 
       const menuId = Number(menu.id);
       keyToId.set(node.key, menuId);
