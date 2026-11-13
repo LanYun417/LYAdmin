@@ -31,6 +31,7 @@ export type RoleAvgAggregateOutputType = {
   sort: number | null
   status: number | null
   dataScope: number | null
+  maxDevices: number | null
 }
 
 export type RoleSumAggregateOutputType = {
@@ -38,6 +39,7 @@ export type RoleSumAggregateOutputType = {
   sort: number | null
   status: number | null
   dataScope: number | null
+  maxDevices: number | null
 }
 
 export type RoleMinAggregateOutputType = {
@@ -48,6 +50,7 @@ export type RoleMinAggregateOutputType = {
   status: number | null
   dataScope: number | null
   remark: string | null
+  maxDevices: number | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -60,6 +63,7 @@ export type RoleMaxAggregateOutputType = {
   status: number | null
   dataScope: number | null
   remark: string | null
+  maxDevices: number | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -72,6 +76,7 @@ export type RoleCountAggregateOutputType = {
   status: number
   dataScope: number
   remark: number
+  maxDevices: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -83,6 +88,7 @@ export type RoleAvgAggregateInputType = {
   sort?: true
   status?: true
   dataScope?: true
+  maxDevices?: true
 }
 
 export type RoleSumAggregateInputType = {
@@ -90,6 +96,7 @@ export type RoleSumAggregateInputType = {
   sort?: true
   status?: true
   dataScope?: true
+  maxDevices?: true
 }
 
 export type RoleMinAggregateInputType = {
@@ -100,6 +107,7 @@ export type RoleMinAggregateInputType = {
   status?: true
   dataScope?: true
   remark?: true
+  maxDevices?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -112,6 +120,7 @@ export type RoleMaxAggregateInputType = {
   status?: true
   dataScope?: true
   remark?: true
+  maxDevices?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -124,6 +133,7 @@ export type RoleCountAggregateInputType = {
   status?: true
   dataScope?: true
   remark?: true
+  maxDevices?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -223,6 +233,7 @@ export type RoleGroupByOutputType = {
   status: number
   dataScope: number
   remark: string | null
+  maxDevices: number | null
   createdAt: Date
   updatedAt: Date
   _count: RoleCountAggregateOutputType | null
@@ -258,6 +269,7 @@ export type RoleWhereInput = {
   status?: Prisma.IntFilter<"Role"> | number
   dataScope?: Prisma.IntFilter<"Role"> | number
   remark?: Prisma.StringNullableFilter<"Role"> | string | null
+  maxDevices?: Prisma.IntNullableFilter<"Role"> | number | null
   createdAt?: Prisma.DateTimeFilter<"Role"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Role"> | Date | string
   userRoles?: Prisma.UserRoleListRelationFilter
@@ -273,6 +285,7 @@ export type RoleOrderByWithRelationInput = {
   status?: Prisma.SortOrder
   dataScope?: Prisma.SortOrder
   remark?: Prisma.SortOrderInput | Prisma.SortOrder
+  maxDevices?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   userRoles?: Prisma.UserRoleOrderByRelationAggregateInput
@@ -292,6 +305,7 @@ export type RoleWhereUniqueInput = Prisma.AtLeast<{
   status?: Prisma.IntFilter<"Role"> | number
   dataScope?: Prisma.IntFilter<"Role"> | number
   remark?: Prisma.StringNullableFilter<"Role"> | string | null
+  maxDevices?: Prisma.IntNullableFilter<"Role"> | number | null
   createdAt?: Prisma.DateTimeFilter<"Role"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Role"> | Date | string
   userRoles?: Prisma.UserRoleListRelationFilter
@@ -307,6 +321,7 @@ export type RoleOrderByWithAggregationInput = {
   status?: Prisma.SortOrder
   dataScope?: Prisma.SortOrder
   remark?: Prisma.SortOrderInput | Prisma.SortOrder
+  maxDevices?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.RoleCountOrderByAggregateInput
@@ -327,6 +342,7 @@ export type RoleScalarWhereWithAggregatesInput = {
   status?: Prisma.IntWithAggregatesFilter<"Role"> | number
   dataScope?: Prisma.IntWithAggregatesFilter<"Role"> | number
   remark?: Prisma.StringNullableWithAggregatesFilter<"Role"> | string | null
+  maxDevices?: Prisma.IntNullableWithAggregatesFilter<"Role"> | number | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Role"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Role"> | Date | string
 }
@@ -339,6 +355,7 @@ export type RoleCreateInput = {
   status?: number
   dataScope?: number
   remark?: string | null
+  maxDevices?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   userRoles?: Prisma.UserRoleCreateNestedManyWithoutRoleInput
@@ -354,6 +371,7 @@ export type RoleUncheckedCreateInput = {
   status?: number
   dataScope?: number
   remark?: string | null
+  maxDevices?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   userRoles?: Prisma.UserRoleUncheckedCreateNestedManyWithoutRoleInput
@@ -369,6 +387,7 @@ export type RoleUpdateInput = {
   status?: Prisma.IntFieldUpdateOperationsInput | number
   dataScope?: Prisma.IntFieldUpdateOperationsInput | number
   remark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  maxDevices?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   userRoles?: Prisma.UserRoleUpdateManyWithoutRoleNestedInput
@@ -384,6 +403,7 @@ export type RoleUncheckedUpdateInput = {
   status?: Prisma.IntFieldUpdateOperationsInput | number
   dataScope?: Prisma.IntFieldUpdateOperationsInput | number
   remark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  maxDevices?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   userRoles?: Prisma.UserRoleUncheckedUpdateManyWithoutRoleNestedInput
@@ -399,6 +419,7 @@ export type RoleCreateManyInput = {
   status?: number
   dataScope?: number
   remark?: string | null
+  maxDevices?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -411,6 +432,7 @@ export type RoleUpdateManyMutationInput = {
   status?: Prisma.IntFieldUpdateOperationsInput | number
   dataScope?: Prisma.IntFieldUpdateOperationsInput | number
   remark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  maxDevices?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -423,6 +445,7 @@ export type RoleUncheckedUpdateManyInput = {
   status?: Prisma.IntFieldUpdateOperationsInput | number
   dataScope?: Prisma.IntFieldUpdateOperationsInput | number
   remark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  maxDevices?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -441,6 +464,7 @@ export type RoleCountOrderByAggregateInput = {
   status?: Prisma.SortOrder
   dataScope?: Prisma.SortOrder
   remark?: Prisma.SortOrder
+  maxDevices?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -450,6 +474,7 @@ export type RoleAvgOrderByAggregateInput = {
   sort?: Prisma.SortOrder
   status?: Prisma.SortOrder
   dataScope?: Prisma.SortOrder
+  maxDevices?: Prisma.SortOrder
 }
 
 export type RoleMaxOrderByAggregateInput = {
@@ -460,6 +485,7 @@ export type RoleMaxOrderByAggregateInput = {
   status?: Prisma.SortOrder
   dataScope?: Prisma.SortOrder
   remark?: Prisma.SortOrder
+  maxDevices?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -472,6 +498,7 @@ export type RoleMinOrderByAggregateInput = {
   status?: Prisma.SortOrder
   dataScope?: Prisma.SortOrder
   remark?: Prisma.SortOrder
+  maxDevices?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -481,6 +508,7 @@ export type RoleSumOrderByAggregateInput = {
   sort?: Prisma.SortOrder
   status?: Prisma.SortOrder
   dataScope?: Prisma.SortOrder
+  maxDevices?: Prisma.SortOrder
 }
 
 export type RoleScalarRelationFilter = {
@@ -538,6 +566,7 @@ export type RoleCreateWithoutUserRolesInput = {
   status?: number
   dataScope?: number
   remark?: string | null
+  maxDevices?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   roleMenus?: Prisma.RoleMenuCreateNestedManyWithoutRoleInput
@@ -552,6 +581,7 @@ export type RoleUncheckedCreateWithoutUserRolesInput = {
   status?: number
   dataScope?: number
   remark?: string | null
+  maxDevices?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   roleMenus?: Prisma.RoleMenuUncheckedCreateNestedManyWithoutRoleInput
@@ -582,6 +612,7 @@ export type RoleUpdateWithoutUserRolesInput = {
   status?: Prisma.IntFieldUpdateOperationsInput | number
   dataScope?: Prisma.IntFieldUpdateOperationsInput | number
   remark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  maxDevices?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   roleMenus?: Prisma.RoleMenuUpdateManyWithoutRoleNestedInput
@@ -596,6 +627,7 @@ export type RoleUncheckedUpdateWithoutUserRolesInput = {
   status?: Prisma.IntFieldUpdateOperationsInput | number
   dataScope?: Prisma.IntFieldUpdateOperationsInput | number
   remark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  maxDevices?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   roleMenus?: Prisma.RoleMenuUncheckedUpdateManyWithoutRoleNestedInput
@@ -610,6 +642,7 @@ export type RoleCreateWithoutRoleMenusInput = {
   status?: number
   dataScope?: number
   remark?: string | null
+  maxDevices?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   userRoles?: Prisma.UserRoleCreateNestedManyWithoutRoleInput
@@ -624,6 +657,7 @@ export type RoleUncheckedCreateWithoutRoleMenusInput = {
   status?: number
   dataScope?: number
   remark?: string | null
+  maxDevices?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   userRoles?: Prisma.UserRoleUncheckedCreateNestedManyWithoutRoleInput
@@ -654,6 +688,7 @@ export type RoleUpdateWithoutRoleMenusInput = {
   status?: Prisma.IntFieldUpdateOperationsInput | number
   dataScope?: Prisma.IntFieldUpdateOperationsInput | number
   remark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  maxDevices?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   userRoles?: Prisma.UserRoleUpdateManyWithoutRoleNestedInput
@@ -668,6 +703,7 @@ export type RoleUncheckedUpdateWithoutRoleMenusInput = {
   status?: Prisma.IntFieldUpdateOperationsInput | number
   dataScope?: Prisma.IntFieldUpdateOperationsInput | number
   remark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  maxDevices?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   userRoles?: Prisma.UserRoleUncheckedUpdateManyWithoutRoleNestedInput
@@ -682,6 +718,7 @@ export type RoleCreateWithoutRoleDeptsInput = {
   status?: number
   dataScope?: number
   remark?: string | null
+  maxDevices?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   userRoles?: Prisma.UserRoleCreateNestedManyWithoutRoleInput
@@ -696,6 +733,7 @@ export type RoleUncheckedCreateWithoutRoleDeptsInput = {
   status?: number
   dataScope?: number
   remark?: string | null
+  maxDevices?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   userRoles?: Prisma.UserRoleUncheckedCreateNestedManyWithoutRoleInput
@@ -726,6 +764,7 @@ export type RoleUpdateWithoutRoleDeptsInput = {
   status?: Prisma.IntFieldUpdateOperationsInput | number
   dataScope?: Prisma.IntFieldUpdateOperationsInput | number
   remark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  maxDevices?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   userRoles?: Prisma.UserRoleUpdateManyWithoutRoleNestedInput
@@ -740,6 +779,7 @@ export type RoleUncheckedUpdateWithoutRoleDeptsInput = {
   status?: Prisma.IntFieldUpdateOperationsInput | number
   dataScope?: Prisma.IntFieldUpdateOperationsInput | number
   remark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  maxDevices?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   userRoles?: Prisma.UserRoleUncheckedUpdateManyWithoutRoleNestedInput
@@ -803,6 +843,7 @@ export type RoleSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   status?: boolean
   dataScope?: boolean
   remark?: boolean
+  maxDevices?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   userRoles?: boolean | Prisma.Role$userRolesArgs<ExtArgs>
@@ -821,11 +862,12 @@ export type RoleSelectScalar = {
   status?: boolean
   dataScope?: boolean
   remark?: boolean
+  maxDevices?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type RoleOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "roleName" | "roleCode" | "sort" | "status" | "dataScope" | "remark" | "createdAt" | "updatedAt", ExtArgs["result"]["role"]>
+export type RoleOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "roleName" | "roleCode" | "sort" | "status" | "dataScope" | "remark" | "maxDevices" | "createdAt" | "updatedAt", ExtArgs["result"]["role"]>
 export type RoleInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   userRoles?: boolean | Prisma.Role$userRolesArgs<ExtArgs>
   roleMenus?: boolean | Prisma.Role$roleMenusArgs<ExtArgs>
@@ -872,6 +914,10 @@ export type $RolePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
      * 备注
      */
     remark: string | null
+    /**
+     * 角色级登录设备数上限；NULL = 未设置（走全局），0 = 不限制该角色
+     */
+    maxDevices: number | null
     /**
      * 创建时间
      */
@@ -1259,6 +1305,7 @@ export interface RoleFieldRefs {
   readonly status: Prisma.FieldRef<"Role", 'Int'>
   readonly dataScope: Prisma.FieldRef<"Role", 'Int'>
   readonly remark: Prisma.FieldRef<"Role", 'String'>
+  readonly maxDevices: Prisma.FieldRef<"Role", 'Int'>
   readonly createdAt: Prisma.FieldRef<"Role", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Role", 'DateTime'>
 }

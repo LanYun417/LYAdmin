@@ -111,6 +111,8 @@ export interface RoleBrief {
   dataScope?: number;
   /** 自定义部门 id 列表（仅 dataScope=2 时非空） */
   deptIds?: number[];
+  /** 角色级登录设备数上限；null = 未设置（走全局），0 = 不限制 */
+  maxDevices?: number | null;
 }
 
 /** 角色详情 */
@@ -139,6 +141,8 @@ export interface RoleUpsert {
   /** 自定义部门 id 列表（dataScope=2 时生效） */
   deptIds?: number[];
   remark?: string;
+  /** 角色级登录设备数上限；null/留空 = 走全局，0 = 不限制 */
+  maxDevices?: number | null;
 }
 
 /** 数据权限范围选项（1 全部 / 2 自定义部门 / 3 本部门及以下 / 4 仅本人） */

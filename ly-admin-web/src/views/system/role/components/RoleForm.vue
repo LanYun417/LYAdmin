@@ -32,7 +32,12 @@ const deptTree = ref<DeptNode[]>([]);
 /** 状态选项：数据来自字典管理中的「通用状态」（sys_common_status） */
 const { statusOptions } = useStatusDict();
 
-const defaultForm = (): RoleUpsert => ({
+/** 表单模型：maxDevices 用 undefined 表示「清空=走全局」，避开 el-input-number 的 null 类型冲突 */
+interface RoleFormModel extends Omit<RoleUpsert, 'maxDevices'> {
+  maxDevices?: number;
+}
+
+const defaultForm = (): RoleFormModel => ({
   roleName: '',
   roleCode: '',
   sort: 0,
@@ -40,9 +45,10 @@ const defaultForm = (): RoleUpsert => ({
   dataScope: 1,
   deptIds: [],
   remark: '',
+  maxDevices: undefined,
 });
 
-const form = reactive<RoleUpsert>(defaultForm());
+const form = reactive<RoleFormModel>(defaultForm());
 
 const rules: FormRules = {
   roleName: [{ required: true, message: '请输入角色名称', trigger: 'blur' }],
@@ -82,6 +88,7 @@ async function loadDetail(id: number): Promise<void> {
       dataScope: target.dataScope ?? 1,
       deptIds: target.deptIds ?? [],
       remark: target.remark ?? '',
+      maxDevices: target.maxDevices ?? undefined,
     });
   }
 }
@@ -185,6 +192,16 @@ async function handleSubmit(): Promise<void> {
           check-strictly
           :render-after-expand="false"
           placeholder="勾选部门及其全部下级可见"
+          style="width: 100%"
+        />
+      </el-form-item>
+      <el-form-item label="设备上限">
+        <el-input-number
+          v-model="form.maxDevices"
+          :min="0"
+          :max="99"
+          clearable
+          placeholder="留空走全局，0=不限制"
           style="width: 100%"
         />
       </el-form-item>

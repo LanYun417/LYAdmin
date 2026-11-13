@@ -25,6 +25,8 @@ export interface RoleBrief {
   dataScope: number;
   /** 自定义部门 id 列表（仅 dataScope=2 时非空） */
   deptIds: number[];
+  /** 角色级登录设备数上限；null = 未设置（走全局），0 = 不限制 */
+  maxDevices: number | null;
 }
 
 @Injectable()
@@ -36,7 +38,15 @@ export class RoleService {
 
   /** 将 Prisma Role 记录转换为简要信息。 */
   private toRoleBrief(
-    role: { id: bigint; roleName: string; roleCode: string; status: number; sort: number; dataScope: number | null },
+    role: {
+      id: bigint;
+      roleName: string;
+      roleCode: string;
+      status: number;
+      sort: number;
+      dataScope: number | null;
+      maxDevices: number | null;
+    },
     deptIds: number[] = [],
   ): RoleBrief {
     return {
@@ -46,6 +56,7 @@ export class RoleService {
       status: Number(role.status),
       sort: Number(role.sort),
       dataScope: Number(role.dataScope ?? DataScope.ALL),
+      maxDevices: role.maxDevices === null ? null : Number(role.maxDevices),
       deptIds,
     };
   }
@@ -142,6 +153,7 @@ export class RoleService {
         status: input.status ?? 1,
         dataScope: input.dataScope ?? DataScope.ALL,
         remark: input.remark || null,
+        maxDevices: input.maxDevices ?? null,
       },
     });
     const deptIds = input.dataScope === DataScope.CUSTOM ? Array.from(new Set(input.deptIds ?? [])) : [];
@@ -168,6 +180,7 @@ export class RoleService {
       status: Number(role.status),
       dataScope: Number(role.dataScope),
       remark: role.remark,
+      maxDevices: role.maxDevices === null ? null : Number(role.maxDevices),
       deptIds: await this.listRoleDeptIds(id),
     });
     await this.prisma.role.update({
@@ -178,6 +191,7 @@ export class RoleService {
         status: input.status ?? 1,
         dataScope,
         remark: input.remark || null,
+        maxDevices: input.maxDevices ?? null,
       },
     });
     const deptIds = dataScope === DataScope.CUSTOM ? Array.from(new Set(input.deptIds ?? [])) : [];
@@ -189,6 +203,7 @@ export class RoleService {
       status: input.status ?? 1,
       dataScope,
       remark: input.remark || null,
+      maxDevices: input.maxDevices ?? null,
       deptIds,
     });
     // 角色信息变更：清空鉴权缓存（角色可能被多个用户持有，影响面广）

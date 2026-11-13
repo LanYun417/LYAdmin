@@ -3,7 +3,7 @@
  * 模块职责：角色新增/编辑/授权菜单的请求体校验（class-validator）。
  * 全局 ValidationPipe 已开启 whitelist + transform，故这里用 @Type 做数值强转，
  */
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { IsArray, IsInt, IsOptional, IsString, Matches, Max, MaxLength, Min } from 'class-validator';
 import { MSG } from '../../../common/utils/validation-messages.js';
 
@@ -53,6 +53,13 @@ export class CreateRoleDto {
   @IsString({ message: MSG.isString })
   @MaxLength(255, { message: '备注过长' })
   remark?: string;
+
+  /** 角色级登录设备数上限：留空/null = 未设置（走全局），0 = 不限制 */
+  @IsOptional()
+  @Transform(({ value }) => (value === undefined || value === null || value === '' ? null : Number(value)))
+  @IsInt({ message: MSG.isInt })
+  @Min(0, { message: MSG.min(0) })
+  maxDevices?: number | null;
 }
 
 /** 编辑角色（不含 roleCode）。 */
@@ -94,6 +101,13 @@ export class UpdateRoleDto {
   @IsString({ message: MSG.isString })
   @MaxLength(255, { message: '备注过长' })
   remark?: string;
+
+  /** 角色级登录设备数上限：留空/null = 未设置（走全局），0 = 不限制 */
+  @IsOptional()
+  @Transform(({ value }) => (value === undefined || value === null || value === '' ? null : Number(value)))
+  @IsInt({ message: MSG.isInt })
+  @Min(0, { message: MSG.min(0) })
+  maxDevices?: number | null;
 }
 
 /** 授权菜单。 */

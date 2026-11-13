@@ -165,7 +165,7 @@ export class AuthService {
     // 连带读角色编码：设备并发控制需要用它判定「访客豁免」（见 applyDeviceLimit）
     const user = await this.prisma.user.findUnique({
       where: { username },
-      include: { userRoles: { select: { role: { select: { roleCode: true } } } } },
+      include: { userRoles: { select: { role: { select: { roleCode: true, maxDevices: true } } } } },
     });
     if (!user) {
       await this.writeLoginLog(username, ip, userAgent, LogResult.FAIL, ERROR_MESSAGE.LOGIN_FAILED, location);
@@ -219,8 +219,12 @@ export class AuthService {
   /**
    * 登录时的设备并发控制。
    *
-   * 策略：优先取用户单独设置 `sys_user.max_devices`（NULL = 未单独设置，0 = 不限制）；
-   * 未单独设置时，非访客角色默认最多同时在线 `sys.login.maxDevices` 台（参数管理可调，0 = 不限制）；
+   * 策略（优先级从高到低）：
+   * ① 用户单独设置 `sys_user.max_devices`（NULL = 未单独设置，0 = 不限制）；
+   * ② 角色层：命中豁免名单 `sys.login.guestRoleCodes` → 不限制；否则取用户各角色
+   *    `sys_role.max_devices` 已设置值——0 = 不限制（且不参与收紧），正值取最小（最严格），
+   *    角色都未设置才进入下一级；
+   * ③ 全局参数 `sys.login.maxDevices`（0 = 不限制，缺失/非法回退默认 3）；
    * 新登录会先回收「最旧」的会话腾出名额（新设备顺利进入，旧设备下一次请求即失效），
    * 命中 `sys.login.guestRoleCodes` 的角色（如只读访客 viewer）完全豁免，允许多设备同时在线。
    *
@@ -230,15 +234,15 @@ export class AuthService {
   private async applyDeviceLimit(user: {
     id: bigint;
     username: string;
-    /** 单用户设备上限：非空且 >=0 时优先（0 = 不限制），否则回退「角色豁免 → 全局参数」 */
+    /** 单用户设备上限：非空且 >=0 时优先（0 = 不限制） */
     maxDevices?: number | null;
-    userRoles?: Array<{ role: { roleCode: string } }>;
+    userRoles?: Array<{ role: { roleCode: string; maxDevices?: number | null } }>;
   }): Promise<void> {
     if (!this.redis.isReady()) {
       return;
     }
     try {
-      // 优先级：用户单独设置 > 角色豁免（guestRoleCodes）> 全局参数 sys.login.maxDevices
+      // 优先级：用户单独设置 > 角色层（豁免名单 → 角色 maxDevices）> 全局参数 sys.login.maxDevices
       const userLimit = user.maxDevices === null || user.maxDevices === undefined ? null : Number(user.maxDevices);
       let maxDevices: number;
       if (userLimit !== null && userLimit >= 0) {
@@ -248,12 +252,24 @@ export class AuthService {
           this.configService.getConfigData(MAX_DEVICES_CONFIG_KEY),
           this.configService.getConfigData(GUEST_ROLE_CONFIG_KEY),
         ]);
-        const roleCodes = (user.userRoles ?? []).map((link) => link.role.roleCode);
+        const roles = user.userRoles ?? [];
+        const roleCodes = roles.map((link) => link.role.roleCode);
         if (roleCodes.some((code) => parseCodeList(guestRow?.configValue).includes(code))) {
-          // 访客角色：不限制并发登录
+          // 豁免名单：不限制并发登录
           return;
         }
-        maxDevices = parseMaxDevices(limitRow?.configValue);
+        // 角色层：已设置 maxDevices 的角色；0=不限制但不参与收紧，正值取最小（最严格）
+        const roleLimits = roles
+          .map((link) => link.role.maxDevices)
+          .filter((value): value is number => value !== null && value !== undefined)
+          .map(Number)
+          .filter((value) => value >= 0);
+        const positiveLimits = roleLimits.filter((value) => value > 0);
+        if (roleLimits.length > 0) {
+          maxDevices = positiveLimits.length > 0 ? Math.min(...positiveLimits) : 0;
+        } else {
+          maxDevices = parseMaxDevices(limitRow?.configValue);
+        }
       }
       if (maxDevices <= 0) {
         return;

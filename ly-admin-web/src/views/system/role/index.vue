@@ -176,6 +176,17 @@ async function handleResetMenus(row: Role): Promise<void> {
       <el-table-column label="数据范围" width="130" align="center">
         <template #default="{ row }">{{ dataScopeLabel((row as Role).dataScope) }}</template>
       </el-table-column>
+      <el-table-column label="设备上限" width="100" align="center">
+        <template #default="{ row }">
+          <span>{{
+            row.maxDevices === null || row.maxDevices === undefined
+              ? '全局'
+              : row.maxDevices === 0
+                ? '不限制'
+                : row.maxDevices
+          }}</span>
+        </template>
+      </el-table-column>
       <el-table-column prop="remark" label="备注" min-width="160" show-overflow-tooltip />
       <el-table-column label="创建时间" width="180">
         <template #default="{ row }">{{ formatDateTime(row.createdAt) }}</template>

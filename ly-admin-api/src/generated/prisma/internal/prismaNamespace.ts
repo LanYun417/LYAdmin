@@ -1915,6 +1915,7 @@ export const RoleScalarFieldEnum = {
   status: 'status',
   dataScope: 'dataScope',
   remark: 'remark',
+  maxDevices: 'maxDevices',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const

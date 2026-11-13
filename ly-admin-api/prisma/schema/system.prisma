@@ -68,6 +68,8 @@ model Role {
   dataScope Int      @default(1) @map("data_scope") @db.TinyInt
   /// 备注
   remark    String?  @db.VarChar(255)
+  /// 角色级登录设备数上限；NULL = 未设置（走全局），0 = 不限制该角色
+  maxDevices Int?     @map("max_devices")
   /// 创建时间
   createdAt DateTime @default(now()) @map("created_at")
   /// 更新时间

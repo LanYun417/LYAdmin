@@ -26,6 +26,8 @@ const GUEST_ROLE_KEY = 'sys.login.guestRoleCodes';
 const ADMIN_USERNAME = 'admin';
 /** 设备限制测试专用账号（无角色 → 不命中豁免名单，受设备上限约束）。 */
 const LIMIT_USERNAME = 'dev_limit_user';
+/** 设备限制测试专用角色编码。 */
+const LIMIT_ROLE_CODE = 'dev_limit_role';
 
 /** 一次登录换来的令牌对。 */
 interface TokenPair {
@@ -40,6 +42,8 @@ describe('登录设备并发控制 (e2e)', () => {
   let token: string;
   /** 设备限制测试用户 id（beforeAll 创建，afterAll 删除）。 */
   let limitUserId = 0;
+  /** 设备限制测试角色 id（beforeAll 创建，afterAll 删除）。 */
+  let limitRoleId = 0;
 
   /** 登录一次（验证码答案从 Redis 取回填，与 contract e2e 同构）。 */
   async function login(username = ADMIN_USERNAME, password = resolveSeedAdminPassword()): Promise<TokenPair> {
@@ -99,6 +103,12 @@ describe('登录设备并发控制 (e2e)', () => {
       },
     });
     limitUserId = Number(created.id);
+    // 建测试角色并绑定到测试用户（角色初始 maxDevices=null，避免干扰单用户用例）
+    const role = await prisma.role.create({
+      data: { roleName: '设备限制测试角色', roleCode: LIMIT_ROLE_CODE, sort: 99, status: 1, dataScope: 1 },
+    });
+    limitRoleId = Number(role.id);
+    await prisma.userRole.create({ data: { userId: BigInt(limitUserId), roleId: BigInt(limitRoleId) } });
   });
 
   afterAll(async () => {
@@ -112,6 +122,11 @@ describe('登录设备并发控制 (e2e)', () => {
     // 清理测试用户（先清中间表再删用户）
     await prisma.userRole.deleteMany({ where: { userId: BigInt(limitUserId) } }).catch(() => undefined);
     await prisma.user.delete({ where: { id: BigInt(limitUserId) } }).catch(() => undefined);
+    // 清理测试角色（先清关联表再删角色）
+    await prisma.userRole.deleteMany({ where: { roleId: BigInt(limitRoleId) } }).catch(() => undefined);
+    await prisma.roleMenu.deleteMany({ where: { roleId: BigInt(limitRoleId) } }).catch(() => undefined);
+    await prisma.roleDept.deleteMany({ where: { roleId: BigInt(limitRoleId) } }).catch(() => undefined);
+    await prisma.role.delete({ where: { id: BigInt(limitRoleId) } }).catch(() => undefined);
     await app?.close();
   });
 
@@ -193,5 +208,57 @@ describe('登录设备并发控制 (e2e)', () => {
     expect(await isSessionAlive(sessions[1]!.refreshToken)).toBe(true);
     expect(await isSessionAlive(sessions[2]!.refreshToken)).toBe(true);
     expect(await isSessionAlive(sessions[3]!.refreshToken)).toBe(true);
+  });
+
+  it('角色级上限优先于全局3：role maxDevices=1 时第 2 次登录回收最旧', async () => {
+    // 用户未单独设置（null）→ 走角色层
+    await prisma.user.update({ where: { id: BigInt(limitUserId) }, data: { maxDevices: null } });
+    await prisma.role.update({ where: { id: BigInt(limitRoleId) }, data: { maxDevices: 1 } });
+    const sessions = [await login(LIMIT_USERNAME), await login(LIMIT_USERNAME)];
+    expect(await isSessionAlive(sessions[0]!.refreshToken)).toBe(false);
+    expect(await isSessionAlive(sessions[1]!.refreshToken)).toBe(true);
+    await prisma.role.update({ where: { id: BigInt(limitRoleId) }, data: { maxDevices: null } });
+  });
+
+  it('角色 maxDevices=0：不限制并发（覆盖全局 3）', async () => {
+    await prisma.user.update({ where: { id: BigInt(limitUserId) }, data: { maxDevices: null } });
+    await prisma.role.update({ where: { id: BigInt(limitRoleId) }, data: { maxDevices: 0 } });
+    const sessions = [
+      await login(LIMIT_USERNAME),
+      await login(LIMIT_USERNAME),
+      await login(LIMIT_USERNAME),
+      await login(LIMIT_USERNAME),
+    ];
+    for (const session of sessions) {
+      expect(await isSessionAlive(session.refreshToken)).toBe(true);
+    }
+    await prisma.role.update({ where: { id: BigInt(limitRoleId) }, data: { maxDevices: null } });
+  });
+
+  it('角色 maxDevices=null：回退全局上限 3', async () => {
+    await prisma.user.update({ where: { id: BigInt(limitUserId) }, data: { maxDevices: null } });
+    await prisma.role.update({ where: { id: BigInt(limitRoleId) }, data: { maxDevices: null } });
+    const sessions = [
+      await login(LIMIT_USERNAME),
+      await login(LIMIT_USERNAME),
+      await login(LIMIT_USERNAME),
+      await login(LIMIT_USERNAME),
+    ];
+    expect(await isSessionAlive(sessions[0]!.refreshToken)).toBe(false);
+    expect(await isSessionAlive(sessions[1]!.refreshToken)).toBe(true);
+    expect(await isSessionAlive(sessions[2]!.refreshToken)).toBe(true);
+    expect(await isSessionAlive(sessions[3]!.refreshToken)).toBe(true);
+  });
+
+  it('单用户设置优先于角色：user=2 覆盖 role=1（上限取 2）', async () => {
+    await prisma.role.update({ where: { id: BigInt(limitRoleId) }, data: { maxDevices: 1 } });
+    await prisma.user.update({ where: { id: BigInt(limitUserId) }, data: { maxDevices: 2 } });
+    const sessions = [await login(LIMIT_USERNAME), await login(LIMIT_USERNAME), await login(LIMIT_USERNAME)];
+    // 上限 2：最旧 1 台被回收，其余 2 台存活
+    expect(await isSessionAlive(sessions[0]!.refreshToken)).toBe(false);
+    expect(await isSessionAlive(sessions[1]!.refreshToken)).toBe(true);
+    expect(await isSessionAlive(sessions[2]!.refreshToken)).toBe(true);
+    await prisma.user.update({ where: { id: BigInt(limitUserId) }, data: { maxDevices: null } });
+    await prisma.role.update({ where: { id: BigInt(limitRoleId) }, data: { maxDevices: null } });
   });
 });
