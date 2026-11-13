@@ -68,7 +68,8 @@ export const ModelName = {
   RoleMenu: 'RoleMenu',
   RoleDept: 'RoleDept',
   UserMenu: 'UserMenu',
-  TaskLog: 'TaskLog'
+  TaskLog: 'TaskLog',
+  UserProfile: 'UserProfile'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -372,6 +373,20 @@ export const TaskLogScalarFieldEnum = {
 export type TaskLogScalarFieldEnum = (typeof TaskLogScalarFieldEnum)[keyof typeof TaskLogScalarFieldEnum]
 
 
+export const UserProfileScalarFieldEnum = {
+  userId: 'userId',
+  signature: 'signature',
+  birthday: 'birthday',
+  company: 'company',
+  position: 'position',
+  address: 'address',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type UserProfileScalarFieldEnum = (typeof UserProfileScalarFieldEnum)[keyof typeof UserProfileScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -574,4 +589,14 @@ export const TaskLogOrderByRelevanceFieldEnum = {
 } as const
 
 export type TaskLogOrderByRelevanceFieldEnum = (typeof TaskLogOrderByRelevanceFieldEnum)[keyof typeof TaskLogOrderByRelevanceFieldEnum]
+
+
+export const UserProfileOrderByRelevanceFieldEnum = {
+  signature: 'signature',
+  company: 'company',
+  position: 'position',
+  address: 'address'
+} as const
+
+export type UserProfileOrderByRelevanceFieldEnum = (typeof UserProfileOrderByRelevanceFieldEnum)[keyof typeof UserProfileOrderByRelevanceFieldEnum]
 

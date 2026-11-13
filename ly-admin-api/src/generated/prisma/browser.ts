@@ -119,3 +119,11 @@ export type UserMenu = Prisma.UserMenuModel
  * 改动其中一处就会漂移——这正是本项目在角色授权上踩过的坑。
  */
 export type TaskLog = Prisma.TaskLogModel
+/**
+ * Model UserProfile
+ * 用户扩展资料（用户中心 Sprint 5）。
+ * 与 sys_user 分开的取舍：sys_user 是**账户域**（登录/鉴权/管理视角），扩展资料是
+ * **资料域**（个人中心视角，字段随业务增长）。拆表后账户表保持精简稳定，
+ * 资料字段增减不动账户结构；未填写的用户本表无记录（懒创建，upsert）。
+ */
+export type UserProfile = Prisma.UserProfileModel

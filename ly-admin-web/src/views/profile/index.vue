@@ -6,17 +6,24 @@
 
 import { ElMessage } from '@/utils/element';
 import type { UploadRequestOptions } from 'element-plus';
-import { uploadAvatarApi } from '@/api/profile';
+import { getProfileDetailApi, uploadAvatarApi } from '@/api/profile';
 import { useDict } from '@/composables/useDict';
 import { useUserStore } from '@/store/modules/user';
 import ProfileForm from './components/ProfileForm.vue';
 import PasswordForm from './components/PasswordForm.vue';
+import ProfileExtraForm from './components/ProfileExtraForm.vue';
+import ProfileSessions from './components/ProfileSessions.vue';
 import { withUploadToken } from '@/utils/uploadToken';
+import type { ProfileDetail } from '@/types/api';
 
 defineOptions({ name: 'Profile' });
 
 const userStore = useUserStore();
 const uploading = ref(false);
+const loadingDetail = ref(false);
+
+/** 详情（扩展资料 + 会话画像）。账户信息仍走 userStore（登录时已拉全）。 */
+const detail = ref<ProfileDetail | null>(null);
 
 const avatar = computed(() => userStore.avatar);
 const nickname = computed(() => userStore.nickname);
@@ -25,6 +32,18 @@ const roles = computed(() => userStore.roles.join('、') || '-');
 
 /** 性别字典（字典管理 → 用户性别 sys_user_sex），把存储值渲染成标签 */
 const { labelOf: genderLabel } = useDict('sys_user_sex');
+
+/** 拉取详情（首次进入 + 保存扩展资料/下线设备后刷新）。 */
+async function loadDetail(): Promise<void> {
+  loadingDetail.value = true;
+  try {
+    detail.value = await getProfileDetailApi();
+  } finally {
+    loadingDetail.value = false;
+  }
+}
+
+onMounted(loadDetail);
 
 /** 头像上传前校验 */
 function beforeAvatarUpload(file: File): boolean {
@@ -121,6 +140,30 @@ async function handleAvatarUpload(options: UploadRequestOptions): Promise<void> 
             只读访客账号不支持自助修改密码，如需变更请联系超级管理员在「用户管理 → 重置密码」中处理。
           </p>
           <PasswordForm v-else />
+        </el-card>
+
+        <!-- Sprint 5：扩展资料（资料域，独立于账户字段） -->
+        <el-card v-loading="loadingDetail" shadow="never" class="mt-4">
+          <template #header>扩展资料</template>
+          <p v-if="userStore.isReadonlyGuest" class="text-[13px] text-muted">
+            只读访客账号不支持修改个人资料，如需变更请联系超级管理员。
+          </p>
+          <ProfileExtraForm v-else :detail="detail" @saved="loadDetail" />
+        </el-card>
+
+        <!-- Sprint 5：用户画像（我的在线会话） -->
+        <el-card v-loading="loadingDetail" shadow="never" class="mt-4">
+          <template #header>
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <span>我的设备</span>
+              <span class="text-xs text-muted">共 {{ detail?.sessions.length ?? 0 }} 个在线会话</span>
+            </div>
+          </template>
+          <ProfileSessions
+            :sessions="detail?.sessions ?? []"
+            :readonly="userStore.isReadonlyGuest"
+            @changed="loadDetail"
+          />
         </el-card>
       </el-col>
     </el-row>

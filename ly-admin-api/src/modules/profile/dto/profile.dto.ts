@@ -66,3 +66,44 @@ export class ChangePasswordDto {
   @Matches(PASSWORD_COMPLEXITY_REGEX, { message: PASSWORD_COMPLEXITY_MESSAGE })
   newPassword!: string;
 }
+
+/** 更新扩展资料（Sprint 5：个人中心资料域字段）。 */
+export class UpdateProfileExtraDto {
+  /** 个人简介（签名）：空串表示清空。 */
+  @IsOptional()
+  @Type(() => String)
+  @IsString({ message: MSG.isString })
+  @MaxLength(200, { message: '简介最长 200 个字符' })
+  @Transform(trim)
+  signature?: string;
+
+  /** 生日：`YYYY-MM-DD`；空串 / 不传表示保留或清空（null 清空）。 */
+  @IsOptional()
+  @Transform(({ value }) => (value === '' || value === null ? null : value))
+  @Matches(/^\d{4}-\d{2}-\d{2}$/, { message: '生日格式应为 YYYY-MM-DD' })
+  birthday?: string | null;
+
+  /** 公司 / 组织：空串表示清空。 */
+  @IsOptional()
+  @Type(() => String)
+  @IsString({ message: MSG.isString })
+  @MaxLength(100, { message: '公司名最长 100 个字符' })
+  @Transform(trim)
+  company?: string;
+
+  /** 职位 / 岗位：空串表示清空。 */
+  @IsOptional()
+  @Type(() => String)
+  @IsString({ message: MSG.isString })
+  @MaxLength(50, { message: '职位最长 50 个字符' })
+  @Transform(trim)
+  position?: string;
+
+  /** 所在地：空串表示清空。 */
+  @IsOptional()
+  @Type(() => String)
+  @IsString({ message: MSG.isString })
+  @MaxLength(200, { message: '所在地最长 200 个字符' })
+  @Transform(trim)
+  address?: string;
+}

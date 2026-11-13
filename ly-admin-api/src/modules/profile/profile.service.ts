@@ -2,7 +2,7 @@
  * 个人中心服务。
  * 模块职责：修改个人资料、修改密码（校验旧密码并写 passwordChangedAt）、更换头像。
  */
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { AppException } from '../../common/exception/app.exception.js';
 import { GUEST_ROLE_CODES, GUEST_USERNAMES } from '../../common/config/constants.js';
 import { lookupDeptName } from '../../common/utils/dept-lookup.js';
@@ -10,7 +10,10 @@ import { comparePassword, hashPassword } from '../../common/utils/utils.js';
 import type { UserBrief } from '../../common/types.js';
 import { AuthCacheService } from '../../common/auth/auth-cache.service.js';
 import { assertPasswordNotContainsAccount } from '../../common/auth/password-policy.js';
+import { parseUserAgent } from '../../common/utils/user-agent.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
+import { RedisService } from '../../common/redis/redis.service.js';
+import { SessionService } from '../../common/auth/session.service.js';
 import { FilesService } from '../files/files.service.js';
 
 /** 修改资料入参。 */
@@ -22,6 +25,53 @@ export interface UpdateProfileInput {
   avatar?: string;
 }
 
+/** 更新扩展资料入参（Sprint 5）。 */
+export interface UpdateProfileExtraInput {
+  signature?: string;
+  /** YYYY-MM-DD（服务层转 Date） */
+  birthday?: string | null;
+  company?: string;
+  position?: string;
+  address?: string;
+}
+
+/** 我的在线会话（画像项）。 */
+export interface SessionProfileItem {
+  sid: string;
+  ip: string;
+  location: string;
+  browser: string | null;
+  os: string | null;
+  userAgent: string;
+  loginAt: Date;
+  lastSeenAt: Date;
+  /** 是否当前请求所在的会话（「本机」标记） */
+  current: boolean;
+}
+
+/** 个人中心详情：账户 + 扩展资料 + 会话画像。 */
+export interface ProfileDetail {
+  id: number;
+  username: string;
+  nickname: string;
+  avatar: string | null;
+  email: string | null;
+  phone: string | null;
+  gender: string | null;
+  status: number;
+  deptId: number;
+  deptName: string | null;
+  lastLoginAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  signature: string | null;
+  birthday: Date | null;
+  company: string | null;
+  position: string | null;
+  address: string | null;
+  sessions: SessionProfileItem[];
+}
+
 /** 修改密码入参。 */
 export interface ChangePasswordInput {
   oldPassword: string;
@@ -30,10 +80,14 @@ export interface ChangePasswordInput {
 
 @Injectable()
 export class ProfileService {
+  private readonly logger = new Logger(ProfileService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly authCache: AuthCacheService,
     private readonly filesService: FilesService,
+    private readonly sessionService: SessionService,
+    private readonly redis: RedisService,
   ) {}
 
   /** 把用户记录转换为对外 UserBrief（含部门名）。 */
@@ -174,5 +228,131 @@ export class ProfileService {
     });
     this.authCache.invalidate(userId);
     return { avatar: saved.fileUrl };
+  }
+
+  /* ------------------------------ Sprint 5：扩展资料与用户画像 ------------------------------ */
+
+  /**
+   * 个人中心详情：账户信息 + 扩展资料 + 在线会话画像。
+   *
+   * 画像数据直接来自 Redis 会话表（SessionService），不落库：
+   * 「当前 sid / 登录时间 / 最后活跃」本就是会话记录字段，同步一份到 MySQL
+   * 只会多一处需要兜一致性的真相源。Redis 不可用时画像降级为空列表。
+   */
+  async getProfileDetail(userId: number, currentSid?: string): Promise<ProfileDetail> {
+    const user = await this.prisma.user.findUnique({ where: { id: BigInt(userId) } });
+    if (!user) {
+      throw AppException.notFound('用户不存在');
+    }
+    const profile = await this.prisma.userProfile.findUnique({ where: { userId: BigInt(userId) } });
+
+    // 我的在线会话（画像）：按用户名过滤（会话记录里带 username 快照）
+    let sessions: SessionProfileItem[] = [];
+    try {
+      if (this.redis.isReady()) {
+        const records = await this.sessionService.list({ username: user.username });
+        sessions = records.map((record) => {
+          // UA 解析与在线用户页同一口径（parseUserAgent）
+          const { browser, os } = parseUserAgent(record.userAgent);
+          return {
+            sid: record.sid,
+            ip: record.ip,
+            location: record.location,
+            browser,
+            os,
+            userAgent: record.userAgent,
+            loginAt: new Date(record.loginAt),
+            lastSeenAt: new Date(record.lastSeenAt),
+            // 「本机」标记：当前请求令牌携带的 sid（守卫写入 req.tokenSid）
+            current: currentSid !== undefined && record.sid === currentSid,
+          };
+        });
+      }
+    } catch (error) {
+      this.logger.warn(`读取用户画像失败: ${error instanceof Error ? error.message : String(error)}`);
+    }
+
+    const brief = this.toUserBrief({ ...user, dept: await this.deptRef(user.deptId) });
+    return {
+      id: brief.id,
+      username: brief.username,
+      nickname: brief.nickname,
+      avatar: brief.avatar,
+      email: brief.email,
+      phone: brief.phone,
+      gender: brief.gender,
+      status: brief.status,
+      deptId: brief.deptId,
+      deptName: brief.deptName,
+      lastLoginAt: brief.lastLoginAt,
+      // UserBrief 的时间字段可选（列表场景可能不选），详情一定来自 user 行本体
+      createdAt: brief.createdAt ?? user.createdAt,
+      updatedAt: brief.updatedAt ?? user.updatedAt,
+      signature: profile?.signature ?? null,
+      birthday: profile?.birthday ?? null,
+      company: profile?.company ?? null,
+      position: profile?.position ?? null,
+      address: profile?.address ?? null,
+      sessions,
+    };
+  }
+
+  /**
+   * 更新扩展资料（懒创建 upsert：没填过资料的用户首次提交即建行）。
+   */
+  async updateProfileExtended(
+    userId: number,
+    input: UpdateProfileExtraInput,
+    roleCodes: string[],
+  ): Promise<ProfileDetail> {
+    const user = await this.prisma.user.findUnique({ where: { id: BigInt(userId) } });
+    if (!user) {
+      throw AppException.notFound('用户不存在');
+    }
+    if (this.isReadonlyGuest(user, roleCodes)) {
+      throw AppException.conflict('只读访客账号不支持修改个人资料，如需变更请联系超级管理员');
+    }
+    // DTO 是 YYYY-MM-DD 字符串；落库为 Date（列类型 @db.Date，时分秒无意义）。
+    // ⚠️ 必须用 Date.UTC 构造：Prisma 把 Date 写 @db.Date 时按 UTC 取日期部分，
+    // 用本地时区零点（new Date('1990-01-02T00:00:00')）在 UTC+8 会变成前一天的 16:00Z，
+    // 落库后退一天（实测 1990-01-02 存成 1990-01-01）。
+    const birthday = input.birthday
+      ? (() => {
+          const [year, month, day] = input.birthday.split('-').map(Number);
+          return new Date(Date.UTC(year ?? 1970, (month ?? 1) - 1, day ?? 1));
+        })()
+      : null;
+    await this.prisma.userProfile.upsert({
+      where: { userId: BigInt(userId) },
+      create: {
+        userId: BigInt(userId),
+        signature: input.signature || null,
+        birthday,
+        company: input.company || null,
+        position: input.position || null,
+        address: input.address || null,
+      },
+      update: {
+        signature: input.signature || null,
+        birthday,
+        company: input.company || null,
+        position: input.position || null,
+        address: input.address || null,
+      },
+    });
+    return this.getProfileDetail(userId);
+  }
+
+  /**
+   * 下线自己的某个会话（「踢掉其他设备」的个人中心版本）。
+   * 归属校验在这里做：sid 必须属于当前用户，防止拿别人的 sid 来踢。
+   */
+  async removeOwnSession(userId: number, sid: string): Promise<void> {
+    // 归属校验：只读当前用户的会话索引，sid 不在其中即拒绝（防踢别人）
+    const owned = (await this.sessionService.listSidsOfUser(userId)).includes(sid);
+    if (!owned) {
+      throw AppException.forbidden('只能下线自己的会话');
+    }
+    await this.sessionService.remove(sid, userId);
   }
 }

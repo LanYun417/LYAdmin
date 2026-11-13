@@ -1,0 +1,27 @@
+// use prisma-next
+// ↑ 首行必须保留（且必须是「 // use prisma-next 」独占一行），原因见 base.prisma 顶部说明。
+
+/// 用户扩展资料（用户中心 Sprint 5）。
+/// 与 sys_user 分开的取舍：sys_user 是**账户域**（登录/鉴权/管理视角），扩展资料是
+/// **资料域**（个人中心视角，字段随业务增长）。拆表后账户表保持精简稳定，
+/// 资料字段增减不动账户结构；未填写的用户本表无记录（懒创建，upsert）。
+model UserProfile {
+  /// 主键（与 sys_user 一对一：user_id 唯一且即主键，天然防重复）
+  userId      BigInt   @id @map("user_id") @db.BigInt
+  /// 个人简介（签名）
+  signature   String?  @db.VarChar(200)
+  /// 生日（按日期存，不带时区语义）
+  birthday    DateTime? @db.Date
+  /// 公司 / 组织
+  company     String?  @db.VarChar(100)
+  /// 职位 / 岗位
+  position    String?  @db.VarChar(50)
+  /// 所在地（省市区文本，不做行政区划表关联：个人资料只需自由文本）
+  address     String?  @db.VarChar(200)
+  /// 创建时间
+  createdAt   DateTime @default(now()) @map("created_at")
+  /// 更新时间
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("sys_user_profile")
+}

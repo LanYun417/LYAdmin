@@ -918,3 +918,38 @@ export interface ExportTaskItem {
   /** 当前是否可下载（done 且文件未被清理） */
   downloadable: boolean;
 }
+
+/** 扩展资料参数（个人中心 Sprint 5）。 */
+export interface ProfileExtraParams {
+  /** 个人简介 / 签名（空串清空） */
+  signature?: string;
+  /** 生日 YYYY-MM-DD（空串清空） */
+  birthday?: string | null;
+  company?: string;
+  position?: string;
+  address?: string;
+}
+
+/** 我的在线会话（用户画像项）。 */
+export interface SessionProfileItem {
+  sid: string;
+  ip: string;
+  location: string;
+  browser: string | null;
+  os: string | null;
+  userAgent: string;
+  loginAt: string;
+  lastSeenAt: string;
+  /** 是否当前请求所在的会话（「本机」） */
+  current: boolean;
+}
+
+/** 个人中心详情：账户 + 扩展资料 + 在线会话画像。 */
+export interface ProfileDetail extends UserBrief {
+  signature: string | null;
+  birthday: string | null;
+  company: string | null;
+  position: string | null;
+  address: string | null;
+  sessions: SessionProfileItem[];
+}
