@@ -84,6 +84,8 @@ export interface TaskDeps {
   sweepImageCache: () => Promise<void>;
   /** 分片上传暂存清理（ChunkUploadService.sweep） */
   sweepChunkCache: () => Promise<void>;
+  /** 过期导出文件清理（ExportTaskService.sweepExpired，只删文件留记录） */
+  sweepExportFiles: () => Promise<void>;
 }
 
 /** 任务注册表条目（描述 + 执行体工厂）。 */
@@ -124,6 +126,16 @@ export function buildTaskRegistry(): TaskRegistryItem[] {
       enabled: config.log.retentionEnabled,
       create: (deps) => async () => {
         await deps.cleanLogs();
+      },
+    },
+    {
+      name: 'export-file-sweep',
+      title: '导出文件清理',
+      description: '按保留期清理下载中心已过期的导出文件（记录保留供审计，文件不再可下载）。',
+      schedule: { kind: 'everyHours', hours: config.exportCenter.sweepIntervalHours },
+      enabled: config.exportCenter.sweepEnabled,
+      create: (deps) => async () => {
+        await deps.sweepExportFiles();
       },
     },
     {

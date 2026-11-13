@@ -532,6 +532,27 @@ const MENU_TREE: MenuSeedNode[] = [
           },
         ],
       },
+      {
+        key: 'log:download-center',
+        menuName: '下载中心',
+        menuType: MenuType.MENU,
+        path: '/log/download-center',
+        component: 'log/download-center/index',
+        icon: 'download',
+        permission: 'export:list',
+        sort: 4,
+        visible: Status.ENABLED,
+        keepAlive: 1,
+        children: [
+          {
+            key: 'export:list',
+            menuName: '查看导出任务',
+            menuType: MenuType.BUTTON,
+            permission: 'export:list',
+            sort: 1,
+          },
+        ],
+      },
     ],
   },
   {
@@ -829,7 +850,13 @@ export async function seedRole(
   for (const seed of ROLE_SEEDS) {
     const existing = await prisma.role.findUnique({ where: { roleCode: seed.roleCode }, select: { id: true } });
     if (existing) {
-      // 角色已存在（其授权可能已被运维调整过）→ 保持原样，绝不覆盖
+      // 角色已存在（其授权可能已被运维调整过）→ **不删不减**；
+      // 但种子新增的菜单要增量补上（否则升级部署后新功能对老角色不可见，
+      // 而「恢复默认授权」是重置语义、代价大，不适合日常升级路径）。
+      const added = await grantMissingSeedMenus(prisma, existing.id, seed, menuIdMap);
+      if (added > 0) {
+        logger.log(`角色「${seed.roleName}」增量补充 ${added} 个新菜单授权`);
+      }
       skipped += 1;
       continue;
     }
@@ -880,6 +907,40 @@ async function applySeedMenus(
     });
   }
   return menuIds.length;
+}
+
+/**
+ * 增量授权：只补种子里有、库里缺的菜单绑定，**绝不清空已存在的**。
+ * 用于「角色已存在但种子升级新增了菜单」的场景（见 seedRole 注释）。
+ * @returns 实际新增的授权条数
+ */
+async function grantMissingSeedMenus(
+  prisma: PrismaService,
+  roleId: bigint,
+  seed: RoleSeed,
+  menuIdMap: Map<string, number>,
+): Promise<number> {
+  const desired =
+    seed.menuKeys === 'ALL'
+      ? Array.from(menuIdMap.values())
+      : seed.menuKeys.map((key) => menuIdMap.get(key)).filter((id): id is number => typeof id === 'number');
+  if (desired.length === 0) {
+    return 0;
+  }
+  const existing = await prisma.roleMenu.findMany({
+    where: { roleId },
+    select: { menuId: true },
+  });
+  const owned = new Set(existing.map((row) => Number(row.menuId)));
+  const missing = desired.filter((menuId) => !owned.has(menuId));
+  if (missing.length === 0) {
+    return 0;
+  }
+  await prisma.roleMenu.createMany({
+    data: missing.map((menuId) => ({ roleId, menuId: BigInt(menuId) })),
+    skipDuplicates: true,
+  });
+  return missing.length;
 }
 
 /**

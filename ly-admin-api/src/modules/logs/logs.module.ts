@@ -10,5 +10,8 @@ import { LogsService } from './logs.service.js';
 @Module({
   controllers: [LogsController],
   providers: [LogsService],
+  // 导出 LogsService 供异步导出中心（ExportTaskService）复用同一套
+  // 查询/游标分页/上限预检链路，保证同步与异步导出口径一致
+  exports: [LogsService],
 })
 export class LogsModule {}

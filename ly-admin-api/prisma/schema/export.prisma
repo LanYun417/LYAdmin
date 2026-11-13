@@ -1,0 +1,41 @@
+// use prisma-next
+// ↑ 首行必须保留（且必须是「 // use prisma-next 」独占一行），原因见 base.prisma 顶部说明。
+
+/// 导出任务表（异步导出中心：大数据量导出不再占用请求线程）
+model ExportTask {
+  /// 主键
+  id            BigInt    @id @default(autoincrement()) @db.BigInt
+  /// 发起人 id（下载权限校验用：本人或管理员）
+  userId        BigInt    @map("user_id") @db.BigInt
+  /// 发起人账号（快照，用户改名后仍可追溯）
+  username      String    @db.VarChar(50)
+  /// 导出模块：login-log / operation-log / http-log
+  module        String    @db.VarChar(30)
+  /// 筛选条件快照（JSON：导出时刻的查询条件，便于复现与审计）
+  query         Json?
+  /// 时区偏移（分钟，与导出请求头一致；CSV 时间列按此时区格式化）
+  timezoneOffset Int?     @map("timezone_offset")
+  /// 状态：0 等待中 / 1 进行中 / 2 已完成 / 3 失败
+  status        Int       @default(0) @db.TinyInt
+  /// 结果文件名（对内展示名）
+  fileName      String?   @map("file_name") @db.VarChar(255)
+  /// 结果文件相对路径（位于缓存目录；完成后可下载）
+  filePath      String?   @map("file_path") @db.VarChar(500)
+  /// 数据行数（表头之外的 CSV 行）
+  total         Int       @default(0) @db.Int
+  /// 文件字节数（完成时 stat 得到）
+  size          BigInt    @default(0) @db.BigInt
+  /// 失败原因（status=3 时填写，展示给用户）
+  message       String?   @db.VarChar(500)
+  /// 创建时间
+  createdAt     DateTime  @default(now()) @map("created_at")
+  /// 完成时间（成功或失败均写）
+  finishedAt    DateTime? @map("finished_at")
+  /// 文件过期时间（完成时刻 + 保留期；过期后由定时任务清理）
+  expiresAt     DateTime? @map("expires_at")
+
+  @@index([userId, createdAt])
+  @@index([status])
+  @@index([createdAt])
+  @@map("sys_export_task")
+}

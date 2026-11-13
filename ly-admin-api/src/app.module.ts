@@ -32,6 +32,7 @@ import { MonitorModule } from './modules/monitor/monitor.module.js';
 import { NoticeModule } from './modules/notice/notice.module.js';
 import { TaskModule } from './modules/task/task.module.js';
 import { SseModule } from './modules/sse/sse.module.js';
+import { ExportModule } from './modules/export/export.module.js';
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { SseModule } from './modules/sse/sse.module.js';
     DocsModule,
     TaskModule,
     SseModule,
+    ExportModule,
   ],
   providers: [
     // 守卫顺序：先鉴权（挂 req.user），再校验权限码

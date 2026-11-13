@@ -33,6 +33,11 @@ export type DictItem = Prisma.DictItemModel
  */
 export type SysConfig = Prisma.SysConfigModel
 /**
+ * Model ExportTask
+ * 导出任务表（异步导出中心：大数据量导出不再占用请求线程）
+ */
+export type ExportTask = Prisma.ExportTaskModel
+/**
  * Model File
  * 文件表
  */

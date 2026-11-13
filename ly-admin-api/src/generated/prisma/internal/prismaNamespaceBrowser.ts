@@ -54,6 +54,7 @@ export const ModelName = {
   DictType: 'DictType',
   DictItem: 'DictItem',
   SysConfig: 'SysConfig',
+  ExportTask: 'ExportTask',
   File: 'File',
   LoginLog: 'LoginLog',
   OperationLog: 'OperationLog',
@@ -126,6 +127,27 @@ export const SysConfigScalarFieldEnum = {
 } as const
 
 export type SysConfigScalarFieldEnum = (typeof SysConfigScalarFieldEnum)[keyof typeof SysConfigScalarFieldEnum]
+
+
+export const ExportTaskScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  username: 'username',
+  module: 'module',
+  query: 'query',
+  timezoneOffset: 'timezoneOffset',
+  status: 'status',
+  fileName: 'fileName',
+  filePath: 'filePath',
+  total: 'total',
+  size: 'size',
+  message: 'message',
+  createdAt: 'createdAt',
+  finishedAt: 'finishedAt',
+  expiresAt: 'expiresAt'
+} as const
+
+export type ExportTaskScalarFieldEnum = (typeof ExportTaskScalarFieldEnum)[keyof typeof ExportTaskScalarFieldEnum]
 
 
 export const FileScalarFieldEnum = {
@@ -403,6 +425,34 @@ export const SysConfigOrderByRelevanceFieldEnum = {
 export type SysConfigOrderByRelevanceFieldEnum = (typeof SysConfigOrderByRelevanceFieldEnum)[keyof typeof SysConfigOrderByRelevanceFieldEnum]
 
 
+export const JsonNullValueFilter = {
+  DbNull: DbNull,
+  JsonNull: JsonNull,
+  AnyNull: AnyNull
+} as const
+
+export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
+
+
+export const QueryMode = {
+  default: 'default',
+  insensitive: 'insensitive'
+} as const
+
+export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
+
+
+export const ExportTaskOrderByRelevanceFieldEnum = {
+  username: 'username',
+  module: 'module',
+  fileName: 'fileName',
+  filePath: 'filePath',
+  message: 'message'
+} as const
+
+export type ExportTaskOrderByRelevanceFieldEnum = (typeof ExportTaskOrderByRelevanceFieldEnum)[keyof typeof ExportTaskOrderByRelevanceFieldEnum]
+
+
 export const FileOrderByRelevanceFieldEnum = {
   originName: 'originName',
   fileName: 'fileName',
@@ -443,23 +493,6 @@ export const OperationLogOrderByRelevanceFieldEnum = {
 } as const
 
 export type OperationLogOrderByRelevanceFieldEnum = (typeof OperationLogOrderByRelevanceFieldEnum)[keyof typeof OperationLogOrderByRelevanceFieldEnum]
-
-
-export const JsonNullValueFilter = {
-  DbNull: DbNull,
-  JsonNull: JsonNull,
-  AnyNull: AnyNull
-} as const
-
-export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
-
-
-export const QueryMode = {
-  default: 'default',
-  insensitive: 'insensitive'
-} as const
-
-export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
 
 
 export const HttpLogOrderByRelevanceFieldEnum = {

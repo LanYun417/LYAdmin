@@ -881,3 +881,40 @@ export interface TaskRunResult {
   startedAt: string;
   finishedAt: string;
 }
+
+/** 导出任务状态（与后端 ExportTaskStatus 一致）。 */
+export const ExportTaskStatus = {
+  PENDING: 0,
+  PROCESSING: 1,
+  DONE: 2,
+  FAILED: 3,
+} as const;
+
+/** 导出中心任务条目。 */
+export interface ExportTaskItem {
+  id: number;
+  /** 模块标识：login-log / operation-log / http-log */
+  module: string;
+  /** 模块中文名 */
+  moduleLabel: string;
+  /** 状态码（见 ExportTaskStatus） */
+  status: number;
+  /** 状态中文（后端已翻译） */
+  statusText: string;
+  /** 结果文件名 */
+  fileName: string | null;
+  /** 数据行数 */
+  total: number;
+  /** 文件字节数 */
+  size: number;
+  /** 失败原因 */
+  message: string | null;
+  /** 发起人账号 */
+  username: string;
+  createdAt: string;
+  finishedAt: string | null;
+  /** 文件过期时间（过期后不可下载） */
+  expiresAt: string | null;
+  /** 当前是否可下载（done 且文件未被清理） */
+  downloadable: boolean;
+}

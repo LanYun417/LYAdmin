@@ -16,6 +16,7 @@ import {
 } from '@/api/log';
 import { getDeptTreeApi } from '@/api/dept';
 import { useTable } from '@/composables/useTable';
+import { useAsyncExport } from '@/composables/useAsyncExport';
 import { useBatchDelete } from '@/composables/useBatchDelete';
 import { downloadBlob } from '@/utils/download';
 import { formatDate, formatDateTime, formatDuration } from '@/utils/format';
@@ -90,6 +91,28 @@ async function handleExport(): Promise<void> {
     ElMessage.error('导出失败');
   } finally {
     exporting.value = false;
+  }
+}
+
+/** 后台导出（大数据量）：不占请求线程，完成后到下载中心领取 */
+const asyncExporting = ref(false);
+const { createAsyncExport } = useAsyncExport();
+async function handleAsyncExport(): Promise<void> {
+  if (asyncExporting.value) {
+    return;
+  }
+  asyncExporting.value = true;
+  try {
+    await createAsyncExport('http-log', {
+      method: query.method || undefined,
+      statusCode: query.statusCode,
+      startTime: dateRange.value[0] || undefined,
+      endTime: dateRange.value[1] || undefined,
+      username: query.username.trim() || undefined,
+      deptId: query.deptId,
+    });
+  } finally {
+    asyncExporting.value = false;
   }
 }
 
@@ -290,6 +313,10 @@ onMounted(() => {
           <el-button v-permission="'log:http:export'" type="primary" :loading="exporting" @click="handleExport">
             <template #icon><i class="bi bi-download" /></template>
             导出
+          </el-button>
+          <el-button v-permission="'log:http:export'" :loading="asyncExporting" @click="handleAsyncExport">
+            <template #icon><i class="bi bi-hourglass-split" /></template>
+            后台导出
           </el-button>
           <el-button
             v-permission="'log:http:remove'"

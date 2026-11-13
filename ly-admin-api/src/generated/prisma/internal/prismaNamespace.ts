@@ -400,6 +400,7 @@ export const ModelName = {
   DictType: 'DictType',
   DictItem: 'DictItem',
   SysConfig: 'SysConfig',
+  ExportTask: 'ExportTask',
   File: 'File',
   LoginLog: 'LoginLog',
   OperationLog: 'OperationLog',
@@ -429,7 +430,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "dictType" | "dictItem" | "sysConfig" | "file" | "loginLog" | "operationLog" | "httpLog" | "notice" | "user" | "role" | "menu" | "dept" | "userRole" | "roleMenu" | "roleDept" | "userMenu" | "taskLog"
+    modelProps: "dictType" | "dictItem" | "sysConfig" | "exportTask" | "file" | "loginLog" | "operationLog" | "httpLog" | "notice" | "user" | "role" | "menu" | "dept" | "userRole" | "roleMenu" | "roleDept" | "userMenu" | "taskLog"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -628,6 +629,72 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.SysConfigCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.SysConfigCountAggregateOutputType> | number
+        }
+      }
+    }
+    ExportTask: {
+      payload: Prisma.$ExportTaskPayload<ExtArgs>
+      fields: Prisma.ExportTaskFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ExportTaskFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ExportTaskPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ExportTaskFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ExportTaskPayload>
+        }
+        findFirst: {
+          args: Prisma.ExportTaskFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ExportTaskPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ExportTaskFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ExportTaskPayload>
+        }
+        findMany: {
+          args: Prisma.ExportTaskFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ExportTaskPayload>[]
+        }
+        create: {
+          args: Prisma.ExportTaskCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ExportTaskPayload>
+        }
+        createMany: {
+          args: Prisma.ExportTaskCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        delete: {
+          args: Prisma.ExportTaskDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ExportTaskPayload>
+        }
+        update: {
+          args: Prisma.ExportTaskUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ExportTaskPayload>
+        }
+        deleteMany: {
+          args: Prisma.ExportTaskDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ExportTaskUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        upsert: {
+          args: Prisma.ExportTaskUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ExportTaskPayload>
+        }
+        aggregate: {
+          args: Prisma.ExportTaskAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateExportTask>
+        }
+        groupBy: {
+          args: Prisma.ExportTaskGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ExportTaskGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ExportTaskCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ExportTaskCountAggregateOutputType> | number
         }
       }
     }
@@ -1636,6 +1703,27 @@ export const SysConfigScalarFieldEnum = {
 export type SysConfigScalarFieldEnum = (typeof SysConfigScalarFieldEnum)[keyof typeof SysConfigScalarFieldEnum]
 
 
+export const ExportTaskScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  username: 'username',
+  module: 'module',
+  query: 'query',
+  timezoneOffset: 'timezoneOffset',
+  status: 'status',
+  fileName: 'fileName',
+  filePath: 'filePath',
+  total: 'total',
+  size: 'size',
+  message: 'message',
+  createdAt: 'createdAt',
+  finishedAt: 'finishedAt',
+  expiresAt: 'expiresAt'
+} as const
+
+export type ExportTaskScalarFieldEnum = (typeof ExportTaskScalarFieldEnum)[keyof typeof ExportTaskScalarFieldEnum]
+
+
 export const FileScalarFieldEnum = {
   id: 'id',
   originName: 'originName',
@@ -1911,6 +1999,34 @@ export const SysConfigOrderByRelevanceFieldEnum = {
 export type SysConfigOrderByRelevanceFieldEnum = (typeof SysConfigOrderByRelevanceFieldEnum)[keyof typeof SysConfigOrderByRelevanceFieldEnum]
 
 
+export const JsonNullValueFilter = {
+  DbNull: DbNull,
+  JsonNull: JsonNull,
+  AnyNull: AnyNull
+} as const
+
+export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
+
+
+export const QueryMode = {
+  default: 'default',
+  insensitive: 'insensitive'
+} as const
+
+export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
+
+
+export const ExportTaskOrderByRelevanceFieldEnum = {
+  username: 'username',
+  module: 'module',
+  fileName: 'fileName',
+  filePath: 'filePath',
+  message: 'message'
+} as const
+
+export type ExportTaskOrderByRelevanceFieldEnum = (typeof ExportTaskOrderByRelevanceFieldEnum)[keyof typeof ExportTaskOrderByRelevanceFieldEnum]
+
+
 export const FileOrderByRelevanceFieldEnum = {
   originName: 'originName',
   fileName: 'fileName',
@@ -1951,23 +2067,6 @@ export const OperationLogOrderByRelevanceFieldEnum = {
 } as const
 
 export type OperationLogOrderByRelevanceFieldEnum = (typeof OperationLogOrderByRelevanceFieldEnum)[keyof typeof OperationLogOrderByRelevanceFieldEnum]
-
-
-export const JsonNullValueFilter = {
-  DbNull: DbNull,
-  JsonNull: JsonNull,
-  AnyNull: AnyNull
-} as const
-
-export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
-
-
-export const QueryMode = {
-  default: 'default',
-  insensitive: 'insensitive'
-} as const
-
-export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
 
 
 export const HttpLogOrderByRelevanceFieldEnum = {
@@ -2259,6 +2358,7 @@ export type GlobalOmitConfig = {
   dictType?: Prisma.DictTypeOmit
   dictItem?: Prisma.DictItemOmit
   sysConfig?: Prisma.SysConfigOmit
+  exportTask?: Prisma.ExportTaskOmit
   file?: Prisma.FileOmit
   loginLog?: Prisma.LoginLogOmit
   operationLog?: Prisma.OperationLogOmit

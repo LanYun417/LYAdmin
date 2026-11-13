@@ -11,6 +11,7 @@
 export type * from './models/DictType.js'
 export type * from './models/DictItem.js'
 export type * from './models/SysConfig.js'
+export type * from './models/ExportTask.js'
 export type * from './models/File.js'
 export type * from './models/LoginLog.js'
 export type * from './models/OperationLog.js'

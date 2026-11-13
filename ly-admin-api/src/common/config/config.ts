@@ -289,6 +289,15 @@ export const config = {
     /** 分批取数大小（默认 1000，兼顾查询次数与单批内存） */
     batchSize: Math.min(Math.max(toNumber(process.env.EXPORT_BATCH_SIZE, 1000), 100), 5000),
   },
+  /** 异步导出中心（导出任务文件保留与清理） */
+  exportCenter: {
+    /** 导出文件保留天数（过期后由定时任务清理，记录保留供审计） */
+    retentionDays: Math.max(1, toNumber(process.env.EXPORT_RETENTION_DAYS, 3)),
+    /** 过期文件清理任务开关 */
+    sweepEnabled: toBoolean(process.env.EXPORT_SWEEP_ENABLED, true),
+    /** 清理任务间隔（小时，须为 24 的约数，见 cronOf 说明） */
+    sweepIntervalHours: Math.max(1, toNumber(process.env.EXPORT_SWEEP_INTERVAL_HOURS, 6)),
+  },
 } as const;
 
 export type AppConfig = typeof config;

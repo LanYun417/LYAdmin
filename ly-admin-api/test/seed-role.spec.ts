@@ -11,6 +11,7 @@ function fakePrisma() {
     roleMenu: {
       deleteMany: vi.fn(),
       createMany: vi.fn(),
+      findMany: vi.fn().mockResolvedValue([]),
       count: vi.fn().mockResolvedValue(0),
     },
     // resetSeedRoleMenus 会先跑 seedMenu 补建缺失节点；这里让 findFirst 直接命中，避免 create
@@ -22,16 +23,44 @@ function fakePrisma() {
 }
 
 describe('seedRole（启动种子）', () => {
-  it('角色已存在 → 完全不碰它的授权（修复"重启即丢"）', async () => {
+  it('角色已存在 → 不清空授权，只增量补种子新增的菜单（升级部署不留死角）', async () => {
     const prisma = fakePrisma();
     prisma.role.findUnique.mockResolvedValue({ id: 1n });
+    // 已有授权里已含 dashboard（10），种子新增了 system（11）：补权只该补 11
+    prisma.roleMenu.findMany.mockResolvedValue([{ menuId: 10n }]);
+
+    const stat = await seedRole(
+      prisma as never,
+      new Map([
+        ['dashboard', 10],
+        ['system', 11],
+      ]),
+    );
+
+    expect(stat).toEqual({ created: 0, skipped: 3 });
+    expect(prisma.role.create).not.toHaveBeenCalled();
+    // 关键断言：绝不清空已有授权（deleteMany 一次都不该出现）
+    expect(prisma.roleMenu.deleteMany).not.toHaveBeenCalled();
+    // 增量路径：三个角色各查一次已有、只补缺失的那一条
+    expect(prisma.roleMenu.findMany).toHaveBeenCalledTimes(3);
+    expect(prisma.roleMenu.createMany).toHaveBeenCalledTimes(3);
+    for (const call of prisma.roleMenu.createMany.mock.calls) {
+      expect((call[0].data as Array<{ menuId: bigint }>).map((row) => Number(row.menuId))).toEqual([11]);
+    }
+  });
+
+  it('角色已存在且授权已齐 → 一次都不写（幂等，重启无副作用）', async () => {
+    const prisma = fakePrisma();
+    prisma.role.findUnique.mockResolvedValue({ id: 1n });
+    // 三个角色的期望授权全都已拥有
+    prisma.roleMenu.findMany.mockResolvedValue([{ menuId: 10n }]);
 
     const stat = await seedRole(prisma as never, new Map([['dashboard', 10]]));
 
     expect(stat).toEqual({ created: 0, skipped: 3 });
-    expect(prisma.role.create).not.toHaveBeenCalled();
-    // 关键断言：绝不清空、绝不重建已有角色的授权
     expect(prisma.roleMenu.deleteMany).not.toHaveBeenCalled();
+    // viewer 只期望 dashboard/system：这里 system 不在映射表里，desired=[10]，已拥有 → 不写
+    // admin 的 menuKeys 含 dashboard/system → desired=[10]（system 缺映射），已拥有 → 不写
     expect(prisma.roleMenu.createMany).not.toHaveBeenCalled();
   });
 
