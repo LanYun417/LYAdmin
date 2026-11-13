@@ -144,6 +144,66 @@ jobs:
       - name: 构建预算（产物体积门禁）
         run: npm run guard:bundle
 
+  web-e2e:
+    # 手动触发（Actions → Run workflow）：Playwright 要下浏览器 + 起前后端双服务，
+    # 每次 push 都跑会把 CI 时长翻倍；移动端布局回归按需/发版前跑一次即可。
+    # 本地等价命令：cd ly-admin-web && npm run test:e2e:web（见 playwright.config.ts 注释）
+    name: Web E2E（Playwright 移动端回归，手动触发）
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    env:
+      # 前端 E2E 不处理图形验证码（登录页只有账号口令输入）
+      CAPTCHA_ENABLED: 'false'
+      # 与全局 SEED_ADMIN_PASSWORD 保持一致：global-setup 用它登录
+      E2E_ADMIN_PASSWORD: ci-Admin-2026
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: ci-root-password
+          MYSQL_DATABASE: ly_admin
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -pci-root-password"
+          --health-interval=10s --health-timeout=5s --health-retries=10
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s --health-timeout=5s --health-retries=5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: ly-admin-api/package-lock.json
+      - name: 安装后端依赖
+        working-directory: ly-admin-api
+        run: npm ci --no-audit --no-fund
+      # 建表交给迁移（应用启动时种子自动补齐 admin/菜单/权限）
+      - name: 应用迁移
+        working-directory: ly-admin-api
+        run: npm run migrate:deploy
+      - name: 安装前端依赖
+        working-directory: ly-admin-web
+        run: npm ci --no-audit --no-fund
+      - name: 安装 Playwright 浏览器
+        working-directory: ly-admin-web
+        run: npx playwright install --with-deps chromium
+      # Playwright 的 webServer 会自动拉起后端（3100）与前端（5173）
+      - name: 运行 E2E（桌面 + 390px 移动端）
+        working-directory: ly-admin-web
+        run: npm run test:e2e:web
+      - name: 上传测试报告（失败时）
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: ly-admin-web/playwright-report/
+          retention-days: 7
+
   docker:
     name: 镜像可构建（仅 push 时跑）
     if: github.event_name == 'push'

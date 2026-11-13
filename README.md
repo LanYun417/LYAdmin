@@ -199,7 +199,7 @@ ly-admin-api/
 │  ├─ generated/              # Prisma Client 生成产物（提交入库，勿手改）
 │  ├─ app.module.ts           # 根模块（全局守卫 / 拦截器 / 过滤器装配）
 │  └─ main.ts                 # 入口（响应适配器、全局管道、静态资源托管）
-├─ test/                      # vitest 单测（13 个 spec）+ e2e（冒烟 / 契约快照，需本地 MySQL）
+├─ test/                      # vitest 单测 + e2e（冒烟 / 契约 / 核心 CRUD，需本地 MySQL）
 ├─ prisma.config.ts           # Prisma CLI 的连接串与 schema 路径
 └─ package.json
 ```
@@ -344,13 +344,15 @@ npm run dev:web   # 前端 http://localhost:5173（等价 cd ly-admin-web && npm
 
 ### 前端 `ly-admin-web/`
 
-| 命令                 | 说明                             |
-| -------------------- | -------------------------------- |
-| `npm run dev`        | Vite 开发服务（:5173）           |
-| `npm run build`      | 类型检查 + 生产构建              |
-| `npm run build:only` | 跳过类型检查，直接构建           |
-| `npm run preview`    | 本地预览构建产物                 |
-| `npm run type-check` | 仅类型检查（`vue-tsc --noEmit`） |
+| 命令                   | 说明                                                                                                                                                                                           |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run dev`          | Vite 开发服务（:5173）                                                                                                                                                                         |
+| `npm run build`        | 类型检查 + 生产构建                                                                                                                                                                            |
+| `npm run build:only`   | 跳过类型检查，直接构建                                                                                                                                                                         |
+| `npm run preview`      | 本地预览构建产物                                                                                                                                                                               |
+| `npm run type-check`   | 仅类型检查（`vue-tsc --noEmit`）                                                                                                                                                               |
+| `npm run test`         | vitest 单测（工具函数 + 组件测试：BasicDialog / Pagination / TablePage / SSE）                                                                                                                 |
+| `npm run test:e2e:web` | Playwright E2E（桌面 + 390px 移动端布局回归）。前置：后端以 `CAPTCHA_ENABLED=false` 起在 3100，前端 dev 在 5173（Playwright 会自动拉起，已起则复用）；首次需 `npx playwright install chromium` |
 
 ### 后端 `ly-admin-api/`
 

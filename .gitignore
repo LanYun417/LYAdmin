@@ -53,3 +53,8 @@ coverage/
 .workbuddy-ai/
 .workbuddy/
 .agents/
+
+# Playwright（Web E2E）：登录态与报告不入库
+ly-admin-web/e2e/.auth/
+ly-admin-web/playwright-report/
+ly-admin-web/test-results/

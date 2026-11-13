@@ -1,5 +1,6 @@
 import { fileURLToPath, URL } from 'node:url';
 
+import vue from '@vitejs/plugin-vue';
 import AutoImport from 'unplugin-auto-import/vite';
 import { defineConfig, type Plugin } from 'vitest/config';
 
@@ -14,6 +15,9 @@ function stubStyleImports(): Plugin {
     name: 'vitest-stub-style-imports',
     enforce: 'pre',
     resolveId(id) {
+      // 只拦「独立样式文件」的导入：.vue 的 style 子请求（?vue&type=style...&lang.css
+      // 以 .css 结尾）必须交给 @vitejs/plugin-vue 处理，否则会拿到带 \0 的假 id 直接崩溃
+      if (id.includes('?vue') || id.startsWith('\0')) return null;
       if (CSS_RE.test(id)) return `\0stub-style:${id}`;
       return null;
     },
@@ -39,12 +43,18 @@ function stubStyleImports(): Plugin {
  */
 export default defineConfig({
   plugins: [
+    // 组件测试要编译 .vue（vitest 的配置文件独立于 vite.config.ts，插件需在此重复声明）
+    vue(),
     stubStyleImports(),
     AutoImport({
       imports: ['vue', 'vue-router', 'pinia', '@vueuse/core'],
       dts: false,
       eslintrc: { enabled: false },
     }),
+    // 注意：这里刻意不挂 unplugin-vue-components 的 ElementPlusResolver。
+    // 它会连带把 element-plus 的 theme-chalk css 拉进 Node 侧（vitest 直接 import
+    // 会报 Unknown file extension ".css"）。组件测试统一用 global.stubs 提供
+    // el-* 替身：验证的是封装层逻辑（props/emits/规则），不是 Element 自身渲染。
   ],
   resolve: {
     alias: {
