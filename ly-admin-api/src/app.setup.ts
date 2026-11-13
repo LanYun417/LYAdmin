@@ -124,7 +124,21 @@ export function configureApp(app: NestExpressApplication, options: AppSetupOptio
   app.use(traceIdMiddleware);
 
   // 响应压缩：>1KB 的可压缩响应（JSON / JS / CSS / SVG）按 Accept-Encoding 协商 br / gzip
-  app.use(compression({ threshold: 1024 }));
+  // filter 排除 SSE 流：压缩器会攒缓冲再吐，直接破坏实时性（表现为「连上了但收不到帧」）
+  app.use(
+    compression({
+      threshold: 1024,
+      filter: (req, res) => {
+        const contentType = String(res.getHeader('Content-Type') ?? '');
+        if (contentType.includes('text/event-stream')) {
+          return false;
+        }
+        // 初始阶段响应头还没设，按路径排除 SSE 端点（事件流由 handler 自行设置响应头）
+        const url = req.originalUrl ?? req.url ?? '';
+        return !url.split('?')[0].endsWith('/api/sse/stream');
+      },
+    }),
+  );
 
   // 安全响应头：nosniff / 点击劫持 / Referrer / 权限策略（+ 可选 HSTS、CSP）
   // 放在最前，保证错误响应（401/403/429/503）也带上这些头

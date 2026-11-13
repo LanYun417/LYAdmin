@@ -16,6 +16,8 @@ import echarts from '@/utils/echarts';
 import { getChartPalette, hexToRgba, GRID_AXIS_LABEL_FIT, verticalGradient } from '@/utils/chartTheme';
 import { ElMessage } from '@/utils/element';
 import { getServerMetricsApi } from '@/api/monitor';
+import { setSseTopicApi } from '@/api/sse';
+import { SseEventName, onSseEvent, onSseStatusChange } from '@/utils/sse';
 import { useAppStore } from '@/store/modules/app';
 import { useI18n } from 'vue-i18n';
 import type { ServerMetrics } from '@/types/api';
@@ -456,9 +458,15 @@ watch(
 
 let timer: ReturnType<typeof setInterval> | null = null;
 
-/** 按「是否自动刷新 + 页面是否可见」决定定时器的启停 */
+/** SSE 是否在推送指标（连接正常且已订阅 metrics 主题）。 */
+const sseLive = ref(false);
+
+/**
+ * 按「是否自动刷新 + 页面是否可见 + SSE 是否在推」决定轮询的启停。
+ * SSE 连接时推送即实时数据，轮询纯属重复请求，自动停；断线时轮询兜底。
+ */
 function syncTimer(): void {
-  const shouldRun = autoRefresh.value && visibility.value === 'visible';
+  const shouldRun = autoRefresh.value && visibility.value === 'visible' && !sseLive.value;
   if (shouldRun && timer === null) {
     timer = setInterval(() => void fetchMetrics(), REFRESH_INTERVAL_MS);
     return;
@@ -469,12 +477,48 @@ function syncTimer(): void {
   }
 }
 
-watch([autoRefresh, visibility], syncTimer, { immediate: true });
+watch([autoRefresh, visibility, sseLive], syncTimer, { immediate: true });
+
+/* ------------------------------ SSE 实时推送 ------------------------------ */
+
+/** 订阅 / 退订 metrics 主题（失败静默：页面仍可依赖轮询兜底）。 */
+async function setMetricsTopic(enabled: boolean): Promise<void> {
+  try {
+    await setSseTopicApi('metrics', enabled);
+  } catch {
+    // 忽略：SSE 不可用时轮询兜底
+  }
+}
+
+/** SSE 指标帧 → 直接更新响应式数据（复用 watch(metrics) 触发重绘）。 */
+const applyMetrics = (snapshot: unknown): void => {
+  metrics.value = snapshot as ServerMetrics;
+};
+
+let offMetrics: (() => void) | null = null;
+let offStatus: (() => void) | null = null;
+
+onMounted(() => {
+  // 首帧前先拉一次，避免白屏干等推送
+  void fetchMetrics();
+  void setMetricsTopic(true);
+  offMetrics = onSseEvent(SseEventName.METRICS, applyMetrics);
+  offStatus = onSseStatusChange((status) => {
+    sseLive.value = status === 'open';
+  });
+});
+
 onBeforeUnmount(() => {
+  offMetrics?.();
+  offStatus?.();
+  offMetrics = null;
+  offStatus = null;
+  void setMetricsTopic(false);
   if (timer !== null) {
     clearInterval(timer);
     timer = null;
   }
+  sseLive.value = false;
 });
 
 /** 手动刷新 */
@@ -500,6 +544,11 @@ async function handleRefresh(): Promise<void> {
           </span>
         </div>
         <div class="flex items-center gap-3">
+          <!-- 实时推送指示：SSE 在线时数据为推送驱动（3s 一帧）；离线回退轮询 -->
+          <el-tag :type="sseLive ? 'success' : 'info'" size="small" effect="plain">
+            <i class="bi" :class="sseLive ? 'bi-broadcast-pin' : 'bi-arrow-repeat'" />
+            {{ sseLive ? '实时推送' : `轮询（${REFRESH_INTERVAL_MS / 1000}s）` }}
+          </el-tag>
           <el-checkbox v-model="autoRefresh">
             {{ t('monitor.autoRefresh') }}（{{ REFRESH_INTERVAL_MS / 1000 }}s）
           </el-checkbox>

@@ -15,5 +15,7 @@ import { SystemMetricsService } from './system-metrics.service.js';
   imports: [NoticeModule],
   controllers: [MonitorController, SystemMetricsController],
   providers: [MonitorService, SystemMetricsService],
+  // SystemMetricsService 供 SSE 模块按需推送监控采样（metrics 主题）
+  exports: [SystemMetricsService],
 })
 export class MonitorModule {}

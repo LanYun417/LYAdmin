@@ -14,6 +14,7 @@ import { AppException } from '../../common/exception/app.exception.js';
 import { buildPageResult, parsePagination, readNumber, readString } from '../../common/utils/utils.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import type { PageResult } from '../../common/types.js';
+import { AppEvents, emit } from '../../common/event/event-bus.js';
 
 /** 通知类型。 */
 export const NOTICE_TYPE = {
@@ -88,6 +89,8 @@ export class NoticeService {
           createdBy: input.createdBy === null ? null : BigInt(input.createdBy),
         })),
       });
+      // SSE 实时推送：目标用户在线时铃铛即时更新（未读数由前端收到事件后自行拉取）
+      emit(AppEvents.NOTICE_PUBLISHED, { userIds: targets });
       return result.count;
     } catch (error) {
       this.logger.error(`[Notice] 发布通知失败: ${error instanceof Error ? error.message : String(error)}`);

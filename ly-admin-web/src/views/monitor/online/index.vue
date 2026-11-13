@@ -8,8 +8,10 @@
  */
 
 import { ElMessage, ElMessageBox } from '@/utils/element';
+import { throttle } from 'lodash-es';
 import { forceLogoutSessionApi, forceLogoutUserApi, getOnlineSessionsApi } from '@/api/monitor';
 import { useTable } from '@/composables/useTable';
+import { onOnlineChange } from '@/composables/useSse';
 import { formatDateTime, formatOnlineDuration } from '@/utils/format';
 import type { OnlineSession } from '@/types/api';
 import TablePage from '@/components/TablePage/index.vue';
@@ -26,6 +28,24 @@ const { loading, list, total, query, search, reset, getList, changePage, changeP
     }),
   { username: '', ip: '' },
 );
+
+/**
+ * 在线会话变化 → 自动刷新列表。
+ * SSE 的 online 事件在有人登录/登出/被踢时广播；这里做 1s 防抖合并——
+ * 批量强制下线会瞬间多帧，逐个刷新既浪费又会把筛选条件打断。
+ */
+const refreshThrottled = throttle(() => void getList(), 1000, { trailing: true });
+
+let offOnline: (() => void) | null = null;
+
+onMounted(() => {
+  offOnline = onOnlineChange(refreshThrottled);
+});
+
+onBeforeUnmount(() => {
+  offOnline?.();
+  offOnline = null;
+});
 
 /** 强制下线单个会话 */
 async function handleForceLogout(row: OnlineSession): Promise<void> {

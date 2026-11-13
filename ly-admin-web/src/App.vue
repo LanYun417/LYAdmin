@@ -12,6 +12,7 @@ import en from 'element-plus/es/locale/lang/en';
 import { useI18n } from 'vue-i18n';
 import { useAppStore } from '@/store/modules/app';
 import { useTheme } from '@/composables/useTheme';
+import { useSseBridge } from '@/composables/useSse';
 import { applyPrimaryColor } from '@/utils/theme';
 import type { LocaleValue } from '@/locales';
 
@@ -52,6 +53,9 @@ watch(
 // useDark 的初始化会给 <html> 应用 localStorage 里的 dark 类——必须早于所有路由渲染，
 // 否则无布局的登录页刷新后丢失暗黑模式（布局内组件此前是唯一初始化点，登录页覆盖不到）
 useTheme();
+
+// SSE 实时推送桥接：登录后连接，通知/在线会话事件分发到各消费方（见 composables/useSse）
+useSseBridge();
 </script>
 
 <template>

@@ -233,6 +233,11 @@ async function requestNewToken(): Promise<string | null> {
     );
     if (data.code === SUCCESS_CODE && data.data?.accessToken) {
       setToken(data.data.accessToken, data.data.refreshToken);
+      // 通知 SSE 管理器换 token 重连：EventSource 的 URL 带的是旧 token，
+      // 不重连会反复 401 假死（详见 utils/sse.ts 的 notifyTokenChanged）
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('sse-token-changed'));
+      }
       return data.data.accessToken;
     }
     return null;

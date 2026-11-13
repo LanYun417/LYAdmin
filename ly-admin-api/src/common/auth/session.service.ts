@@ -20,6 +20,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { config } from '../config/config.js';
 import { RedisService } from '../redis/redis.service.js';
+import { AppEvents, emit } from '../event/event-bus.js';
 
 /** 会话详情（redis 中存的 JSON）。 */
 export interface SessionRecord {
@@ -94,6 +95,8 @@ export class SessionService {
     await this.redis.expire(`${USER_INDEX_PREFIX}${input.userId}`, ttlMs);
     await this.redis.sAdd(GLOBAL_INDEX_KEY, sid);
     await this.redis.expire(GLOBAL_INDEX_KEY, ttlMs);
+    // 上线广播：在线用户页 / 监控看板实时更新
+    emit(AppEvents.SESSION_CREATED, { userId: input.userId });
     return sid;
   }
 
@@ -137,6 +140,8 @@ export class SessionService {
     const owner = userId ?? record?.userId;
     if (owner !== undefined && owner !== null) {
       await this.redis.sRem(`${USER_INDEX_PREFIX}${owner}`, sid);
+      // 下线广播（在线用户页实时刷新）
+      emit(AppEvents.SESSION_DESTROYED, { userId: owner });
     }
     await this.redis.sRem(GLOBAL_INDEX_KEY, sid);
   }
@@ -152,6 +157,8 @@ export class SessionService {
     for (const sid of sids) {
       await this.redis.sRem(GLOBAL_INDEX_KEY, sid);
     }
+    // 下线广播（在线用户页实时刷新）
+    emit(AppEvents.SESSION_DESTROYED, { userId });
     return sids.length;
   }
 

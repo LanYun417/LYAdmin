@@ -31,6 +31,7 @@ import { HealthModule } from './modules/health/health.module.js';
 import { MonitorModule } from './modules/monitor/monitor.module.js';
 import { NoticeModule } from './modules/notice/notice.module.js';
 import { TaskModule } from './modules/task/task.module.js';
+import { SseModule } from './modules/sse/sse.module.js';
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import { TaskModule } from './modules/task/task.module.js';
     LogsModule,
     DocsModule,
     TaskModule,
+    SseModule,
   ],
   providers: [
     // 守卫顺序：先鉴权（挂 req.user），再校验权限码
