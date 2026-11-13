@@ -78,13 +78,13 @@ function onEnter(): void {
 </script>
 
 <template>
-  <el-tooltip content="搜索菜单" placement="bottom" :show-after="300">
-    <button type="button" class="menu-search-btn" aria-label="搜索菜单" @click="open">
+  <el-tooltip content="搜索页面" placement="bottom" :show-after="300">
+    <button type="button" class="menu-search-btn" aria-label="搜索页面" @click="open">
       <i class="bi bi-search" aria-hidden="true" />
     </button>
   </el-tooltip>
 
-  <BasicDialog v-model="visible" title="搜索菜单" width="560px" :show-footer="false">
+  <BasicDialog v-model="visible" title="搜索页面" width="560px" :show-footer="false">
     <el-input
       ref="inputRef"
       v-model="keyword"
