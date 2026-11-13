@@ -67,6 +67,20 @@ describe('operation-snapshot', () => {
     expect(text.endsWith('…(truncated)')).toBe(true);
   });
 
+  it('快照含 BigInt（Prisma id）不会崩，且转成数字落库', () => {
+    const snapshot: OperationSnapshot = {};
+    runWithSnapshot(snapshot, () => {
+      // 服务层 recordAfter 常直接传 Prisma 行（id 是 BigInt）：
+      // 未做转换时 JSON.stringify 会抛 TypeError，日志静默丢失
+      recordBefore({ id: 1n, name: '旧值' });
+      recordAfter({ id: 2n, name: '新值', nested: { id: 3n } });
+    });
+
+    const fields = buildSnapshotFields(snapshot);
+    expect(fields.beforeData).toBe(JSON.stringify({ id: 1, name: '旧值' }));
+    expect(fields.afterData).toBe(JSON.stringify({ id: 2, name: '新值', nested: { id: 3 } }));
+  });
+
   it('未采集留痕时两侧都是 null（不写 {} 占位，避免前端误判"有留痕"）', () => {
     const snapshot: OperationSnapshot = {};
     runWithSnapshot(snapshot, () => {

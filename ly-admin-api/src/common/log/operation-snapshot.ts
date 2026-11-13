@@ -61,7 +61,12 @@ function serializeSide(side: Record<string, unknown> | null | undefined): string
   if (side === null || side === undefined) {
     return null;
   }
-  const json = JSON.stringify(maskSensitiveValue(side));
+  // BigInt 必须显式转换：JSON.stringify 遇 BigInt 直接抛
+  // `TypeError: Do not know how to serialize a BigInt`。服务层 recordAfter 常传
+  // 含 id 的快照（Prisma BigInt），此前这类调用会静默丢日志并产生 unhandled rejection。
+  const json = JSON.stringify(maskSensitiveValue(side), (_key, value: unknown) =>
+    typeof value === 'bigint' ? Number(value) : value,
+  );
   if (json.length <= SNAPSHOT_MAX_CHARS) {
     return json;
   }
