@@ -484,6 +484,46 @@ export const API_DOCS: ApiDocGroup[] = [
         }
       },
       {
+        "method": "GET",
+        "path": "/api/users/search",
+        "summary": "用户搜索（公告「指定用户」选择器）。 仅登录即可访问（全局鉴权守卫保证），按用户名 / 昵称 / id 模糊匹配，返回最小化字段。 必须声明在 `@Get(':id')` **之前**，否则 `search` 会被 `:id` 吃掉",
+        "permission": [],
+        "isPublic": false,
+        "action": "",
+        "params": [
+          {
+            "name": "trim",
+            "in": "query",
+            "type": "unknown",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "页码，从 1 开始",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "每页条数",
+            "example": 10
+          }
+        ],
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3100/api/users/search?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "page": 1,
+            "pageSize": 10
+          }
+        }
+      },
+      {
         "method": "POST",
         "path": "/api/users",
         "summary": "新增用户",
@@ -574,10 +614,18 @@ export const API_DOCS: ApiDocGroup[] = [
             "required": false,
             "description": "备注（可空）",
             "example": "示例备注"
+          },
+          {
+            "name": "maxDevices",
+            "in": "body",
+            "type": "number | null",
+            "required": false,
+            "description": "单用户登录设备数上限：留空/null = 走全局 sys.login.maxDevices，0 = 不限制",
+            "example": "示例值"
           }
         ],
         "examples": {
-          "curl": "curl -X POST \"http://localhost:3100/api/users\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"username\": \"admin\",\n      \"password\": \"123456\",\n      \"nickname\": \"示例用户\",\n      \"email\": \"demo@example.com\",\n      \"phone\": \"13800138000\",\n      \"gender\": \"1\",\n      \"status\": 1,\n      \"roleIds\": [\n        1\n      ],\n      \"deptId\": 1,\n      \"remark\": \"示例备注\"\n    }'",
+          "curl": "curl -X POST \"http://localhost:3100/api/users\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"username\": \"admin\",\n      \"password\": \"123456\",\n      \"nickname\": \"示例用户\",\n      \"email\": \"demo@example.com\",\n      \"phone\": \"13800138000\",\n      \"gender\": \"1\",\n      \"status\": 1,\n      \"roleIds\": [\n        1\n      ],\n      \"deptId\": 1,\n      \"remark\": \"示例备注\",\n      \"maxDevices\": \"示例值\"\n    }'",
           "requestBody": {
             "username": "admin",
             "password": "123456",
@@ -590,7 +638,8 @@ export const API_DOCS: ApiDocGroup[] = [
               1
             ],
             "deptId": 1,
-            "remark": "示例备注"
+            "remark": "示例备注",
+            "maxDevices": "示例值"
           }
         }
       },
@@ -690,10 +739,18 @@ export const API_DOCS: ApiDocGroup[] = [
             "required": false,
             "description": "备注（可空）",
             "example": "示例备注"
+          },
+          {
+            "name": "maxDevices",
+            "in": "body",
+            "type": "number | null",
+            "required": false,
+            "description": "单用户登录设备数上限：留空/null = 走全局 sys.login.maxDevices，0 = 不限制",
+            "example": "示例值"
           }
         ],
         "examples": {
-          "curl": "curl -X PUT \"http://localhost:3100/api/users/1\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"nickname\": \"示例用户\",\n      \"email\": \"demo@example.com\",\n      \"phone\": \"13800138000\",\n      \"gender\": \"1\",\n      \"status\": 1,\n      \"roleIds\": [\n        1\n      ],\n      \"deptId\": 1,\n      \"remark\": \"示例备注\"\n    }'",
+          "curl": "curl -X PUT \"http://localhost:3100/api/users/1\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"nickname\": \"示例用户\",\n      \"email\": \"demo@example.com\",\n      \"phone\": \"13800138000\",\n      \"gender\": \"1\",\n      \"status\": 1,\n      \"roleIds\": [\n        1\n      ],\n      \"deptId\": 1,\n      \"remark\": \"示例备注\",\n      \"maxDevices\": \"示例值\"\n    }'",
           "pathParams": {
             "id": "1"
           },
@@ -707,7 +764,8 @@ export const API_DOCS: ApiDocGroup[] = [
               1
             ],
             "deptId": 1,
-            "remark": "示例备注"
+            "remark": "示例备注",
+            "maxDevices": "示例值"
           }
         }
       },
@@ -1101,10 +1159,18 @@ export const API_DOCS: ApiDocGroup[] = [
             "required": false,
             "description": "",
             "example": "示例备注"
+          },
+          {
+            "name": "maxDevices",
+            "in": "body",
+            "type": "number | null",
+            "required": false,
+            "description": "角色级登录设备数上限：留空/null = 未设置（走全局），0 = 不限制",
+            "example": "示例值"
           }
         ],
         "examples": {
-          "curl": "curl -X POST \"http://localhost:3100/api/roles\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"roleName\": \"示例角色\",\n      \"roleCode\": \"demo_role\",\n      \"sort\": 1,\n      \"status\": 1,\n      \"dataScope\": 1,\n      \"deptIds\": [\n        1\n      ],\n      \"remark\": \"示例备注\"\n    }'",
+          "curl": "curl -X POST \"http://localhost:3100/api/roles\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"roleName\": \"示例角色\",\n      \"roleCode\": \"demo_role\",\n      \"sort\": 1,\n      \"status\": 1,\n      \"dataScope\": 1,\n      \"deptIds\": [\n        1\n      ],\n      \"remark\": \"示例备注\",\n      \"maxDevices\": \"示例值\"\n    }'",
           "requestBody": {
             "roleName": "示例角色",
             "roleCode": "demo_role",
@@ -1114,7 +1180,8 @@ export const API_DOCS: ApiDocGroup[] = [
             "deptIds": [
               1
             ],
-            "remark": "示例备注"
+            "remark": "示例备注",
+            "maxDevices": "示例值"
           }
         }
       },
@@ -1215,10 +1282,18 @@ export const API_DOCS: ApiDocGroup[] = [
             "required": false,
             "description": "",
             "example": "示例备注"
+          },
+          {
+            "name": "maxDevices",
+            "in": "body",
+            "type": "number | null",
+            "required": false,
+            "description": "角色级登录设备数上限：留空/null = 未设置（走全局），0 = 不限制",
+            "example": "示例值"
           }
         ],
         "examples": {
-          "curl": "curl -X PUT \"http://localhost:3100/api/roles/1\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"roleName\": \"示例角色\",\n      \"sort\": 1,\n      \"status\": 1,\n      \"dataScope\": 1,\n      \"deptIds\": [\n        1\n      ],\n      \"remark\": \"示例备注\"\n    }'",
+          "curl": "curl -X PUT \"http://localhost:3100/api/roles/1\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"roleName\": \"示例角色\",\n      \"sort\": 1,\n      \"status\": 1,\n      \"dataScope\": 1,\n      \"deptIds\": [\n        1\n      ],\n      \"remark\": \"示例备注\",\n      \"maxDevices\": \"示例值\"\n    }'",
           "pathParams": {
             "id": "1"
           },
@@ -1230,7 +1305,8 @@ export const API_DOCS: ApiDocGroup[] = [
             "deptIds": [
               1
             ],
-            "remark": "示例备注"
+            "remark": "示例备注",
+            "maxDevices": "示例值"
           }
         }
       },
@@ -1477,6 +1553,14 @@ export const API_DOCS: ApiDocGroup[] = [
             "example": "示例菜单"
           },
           {
+            "name": "menuNameEn",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "示例值"
+          },
+          {
             "name": "menuType",
             "in": "body",
             "type": "'M' | 'C' | 'F'",
@@ -1558,10 +1642,11 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X POST \"http://localhost:3100/api/menus\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"parentId\": 1,\n      \"menuName\": \"示例菜单\",\n      \"menuType\": \"C\",\n      \"path\": \"示例值\",\n      \"component\": \"示例值\",\n      \"icon\": \"示例值\",\n      \"permission\": \"示例值\",\n      \"sort\": 1,\n      \"visible\": 1,\n      \"status\": 1,\n      \"redirect\": \"示例值\",\n      \"keepAlive\": 1\n    }'",
+          "curl": "curl -X POST \"http://localhost:3100/api/menus\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"parentId\": 1,\n      \"menuName\": \"示例菜单\",\n      \"menuNameEn\": \"示例值\",\n      \"menuType\": \"C\",\n      \"path\": \"示例值\",\n      \"component\": \"示例值\",\n      \"icon\": \"示例值\",\n      \"permission\": \"示例值\",\n      \"sort\": 1,\n      \"visible\": 1,\n      \"status\": 1,\n      \"redirect\": \"示例值\",\n      \"keepAlive\": 1\n    }'",
           "requestBody": {
             "parentId": 1,
             "menuName": "示例菜单",
+            "menuNameEn": "示例值",
             "menuType": "C",
             "path": "示例值",
             "component": "示例值",
@@ -1610,6 +1695,14 @@ export const API_DOCS: ApiDocGroup[] = [
             "example": "示例菜单"
           },
           {
+            "name": "menuNameEn",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "示例值"
+          },
+          {
             "name": "menuType",
             "in": "body",
             "type": "'M' | 'C' | 'F'",
@@ -1691,13 +1784,14 @@ export const API_DOCS: ApiDocGroup[] = [
           }
         ],
         "examples": {
-          "curl": "curl -X PUT \"http://localhost:3100/api/menus/1\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"parentId\": 1,\n      \"menuName\": \"示例菜单\",\n      \"menuType\": \"C\",\n      \"path\": \"示例值\",\n      \"component\": \"示例值\",\n      \"icon\": \"示例值\",\n      \"permission\": \"示例值\",\n      \"sort\": 1,\n      \"visible\": 1,\n      \"status\": 1,\n      \"redirect\": \"示例值\",\n      \"keepAlive\": 1\n    }'",
+          "curl": "curl -X PUT \"http://localhost:3100/api/menus/1\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"parentId\": 1,\n      \"menuName\": \"示例菜单\",\n      \"menuNameEn\": \"示例值\",\n      \"menuType\": \"C\",\n      \"path\": \"示例值\",\n      \"component\": \"示例值\",\n      \"icon\": \"示例值\",\n      \"permission\": \"示例值\",\n      \"sort\": 1,\n      \"visible\": 1,\n      \"status\": 1,\n      \"redirect\": \"示例值\",\n      \"keepAlive\": 1\n    }'",
           "pathParams": {
             "id": "1"
           },
           "requestBody": {
             "parentId": 1,
             "menuName": "示例菜单",
+            "menuNameEn": "示例值",
             "menuType": "C",
             "path": "示例值",
             "component": "示例值",
@@ -3143,6 +3237,32 @@ export const API_DOCS: ApiDocGroup[] = [
       },
       {
         "method": "GET",
+        "path": "/api/files/chunk/status",
+        "summary": "分片状态：已上传的序号列表（断点续传的依据）",
+        "permission": [
+          "file:upload"
+        ],
+        "isPublic": false,
+        "action": "",
+        "params": [
+          {
+            "name": "identifier",
+            "in": "query",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "示例值"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3100/api/files/chunk/status?identifier=%E7%A4%BA%E4%BE%8B%E5%80%BC\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "identifier": "示例值"
+          }
+        }
+      },
+      {
+        "method": "GET",
         "path": "/api/files/quota",
         "summary": "当前用户的上传配额使用情况（供前端展示「已用 / 上限」）",
         "permission": [
@@ -3248,6 +3368,148 @@ export const API_DOCS: ApiDocGroup[] = [
       },
       {
         "method": "POST",
+        "path": "/api/files/chunk",
+        "summary": "分片上传（单片）。 前端把大文件切成 chunkSize 的片后逐片提交（字段名 `file`）， 中断后凭 identifier 查 chunk/status 续传，全部到齐后调 chunk/merge",
+        "permission": [
+          "file:upload"
+        ],
+        "isPublic": false,
+        "action": "",
+        "params": [
+          {
+            "name": "identifier",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "上传标识：同一文件的各分片必须一致（建议用文件内容的采样哈希）",
+            "example": "示例值"
+          },
+          {
+            "name": "chunkIndex",
+            "in": "body",
+            "type": "number",
+            "required": true,
+            "description": "分片序号（从 0 开始）",
+            "example": 1
+          },
+          {
+            "name": "totalChunks",
+            "in": "body",
+            "type": "number",
+            "required": true,
+            "description": "分片总数（1-10000）",
+            "example": 1
+          },
+          {
+            "name": "filename",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "原始文件名（决定落盘扩展名分组与对外名称，按扩展名白名单校验）",
+            "example": "示例值"
+          },
+          {
+            "name": "totalSize",
+            "in": "body",
+            "type": "number",
+            "required": true,
+            "description": "文件总大小（字节）：合并时逐字节核对，防止缺片/错片",
+            "example": 1
+          }
+        ],
+        "examples": {
+          "curl": "curl -X POST \"http://localhost:3100/api/files/chunk\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"identifier\": \"示例值\",\n      \"chunkIndex\": 1,\n      \"totalChunks\": 1,\n      \"filename\": \"示例值\",\n      \"totalSize\": 1\n    }'",
+          "requestBody": {
+            "identifier": "示例值",
+            "chunkIndex": 1,
+            "totalChunks": 1,
+            "filename": "示例值",
+            "totalSize": 1
+          }
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/api/files/chunk/merge",
+        "summary": "合并分片：拼合 → 大小核对 → 流式哈希 → 秒传去重 → 落库",
+        "permission": [
+          "file:upload"
+        ],
+        "isPublic": false,
+        "action": "文件管理 · 分片合并",
+        "params": [
+          {
+            "name": "identifier",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "示例值"
+          },
+          {
+            "name": "totalChunks",
+            "in": "body",
+            "type": "number",
+            "required": true,
+            "description": "",
+            "example": 1
+          },
+          {
+            "name": "filename",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "示例值"
+          },
+          {
+            "name": "totalSize",
+            "in": "body",
+            "type": "number",
+            "required": true,
+            "description": "",
+            "example": 1
+          },
+          {
+            "name": "mimeType",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "文件 MIME（决定白名单校验；浏览器 `file.type`，为空串时按不允许处理，与直传同口径）",
+            "example": "示例值"
+          },
+          {
+            "name": "bizType",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "业务类型：同直传的 UploadBizDto",
+            "example": "示例值"
+          },
+          {
+            "name": "bizId",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "业务主键",
+            "example": 1
+          }
+        ],
+        "examples": {
+          "curl": "curl -X POST \"http://localhost:3100/api/files/chunk/merge\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"identifier\": \"示例值\",\n      \"totalChunks\": 1,\n      \"filename\": \"示例值\",\n      \"totalSize\": 1,\n      \"mimeType\": \"示例值\",\n      \"bizType\": \"示例值\",\n      \"bizId\": 1\n    }'",
+          "requestBody": {
+            "identifier": "示例值",
+            "totalChunks": 1,
+            "filename": "示例值",
+            "totalSize": 1,
+            "mimeType": "示例值",
+            "bizType": "示例值",
+            "bizId": 1
+          }
+        }
+      },
+      {
+        "method": "POST",
         "path": "/api/files/upload",
         "summary": "上传（单/多文件，兼容任意字段名）",
         "permission": [
@@ -3304,6 +3566,32 @@ export const API_DOCS: ApiDocGroup[] = [
           "curl": "curl -X DELETE \"http://localhost:3100/api/files/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
             "id": "1"
+          }
+        }
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/files/chunk",
+        "summary": "取消上传：清理该标识的全部分片（幂等）",
+        "permission": [
+          "file:upload"
+        ],
+        "isPublic": false,
+        "action": "",
+        "params": [
+          {
+            "name": "identifier",
+            "in": "query",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "示例值"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X DELETE \"http://localhost:3100/api/files/chunk?identifier=%E7%A4%BA%E4%BE%8B%E5%80%BC\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "identifier": "示例值"
           }
         }
       }
@@ -3578,6 +3866,39 @@ export const API_DOCS: ApiDocGroup[] = [
     "group": "个人中心",
     "endpoints": [
       {
+        "method": "GET",
+        "path": "/api/profile",
+        "summary": "个人中心详情：账户 + 扩展资料 + 会话画像。 「本机」标记的 sid 来自守卫写入的 req.tokenSid（当前请求令牌的会话）",
+        "permission": [],
+        "isPublic": false,
+        "action": "",
+        "params": [
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "页码，从 1 开始",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "每页条数",
+            "example": 10
+          }
+        ],
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3100/api/profile?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "page": 1,
+            "pageSize": 10
+          }
+        }
+      },
+      {
         "method": "POST",
         "path": "/api/profile/avatar",
         "summary": "更换头像",
@@ -3650,6 +3971,66 @@ export const API_DOCS: ApiDocGroup[] = [
       },
       {
         "method": "PUT",
+        "path": "/api/profile/extra",
+        "summary": "更新扩展资料（简介 / 生日 / 公司 / 职位 / 所在地）",
+        "permission": [],
+        "isPublic": false,
+        "action": "个人中心 · 修改扩展资料",
+        "params": [
+          {
+            "name": "signature",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "个人简介（签名）：空串表示清空。",
+            "example": "示例值"
+          },
+          {
+            "name": "birthday",
+            "in": "body",
+            "type": "string | null",
+            "required": false,
+            "description": "生日：`YYYY-MM-DD`；空串 / 不传表示保留或清空（null 清空）。",
+            "example": "示例值"
+          },
+          {
+            "name": "company",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "公司 / 组织：空串表示清空。",
+            "example": "示例值"
+          },
+          {
+            "name": "position",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "职位 / 岗位：空串表示清空。",
+            "example": "示例值"
+          },
+          {
+            "name": "address",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "所在地：空串表示清空。",
+            "example": "示例值"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X PUT \"http://localhost:3100/api/profile/extra\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"signature\": \"示例值\",\n      \"birthday\": \"示例值\",\n      \"company\": \"示例值\",\n      \"position\": \"示例值\",\n      \"address\": \"示例值\"\n    }'",
+          "requestBody": {
+            "signature": "示例值",
+            "birthday": "示例值",
+            "company": "示例值",
+            "position": "示例值",
+            "address": "示例值"
+          }
+        }
+      },
+      {
+        "method": "PUT",
         "path": "/api/profile/password",
         "summary": "修改密码",
         "permission": [],
@@ -3678,6 +4059,30 @@ export const API_DOCS: ApiDocGroup[] = [
           "requestBody": {
             "oldPassword": "123456",
             "newPassword": "123456"
+          }
+        }
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/profile/sessions/:id",
+        "summary": "下线自己的某个会话（「踢掉其他设备」）。 sid 归属校验在 service 内完成；当前会话不允许踢自己下线之外的设备没有限制—— 想踢当前设备也可以（多标签页场景有用），届时另一个标签页下次请求即失效",
+        "permission": [],
+        "isPublic": false,
+        "action": "个人中心 · 下线我的设备",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X DELETE \"http://localhost:3100/api/profile/sessions/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "id": "1"
           }
         }
       }
@@ -4491,6 +4896,215 @@ export const API_DOCS: ApiDocGroup[] = [
           "pathParams": {
             "id": "1"
           }
+        }
+      }
+    ]
+  },
+  {
+    "group": "下载中心",
+    "endpoints": [
+      {
+        "method": "GET",
+        "path": "/api/export-tasks",
+        "summary": "我的导出任务（分页）",
+        "permission": [
+          "export:list"
+        ],
+        "isPublic": false,
+        "action": "",
+        "params": [
+          {
+            "name": "page",
+            "in": "query",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 1
+          },
+          {
+            "name": "module",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "示例值"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3100/api/export-tasks?page=1&pageSize=1&module=%E7%A4%BA%E4%BE%8B%E5%80%BC\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "page": 1,
+            "pageSize": 1,
+            "module": "示例值"
+          }
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/api/export-tasks/:id/download",
+        "summary": "下载导出文件（res.download 底层 send 库，Range 断点续传天然支持）",
+        "permission": [
+          "export:list"
+        ],
+        "isPublic": false,
+        "action": "",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3100/api/export-tasks/1/download\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "id": "1"
+          },
+          "isRawResponse": true
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/api/export-tasks",
+        "summary": "创建导出任务（秒回；生成与通知在后台进行）",
+        "permission": [
+          "log:login:export",
+          "log:operation:export",
+          "log:http:export"
+        ],
+        "isPublic": false,
+        "action": "下载中心 · 创建导出任务",
+        "params": [
+          {
+            "name": "module",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "导出模块（决定用哪类日志的查询与表头）。",
+            "example": "示例值"
+          },
+          {
+            "name": "query",
+            "in": "body",
+            "type": "Record<string, unknown>",
+            "required": false,
+            "description": "筛选条件快照：前端把列表页当前的查询原样传来，后台按同一套 where 导出。 限深限长：只接受「键字符集合法 + 值为原始类型」的浅层对象， 拒绝嵌套对象/数组（导出条件不需要复杂结构，拒绝可防意外与滥用）。",
+            "example": "示例值"
+          },
+          {
+            "name": "timezoneOffset",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "时区偏移（分钟）：CSV 时间列按此时区格式化，与请求头同一口径。",
+            "example": 1
+          }
+        ],
+        "examples": {
+          "curl": "curl -X POST \"http://localhost:3100/api/export-tasks\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"module\": \"示例值\",\n      \"query\": \"示例值\",\n      \"timezoneOffset\": 1\n    }'",
+          "requestBody": {
+            "module": "示例值",
+            "query": "示例值",
+            "timezoneOffset": 1
+          }
+        }
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/export-tasks/:id",
+        "summary": "删除任务（记录与文件一并删除）",
+        "permission": [
+          "export:list"
+        ],
+        "isPublic": false,
+        "action": "下载中心 · 删除导出任务",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X DELETE \"http://localhost:3100/api/export-tasks/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "id": "1"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "group": "Sse",
+    "endpoints": [
+      {
+        "method": "GET",
+        "path": "/api/sse/online-count",
+        "summary": "当前在线连接数（健康检查用：前端可对比判断 SSE 是否已断）",
+        "permission": [],
+        "isPublic": false,
+        "action": "",
+        "params": [
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "页码，从 1 开始",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "每页条数",
+            "example": 10
+          }
+        ],
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3100/api/sse/online-count?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "page": 1,
+            "pageSize": 10
+          }
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/api/sse/stream",
+        "summary": "SSE 连接入口：`GET /sse/stream?token=<accessToken>`。 前端 `new EventSource(url)` 即可；断线由浏览器自动重连（onerror 里兜底退避）",
+        "permission": [],
+        "isPublic": true,
+        "action": "",
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3100/api/sse/stream\"",
+          "isRawResponse": true
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/api/sse/topics",
+        "summary": "订阅 / 退订主题（当前仅 metrics；前端监控页挂载/卸载时调用）",
+        "permission": [],
+        "isPublic": false,
+        "action": "",
+        "examples": {
+          "curl": "curl -X POST \"http://localhost:3100/api/sse/topics\" \\\n  -H \"Authorization: Bearer <accessToken>\""
         }
       }
     ]

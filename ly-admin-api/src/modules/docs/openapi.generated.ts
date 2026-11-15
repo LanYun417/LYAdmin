@@ -72,6 +72,12 @@ export const OPENAPI_DOC: Record<string, unknown> = {
     },
     {
       "name": "部门/岗位管理"
+    },
+    {
+      "name": "下载中心"
+    },
+    {
+      "name": "Sse"
     }
   ],
   "paths": {
@@ -1441,6 +1447,100 @@ export const OPENAPI_DOC: Record<string, unknown> = {
                 "schema": {
                   "type": "string",
                   "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/users/search": {
+      "get": {
+        "tags": [
+          "用户管理"
+        ],
+        "summary": "用户搜索（公告「指定用户」选择器）。 仅登录即可访问（全局鉴权守卫保证），按用户名 / 昵称 / id 模糊匹配，返回最小化字段。 必须声明在 `@Get(':id')` **之前**，否则 `search` 会被 `:id` 吃掉",
+        "operationId": "get__api_users_search",
+        "parameters": [
+          {
+            "name": "trim",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "description": "页码"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 10
+            },
+            "description": "每页条数"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功（统一信封 { code, message, data }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "业务码，0 表示成功"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "list": {
+                          "type": "array",
+                          "items": {}
+                        },
+                        "total": {
+                          "type": "integer",
+                          "example": 0
+                        },
+                        "page": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "pageSize": {
+                          "type": "integer",
+                          "example": 10
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
                 }
               }
             }
@@ -5294,6 +5394,80 @@ export const OPENAPI_DOC: Record<string, unknown> = {
         ]
       }
     },
+    "/api/files/chunk/status": {
+      "get": {
+        "tags": [
+          "文件管理"
+        ],
+        "summary": "分片状态：已上传的序号列表（断点续传的依据）",
+        "operationId": "get__api_files_chunk_status",
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "示例值"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功（统一信封 { code, message, data }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "业务码，0 表示成功"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "list": {
+                          "type": "array",
+                          "items": {}
+                        },
+                        "total": {
+                          "type": "integer",
+                          "example": 0
+                        },
+                        "page": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "pageSize": {
+                          "type": "integer",
+                          "example": 10
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
     "/api/files/quota": {
       "get": {
         "tags": [
@@ -5530,6 +5704,168 @@ export const OPENAPI_DOC: Record<string, unknown> = {
                           "example": 10
                         }
                       }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/files/chunk": {
+      "post": {
+        "tags": [
+          "文件管理"
+        ],
+        "summary": "分片上传（单片）。 前端把大文件切成 chunkSize 的片后逐片提交（字段名 `file`）， 中断后凭 identifier 查 chunk/status 续传，全部到齐后调 chunk/merge",
+        "operationId": "post__api_files_chunk",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChunkUploadDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功（统一信封 { code, message, data }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "业务码，0 表示成功"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/ChunkUploadDto"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "文件管理"
+        ],
+        "summary": "取消上传：清理该标识的全部分片（幂等）",
+        "operationId": "delete__api_files_chunk",
+        "parameters": [
+          {
+            "name": "identifier",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "示例值"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功（统一信封 { code, message, data }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "业务码，0 表示成功"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {}
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/files/chunk/merge": {
+      "post": {
+        "tags": [
+          "文件管理"
+        ],
+        "summary": "合并分片：拼合 → 大小核对 → 流式哈希 → 秒传去重 → 落库",
+        "operationId": "post__api_files_chunk_merge",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MergeChunkDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功（统一信封 { code, message, data }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "业务码，0 表示成功"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/MergeChunkDto"
                     }
                   },
                   "required": [
@@ -5964,6 +6300,144 @@ export const OPENAPI_DOC: Record<string, unknown> = {
         ]
       }
     },
+    "/api/profile": {
+      "get": {
+        "tags": [
+          "个人中心"
+        ],
+        "summary": "个人中心详情：账户 + 扩展资料 + 会话画像。 「本机」标记的 sid 来自守卫写入的 req.tokenSid（当前请求令牌的会话）",
+        "operationId": "get__api_profile",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "description": "页码"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 10
+            },
+            "description": "每页条数"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功（统一信封 { code, message, data }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "业务码，0 表示成功"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "list": {
+                          "type": "array",
+                          "items": {}
+                        },
+                        "total": {
+                          "type": "integer",
+                          "example": 0
+                        },
+                        "page": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "pageSize": {
+                          "type": "integer",
+                          "example": 10
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "个人中心"
+        ],
+        "summary": "修改资料",
+        "operationId": "put__api_profile",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功（统一信封 { code, message, data }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "业务码，0 表示成功"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/UpdateProfileDto"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
     "/api/profile/avatar": {
       "post": {
         "tags": [
@@ -6007,19 +6481,19 @@ export const OPENAPI_DOC: Record<string, unknown> = {
         ]
       }
     },
-    "/api/profile": {
+    "/api/profile/extra": {
       "put": {
         "tags": [
           "个人中心"
         ],
-        "summary": "修改资料",
-        "operationId": "put__api_profile",
+        "summary": "更新扩展资料（简介 / 生日 / 公司 / 职位 / 所在地）",
+        "operationId": "put__api_profile_extra",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateProfileDto"
+                "$ref": "#/components/schemas/UpdateProfileExtraDto"
               }
             }
           }
@@ -6042,7 +6516,7 @@ export const OPENAPI_DOC: Record<string, unknown> = {
                       "example": "success"
                     },
                     "data": {
-                      "$ref": "#/components/schemas/UpdateProfileDto"
+                      "$ref": "#/components/schemas/UpdateProfileExtraDto"
                     }
                   },
                   "required": [
@@ -6099,6 +6573,60 @@ export const OPENAPI_DOC: Record<string, unknown> = {
                     "data": {
                       "$ref": "#/components/schemas/ChangePasswordDto"
                     }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/profile/sessions/{id}": {
+      "delete": {
+        "tags": [
+          "个人中心"
+        ],
+        "summary": "下线自己的某个会话（「踢掉其他设备」）。 sid 归属校验在 service 内完成；当前会话不允许踢自己下线之外的设备没有限制—— 想踢当前设备也可以（多标签页场景有用），届时另一个标签页下次请求即失效",
+        "operationId": "delete__api_profile_sessions__id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "路径参数 id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功（统一信封 { code, message, data }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "业务码，0 表示成功"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {}
                   },
                   "required": [
                     "code",
@@ -7624,6 +8152,393 @@ export const OPENAPI_DOC: Record<string, unknown> = {
           }
         ]
       }
+    },
+    "/api/export-tasks": {
+      "get": {
+        "tags": [
+          "下载中心"
+        ],
+        "summary": "我的导出任务（分页）",
+        "operationId": "get__api_export_tasks",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "example": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "example": 1
+            }
+          },
+          {
+            "name": "module",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "示例值"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功（统一信封 { code, message, data }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "业务码，0 表示成功"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "list": {
+                          "type": "array",
+                          "items": {}
+                        },
+                        "total": {
+                          "type": "integer",
+                          "example": 0
+                        },
+                        "page": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "pageSize": {
+                          "type": "integer",
+                          "example": 10
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "下载中心"
+        ],
+        "summary": "创建导出任务（秒回；生成与通知在后台进行）",
+        "operationId": "post__api_export_tasks",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateExportTaskDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功（统一信封 { code, message, data }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "业务码，0 表示成功"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/CreateExportTaskDto"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/export-tasks/{id}/download": {
+      "get": {
+        "tags": [
+          "下载中心"
+        ],
+        "summary": "下载导出文件（res.download 底层 send 库，Range 断点续传天然支持）",
+        "operationId": "get__api_export_tasks__id_download",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "路径参数 id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "文件流（CSV / ZIP / 附件），响应体为二进制，无 JSON 信封",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/export-tasks/{id}": {
+      "delete": {
+        "tags": [
+          "下载中心"
+        ],
+        "summary": "删除任务（记录与文件一并删除）",
+        "operationId": "delete__api_export_tasks__id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "路径参数 id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功（统一信封 { code, message, data }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "业务码，0 表示成功"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {}
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/sse/online-count": {
+      "get": {
+        "tags": [
+          "Sse"
+        ],
+        "summary": "当前在线连接数（健康检查用：前端可对比判断 SSE 是否已断）",
+        "operationId": "get__api_sse_online_count",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "description": "页码"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 10
+            },
+            "description": "每页条数"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功（统一信封 { code, message, data }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "业务码，0 表示成功"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "list": {
+                          "type": "array",
+                          "items": {}
+                        },
+                        "total": {
+                          "type": "integer",
+                          "example": 0
+                        },
+                        "page": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "pageSize": {
+                          "type": "integer",
+                          "example": 10
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/sse/stream": {
+      "get": {
+        "tags": [
+          "Sse"
+        ],
+        "summary": "SSE 连接入口：`GET /sse/stream?token=<accessToken>`。 前端 `new EventSource(url)` 即可；断线由浏览器自动重连（onerror 里兜底退避）",
+        "operationId": "get__api_sse_stream",
+        "responses": {
+          "200": {
+            "description": "文件流（CSV / ZIP / 附件），响应体为二进制，无 JSON 信封",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sse/topics": {
+      "post": {
+        "tags": [
+          "Sse"
+        ],
+        "summary": "订阅 / 退订主题（当前仅 metrics；前端监控页挂载/卸载时调用）",
+        "operationId": "post__api_sse_topics",
+        "responses": {
+          "200": {
+            "description": "成功（统一信封 { code, message, data }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "业务码，0 表示成功"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {}
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -7734,6 +8649,11 @@ export const OPENAPI_DOC: Record<string, unknown> = {
             "type": "string",
             "description": "备注（可空）",
             "example": "示例备注"
+          },
+          "maxDevices": {
+            "type": "string",
+            "description": "单用户登录设备数上限：留空/null = 走全局 sys.login.maxDevices，0 = 不限制",
+            "example": "示例值"
           }
         },
         "required": [
@@ -7789,6 +8709,11 @@ export const OPENAPI_DOC: Record<string, unknown> = {
             "type": "string",
             "description": "备注（可空）",
             "example": "示例备注"
+          },
+          "maxDevices": {
+            "type": "string",
+            "description": "单用户登录设备数上限：留空/null = 走全局 sys.login.maxDevices，0 = 不限制",
+            "example": "示例值"
           }
         },
         "required": [
@@ -7899,6 +8824,11 @@ export const OPENAPI_DOC: Record<string, unknown> = {
           "remark": {
             "type": "string",
             "example": "示例备注"
+          },
+          "maxDevices": {
+            "type": "string",
+            "description": "角色级登录设备数上限：留空/null = 未设置（走全局），0 = 不限制",
+            "example": "示例值"
           }
         },
         "required": [
@@ -7954,6 +8884,11 @@ export const OPENAPI_DOC: Record<string, unknown> = {
           "remark": {
             "type": "string",
             "example": "示例备注"
+          },
+          "maxDevices": {
+            "type": "string",
+            "description": "角色级登录设备数上限：留空/null = 未设置（走全局），0 = 不限制",
+            "example": "示例值"
           }
         },
         "required": [
@@ -7984,6 +8919,10 @@ export const OPENAPI_DOC: Record<string, unknown> = {
           "menuName": {
             "type": "string",
             "example": "示例菜单"
+          },
+          "menuNameEn": {
+            "type": "string",
+            "example": "示例值"
           },
           "menuType": {
             "type": "string",
@@ -8222,6 +9161,85 @@ export const OPENAPI_DOC: Record<string, unknown> = {
           "configName"
         ]
       },
+      "ChunkUploadDto": {
+        "type": "object",
+        "properties": {
+          "identifier": {
+            "type": "string",
+            "description": "上传标识：同一文件的各分片必须一致（建议用文件内容的采样哈希）",
+            "example": "示例值"
+          },
+          "chunkIndex": {
+            "type": "number",
+            "description": "分片序号（从 0 开始）",
+            "example": 1
+          },
+          "totalChunks": {
+            "type": "number",
+            "description": "分片总数（1-10000）",
+            "example": 1
+          },
+          "filename": {
+            "type": "string",
+            "description": "原始文件名（决定落盘扩展名分组与对外名称，按扩展名白名单校验）",
+            "example": "示例值"
+          },
+          "totalSize": {
+            "type": "number",
+            "description": "文件总大小（字节）：合并时逐字节核对，防止缺片/错片",
+            "example": 1
+          }
+        },
+        "required": [
+          "identifier",
+          "chunkIndex",
+          "totalChunks",
+          "filename",
+          "totalSize"
+        ]
+      },
+      "MergeChunkDto": {
+        "type": "object",
+        "properties": {
+          "identifier": {
+            "type": "string",
+            "example": "示例值"
+          },
+          "totalChunks": {
+            "type": "number",
+            "example": 1
+          },
+          "filename": {
+            "type": "string",
+            "example": "示例值"
+          },
+          "totalSize": {
+            "type": "number",
+            "example": 1
+          },
+          "mimeType": {
+            "type": "string",
+            "description": "文件 MIME（决定白名单校验；浏览器 `file.type`，为空串时按不允许处理，与直传同口径）",
+            "example": "示例值"
+          },
+          "bizType": {
+            "type": "string",
+            "description": "业务类型：同直传的 UploadBizDto",
+            "example": "示例值"
+          },
+          "bizId": {
+            "type": "number",
+            "description": "业务主键",
+            "example": 1
+          }
+        },
+        "required": [
+          "identifier",
+          "totalChunks",
+          "filename",
+          "totalSize"
+        ]
+      },
       "UploadBizDto": {
         "type": "object",
         "properties": {
@@ -8351,6 +9369,36 @@ export const OPENAPI_DOC: Record<string, unknown> = {
           "nickname"
         ]
       },
+      "UpdateProfileExtraDto": {
+        "type": "object",
+        "properties": {
+          "signature": {
+            "type": "string",
+            "description": "个人简介（签名）：空串表示清空。",
+            "example": "示例值"
+          },
+          "birthday": {
+            "type": "string",
+            "description": "生日：`YYYY-MM-DD`；空串 / 不传表示保留或清空（null 清空）。",
+            "example": "示例值"
+          },
+          "company": {
+            "type": "string",
+            "description": "公司 / 组织：空串表示清空。",
+            "example": "示例值"
+          },
+          "position": {
+            "type": "string",
+            "description": "职位 / 岗位：空串表示清空。",
+            "example": "示例值"
+          },
+          "address": {
+            "type": "string",
+            "description": "所在地：空串表示清空。",
+            "example": "示例值"
+          }
+        }
+      },
       "ChangePasswordDto": {
         "type": "object",
         "properties": {
@@ -8408,6 +9456,29 @@ export const OPENAPI_DOC: Record<string, unknown> = {
         "required": [
           "deptType",
           "deptName"
+        ]
+      },
+      "CreateExportTaskDto": {
+        "type": "object",
+        "properties": {
+          "module": {
+            "type": "string",
+            "description": "导出模块（决定用哪类日志的查询与表头）。",
+            "example": "示例值"
+          },
+          "query": {
+            "type": "string",
+            "description": "筛选条件快照：前端把列表页当前的查询原样传来，后台按同一套 where 导出。 限深限长：只接受「键字符集合法 + 值为原始类型」的浅层对象， 拒绝嵌套对象/数组（导出条件不需要复杂结构，拒绝可防意外与滥用）。",
+            "example": "示例值"
+          },
+          "timezoneOffset": {
+            "type": "number",
+            "description": "时区偏移（分钟）：CSV 时间列按此时区格式化，与请求头同一口径。",
+            "example": 1
+          }
+        },
+        "required": [
+          "module"
         ]
       }
     }
