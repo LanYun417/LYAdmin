@@ -1,5 +1,5 @@
 <script setup lang="ts">
-/** 近 7 日登录趋势折线图。模块职责：渲染登录次数折线并标注峰值点。 */
+/** 单序列趋势折线图。模块职责：渲染一条折线（登录次数 / 活跃用户等）并标注峰值点。 */
 
 import { throttle } from 'lodash-es';
 
@@ -10,10 +10,15 @@ import type { LoginTrend } from '@/types/api';
 
 defineOptions({ name: 'TrendChart' });
 
-const props = defineProps<{
-  /** 登录趋势数据 */
-  data: LoginTrend;
-}>();
+const props = withDefaults(
+  defineProps<{
+    /** 趋势数据（dates ↔ counts 一一对应） */
+    data: LoginTrend;
+    /** 序列名称（tooltip / 图例 / 峰值标注用） */
+    name?: string;
+  }>(),
+  { name: '登录次数' },
+);
 
 const appStore = useAppStore();
 const chartRef = ref<HTMLDivElement>();
@@ -53,7 +58,7 @@ function render(): void {
     },
     series: [
       {
-        name: '登录次数',
+        name: props.name,
         type: 'line',
         smooth: 0.4,
         symbol: 'circle',

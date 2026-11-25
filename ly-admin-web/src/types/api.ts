@@ -642,12 +642,23 @@ export interface DashboardStats {
   roleTotal: number;
   menuTotal: number;
   todayLoginCount: number;
+  /** 今日 HTTP 请求总量 */
+  todayRequestCount: number;
+  /** 今日接口错误数（status >= 400） */
+  todayErrorCount: number;
 }
 
 /** 登录趋势 */
 export interface LoginTrend {
   dates: string[];
   counts: number[];
+}
+
+/** 请求量 / 错误数趋势（requests[i] 与 errors[i] 对应 dates[i]） */
+export interface RequestTrend {
+  dates: string[];
+  requests: number[];
+  errors: number[];
 }
 
 /** 名称-数值对（饼图） */

@@ -153,6 +153,10 @@ export interface DashboardStats {
   roleTotal: number;
   menuTotal: number;
   todayLoginCount: number;
+  /** 今日 HTTP 请求总量 */
+  todayRequestCount: number;
+  /** 今日接口错误数（status >= 400） */
+  todayErrorCount: number;
 }
 
 /** 带 children 的树节点。 */
