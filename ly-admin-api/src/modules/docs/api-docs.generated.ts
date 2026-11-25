@@ -12,6 +12,30 @@ export const API_DOCS: ApiDocGroup[] = [
     "endpoints": [
       {
         "method": "GET",
+        "path": "/api/dashboard/active-user-trend",
+        "summary": "活跃用户趋势",
+        "permission": [],
+        "isPublic": false,
+        "action": "",
+        "params": [
+          {
+            "name": "days",
+            "in": "query",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 7
+          }
+        ],
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3100/api/dashboard/active-user-trend?days=7\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "days": 7
+          }
+        }
+      },
+      {
+        "method": "GET",
         "path": "/api/dashboard/login-trend",
         "summary": "登录趋势",
         "permission": [],
@@ -64,6 +88,30 @@ export const API_DOCS: ApiDocGroup[] = [
           "query": {
             "page": 1,
             "pageSize": 10
+          }
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/api/dashboard/request-trend",
+        "summary": "请求量 / 错误数趋势",
+        "permission": [],
+        "isPublic": false,
+        "action": "",
+        "params": [
+          {
+            "name": "days",
+            "in": "query",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 7
+          }
+        ],
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3100/api/dashboard/request-trend?days=7\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "days": 7
           }
         }
       },
@@ -5041,6 +5089,279 @@ export const API_DOCS: ApiDocGroup[] = [
         ],
         "examples": {
           "curl": "curl -X DELETE \"http://localhost:3100/api/export-tasks/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "id": "1"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "group": "IP 访问控制",
+    "endpoints": [
+      {
+        "method": "GET",
+        "path": "/api/ip-rules",
+        "summary": "规则分页列表",
+        "permission": [
+          "monitor:ipRule:list"
+        ],
+        "isPublic": false,
+        "action": "",
+        "params": [
+          {
+            "name": "ip",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "ruleType",
+            "in": "query",
+            "type": "number",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "type": "number",
+            "required": false,
+            "description": "动态查询条件（运行时从 query 对象读取，类型依实现）"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "页码，从 1 开始",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "每页条数",
+            "example": 10
+          }
+        ],
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3100/api/ip-rules?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "page": 1,
+            "pageSize": 10
+          }
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/api/ip-rules/:id",
+        "summary": "规则详情",
+        "permission": [
+          "monitor:ipRule:list"
+        ],
+        "isPublic": false,
+        "action": "",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3100/api/ip-rules/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "id": "1"
+          }
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/api/ip-rules",
+        "summary": "新增规则",
+        "permission": [
+          "monitor:ipRule:add"
+        ],
+        "isPublic": false,
+        "action": "IP 访问控制 · 新增",
+        "params": [
+          {
+            "name": "ip",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "IP 或 CIDR 段",
+            "example": "示例值"
+          },
+          {
+            "name": "ruleType",
+            "in": "body",
+            "type": "number",
+            "required": true,
+            "description": "规则类型：1 黑名单 / 2 白名单",
+            "example": 1
+          },
+          {
+            "name": "remark",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "备注（封禁原因等）",
+            "example": "示例备注"
+          },
+          {
+            "name": "expiresAt",
+            "in": "body",
+            "type": "string | null",
+            "required": false,
+            "description": "过期时间（ISO 字符串；不传表示永久）",
+            "example": "示例值"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X POST \"http://localhost:3100/api/ip-rules\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"ip\": \"示例值\",\n      \"ruleType\": 1,\n      \"remark\": \"示例备注\",\n      \"expiresAt\": \"示例值\"\n    }'",
+          "requestBody": {
+            "ip": "示例值",
+            "ruleType": 1,
+            "remark": "示例备注",
+            "expiresAt": "示例值"
+          }
+        }
+      },
+      {
+        "method": "PUT",
+        "path": "/api/ip-rules/:id",
+        "summary": "编辑规则（IP 不可改）",
+        "permission": [
+          "monitor:ipRule:edit"
+        ],
+        "isPublic": false,
+        "action": "IP 访问控制 · 编辑",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          },
+          {
+            "name": "ruleType",
+            "in": "body",
+            "type": "number",
+            "required": true,
+            "description": "规则类型",
+            "example": 1
+          },
+          {
+            "name": "remark",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "备注",
+            "example": "示例备注"
+          },
+          {
+            "name": "expiresAt",
+            "in": "body",
+            "type": "string | null",
+            "required": false,
+            "description": "过期时间",
+            "example": "示例值"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X PUT \"http://localhost:3100/api/ip-rules/1\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"ruleType\": 1,\n      \"remark\": \"示例备注\",\n      \"expiresAt\": \"示例值\"\n    }'",
+          "pathParams": {
+            "id": "1"
+          },
+          "requestBody": {
+            "ruleType": 1,
+            "remark": "示例备注",
+            "expiresAt": "示例值"
+          }
+        }
+      },
+      {
+        "method": "PUT",
+        "path": "/api/ip-rules/:id/hit-reset",
+        "summary": "清空命中计数",
+        "permission": [
+          "monitor:ipRule:edit"
+        ],
+        "isPublic": false,
+        "action": "IP 访问控制 · 清零命中",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X PUT \"http://localhost:3100/api/ip-rules/1/hit-reset\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "id": "1"
+          }
+        }
+      },
+      {
+        "method": "PUT",
+        "path": "/api/ip-rules/:id/status",
+        "summary": "启停规则",
+        "permission": [
+          "monitor:ipRule:edit"
+        ],
+        "isPublic": false,
+        "action": "IP 访问控制 · 启停",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X PUT \"http://localhost:3100/api/ip-rules/1/status\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "id": "1"
+          }
+        }
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/ip-rules/:id",
+        "summary": "删除规则",
+        "permission": [
+          "monitor:ipRule:remove"
+        ],
+        "isPublic": false,
+        "action": "IP 访问控制 · 删除",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X DELETE \"http://localhost:3100/api/ip-rules/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
             "id": "1"
           }
