@@ -14,6 +14,7 @@ import { CommonModule } from './common/common.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { HttpAccessLoggerMiddleware } from './common/log/http-access-log.middleware.js';
 import { RateLimitMiddleware } from './common/http/rate-limit.middleware.js';
+import { IpAccessMiddleware } from './common/http/ip-access.middleware.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { MenuModule } from './modules/menu/menu.module.js';
 import { UsersModule } from './modules/users/users.module.js';
@@ -33,6 +34,7 @@ import { NoticeModule } from './modules/notice/notice.module.js';
 import { TaskModule } from './modules/task/task.module.js';
 import { SseModule } from './modules/sse/sse.module.js';
 import { ExportModule } from './modules/export/export.module.js';
+import { IpRuleModule } from './modules/ip-rule/ip-rule.module.js';
 
 @Module({
   imports: [
@@ -61,6 +63,7 @@ import { ExportModule } from './modules/export/export.module.js';
     TaskModule,
     SseModule,
     ExportModule,
+    IpRuleModule,
   ],
   providers: [
     // 守卫顺序：先鉴权（挂 req.user），再校验权限码
@@ -81,6 +84,9 @@ export class AppModule implements NestModule {
     // 视作 `/api/*` 并每次启动打一条路由转换告警（自动转成 `/api/{*path}`）。
     // 显式写等价形式即可消警，实际覆盖范围不变（仅 /api 下的请求；静态资源不计入访问日志）。
     consumer.apply(HttpAccessLoggerMiddleware).forRoutes('{*path}');
+
+    // IP 访问控制：访问日志之后（被拦截的请求也留痕）、限流之前（黑名单直接 403，不消耗限流额度）
+    consumer.apply(IpAccessMiddleware).forRoutes('{*path}');
 
     // 接口限流：注册在访问日志之后 → 被限流的请求同样留下访问记录，便于排查刷量来源
     consumer.apply(RateLimitMiddleware).forRoutes('{*path}');

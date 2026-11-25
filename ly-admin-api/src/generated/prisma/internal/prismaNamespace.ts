@@ -402,6 +402,7 @@ export const ModelName = {
   SysConfig: 'SysConfig',
   ExportTask: 'ExportTask',
   File: 'File',
+  IpRule: 'IpRule',
   LoginLog: 'LoginLog',
   OperationLog: 'OperationLog',
   HttpLog: 'HttpLog',
@@ -431,7 +432,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "dictType" | "dictItem" | "sysConfig" | "exportTask" | "file" | "loginLog" | "operationLog" | "httpLog" | "notice" | "user" | "role" | "menu" | "dept" | "userRole" | "roleMenu" | "roleDept" | "userMenu" | "taskLog" | "userProfile"
+    modelProps: "dictType" | "dictItem" | "sysConfig" | "exportTask" | "file" | "ipRule" | "loginLog" | "operationLog" | "httpLog" | "notice" | "user" | "role" | "menu" | "dept" | "userRole" | "roleMenu" | "roleDept" | "userMenu" | "taskLog" | "userProfile"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -762,6 +763,72 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.FileCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.FileCountAggregateOutputType> | number
+        }
+      }
+    }
+    IpRule: {
+      payload: Prisma.$IpRulePayload<ExtArgs>
+      fields: Prisma.IpRuleFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.IpRuleFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IpRulePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.IpRuleFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IpRulePayload>
+        }
+        findFirst: {
+          args: Prisma.IpRuleFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IpRulePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.IpRuleFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IpRulePayload>
+        }
+        findMany: {
+          args: Prisma.IpRuleFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IpRulePayload>[]
+        }
+        create: {
+          args: Prisma.IpRuleCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IpRulePayload>
+        }
+        createMany: {
+          args: Prisma.IpRuleCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        delete: {
+          args: Prisma.IpRuleDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IpRulePayload>
+        }
+        update: {
+          args: Prisma.IpRuleUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IpRulePayload>
+        }
+        deleteMany: {
+          args: Prisma.IpRuleDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.IpRuleUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        upsert: {
+          args: Prisma.IpRuleUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$IpRulePayload>
+        }
+        aggregate: {
+          args: Prisma.IpRuleAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateIpRule>
+        }
+        groupBy: {
+          args: Prisma.IpRuleGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.IpRuleGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.IpRuleCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.IpRuleCountAggregateOutputType> | number
         }
       }
     }
@@ -1809,6 +1876,22 @@ export const FileScalarFieldEnum = {
 export type FileScalarFieldEnum = (typeof FileScalarFieldEnum)[keyof typeof FileScalarFieldEnum]
 
 
+export const IpRuleScalarFieldEnum = {
+  id: 'id',
+  ip: 'ip',
+  ruleType: 'ruleType',
+  remark: 'remark',
+  status: 'status',
+  expiresAt: 'expiresAt',
+  hitCount: 'hitCount',
+  createdBy: 'createdBy',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type IpRuleScalarFieldEnum = (typeof IpRuleScalarFieldEnum)[keyof typeof IpRuleScalarFieldEnum]
+
+
 export const LoginLogScalarFieldEnum = {
   id: 'id',
   username: 'username',
@@ -2122,6 +2205,14 @@ export const FileOrderByRelevanceFieldEnum = {
 } as const
 
 export type FileOrderByRelevanceFieldEnum = (typeof FileOrderByRelevanceFieldEnum)[keyof typeof FileOrderByRelevanceFieldEnum]
+
+
+export const IpRuleOrderByRelevanceFieldEnum = {
+  ip: 'ip',
+  remark: 'remark'
+} as const
+
+export type IpRuleOrderByRelevanceFieldEnum = (typeof IpRuleOrderByRelevanceFieldEnum)[keyof typeof IpRuleOrderByRelevanceFieldEnum]
 
 
 export const LoginLogOrderByRelevanceFieldEnum = {
@@ -2455,6 +2546,7 @@ export type GlobalOmitConfig = {
   sysConfig?: Prisma.SysConfigOmit
   exportTask?: Prisma.ExportTaskOmit
   file?: Prisma.FileOmit
+  ipRule?: Prisma.IpRuleOmit
   loginLog?: Prisma.LoginLogOmit
   operationLog?: Prisma.OperationLogOmit
   httpLog?: Prisma.HttpLogOmit

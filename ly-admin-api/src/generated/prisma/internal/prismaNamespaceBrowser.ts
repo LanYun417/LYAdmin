@@ -56,6 +56,7 @@ export const ModelName = {
   SysConfig: 'SysConfig',
   ExportTask: 'ExportTask',
   File: 'File',
+  IpRule: 'IpRule',
   LoginLog: 'LoginLog',
   OperationLog: 'OperationLog',
   HttpLog: 'HttpLog',
@@ -167,6 +168,22 @@ export const FileScalarFieldEnum = {
 } as const
 
 export type FileScalarFieldEnum = (typeof FileScalarFieldEnum)[keyof typeof FileScalarFieldEnum]
+
+
+export const IpRuleScalarFieldEnum = {
+  id: 'id',
+  ip: 'ip',
+  ruleType: 'ruleType',
+  remark: 'remark',
+  status: 'status',
+  expiresAt: 'expiresAt',
+  hitCount: 'hitCount',
+  createdBy: 'createdBy',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type IpRuleScalarFieldEnum = (typeof IpRuleScalarFieldEnum)[keyof typeof IpRuleScalarFieldEnum]
 
 
 export const LoginLogScalarFieldEnum = {
@@ -482,6 +499,14 @@ export const FileOrderByRelevanceFieldEnum = {
 } as const
 
 export type FileOrderByRelevanceFieldEnum = (typeof FileOrderByRelevanceFieldEnum)[keyof typeof FileOrderByRelevanceFieldEnum]
+
+
+export const IpRuleOrderByRelevanceFieldEnum = {
+  ip: 'ip',
+  remark: 'remark'
+} as const
+
+export type IpRuleOrderByRelevanceFieldEnum = (typeof IpRuleOrderByRelevanceFieldEnum)[keyof typeof IpRuleOrderByRelevanceFieldEnum]
 
 
 export const LoginLogOrderByRelevanceFieldEnum = {

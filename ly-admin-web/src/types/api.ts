@@ -617,6 +617,43 @@ export interface OnlineQuery extends PageQuery {
   ip?: string;
 }
 
+/* ------------------------------- IP 访问控制 ------------------------------- */
+
+/** IP 访问控制规则（GET /ip-rules） */
+export interface IpRuleItem {
+  id: number;
+  /** IP 或 CIDR 段 */
+  ip: string;
+  /** 1 黑名单 / 2 白名单 */
+  ruleType: number;
+  remark: string | null;
+  /** 1 启用 / 0 停用 */
+  status: number;
+  /** 过期时间（null = 永久） */
+  expiresAt: string | null;
+  /** 是否已因时间或状态失效（展示用） */
+  expired: boolean;
+  hitCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** IP 规则查询参数 */
+export interface IpRuleQuery extends PageQuery {
+  ip?: string;
+  ruleType?: number;
+  status?: number;
+}
+
+/** IP 规则新增入参 */
+export interface IpRuleUpsert {
+  ip: string;
+  ruleType: number;
+  remark?: string;
+  /** ISO 时间字符串；null 表示永久 */
+  expiresAt?: string | null;
+}
+
 /** 上传配额（GET /files/quota） */
 export interface FileQuota {
   /** 已用字节 */

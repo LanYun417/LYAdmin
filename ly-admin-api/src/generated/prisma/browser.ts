@@ -43,6 +43,11 @@ export type ExportTask = Prisma.ExportTaskModel
  */
 export type File = Prisma.FileModel
 /**
+ * Model IpRule
+ * IP 访问控制规则表（黑名单拦截请求；白名单绕过限流，且豁免黑名单误封）
+ */
+export type IpRule = Prisma.IpRuleModel
+/**
  * Model LoginLog
  * 登录日志表
  */

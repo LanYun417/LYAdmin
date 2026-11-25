@@ -1,0 +1,32 @@
+// use prisma-next
+// ↑ 首行不可删：VS Code 的 Prisma 扩展按文件判定是否启用 Prisma 7 语言服务，
+//   缺失会回落到 v6 语义并误报 `Argument "url" is missing in data source block "db"`。
+//
+// IP 访问控制：黑名单 / 白名单规则
+// 公共约定（snake_case 映射 / 哨兵值 / 注释落库）见 base.prisma。
+/// IP 访问控制规则表（黑名单拦截请求；白名单绕过限流，且豁免黑名单误封）
+model IpRule {
+  /// 主键
+  id         BigInt   @id @default(autoincrement()) @db.BigInt
+  /// IP 或 CIDR 段（如 192.168.1.1 / 10.0.0.0/8）
+  ip         String   @unique @db.VarChar(100)
+  /// 规则类型：1 黑名单 / 2 白名单
+  ruleType   Int      @map("rule_type") @db.TinyInt
+  /// 备注（封禁原因等）
+  remark     String?  @db.VarChar(255)
+  /// 1 启用 / 0 停用
+  status     Int      @default(1) @db.TinyInt
+  /// 过期时间（NULL = 永久生效）
+  expiresAt  DateTime? @map("expires_at")
+  /// 命中次数（累计；由访问控制中间件异步累加）
+  hitCount   Int      @default(0) @map("hit_count")
+  /// 创建人 id（0 = 系统）
+  createdBy  BigInt   @default(0) @map("created_by") @db.BigInt
+  /// 创建时间
+  createdAt  DateTime @default(now()) @map("created_at")
+  /// 更新时间
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@index([ruleType, status])
+  @@map("sys_ip_rule")
+}

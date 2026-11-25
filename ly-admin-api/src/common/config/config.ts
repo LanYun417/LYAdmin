@@ -270,6 +270,18 @@ export const config = {
     /** 单窗口内单 IP 的默认上限（登录/验证码/文档等敏感接口另有收紧值，见中间件） */
     max: toNumber(process.env.RATE_LIMIT_MAX, 300),
   },
+  /** IP 访问控制（黑名单拦截 / 白名单放行，规则来自 sys_ip_rule 表） */
+  ipAccess: {
+    enabled: toBoolean(process.env.IP_ACCESS_ENABLED, true),
+    /**
+     * 永不封禁的 IP / CIDR（逗号分隔），防管理员把自己或其他出口 IP 误封在网络之外。
+     * 只在「静态豁免」层生效：这些 IP 跳过黑名单判定，但仍受限流约束。
+     */
+    exemptIps: (process.env.IP_ACCESS_EXEMPT_IPS ?? '')
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean),
+  },
   /**
    * 口令策略（新增用户 / 重置密码 / 自助改密共用，见 common/auth/password-policy.ts）。
    * 只约束**新设置**的口令，不影响存量账号登录。

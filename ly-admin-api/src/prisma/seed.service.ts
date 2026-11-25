@@ -443,6 +443,42 @@ const MENU_TREE: MenuSeedNode[] = [
         // 不缓存：页面每次进入重新取指标并重建定时器，避免看到已停止刷新的旧曲线
         keepAlive: 0,
       },
+      {
+        key: 'monitor:ip-rule',
+        menuName: 'IP 访问控制',
+        menuNameEn: 'IP Access Control',
+        menuType: MenuType.MENU,
+        path: '/monitor/ip-rule',
+        component: 'monitor/ip-rule/index',
+        icon: 'shield-lock',
+        permission: 'monitor:ipRule:list',
+        sort: 3,
+        visible: Status.ENABLED,
+        keepAlive: 1,
+        children: [
+          {
+            key: 'monitor:ipRule:add',
+            menuName: '新增规则',
+            menuType: MenuType.BUTTON,
+            permission: 'monitor:ipRule:add',
+            sort: 1,
+          },
+          {
+            key: 'monitor:ipRule:edit',
+            menuName: '编辑规则',
+            menuType: MenuType.BUTTON,
+            permission: 'monitor:ipRule:edit',
+            sort: 2,
+          },
+          {
+            key: 'monitor:ipRule:remove',
+            menuName: '删除规则',
+            menuType: MenuType.BUTTON,
+            permission: 'monitor:ipRule:remove',
+            sort: 3,
+          },
+        ],
+      },
     ],
   },
   {
