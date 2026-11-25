@@ -7,7 +7,6 @@
  * 有 link 的在弹窗里提供「前往查看」。更多请进通知中心。
  */
 import { ElMessage } from '@/utils/element';
-import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { getNoticeListApi, markAllNoticesReadApi, markNoticeReadApi } from '@/api/notice';
 import { useNoticeStore } from '@/store/modules/notice';

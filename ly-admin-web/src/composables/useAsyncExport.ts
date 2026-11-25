@@ -7,7 +7,6 @@
  * 两者数据口径完全一致（后端同一套 where / 游标分页 / 上限预检），
  * 区别只在「谁等结果」——用户按数据量自选。
  */
-import { useRouter } from 'vue-router';
 import { ElMessage } from '@/utils/element';
 import { createExportTaskApi, type ExportModuleKey } from '@/api/exportTask';
 

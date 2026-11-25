@@ -9,7 +9,6 @@
  * 为什么放 App.vue 根组件：连接生命周期与「登录态」严格一致——
  * 登录建立、登出关闭；放在页面级会随路由切换反复重连。
  */
-import { onBeforeUnmount, watch } from 'vue';
 import { useUserStore } from '@/store/modules/user';
 import { useNoticeStore } from '@/store/modules/notice';
 import { SseEventName, closeSse, connectSse, onSseEvent } from '@/utils/sse';

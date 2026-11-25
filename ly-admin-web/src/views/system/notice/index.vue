@@ -5,7 +5,6 @@
  * 未读数与顶栏铃铛共用 notice store，任何写操作后同步，避免红点与列表不一致。
  */
 import { ElMessage, ElMessageBox } from '@/utils/element';
-import { useRouter } from 'vue-router';
 import {
   clearNoticesApi,
   deleteNoticeApi,

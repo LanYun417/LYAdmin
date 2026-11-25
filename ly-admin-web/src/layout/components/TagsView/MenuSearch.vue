@@ -4,7 +4,6 @@
  * 数据取已注册路由中「有标题且未隐藏」的页面菜单（排除带参动态路由），
  * 支持按中文名 / 英文名（menuNameEn）模糊搜索，展示跟随当前语言，点击即跳转。
  */
-import { useRouter } from 'vue-router';
 import type { InputInstance } from 'element-plus';
 import type { AppRouteMeta } from '@/types/router';
 import { useAppStore } from '@/store/modules/app';

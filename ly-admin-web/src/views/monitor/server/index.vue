@@ -591,9 +591,10 @@ async function handleRefresh(): Promise<void> {
             <!-- 每核使用率：核多时用条形小图，一眼看出是否有单核打满 -->
             <div v-if="metrics && metrics.cpu.perCore.length > 1" class="mt-2">
               <div class="flex flex-wrap gap-1">
+                <!-- 每核色块用「CPU 核号」作语义化 key（核号即稳定身份，非数组下标语义），避免直接用 index -->
                 <span
                   v-for="(core, index) in metrics.cpu.perCore"
-                  :key="index"
+                  :key="`cpu-${index}`"
                   class="inline-block h-3 w-3 rounded-sm"
                   :style="{ backgroundColor: core === null ? 'var(--el-fill-color)' : usageColor(core) }"
                   :title="`CPU${index}: ${core === null ? t('monitor.sampling') : `${core}%`}`"

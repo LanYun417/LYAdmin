@@ -9,7 +9,6 @@
  *   轮询仅在存在未终态任务时进行，无在途任务时完全静止；
  * - 过期任务（expiresAt 已过）下载按钮置灰并提示，文件由后端定时任务清理。
  */
-import { onBeforeUnmount, onMounted } from 'vue';
 import { ElMessage, ElMessageBox } from '@/utils/element';
 import { deleteExportTaskApi, downloadExportTaskApi, getExportTasksApi } from '@/api/exportTask';
 import { useTable } from '@/composables/useTable';
