@@ -24,11 +24,19 @@ const WHITE_LIST: string[] = ['/login', '/403', '/404', '/500'];
  * @param router 路由实例
  */
 export function setupRouterGuard(router: Router): void {
-  router.beforeEach(async (to) => {
+  // 标题只跟随「已确认」的路由更新。动态路由尚未注入时，深路径会先匹配 catch-all；
+  // 若在 beforeEach 里设置标题，首次刷新会先把标签页写成「页面不存在」，再重定向到真实页面。
+  // afterEach 的 failure 非空表示导航被重定向 / 取消，此时不能采用这次匹配的 meta。
+  router.afterEach((to, _from, failure) => {
+    if (failure) {
+      return;
+    }
     const appTitle = import.meta.env.VITE_APP_TITLE || '蓝云后台管理系统';
     const pageTitle = (to.meta.title as string) || '';
     document.title = pageTitle ? `${pageTitle} - ${appTitle}` : appTitle;
+  });
 
+  router.beforeEach(async (to) => {
     const userStore = useUserStore();
     const permissionStore = usePermissionStore();
 

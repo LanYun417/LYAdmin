@@ -29,4 +29,40 @@ test.describe('桌面端冒烟', () => {
     await expect(page.getByText('下载中心').first()).toBeVisible({ timeout: 15_000 });
     await expect(page.locator('.el-table')).toBeVisible();
   });
+
+  test('深路径刷新：动态路由注入前不闪现 404 标题', async ({ page }) => {
+    // beforeEach 里若过早读取 catch-all 的 meta，首屏会先写一次「页面不存在」。
+    // 记录整段首屏的标题写入，而不只断言最终标题，防止漏掉这类瞬时回归。
+    await page.addInitScript(() => {
+      const titles: string[] = [];
+      Object.defineProperty(window, '__documentTitles', { value: titles });
+      const descriptor = Object.getOwnPropertyDescriptor(Document.prototype, 'title');
+      if (!descriptor?.get || !descriptor.set) {
+        return;
+      }
+      Object.defineProperty(document, 'title', {
+        configurable: true,
+        get() {
+          return descriptor.get!.call(this);
+        },
+        set(value: string) {
+          titles.push(value);
+          descriptor.set!.call(this, value);
+        },
+      });
+    });
+
+    await page.goto('/log/http');
+    await expect(page.locator('.el-table')).toBeVisible({ timeout: 15_000 });
+    await expect(page).toHaveTitle(/HTTP日志/);
+    const titles = await page.evaluate(() => {
+      return (window as unknown as { __documentTitles: string[] }).__documentTitles;
+    });
+    expect(titles).not.toContain('页面不存在 - 蓝云后台管理系统');
+
+    // 真正未知的路径在动态路由就绪后仍应正常进入 404，不能把兜底页一并屏蔽。
+    await page.goto('/this-route-does-not-exist');
+    await expect(page).toHaveTitle(/页面不存在/);
+    await expect(page.locator('h1')).toHaveText('404');
+  });
 });
