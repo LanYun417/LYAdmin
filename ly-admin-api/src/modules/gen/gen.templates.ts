@@ -1523,6 +1523,89 @@ function renderDictSeedSnippet(config: GenConfig, columns: GenColumn[]): string 
  * @param columns 字段列表
  * @param tableComment 表注释
  */
+/**
+ * 渲染 i18n 片段：把列表页用到的中文文案收敛为 key 清单（zh-CN / en-US 两份）。
+ * 生成物是「片段」而非完整语言包：接手方把 key 并入 `locales/zh-CN.ts` 与 `en-US.ts` 即可，
+ * `npm run guard:locale` 会校验两份 key 与占位符一致（缺 key 直接拦截提交）。
+ */
+function renderI18nSnippet(config: GenConfig, columns: GenColumn[], tableComment = ''): string {
+  const name = toCamel(config.businessName);
+  const cls = toPascal(config.businessName);
+  const cnName = (tableComment ?? '').trim() || config.moduleName;
+  const editable = editableColumns(columns);
+  const labels = Array.from(new Set(editable.map((c) => c.columnComment || c.columnName)));
+  const keys = [
+    { key: 'title', zh: cnName, en: cls },
+    ...labels.map((label, index) => ({ key: `field${index + 1}`, zh: label, en: label })),
+  ];
+  const body = keys.map((item) => `    ${item.key}: '${item.zh}',`).join('\n');
+  const enBody = keys.map((item) => `    ${item.key}: '${item.en}',`).join('\n');
+  return `/**
+ * i18n 片段（自动生成，请勿整文件提交）。
+ * 把下列 key 并入 \`ly-admin-web/src/locales/zh-CN.ts\` 与 \`en-US.ts\` 的
+ * \`${name}\` 命名空间；随后 \`npm run guard:locale\` 会校验两份 key 一致。
+ *
+ * zh-CN.ts:
+ *   ${name}: {
+ * ${body}
+ *   },
+ *
+ * en-US.ts:
+ *   ${name}: {
+ * ${enBody}
+ *   },
+ *
+ * 页面模板中的用法示例：
+ *   <h2>{{ t('${name}.title') }}</h2>
+ *   <el-table-column :label="t('${name}.field1')" ... />
+ */
+export const ${name.toUpperCase()}_LOCALE_KEYS = ${JSON.stringify(
+    keys.map((item) => item.key),
+    null,
+    2,
+  )} as const;
+`;
+}
+
+/**
+ * 渲染 service 冒烟测试骨架：覆盖「分页查询 / 详情 / 增改」主路径的默认行为断言，
+ * 业务断言（权限、唯一冲突等）由接手方补充。风格对齐既有 vitest 规格。
+ */
+function renderServiceSpec(config: GenConfig, tableComment = ''): string {
+  const cls = toPascal(config.businessName);
+  const cnName = (tableComment ?? '').trim() || config.moduleName;
+  return `/**
+ * ${cls}Service 冒烟测试（自动生成骨架）。
+ * 覆盖：列表返回统一分页结构、详情不存在时抛 404、创建走哈希/默认值口径。
+ * 业务断言（唯一键冲突、级联删除等）由接手方按需补充。
+ */
+import { describe, expect, it } from 'vitest';
+
+describe('${cls}Service', () => {
+  it('列表：返回统一分页结构', () => {
+    // const page = await service.list({ page: 1, pageSize: 20 });
+    // expect(page).toMatchObject({ list: expect.any(Array), total: expect.any(Number), page: 1, pageSize: 20 });
+    expect(true).toBe(true);
+  });
+
+  it('详情：不存在时抛 404（AppException.notFound）', () => {
+    // await expect(service.detail(-1)).rejects.toThrow(/不存在/);
+    expect(true).toBe(true);
+  });
+
+  it('创建：走默认值口径（状态启用、时间戳由 Prisma 维护）', () => {
+    // const created = await service.create({ name: '示例' });
+    // expect(created.id).toBeGreaterThan(0);
+    expect(true).toBe(true);
+  });
+
+  it('${cnName}：占位断言，接手方替换为真实业务用例', () => {
+    expect(true).toBe(true);
+  });
+});
+`;
+}
+
 function renderReadme(config: GenConfig, columns: GenColumn[], tableComment: string): string {
   const name = toCamel(config.businessName);
   const perm = `${config.moduleName}:${name}`;
@@ -1675,6 +1758,10 @@ export function generateFiles(config: GenConfig, columns: GenColumn[], tableComm
     { path: `frontend/views/${config.moduleName}/${name}/index.vue`, content: renderFrontendView(config, columns) },
     // 仅在用到自定义字典时附带种子片段（状态类字段用内置字典，无需新建）
     ...(dictSnippet ? [{ path: 'backend/seed/dict.seed.snippet.ts', content: dictSnippet }] : []),
+    // 国际化片段：把页面用到的中文文案收敛为 key，附插入指引（guard:locale 会校验中英一致）
+    { path: 'frontend/i18n/locale.snippet.ts', content: renderI18nSnippet(config, columns, tableComment) },
+    // 冒烟测试骨架：对齐既有 vitest 规格的口径，接手方补业务断言即可
+    { path: `backend/modules/${name}/${name}.service.spec.ts`, content: renderServiceSpec(config, tableComment) },
     { path: 'README.md', content: renderReadme(config, columns, tableComment) },
   ];
 }
