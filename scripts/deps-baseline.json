@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-15T07:12:35.580Z",
+  "generatedAt": "2026-11-26T05:55:58.296Z",
   "packages": {
     "package.json": {
       "dependencies": {},
@@ -45,6 +45,7 @@
         "ip2region.js": "^3.1.8",
         "jose": "^6.2.12",
         "multer": "^2.4.0",
+        "nodemailer": "^7.0.13",
         "redis": "^6.3.0",
         "reflect-metadata": "^0.2.2",
         "rxjs": "^7.8.1",
@@ -58,6 +59,7 @@
         "@types/express": "^5.0.0",
         "@types/multer": "^2.2.0",
         "@types/node": "^26.6.6",
+        "@types/nodemailer": "^7.0.12",
         "@types/supertest": "^7.0.0",
         "@vitest/coverage-v8": "^5.1.0",
         "oxlint": "^1.58.0",
