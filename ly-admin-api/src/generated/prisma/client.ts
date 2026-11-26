@@ -96,6 +96,24 @@ export type HttpLog = Prisma.HttpLogModel
  */
 export type Notice = Prisma.NoticeModel
 /**
+ * Model UserMfa
+ * 二次验证（TOTP）状态表（与 sys_user 一对一）。
+ * 密钥经 AES-256-GCM 信封加密后存放（见 common/crypto/secret-box.ts）——
+ * 明文落库等于所有人的二次验证形同虚设。
+ */
+export type UserMfa = Prisma.UserMfaModel
+/**
+ * Model SsoProvider
+ * SSO 提供方配置表。
+ * clientSecret 同样经 AES-256-GCM 信封加密存放（见 common/crypto/secret-box.ts）。
+ */
+export type SsoProvider = Prisma.SsoProviderModel
+/**
+ * Model UserSso
+ * 用户与 SSO 提供方的绑定关系（sub 为提供方体系内的稳定用户标识）。
+ */
+export type UserSso = Prisma.UserSsoModel
+/**
  * Model User
  * 用户表
  */

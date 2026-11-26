@@ -14,6 +14,7 @@ import ProfileForm from './components/ProfileForm.vue';
 import PasswordForm from './components/PasswordForm.vue';
 import ProfileExtraForm from './components/ProfileExtraForm.vue';
 import ProfileSessions from './components/ProfileSessions.vue';
+import MfaCard from './components/MfaCard.vue';
 import { withUploadToken } from '@/utils/uploadToken';
 import type { ProfileDetail } from '@/types/api';
 
@@ -154,6 +155,13 @@ async function handleAvatarUpload(options: UploadRequestOptions): Promise<void> 
             只读访客账号不支持自助修改密码，如需变更请联系超级管理员在「用户管理 → 重置密码」中处理。
           </p>
           <PasswordForm v-else />
+        </el-card>
+
+        <!-- 二次验证（TOTP）：绑定 / 解绑 / 恢复码管理 -->
+        <el-card shadow="never" class="mt-4">
+          <template #header>二次验证</template>
+          <MfaCard v-if="!userStore.isReadonlyGuest" />
+          <p v-else class="text-[13px] text-muted">只读访客账号不支持绑定二次验证。</p>
         </el-card>
 
         <!-- Sprint 5：扩展资料（资料域，独立于账户字段） -->

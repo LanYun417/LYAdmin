@@ -1,0 +1,71 @@
+// use prisma-next
+// ↑ 首行不可删：VS Code 的 Prisma 扩展按文件判定是否启用 Prisma 7 语言服务。
+//
+// 企业单点登录（SSO）：OIDC 提供方配置与账号绑定。
+// 公共约定（snake_case 映射 / 哨兵值 / 注释落库）见 base.prisma。
+
+/// SSO 提供方配置表。
+/// clientSecret 同样经 AES-256-GCM 信封加密存放（见 common/crypto/secret-box.ts）。
+model SsoProvider {
+  /// 主键
+  id             BigInt   @id @default(autoincrement()) @db.BigInt
+  /// 提供方名称（登录页按钮文案）
+  name           String   @db.VarChar(50)
+  /// 协议类型：oidc
+  protocol       String   @default("oidc") @db.VarChar(20)
+  /// OIDC issuer（用于发现或校验）
+  issuer         String   @db.VarChar(255)
+  /// 授权端点
+  authorizationUrl String @map("authorization_url") @db.VarChar(500)
+  /// 令牌端点
+  tokenUrl       String   @map("token_url") @db.VarChar(500)
+  /// 用户信息端点
+  userInfoUrl    String   @map("user_info_url") @db.VarChar(500)
+  /// JWKS 端点（校验 id_token；为空则跳过签名校验，仅用于内网自建提供方）
+  jwksUrl        String?  @map("jwks_url") @db.VarChar(500)
+  /// 客户端 id
+  clientId       String   @map("client_id") @db.VarChar(255)
+  /// 客户端密钥（信封加密）
+  clientSecret   String   @map("client_secret") @db.VarChar(500)
+  /// 授权请求 scope（空格分隔）
+  scopes         String   @default("openid profile email") @db.VarChar(255)
+  /// 回调地址（后端接收 code 的完整 URL）
+  redirectUri    String   @map("redirect_uri") @db.VarChar(500)
+  /// 用户字段映射配置（JSON：username/email/nickname/avatar 的 claim 名）
+  fieldMapping   String?  @map("field_mapping") @db.Text
+  /// 是否按邮箱自动绑定已有账号（1 是 / 0 否）
+  linkByEmail    Int      @default(1) @map("link_by_email") @db.TinyInt
+  /// 首次登录自动建号时授予的角色编码（逗号分隔）
+  defaultRoleCodes String? @map("default_role_codes") @db.VarChar(255)
+  /// 1 启用 / 0 停用
+  status         Int      @default(1) @db.TinyInt
+  /// 排序
+  sort           Int      @default(0)
+  /// 备注
+  remark         String?  @db.VarChar(255)
+  /// 创建时间
+  createdAt      DateTime @default(now()) @map("created_at")
+  /// 更新时间
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@index([status, sort])
+  @@map("sys_sso_provider")
+}
+
+/// 用户与 SSO 提供方的绑定关系（sub 为提供方体系内的稳定用户标识）。
+model UserSso {
+  /// 主键
+  id         BigInt   @id @default(autoincrement()) @db.BigInt
+  /// 本地用户 id
+  userId     BigInt   @map("user_id") @db.BigInt
+  /// 提供方 id
+  providerId BigInt   @map("provider_id") @db.BigInt
+  /// 提供方体系内的用户标识（sub claim）
+  subject    String   @db.VarChar(255)
+  /// 绑定时间
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@unique([providerId, subject])
+  @@index([userId])
+  @@map("sys_user_sso")
+}

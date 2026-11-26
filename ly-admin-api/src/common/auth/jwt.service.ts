@@ -57,6 +57,42 @@ export class JwtService {
   }
 
   /**
+   * 签发 MFA 挑战令牌（登录第一因子通过后、第二因子验证前的短时令牌）。
+   * 载荷带 `purpose: 'mfa-challenge'`，有效期按配置（默认 5 分钟）；
+   * 该令牌**不能**访问任何业务接口（AuthGuard 会拒绝带 purpose 的令牌）。
+   */
+  async signMfaChallengeToken(payload: JwtUserPayload, expiresMinutes: number): Promise<string> {
+    const claims: Record<string, unknown> = {
+      userId: payload.userId,
+      username: payload.username,
+      purpose: 'mfa-challenge',
+    };
+    return new SignJWT(claims)
+      .setProtectedHeader({ alg: 'HS256' })
+      .setIssuedAt()
+      .setExpirationTime(`${expiresMinutes}m`)
+      .sign(this.accessKey);
+  }
+
+  /**
+   * 校验 MFA 挑战令牌；purpose 不符直接视为无效（防止拿普通 accessToken 当挑战用）。
+   * @throws jose.errors.JWTExpired / JWTInvalid
+   */
+  async verifyMfaChallengeToken(token: string): Promise<JwtPayload> {
+    const { payload } = await jwtVerify(token, this.accessKey);
+    if (payload.purpose !== 'mfa-challenge') {
+      throw new joseErrors.JWTInvalid('令牌用途不符');
+    }
+    return {
+      userId: Number(payload.userId),
+      username: typeof payload.username === 'string' ? payload.username : '',
+      iat: Number(payload.iat ?? 0),
+      exp: Number(payload.exp ?? 0),
+      purpose: 'mfa-challenge',
+    };
+  }
+
+  /**
    * 校验并解码 accessToken。
    * @throws jose.errors.JWTExpired 令牌已过期
    * @throws jose.errors.JWTInvalid 令牌无效（签名不符 / 结构错误）
@@ -69,6 +105,7 @@ export class JwtService {
       iat: Number(payload.iat ?? 0),
       exp: Number(payload.exp ?? 0),
       sid: typeof payload.sid === 'string' ? payload.sid : undefined,
+      purpose: typeof payload.purpose === 'string' ? payload.purpose : undefined,
     };
   }
 

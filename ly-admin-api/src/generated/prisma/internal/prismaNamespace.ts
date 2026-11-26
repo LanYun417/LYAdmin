@@ -407,6 +407,9 @@ export const ModelName = {
   OperationLog: 'OperationLog',
   HttpLog: 'HttpLog',
   Notice: 'Notice',
+  UserMfa: 'UserMfa',
+  SsoProvider: 'SsoProvider',
+  UserSso: 'UserSso',
   User: 'User',
   Role: 'Role',
   Menu: 'Menu',
@@ -432,7 +435,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "dictType" | "dictItem" | "sysConfig" | "exportTask" | "file" | "ipRule" | "loginLog" | "operationLog" | "httpLog" | "notice" | "user" | "role" | "menu" | "dept" | "userRole" | "roleMenu" | "roleDept" | "userMenu" | "taskLog" | "userProfile"
+    modelProps: "dictType" | "dictItem" | "sysConfig" | "exportTask" | "file" | "ipRule" | "loginLog" | "operationLog" | "httpLog" | "notice" | "userMfa" | "ssoProvider" | "userSso" | "user" | "role" | "menu" | "dept" | "userRole" | "roleMenu" | "roleDept" | "userMenu" | "taskLog" | "userProfile"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1093,6 +1096,204 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.NoticeCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.NoticeCountAggregateOutputType> | number
+        }
+      }
+    }
+    UserMfa: {
+      payload: Prisma.$UserMfaPayload<ExtArgs>
+      fields: Prisma.UserMfaFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.UserMfaFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserMfaPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.UserMfaFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserMfaPayload>
+        }
+        findFirst: {
+          args: Prisma.UserMfaFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserMfaPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.UserMfaFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserMfaPayload>
+        }
+        findMany: {
+          args: Prisma.UserMfaFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserMfaPayload>[]
+        }
+        create: {
+          args: Prisma.UserMfaCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserMfaPayload>
+        }
+        createMany: {
+          args: Prisma.UserMfaCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        delete: {
+          args: Prisma.UserMfaDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserMfaPayload>
+        }
+        update: {
+          args: Prisma.UserMfaUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserMfaPayload>
+        }
+        deleteMany: {
+          args: Prisma.UserMfaDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.UserMfaUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        upsert: {
+          args: Prisma.UserMfaUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserMfaPayload>
+        }
+        aggregate: {
+          args: Prisma.UserMfaAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateUserMfa>
+        }
+        groupBy: {
+          args: Prisma.UserMfaGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.UserMfaGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.UserMfaCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.UserMfaCountAggregateOutputType> | number
+        }
+      }
+    }
+    SsoProvider: {
+      payload: Prisma.$SsoProviderPayload<ExtArgs>
+      fields: Prisma.SsoProviderFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.SsoProviderFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SsoProviderPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.SsoProviderFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SsoProviderPayload>
+        }
+        findFirst: {
+          args: Prisma.SsoProviderFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SsoProviderPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.SsoProviderFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SsoProviderPayload>
+        }
+        findMany: {
+          args: Prisma.SsoProviderFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SsoProviderPayload>[]
+        }
+        create: {
+          args: Prisma.SsoProviderCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SsoProviderPayload>
+        }
+        createMany: {
+          args: Prisma.SsoProviderCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        delete: {
+          args: Prisma.SsoProviderDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SsoProviderPayload>
+        }
+        update: {
+          args: Prisma.SsoProviderUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SsoProviderPayload>
+        }
+        deleteMany: {
+          args: Prisma.SsoProviderDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.SsoProviderUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        upsert: {
+          args: Prisma.SsoProviderUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SsoProviderPayload>
+        }
+        aggregate: {
+          args: Prisma.SsoProviderAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateSsoProvider>
+        }
+        groupBy: {
+          args: Prisma.SsoProviderGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.SsoProviderGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.SsoProviderCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.SsoProviderCountAggregateOutputType> | number
+        }
+      }
+    }
+    UserSso: {
+      payload: Prisma.$UserSsoPayload<ExtArgs>
+      fields: Prisma.UserSsoFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.UserSsoFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserSsoPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.UserSsoFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserSsoPayload>
+        }
+        findFirst: {
+          args: Prisma.UserSsoFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserSsoPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.UserSsoFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserSsoPayload>
+        }
+        findMany: {
+          args: Prisma.UserSsoFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserSsoPayload>[]
+        }
+        create: {
+          args: Prisma.UserSsoCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserSsoPayload>
+        }
+        createMany: {
+          args: Prisma.UserSsoCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        delete: {
+          args: Prisma.UserSsoDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserSsoPayload>
+        }
+        update: {
+          args: Prisma.UserSsoUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserSsoPayload>
+        }
+        deleteMany: {
+          args: Prisma.UserSsoDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.UserSsoUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        upsert: {
+          args: Prisma.UserSsoUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserSsoPayload>
+        }
+        aggregate: {
+          args: Prisma.UserSsoAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateUserSso>
+        }
+        groupBy: {
+          args: Prisma.UserSsoGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.UserSsoGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.UserSsoCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.UserSsoCountAggregateOutputType> | number
         }
       }
     }
@@ -1968,6 +2169,56 @@ export const NoticeScalarFieldEnum = {
 export type NoticeScalarFieldEnum = (typeof NoticeScalarFieldEnum)[keyof typeof NoticeScalarFieldEnum]
 
 
+export const UserMfaScalarFieldEnum = {
+  id: 'id',
+  secret: 'secret',
+  enabled: 'enabled',
+  recovery: 'recovery',
+  enabledAt: 'enabledAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type UserMfaScalarFieldEnum = (typeof UserMfaScalarFieldEnum)[keyof typeof UserMfaScalarFieldEnum]
+
+
+export const SsoProviderScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  protocol: 'protocol',
+  issuer: 'issuer',
+  authorizationUrl: 'authorizationUrl',
+  tokenUrl: 'tokenUrl',
+  userInfoUrl: 'userInfoUrl',
+  jwksUrl: 'jwksUrl',
+  clientId: 'clientId',
+  clientSecret: 'clientSecret',
+  scopes: 'scopes',
+  redirectUri: 'redirectUri',
+  fieldMapping: 'fieldMapping',
+  linkByEmail: 'linkByEmail',
+  defaultRoleCodes: 'defaultRoleCodes',
+  status: 'status',
+  sort: 'sort',
+  remark: 'remark',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type SsoProviderScalarFieldEnum = (typeof SsoProviderScalarFieldEnum)[keyof typeof SsoProviderScalarFieldEnum]
+
+
+export const UserSsoScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  providerId: 'providerId',
+  subject: 'subject',
+  createdAt: 'createdAt'
+} as const
+
+export type UserSsoScalarFieldEnum = (typeof UserSsoScalarFieldEnum)[keyof typeof UserSsoScalarFieldEnum]
+
+
 export const UserScalarFieldEnum = {
   id: 'id',
   username: 'username',
@@ -2270,6 +2521,41 @@ export const NoticeOrderByRelevanceFieldEnum = {
 export type NoticeOrderByRelevanceFieldEnum = (typeof NoticeOrderByRelevanceFieldEnum)[keyof typeof NoticeOrderByRelevanceFieldEnum]
 
 
+export const UserMfaOrderByRelevanceFieldEnum = {
+  secret: 'secret',
+  recovery: 'recovery'
+} as const
+
+export type UserMfaOrderByRelevanceFieldEnum = (typeof UserMfaOrderByRelevanceFieldEnum)[keyof typeof UserMfaOrderByRelevanceFieldEnum]
+
+
+export const SsoProviderOrderByRelevanceFieldEnum = {
+  name: 'name',
+  protocol: 'protocol',
+  issuer: 'issuer',
+  authorizationUrl: 'authorizationUrl',
+  tokenUrl: 'tokenUrl',
+  userInfoUrl: 'userInfoUrl',
+  jwksUrl: 'jwksUrl',
+  clientId: 'clientId',
+  clientSecret: 'clientSecret',
+  scopes: 'scopes',
+  redirectUri: 'redirectUri',
+  fieldMapping: 'fieldMapping',
+  defaultRoleCodes: 'defaultRoleCodes',
+  remark: 'remark'
+} as const
+
+export type SsoProviderOrderByRelevanceFieldEnum = (typeof SsoProviderOrderByRelevanceFieldEnum)[keyof typeof SsoProviderOrderByRelevanceFieldEnum]
+
+
+export const UserSsoOrderByRelevanceFieldEnum = {
+  subject: 'subject'
+} as const
+
+export type UserSsoOrderByRelevanceFieldEnum = (typeof UserSsoOrderByRelevanceFieldEnum)[keyof typeof UserSsoOrderByRelevanceFieldEnum]
+
+
 export const UserOrderByRelevanceFieldEnum = {
   username: 'username',
   password: 'password',
@@ -2552,6 +2838,9 @@ export type GlobalOmitConfig = {
   operationLog?: Prisma.OperationLogOmit
   httpLog?: Prisma.HttpLogOmit
   notice?: Prisma.NoticeOmit
+  userMfa?: Prisma.UserMfaOmit
+  ssoProvider?: Prisma.SsoProviderOmit
+  userSso?: Prisma.UserSsoOmit
   user?: Prisma.UserOmit
   role?: Prisma.RoleOmit
   menu?: Prisma.MenuOmit

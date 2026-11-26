@@ -12,7 +12,7 @@ import { useTagsViewStore } from '@/store/modules/tagsView';
 import { hasPermission } from '@/utils/permission';
 
 /** 免登录白名单 */
-const WHITE_LIST: string[] = ['/login', '/403', '/404', '/500'];
+const WHITE_LIST: string[] = ['/login', '/sso/callback', '/403', '/404', '/500'];
 
 /**
  * 「强制修改初始口令」期间允许访问的路径。

@@ -71,6 +71,9 @@ export const OPENAPI_DOC: Record<string, unknown> = {
       "name": "系统"
     },
     {
+      "name": "SSO 配置"
+    },
+    {
       "name": "IP 访问控制"
     },
     {
@@ -78,6 +81,9 @@ export const OPENAPI_DOC: Record<string, unknown> = {
     },
     {
       "name": "下载中心"
+    },
+    {
+      "name": "安全中心"
     },
     {
       "name": "部门/岗位管理"
@@ -987,6 +993,56 @@ export const OPENAPI_DOC: Record<string, unknown> = {
             "bearerAuth": []
           }
         ]
+      }
+    },
+    "/api/auth/mfa/verify": {
+      "post": {
+        "tags": [
+          "认证"
+        ],
+        "summary": "二次验证（MFA）登录。 登录接口返回 `mfaRequired: true` 时，前端引导用户输入 authenticator 动态码 / 恢复码，连同 `mfaToken` 一起提交到这里换取正式双 Token",
+        "operationId": "post__api_auth_mfa_verify",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MfaVerifyLoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功（统一信封 { code, message, data }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "业务码，0 表示成功"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/MfaVerifyLoginDto"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/auth/refresh": {
@@ -7864,6 +7920,613 @@ export const OPENAPI_DOC: Record<string, unknown> = {
         }
       }
     },
+    "/api/sso/{id}/authorize": {
+      "get": {
+        "tags": [
+          "SSO 配置"
+        ],
+        "summary": "取授权跳转地址（公开：前端拿到 URL 后自行 302）",
+        "operationId": "get__api_sso__id_authorize",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "路径参数 id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功（统一信封 { code, message, data }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "业务码，0 表示成功"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "list": {
+                          "type": "array",
+                          "items": {}
+                        },
+                        "total": {
+                          "type": "integer",
+                          "example": 0
+                        },
+                        "page": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "pageSize": {
+                          "type": "integer",
+                          "example": 10
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/admin/providers": {
+      "get": {
+        "tags": [
+          "SSO 配置"
+        ],
+        "summary": "管理面：提供方列表（含完整配置，clientSecret 永不出库）",
+        "operationId": "get__api_sso_admin_providers",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "description": "页码"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 10
+            },
+            "description": "每页条数"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功（统一信封 { code, message, data }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "业务码，0 表示成功"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "list": {
+                          "type": "array",
+                          "items": {}
+                        },
+                        "total": {
+                          "type": "integer",
+                          "example": 0
+                        },
+                        "page": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "pageSize": {
+                          "type": "integer",
+                          "example": 10
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "SSO 配置"
+        ],
+        "summary": "管理面：新增提供方",
+        "operationId": "post__api_sso_admin_providers",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SsoProviderDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功（统一信封 { code, message, data }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "业务码，0 表示成功"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/SsoProviderDto"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/sso/admin/providers/{id}": {
+      "get": {
+        "tags": [
+          "SSO 配置"
+        ],
+        "summary": "管理面：提供方详情",
+        "operationId": "get__api_sso_admin_providers__id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "路径参数 id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功（统一信封 { code, message, data }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "业务码，0 表示成功"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "list": {
+                          "type": "array",
+                          "items": {}
+                        },
+                        "total": {
+                          "type": "integer",
+                          "example": 0
+                        },
+                        "page": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "pageSize": {
+                          "type": "integer",
+                          "example": 10
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "SSO 配置"
+        ],
+        "summary": "管理面：更新提供方（clientSecret 留空表示不修改）",
+        "operationId": "put__api_sso_admin_providers__id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "路径参数 id"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SsoProviderDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功（统一信封 { code, message, data }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "业务码，0 表示成功"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/SsoProviderDto"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "SSO 配置"
+        ],
+        "summary": "管理面：删除提供方（绑定关系一并清理）",
+        "operationId": "delete__api_sso_admin_providers__id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "路径参数 id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功（统一信封 { code, message, data }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "业务码，0 表示成功"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {}
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/sso/callback": {
+      "get": {
+        "tags": [
+          "SSO 配置"
+        ],
+        "summary": "OIDC 回调（公开）。 换取一次性 ticket 后 302 到前端回调页；URL 上不出现正式令牌",
+        "operationId": "get__api_sso_callback",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "description": "页码"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 10
+            },
+            "description": "每页条数"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功（统一信封 { code, message, data }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "业务码，0 表示成功"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "list": {
+                          "type": "array",
+                          "items": {}
+                        },
+                        "total": {
+                          "type": "integer",
+                          "example": 0
+                        },
+                        "page": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "pageSize": {
+                          "type": "integer",
+                          "example": 10
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/providers": {
+      "get": {
+        "tags": [
+          "SSO 配置"
+        ],
+        "summary": "登录页可见的启用中提供方（公开）",
+        "operationId": "get__api_sso_providers",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "description": "页码"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 10
+            },
+            "description": "每页条数"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功（统一信封 { code, message, data }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "业务码，0 表示成功"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "list": {
+                          "type": "array",
+                          "items": {}
+                        },
+                        "total": {
+                          "type": "integer",
+                          "example": 0
+                        },
+                        "page": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "pageSize": {
+                          "type": "integer",
+                          "example": 10
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sso/redeem": {
+      "post": {
+        "tags": [
+          "SSO 配置"
+        ],
+        "summary": "前端用 ticket 换本站双 Token（公开）",
+        "operationId": "post__api_sso_redeem",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SsoRedeemDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功（统一信封 { code, message, data }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "业务码，0 表示成功"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/SsoRedeemDto"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/ip-rules": {
       "get": {
         "tags": [
@@ -8714,6 +9377,311 @@ export const OPENAPI_DOC: Record<string, unknown> = {
         ]
       }
     },
+    "/api/mfa/status": {
+      "get": {
+        "tags": [
+          "安全中心"
+        ],
+        "summary": "当前 MFA 状态",
+        "operationId": "get__api_mfa_status",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "description": "页码"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 10
+            },
+            "description": "每页条数"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功（统一信封 { code, message, data }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "业务码，0 表示成功"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "list": {
+                          "type": "array",
+                          "items": {}
+                        },
+                        "total": {
+                          "type": "integer",
+                          "example": 0
+                        },
+                        "page": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "pageSize": {
+                          "type": "integer",
+                          "example": 10
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/mfa/disable": {
+      "post": {
+        "tags": [
+          "安全中心"
+        ],
+        "summary": "解绑（需登录口令）",
+        "operationId": "post__api_mfa_disable",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MfaDisableDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功（统一信封 { code, message, data }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "业务码，0 表示成功"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/MfaDisableDto"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/mfa/enable": {
+      "post": {
+        "tags": [
+          "安全中心"
+        ],
+        "summary": "确认绑定：校验动态码后启用，返回一次性恢复码",
+        "operationId": "post__api_mfa_enable",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MfaEnableDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功（统一信封 { code, message, data }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "业务码，0 表示成功"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/MfaEnableDto"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/mfa/setup": {
+      "post": {
+        "tags": [
+          "安全中心"
+        ],
+        "summary": "开始绑定：返回种子与 otpauth URL（需登录口令）",
+        "operationId": "post__api_mfa_setup",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MfaSetupDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功（统一信封 { code, message, data }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "业务码，0 表示成功"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/MfaSetupDto"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/mfa/recovery": {
+      "put": {
+        "tags": [
+          "安全中心"
+        ],
+        "summary": "重新签发恢复码（需一次动态码校验，旧码作废）",
+        "operationId": "put__api_mfa_recovery",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MfaEnableDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功（统一信封 { code, message, data }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "业务码，0 表示成功"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/MfaEnableDto"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
     "/api/depts": {
       "get": {
         "tags": [
@@ -9191,6 +10159,30 @@ export const OPENAPI_DOC: Record<string, unknown> = {
         "required": [
           "username",
           "password"
+        ]
+      },
+      "MfaVerifyLoginDto": {
+        "type": "object",
+        "properties": {
+          "mfaToken": {
+            "type": "string",
+            "description": "登录流程下发的挑战令牌（mfaToken）",
+            "example": "示例值"
+          },
+          "code": {
+            "type": "string",
+            "description": "动态码或恢复码（恢复码含连字符，放宽字符集）",
+            "example": "示例值"
+          },
+          "timezoneOffset": {
+            "type": "number",
+            "description": "可选：客户端时区偏移（与登录请求保持一致口径，暂无业务用途，预留）",
+            "example": 1
+          }
+        },
+        "required": [
+          "mfaToken",
+          "code"
         ]
       },
       "RefreshDto": {
@@ -10030,6 +11022,102 @@ export const OPENAPI_DOC: Record<string, unknown> = {
           "newPassword"
         ]
       },
+      "SsoProviderDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "log-archive"
+          },
+          "issuer": {
+            "type": "string",
+            "description": "OIDC issuer（校验 id_token 的 iss）",
+            "example": "示例值"
+          },
+          "authorizationUrl": {
+            "type": "string",
+            "example": "示例值"
+          },
+          "tokenUrl": {
+            "type": "string",
+            "example": "示例值"
+          },
+          "userInfoUrl": {
+            "type": "string",
+            "example": "示例值"
+          },
+          "jwksUrl": {
+            "type": "string",
+            "description": "JWKS 端点；留空 = 不验签（仅内网自建提供方建议）",
+            "example": "示例值"
+          },
+          "clientId": {
+            "type": "string",
+            "example": "示例值"
+          },
+          "clientSecret": {
+            "type": "string",
+            "description": "新增必填；更新可留空（不修改）",
+            "example": "示例值"
+          },
+          "scopes": {
+            "type": "string",
+            "example": "示例值"
+          },
+          "redirectUri": {
+            "type": "string",
+            "description": "后端接收 code 的完整回调地址",
+            "example": "示例值"
+          },
+          "fieldMapping": {
+            "type": "string",
+            "description": "字段映射 JSON（username/email/nickname/avatar 的 claim 名）",
+            "example": "示例值"
+          },
+          "linkByEmail": {
+            "type": "boolean",
+            "example": true
+          },
+          "defaultRoleCodes": {
+            "type": "string",
+            "description": "自动建号时授予的角色编码（逗号分隔）",
+            "example": "示例值"
+          },
+          "status": {
+            "type": "number",
+            "example": 1
+          },
+          "sort": {
+            "type": "number",
+            "example": 1
+          },
+          "remark": {
+            "type": "string",
+            "example": "示例备注"
+          }
+        },
+        "required": [
+          "name",
+          "issuer",
+          "authorizationUrl",
+          "tokenUrl",
+          "userInfoUrl",
+          "clientId",
+          "redirectUri"
+        ]
+      },
+      "SsoRedeemDto": {
+        "type": "object",
+        "properties": {
+          "ticket": {
+            "type": "string",
+            "example": "示例值"
+          }
+        },
+        "required": [
+          "ticket"
+        ]
+      },
       "CreateIpRuleDto": {
         "type": "object",
         "properties": {
@@ -10103,6 +11191,42 @@ export const OPENAPI_DOC: Record<string, unknown> = {
         },
         "required": [
           "module"
+        ]
+      },
+      "MfaDisableDto": {
+        "type": "object",
+        "properties": {
+          "password": {
+            "type": "string",
+            "example": "123456"
+          }
+        },
+        "required": [
+          "password"
+        ]
+      },
+      "MfaEnableDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "示例值"
+          }
+        },
+        "required": [
+          "code"
+        ]
+      },
+      "MfaSetupDto": {
+        "type": "object",
+        "properties": {
+          "password": {
+            "type": "string",
+            "example": "123456"
+          }
+        },
+        "required": [
+          "password"
         ]
       },
       "DeptUpsertDto": {

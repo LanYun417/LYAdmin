@@ -7,6 +7,7 @@
 import path from 'node:path';
 import { ROOT_DIR, toBoolean, toNumber } from './env-parse.js';
 import { dbConfig } from './db-config.js';
+import { secretsEncryptionAvailable } from '../crypto/secret-box.js';
 
 /**
  * 项目根目录（定义在 `env-parse.ts`，本文件仅转发导出以保持对外 API 稳定）。
@@ -309,6 +310,33 @@ export const config = {
     sweepEnabled: toBoolean(process.env.EXPORT_SWEEP_ENABLED, true),
     /** 清理任务间隔（小时，须为 24 的约数，见 cronOf 说明） */
     sweepIntervalHours: Math.max(1, toNumber(process.env.EXPORT_SWEEP_INTERVAL_HOURS, 6)),
+  },
+  /**
+   * 多因素认证（TOTP）。
+   * 未配置 `SECRETS_ENCRYPTION_KEY` 时整体禁用——TOTP 种子必须加密落库，
+   * 没有信封密钥宁可不用 MFA，也不能明文存种子。
+   */
+  mfa: {
+    enabled: secretsEncryptionAvailable(),
+    /** authenticator 应用里展示的发行方名称 */
+    issuer: process.env.MFA_ISSUER ?? 'LYAdmin',
+    /** MFA 中间态令牌有效期（分钟）：密码校验通过 → 验证动态码之间的短暂窗口 */
+    challengeExpiresMinutes: toNumber(process.env.MFA_CHALLENGE_MINUTES, 5),
+  },
+  /**
+   * 企业单点登录（OIDC）。
+   * 未配置 `SECRETS_ENCRYPTION_KEY` 时同理禁用（clientSecret 需信封加密）。
+   */
+  sso: {
+    enabled: secretsEncryptionAvailable(),
+    /** 一次性换票有效期（秒）：SSO 回调拿到 code 后的临时票据，前端凭票换 JWT */
+    ticketTtlSeconds: Math.max(30, toNumber(process.env.SSO_TICKET_TTL_SECONDS, 60)),
+    /** OAuth state / nonce 缓存有效期（分钟） */
+    stateTtlMinutes: Math.max(1, toNumber(process.env.SSO_STATE_TTL_MINUTES, 5)),
+    /** 登录页是否默认展示 SSO 按钮列表 */
+    showOnLoginPage: toBoolean(process.env.SSO_SHOW_ON_LOGIN_PAGE, true),
+    /** 前端地址（回调 302 目标；票据页面前缀即此 + /sso/callback） */
+    frontendUrl: (process.env.SSO_FRONTEND_URL ?? 'http://localhost:5173').replace(/\/+$/, ''),
   },
 } as const;
 

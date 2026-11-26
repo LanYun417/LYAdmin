@@ -20,6 +20,14 @@ export const constantRoutes: RouteRecordRaw[] = [
     meta: { title: '登录', hidden: true },
   },
   {
+    // SSO 回调中转页（OIDC 提供方 → 后端 → 302 到这里换票）；
+    // 令牌只以一次性 ticket 形式出现在 URL，页面即用即弃。
+    path: '/sso/callback',
+    name: 'SsoCallback',
+    component: () => import('@/views/sso-callback/index.vue'),
+    meta: { title: '单点登录', hidden: true },
+  },
+  {
     path: '/redirect',
     component: Layout,
     meta: { hidden: true },

@@ -7,6 +7,7 @@ import { AppException } from '../../common/exception/app.exception.js';
 import { AuthCacheService } from '../../common/auth/auth-cache.service.js';
 import { CaptchaService } from '../../common/auth/captcha.service.js';
 import { ERROR_MESSAGE, LogResult, Status } from '../../common/config/constants.js';
+import { config } from '../../common/config/config.js';
 import { lookupDeptName } from '../../common/utils/dept-lookup.js';
 import { IpRegionService } from '../../common/ip/ip-region.service.js';
 import { JwtService } from '../../common/auth/jwt.service.js';
@@ -18,6 +19,7 @@ import { PrismaService } from '../../prisma/prisma.service.js';
 import { AuthUserService } from '../../common/auth/auth-user.service.js';
 import { ConfigService } from '../config/config.service.js';
 import { NOTICE_TYPE, NoticeService } from '../notice/notice.service.js';
+import { MfaService } from '../mfa/mfa.service.js';
 import type { AuthContext, JwtPayload, UserBrief } from '../../common/types.js';
 
 /** 登录结果。 */
@@ -29,11 +31,24 @@ export interface LoginResult {
   mustChangePassword: boolean;
 }
 
+/** 登录中间结果：第一因子已过、二次验证未完成。 */
+export interface MfaChallengeResult {
+  mfaRequired: true;
+  /** 短期挑战令牌（默认 5 分钟，不可访问业务接口），凭动态码换正式令牌 */
+  mfaToken: string;
+}
+
+/** 登录响应：直接下发令牌，或进入二次验证挑战。 */
+export type LoginOutcome = LoginResult | MfaChallengeResult;
+
 /** Token 对。 */
 export interface TokenPair {
   accessToken: string;
   refreshToken: string;
 }
+
+/** 二次验证换令牌的结果（与第一因子登录的回包结构一致，便于前端统一处理）。 */
+export type MfaLoginResult = LoginResult;
 
 /** 登录设备数上限参数键（值 0 = 不限制）。 */
 const MAX_DEVICES_CONFIG_KEY = 'sys.login.maxDevices';
@@ -75,6 +90,7 @@ export class AuthService {
     private readonly redis: RedisService,
     private readonly configService: ConfigService,
     private readonly noticeService: NoticeService,
+    private readonly mfaService: MfaService,
   ) {}
 
   /** 将用户记录转换为对外简要信息。 */
@@ -146,7 +162,8 @@ export class AuthService {
   }
 
   /**
-   * 登录：校验图形验证码、账号密码与状态，签发双 Token 并写登录日志。
+   * 登录：校验图形验证码、账号密码与状态。
+   * 未绑定 MFA → 直接签发双 Token；已绑定 → 返回挑战结果（前端引导输入动态码）。
    */
   async login(
     username: string,
@@ -155,7 +172,7 @@ export class AuthService {
     captchaCode: string | undefined,
     ip: string,
     userAgent: string,
-  ): Promise<LoginResult> {
+  ): Promise<LoginOutcome> {
     // 图形验证码：先校验（廉价、无 DB 查询），失败直接拒绝，避免爆破消耗数据库
     if (!(await this.captchaService.verifyCaptcha(captchaId, captchaCode))) {
       throw AppException.badRequest('验证码错误或已过期');
@@ -190,13 +207,90 @@ export class AuthService {
     await this.blacklist.clearLogout(Number(user.id));
 
     await this.prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
-    await this.writeLoginLog(username, ip, userAgent, LogResult.SUCCESS, '登录成功', location);
     // 登录会更新 lastLoginAt：失效该用户鉴权缓存，避免 /auth/profile 在 TTL 内返回陈旧值
     this.authCache.invalidate(Number(user.id));
 
     // 设备并发控制：非访客角色达到在线设备上限时，回收最旧会话后放行新登录（访客豁免）
     await this.applyDeviceLimit(user);
 
+    // 第二因子：已绑定 MFA 的账号不直接下发令牌，先给一个短期挑战令牌；
+    // 设备上限已在上面收敛，挑战期间不占会话名额。
+    if (await this.mfaService.isEnabled(Number(user.id))) {
+      await this.writeLoginLog(username, ip, userAgent, LogResult.SUCCESS, '二次验证待确认', location);
+      return {
+        mfaRequired: true,
+        mfaToken: await this.jwtService.signMfaChallengeToken(
+          { userId: Number(user.id), username: user.username },
+          config.mfa.challengeExpiresMinutes,
+        ),
+      };
+    }
+
+    await this.writeLoginLog(username, ip, userAgent, LogResult.SUCCESS, '登录成功', location);
+    return this.issueTokens(user, ip, userAgent, location);
+  }
+
+  /**
+   * 为指定用户直接签发登录态（供 SSO 回调换票使用）。
+   * 复用 issueTokens 的会话登记与令牌签发，业务口径与密码登录完全一致。
+   */
+  async issueTokensForUser(userId: number, ip = '', userAgent = 'sso'): Promise<LoginResult> {
+    const user = await this.prisma.user.findUniqueOrThrow({ where: { id: BigInt(userId) } });
+    if (Number(user.status) !== Status.ENABLED) {
+      throw AppException.unauthorized(ERROR_MESSAGE.ACCOUNT_DISABLED);
+    }
+    const location = ip ? await this.ipRegion.locate(ip) : '';
+    await this.writeLoginLog(user.username, ip, userAgent, LogResult.SUCCESS, '登录成功（SSO）', location);
+    return this.issueTokens(user, ip, userAgent, location);
+  }
+
+  /**
+   * 二次验证通过后签发正式令牌。
+   *
+   * 挑战期间账号可能被禁用 / 已解绑 MFA / 挑战过期——逐一复核，
+   * 任一条不满足都按 401 拒绝（宁可让用户重新登录，也不在中间态放行）。
+   */
+  async verifyMfaLogin(mfaToken: string, code: string, ip: string, userAgent: string): Promise<LoginResult> {
+    const challenge = await this.jwtService.verifyMfaChallengeToken(mfaToken).catch(() => {
+      throw AppException.unauthorized('二次验证已过期，请重新登录');
+    });
+    const user = await this.prisma.user.findUnique({
+      where: { id: BigInt(challenge.userId) },
+      include: { userRoles: { select: { role: { select: { roleCode: true } } } } },
+    });
+    if (!user || Number(user.status) !== Status.ENABLED) {
+      throw AppException.unauthorized(ERROR_MESSAGE.ACCOUNT_DISABLED);
+    }
+    // 动态码 / 恢复码校验（内部已是常量时间比较；失败抛 401）
+    await this.mfaService.verifyLoginCode(Number(user.id), code);
+
+    const location = await this.ipRegion.locate(ip);
+    await this.writeLoginLog(user.username, ip, userAgent, LogResult.SUCCESS, '登录成功（二次验证）', location);
+    return this.issueTokens(user, ip, userAgent, location);
+  }
+
+  /** 登录末段：登记会话并签发双 Token（MFA 分支与非 MFA 分支共用）。 */
+  private async issueTokens(
+    user: {
+      id: bigint;
+      username: string;
+      nickname: string;
+      avatar: string | null;
+      email: string | null;
+      phone: string | null;
+      gender: string | null;
+      status: number;
+      deptId: bigint;
+      lastLoginAt: Date | null;
+      createdAt: Date;
+      updatedAt: Date;
+      mustChangePassword: number;
+      dept?: { deptName: string } | null;
+    },
+    ip: string,
+    userAgent: string,
+    location: string,
+  ): Promise<LoginResult> {
     const payload = { userId: Number(user.id), username: user.username };
     // 登记在线会话：成功后令牌带上 sid（可被在线用户页强制下线）；
     // Redis 不可用时 create 返回 null，此时签发不带 sid 的令牌——宁可失去会话管理能力，

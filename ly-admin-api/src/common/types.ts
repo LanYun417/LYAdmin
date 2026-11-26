@@ -22,6 +22,11 @@ export interface JwtPayload extends JwtUserPayload {
    * 旧令牌没有该字段，守卫会跳过会话校验（向后兼容）。
    */
   sid?: string;
+  /**
+   * 令牌用途。普通访问令牌不携带；`mfa-challenge` 表示登录流程的
+   * 第二因子挑战令牌（短期、不可访问业务接口，AuthGuard 直接拒绝）。
+   */
+  purpose?: string;
 }
 
 /** 鉴权后挂载到请求上下文的用户信息。 */

@@ -1,0 +1,27 @@
+// use prisma-next
+// ↑ 首行不可删：VS Code 的 Prisma 扩展按文件判定是否启用 Prisma 7 语言服务。
+//
+// 多因素认证（MFA）：TOTP 动态口令。
+// 公共约定（snake_case 映射 / 哨兵值 / 注释落库）见 base.prisma。
+
+/// 二次验证（TOTP）状态表（与 sys_user 一对一）。
+/// 密钥经 AES-256-GCM 信封加密后存放（见 common/crypto/secret-box.ts）——
+/// 明文落库等于所有人的二次验证形同虚设。
+model UserMfa {
+  /// 用户 id（即主键，一对一）
+  id        BigInt  @id @db.BigInt
+  /// 加密信封格式的 TOTP 种子（v1:iv:ct:tag）
+  secret    String  @db.VarChar(500)
+  /// 1 启用 / 0 未启用（setup 后未 confirm 前为 0）
+  enabled   Int     @default(0) @db.TinyInt
+  /// 恢复码（JSON 数组，元素为 bcrypt 哈希；一次性使用）
+  recovery  String? @db.Text
+  /// 启用时间
+  enabledAt DateTime? @map("enabled_at")
+  /// 创建时间
+  createdAt DateTime @default(now()) @map("created_at")
+  /// 更新时间
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("sys_user_mfa")
+}

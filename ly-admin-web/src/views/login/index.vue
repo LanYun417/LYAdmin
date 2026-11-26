@@ -11,10 +11,11 @@ import { ElMessage } from '@/utils/element';
 import type { FormInstance, FormRules } from 'element-plus';
 import logoUrl from '@/assets/logo-mark.svg';
 import { getCaptchaApi } from '@/api/auth';
+import { getSsoAuthorizeUrlApi, listSsoProvidersApi } from '@/api/sso';
 import { useUserStore } from '@/store/modules/user';
 import { usePermissionStore } from '@/store/modules/permission';
 import { usernameRule } from '@/utils/validate';
-import type { LoginParams } from '@/types/api';
+import type { LoginParams, SsoProvider } from '@/types/api';
 
 defineOptions({ name: 'Login' });
 
@@ -59,6 +60,75 @@ const captchaFailed = ref(false);
 const CAPTCHA_RETRY_LIMIT = 5;
 /** 验证码自动重试间隔（ms） */
 const CAPTCHA_RETRY_DELAY = 1500;
+
+/* ------------------------------ 二次验证（MFA） ------------------------------ */
+
+/** 是否处于第二因子输入步骤（账号密码校验通过但绑定了 MFA） */
+const mfaStep = ref(false);
+/** 登录流程下发的挑战令牌 */
+const mfaToken = ref('');
+/** 用户输入的动态码 / 恢复码 */
+const mfaCode = ref('');
+/** 第二因子提交中 */
+const mfaLoading = ref(false);
+
+/** 提交动态码，通过后走与账号登录一致的跳转 */
+async function submitMfa(): Promise<void> {
+  if (mfaLoading.value) {
+    return;
+  }
+  if (!mfaCode.value.trim()) {
+    ElMessage.warning('请输入动态码');
+    return;
+  }
+  mfaLoading.value = true;
+  try {
+    await userStore.verifyMfa(mfaToken.value, mfaCode.value.trim());
+    permissionStore.resetRoutes();
+    ElMessage.success('登录成功');
+    const redirect = (route.query.redirect as string) || '/home';
+    await router.replace(redirect);
+  } catch {
+    // 错误提示由 axios 拦截器统一处理；动态码可能已跨步，清空让用户重新输入
+    mfaCode.value = '';
+  } finally {
+    mfaLoading.value = false;
+  }
+}
+
+/** 返回账号密码步骤（挑战令牌随之失效，5 分钟后自动过期） */
+function backToPasswordStep(): void {
+  mfaStep.value = false;
+  mfaToken.value = '';
+  mfaCode.value = '';
+}
+
+/* ------------------------------ 企业单点登录（SSO） ------------------------------ */
+
+/** 登录页可见的 SSO 提供方 */
+const ssoProviders = ref<SsoProvider[]>([]);
+
+/** 跳转到提供方授权页（后端登记 state 后 302 回来） */
+async function goSso(providerId: number): Promise<void> {
+  try {
+    const { url } = await getSsoAuthorizeUrlApi(providerId);
+    window.location.assign(url);
+  } catch {
+    // 错误提示由 axios 拦截器统一处理
+  }
+}
+
+onMounted(() => {
+  void loadCaptcha();
+  void listSsoProvidersApi()
+    .then((list) => {
+      ssoProviders.value = list;
+    })
+    .catch(() => {
+      // SSO 列表拉取失败不影响账号密码登录：静默降级为不展示按钮
+      ssoProviders.value = [];
+    });
+});
 
 /** 自动重试计时器（卸载时清理，避免离开页面后仍在轮询） */
 let captchaRetryTimer: ReturnType<typeof setTimeout> | null = null;
@@ -130,7 +200,13 @@ async function submitLogin(): Promise<void> {
     if (!valid) {
       return;
     }
-    await userStore.login(form);
+    const challengeToken = await userStore.login(form);
+    if (challengeToken) {
+      // 第一因子已过、账号绑定了 MFA：进入动态码步骤，不写登录态
+      mfaToken.value = challengeToken;
+      mfaStep.value = true;
+      return;
+    }
     permissionStore.resetRoutes();
     ElMessage.success('登录成功');
     const redirect = (route.query.redirect as string) || '/home';
@@ -150,10 +226,6 @@ async function submitLogin(): Promise<void> {
  */
 const handleLogin = throttle(submitLogin, 1000, { leading: true, trailing: false });
 
-onMounted(() => {
-  void loadCaptcha();
-});
-
 // 离开登录页时取消进行中的重试计时器，避免页面卸载后仍在轮询
 onBeforeUnmount(clearCaptchaRetry);
 </script>
@@ -167,7 +239,7 @@ onBeforeUnmount(clearCaptchaRetry);
         <h1 class="login-header__title">蓝云后台管理系统</h1>
       </header>
 
-      <el-form ref="formRef" :model="form" :rules="rules" size="large" @keyup.enter="handleLogin">
+      <el-form v-if="!mfaStep" ref="formRef" :model="form" :rules="rules" size="large" @keyup.enter="handleLogin">
         <el-form-item prop="username">
           <el-input v-model="form.username" placeholder="请输入账号" clearable autocomplete="username">
             <template #prefix><i class="bi bi-person" /></template>
@@ -227,6 +299,36 @@ onBeforeUnmount(clearCaptchaRetry);
           <el-button type="primary" class="login-button" :loading="loading" @click="handleLogin"> 登 录 </el-button>
         </el-form-item>
       </el-form>
+
+      <!-- 第二因子：账号密码已通过，输入 authenticator 动态码或恢复码 -->
+      <el-form v-else class="mfa-form" size="large" @keyup.enter="submitMfa">
+        <el-form-item>
+          <el-input
+            v-model="mfaCode"
+            placeholder="请输入 6 位动态码或恢复码"
+            maxlength="32"
+            autocomplete="one-time-code"
+          >
+            <template #prefix><i class="bi bi-shield-lock" /></template>
+          </el-input>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" class="login-button" :loading="mfaLoading" @click="submitMfa"> 验 证 </el-button>
+        </el-form-item>
+        <el-form-item>
+          <el-button class="login-button" @click="backToPasswordStep"> 返回账号密码登录 </el-button>
+        </el-form-item>
+      </el-form>
+
+      <!-- 企业单点登录：存在启用中的提供方才渲染分隔线与按钮 -->
+      <template v-if="ssoProviders.length > 0">
+        <div class="login-divider"><span>其他登录方式</span></div>
+        <div class="sso-buttons">
+          <el-button v-for="provider in ssoProviders" :key="provider.id" class="sso-button" @click="goSso(provider.id)">
+            {{ provider.name }}
+          </el-button>
+        </div>
+      </template>
 
       <p v-if="devTip" class="login-tip">{{ devTip }}</p>
     </div>
@@ -292,6 +394,47 @@ onBeforeUnmount(clearCaptchaRetry);
   font-size: 12px;
   color: var(--el-text-color-secondary);
   text-align: center;
+}
+
+/* ------------------------------ 第二因子步骤 ------------------------------ */
+.mfa-form .el-button + .el-button {
+  margin-left: 0;
+}
+
+/* ------------------------------ 企业单点登录 ------------------------------ */
+
+/* 分隔线：中间文案，两端细线 */
+.login-divider {
+  display: flex;
+  align-items: center;
+  margin-top: 24px;
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+}
+
+.login-divider::before,
+.login-divider::after {
+  flex: 1;
+  height: 1px;
+  content: '';
+  background-color: var(--el-border-color-light);
+}
+
+.login-divider span {
+  padding: 0 12px;
+}
+
+.sso-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.sso-button {
+  width: 100%;
+  height: 42px;
+  margin-left: 0;
 }
 
 /* ------------------------------ 宽屏：加大留白 ------------------------------ */

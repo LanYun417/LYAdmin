@@ -832,6 +832,10 @@ export interface LoginResult {
   user: UserBrief;
   /** 是否必须强制修改初始口令（种子默认口令 / 管理员重置密码后被置位） */
   mustChangePassword?: boolean;
+  /** 是否需要二次验证（绑定了 MFA 的账号第一因子校验通过后返回） */
+  mfaRequired?: boolean;
+  /** 二次验证挑战令牌（配合 mfaRequired；5 分钟有效，不可访问业务接口） */
+  mfaToken?: string;
 }
 
 /** 登录图形验证码 */
@@ -1025,4 +1029,71 @@ export interface ProfileDetail extends UserBrief {
   position: string | null;
   address: string | null;
   sessions: SessionProfileItem[];
+}
+
+/* ------------------------------ 多因素认证（MFA） ------------------------------ */
+
+/** MFA 绑定状态（个人中心展示）。 */
+export interface MfaStatus {
+  /** 是否已启用 */
+  enabled: boolean;
+  /** 是否已有未确认的种子（setup 后、enable 前） */
+  pending: boolean;
+  /** 剩余可用恢复码数量 */
+  recoveryRemaining: number;
+  /** 启用时间（未启用为 null） */
+  enabledAt: string | null;
+}
+
+/** 开始绑定的返回：种子（供手动添加）+ otpauth URL。 */
+export interface MfaSetupResult {
+  secret: string;
+  otpauthUrl: string;
+}
+
+/* ------------------------------ 企业单点登录（SSO） ------------------------------ */
+
+/** SSO 提供方（clientSecret 只写不读，后端永不下发）。 */
+export interface SsoProvider {
+  id: number;
+  name: string;
+  protocol: string;
+  issuer: string;
+  authorizationUrl: string;
+  tokenUrl: string;
+  userInfoUrl: string;
+  jwksUrl: string | null;
+  clientId: string;
+  scopes: string;
+  redirectUri: string;
+  fieldMapping: Record<string, string>;
+  linkByEmail: boolean;
+  defaultRoleCodes: string[];
+  status: number;
+  sort: number;
+  remark: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** 新增 / 更新提供方参数（clientSecret 更新时留空 = 不修改）。 */
+export interface SsoProviderParams {
+  name: string;
+  issuer: string;
+  authorizationUrl: string;
+  tokenUrl: string;
+  userInfoUrl: string;
+  jwksUrl?: string;
+  clientId: string;
+  /** 新增必填；更新可留空 */
+  clientSecret?: string;
+  scopes?: string;
+  redirectUri: string;
+  /** 字段映射 JSON 字符串（username/email/nickname/avatar 的 claim 名） */
+  fieldMapping?: string;
+  linkByEmail?: boolean;
+  defaultRoleCodes?: string;
+  status?: number;
+  sort?: number;
+  remark?: string;
 }

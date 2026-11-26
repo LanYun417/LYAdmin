@@ -382,6 +382,48 @@ export const API_DOCS: ApiDocGroup[] = [
       },
       {
         "method": "POST",
+        "path": "/api/auth/mfa/verify",
+        "summary": "二次验证（MFA）登录。 登录接口返回 `mfaRequired: true` 时，前端引导用户输入 authenticator 动态码 / 恢复码，连同 `mfaToken` 一起提交到这里换取正式双 Token",
+        "permission": [],
+        "isPublic": true,
+        "action": "认证 · 二次验证登录",
+        "params": [
+          {
+            "name": "mfaToken",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "登录流程下发的挑战令牌（mfaToken）",
+            "example": "示例值"
+          },
+          {
+            "name": "code",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "动态码或恢复码（恢复码含连字符，放宽字符集）",
+            "example": "示例值"
+          },
+          {
+            "name": "timezoneOffset",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "可选：客户端时区偏移（与登录请求保持一致口径，暂无业务用途，预留）",
+            "example": 1
+          }
+        ],
+        "examples": {
+          "curl": "curl -X POST \"http://localhost:3100/api/auth/mfa/verify\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"mfaToken\": \"示例值\",\n      \"code\": \"示例值\",\n      \"timezoneOffset\": 1\n    }'",
+          "requestBody": {
+            "mfaToken": "示例值",
+            "code": "示例值",
+            "timezoneOffset": 1
+          }
+        }
+      },
+      {
+        "method": "POST",
         "path": "/api/auth/refresh",
         "summary": "刷新 Token",
         "permission": [],
@@ -4612,6 +4654,535 @@ export const API_DOCS: ApiDocGroup[] = [
     ]
   },
   {
+    "group": "SSO 配置",
+    "endpoints": [
+      {
+        "method": "GET",
+        "path": "/api/sso/:id/authorize",
+        "summary": "取授权跳转地址（公开：前端拿到 URL 后自行 302）",
+        "permission": [],
+        "isPublic": true,
+        "action": "",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3100/api/sso/1/authorize\"",
+          "pathParams": {
+            "id": "1"
+          }
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/api/sso/admin/providers",
+        "summary": "管理面：提供方列表（含完整配置，clientSecret 永不出库）",
+        "permission": [],
+        "isPublic": false,
+        "action": "",
+        "params": [
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "页码，从 1 开始",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "每页条数",
+            "example": 10
+          }
+        ],
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3100/api/sso/admin/providers?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "page": 1,
+            "pageSize": 10
+          }
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/api/sso/admin/providers/:id",
+        "summary": "管理面：提供方详情",
+        "permission": [],
+        "isPublic": false,
+        "action": "",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3100/api/sso/admin/providers/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "id": "1"
+          }
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/api/sso/callback",
+        "summary": "OIDC 回调（公开）。 换取一次性 ticket 后 302 到前端回调页；URL 上不出现正式令牌",
+        "permission": [],
+        "isPublic": true,
+        "action": "",
+        "params": [
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "页码，从 1 开始",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "每页条数",
+            "example": 10
+          }
+        ],
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3100/api/sso/callback?page=1&pageSize=10\"",
+          "query": {
+            "page": 1,
+            "pageSize": 10
+          }
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/api/sso/providers",
+        "summary": "登录页可见的启用中提供方（公开）",
+        "permission": [],
+        "isPublic": true,
+        "action": "",
+        "params": [
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "页码，从 1 开始",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "每页条数",
+            "example": 10
+          }
+        ],
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3100/api/sso/providers?page=1&pageSize=10\"",
+          "query": {
+            "page": 1,
+            "pageSize": 10
+          }
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/api/sso/admin/providers",
+        "summary": "管理面：新增提供方",
+        "permission": [],
+        "isPublic": false,
+        "action": "SSO 配置 · 新增",
+        "params": [
+          {
+            "name": "name",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "log-archive"
+          },
+          {
+            "name": "issuer",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "OIDC issuer（校验 id_token 的 iss）",
+            "example": "示例值"
+          },
+          {
+            "name": "authorizationUrl",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "示例值"
+          },
+          {
+            "name": "tokenUrl",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "示例值"
+          },
+          {
+            "name": "userInfoUrl",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "示例值"
+          },
+          {
+            "name": "jwksUrl",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "JWKS 端点；留空 = 不验签（仅内网自建提供方建议）",
+            "example": "示例值"
+          },
+          {
+            "name": "clientId",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "示例值"
+          },
+          {
+            "name": "clientSecret",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "新增必填；更新可留空（不修改）",
+            "example": "示例值"
+          },
+          {
+            "name": "scopes",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "示例值"
+          },
+          {
+            "name": "redirectUri",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "后端接收 code 的完整回调地址",
+            "example": "示例值"
+          },
+          {
+            "name": "fieldMapping",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "字段映射 JSON（username/email/nickname/avatar 的 claim 名）",
+            "example": "示例值"
+          },
+          {
+            "name": "linkByEmail",
+            "in": "body",
+            "type": "boolean",
+            "required": false,
+            "description": "",
+            "example": true
+          },
+          {
+            "name": "defaultRoleCodes",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "自动建号时授予的角色编码（逗号分隔）",
+            "example": "示例值"
+          },
+          {
+            "name": "status",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 1
+          },
+          {
+            "name": "sort",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 1
+          },
+          {
+            "name": "remark",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "示例备注"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X POST \"http://localhost:3100/api/sso/admin/providers\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"name\": \"log-archive\",\n      \"issuer\": \"示例值\",\n      \"authorizationUrl\": \"示例值\",\n      \"tokenUrl\": \"示例值\",\n      \"userInfoUrl\": \"示例值\",\n      \"jwksUrl\": \"示例值\",\n      \"clientId\": \"示例值\",\n      \"clientSecret\": \"示例值\",\n      \"scopes\": \"示例值\",\n      \"redirectUri\": \"示例值\",\n      \"fieldMapping\": \"示例值\",\n      \"linkByEmail\": true,\n      \"defaultRoleCodes\": \"示例值\",\n      \"status\": 1,\n      \"sort\": 1,\n      \"remark\": \"示例备注\"\n    }'",
+          "requestBody": {
+            "name": "log-archive",
+            "issuer": "示例值",
+            "authorizationUrl": "示例值",
+            "tokenUrl": "示例值",
+            "userInfoUrl": "示例值",
+            "jwksUrl": "示例值",
+            "clientId": "示例值",
+            "clientSecret": "示例值",
+            "scopes": "示例值",
+            "redirectUri": "示例值",
+            "fieldMapping": "示例值",
+            "linkByEmail": true,
+            "defaultRoleCodes": "示例值",
+            "status": 1,
+            "sort": 1,
+            "remark": "示例备注"
+          }
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/api/sso/redeem",
+        "summary": "前端用 ticket 换本站双 Token（公开）",
+        "permission": [],
+        "isPublic": true,
+        "action": "",
+        "params": [
+          {
+            "name": "ticket",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "示例值"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X POST \"http://localhost:3100/api/sso/redeem\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"ticket\": \"示例值\"\n    }'",
+          "requestBody": {
+            "ticket": "示例值"
+          }
+        }
+      },
+      {
+        "method": "PUT",
+        "path": "/api/sso/admin/providers/:id",
+        "summary": "管理面：更新提供方（clientSecret 留空表示不修改）",
+        "permission": [],
+        "isPublic": false,
+        "action": "SSO 配置 · 编辑",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          },
+          {
+            "name": "name",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "log-archive"
+          },
+          {
+            "name": "issuer",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "OIDC issuer（校验 id_token 的 iss）",
+            "example": "示例值"
+          },
+          {
+            "name": "authorizationUrl",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "示例值"
+          },
+          {
+            "name": "tokenUrl",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "示例值"
+          },
+          {
+            "name": "userInfoUrl",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "示例值"
+          },
+          {
+            "name": "jwksUrl",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "JWKS 端点；留空 = 不验签（仅内网自建提供方建议）",
+            "example": "示例值"
+          },
+          {
+            "name": "clientId",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "示例值"
+          },
+          {
+            "name": "clientSecret",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "新增必填；更新可留空（不修改）",
+            "example": "示例值"
+          },
+          {
+            "name": "scopes",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "示例值"
+          },
+          {
+            "name": "redirectUri",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "后端接收 code 的完整回调地址",
+            "example": "示例值"
+          },
+          {
+            "name": "fieldMapping",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "字段映射 JSON（username/email/nickname/avatar 的 claim 名）",
+            "example": "示例值"
+          },
+          {
+            "name": "linkByEmail",
+            "in": "body",
+            "type": "boolean",
+            "required": false,
+            "description": "",
+            "example": true
+          },
+          {
+            "name": "defaultRoleCodes",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "自动建号时授予的角色编码（逗号分隔）",
+            "example": "示例值"
+          },
+          {
+            "name": "status",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 1
+          },
+          {
+            "name": "sort",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 1
+          },
+          {
+            "name": "remark",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "示例备注"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X PUT \"http://localhost:3100/api/sso/admin/providers/1\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"name\": \"log-archive\",\n      \"issuer\": \"示例值\",\n      \"authorizationUrl\": \"示例值\",\n      \"tokenUrl\": \"示例值\",\n      \"userInfoUrl\": \"示例值\",\n      \"jwksUrl\": \"示例值\",\n      \"clientId\": \"示例值\",\n      \"clientSecret\": \"示例值\",\n      \"scopes\": \"示例值\",\n      \"redirectUri\": \"示例值\",\n      \"fieldMapping\": \"示例值\",\n      \"linkByEmail\": true,\n      \"defaultRoleCodes\": \"示例值\",\n      \"status\": 1,\n      \"sort\": 1,\n      \"remark\": \"示例备注\"\n    }'",
+          "pathParams": {
+            "id": "1"
+          },
+          "requestBody": {
+            "name": "log-archive",
+            "issuer": "示例值",
+            "authorizationUrl": "示例值",
+            "tokenUrl": "示例值",
+            "userInfoUrl": "示例值",
+            "jwksUrl": "示例值",
+            "clientId": "示例值",
+            "clientSecret": "示例值",
+            "scopes": "示例值",
+            "redirectUri": "示例值",
+            "fieldMapping": "示例值",
+            "linkByEmail": true,
+            "defaultRoleCodes": "示例值",
+            "status": 1,
+            "sort": 1,
+            "remark": "示例备注"
+          }
+        }
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/sso/admin/providers/:id",
+        "summary": "管理面：删除提供方（绑定关系一并清理）",
+        "permission": [],
+        "isPublic": false,
+        "action": "SSO 配置 · 删除",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X DELETE \"http://localhost:3100/api/sso/admin/providers/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "id": "1"
+          }
+        }
+      }
+    ]
+  },
+  {
     "group": "IP 访问控制",
     "endpoints": [
       {
@@ -5088,6 +5659,140 @@ export const API_DOCS: ApiDocGroup[] = [
           "curl": "curl -X DELETE \"http://localhost:3100/api/export-tasks/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
           "pathParams": {
             "id": "1"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "group": "安全中心",
+    "endpoints": [
+      {
+        "method": "GET",
+        "path": "/api/mfa/status",
+        "summary": "当前 MFA 状态",
+        "permission": [],
+        "isPublic": false,
+        "action": "",
+        "params": [
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "页码，从 1 开始",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "每页条数",
+            "example": 10
+          }
+        ],
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3100/api/mfa/status?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "page": 1,
+            "pageSize": 10
+          }
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/api/mfa/disable",
+        "summary": "解绑（需登录口令）",
+        "permission": [],
+        "isPublic": false,
+        "action": "安全中心 · 解绑二次验证",
+        "params": [
+          {
+            "name": "password",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "123456"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X POST \"http://localhost:3100/api/mfa/disable\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"password\": \"123456\"\n    }'",
+          "requestBody": {
+            "password": "123456"
+          }
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/api/mfa/enable",
+        "summary": "确认绑定：校验动态码后启用，返回一次性恢复码",
+        "permission": [],
+        "isPublic": false,
+        "action": "安全中心 · 启用二次验证",
+        "params": [
+          {
+            "name": "code",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "示例值"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X POST \"http://localhost:3100/api/mfa/enable\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"code\": \"示例值\"\n    }'",
+          "requestBody": {
+            "code": "示例值"
+          }
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/api/mfa/setup",
+        "summary": "开始绑定：返回种子与 otpauth URL（需登录口令）",
+        "permission": [],
+        "isPublic": false,
+        "action": "安全中心 · 绑定二次验证",
+        "params": [
+          {
+            "name": "password",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "123456"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X POST \"http://localhost:3100/api/mfa/setup\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"password\": \"123456\"\n    }'",
+          "requestBody": {
+            "password": "123456"
+          }
+        }
+      },
+      {
+        "method": "PUT",
+        "path": "/api/mfa/recovery",
+        "summary": "重新签发恢复码（需一次动态码校验，旧码作废）",
+        "permission": [],
+        "isPublic": false,
+        "action": "安全中心 · 重签恢复码",
+        "params": [
+          {
+            "name": "code",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "示例值"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X PUT \"http://localhost:3100/api/mfa/recovery\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"code\": \"示例值\"\n    }'",
+          "requestBody": {
+            "code": "示例值"
           }
         }
       }

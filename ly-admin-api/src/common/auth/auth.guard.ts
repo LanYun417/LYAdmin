@@ -82,6 +82,12 @@ export async function authenticateRequest(
     throw AppException.unauthorized('访问令牌无效');
   }
 
+  // MFA 挑战令牌是登录流程的中间产物（第一因子已过、第二因子未验证），
+  // **不得**当普通访问令牌使用——否则一个 5 分钟窗口就能绕过二次验证。
+  if (payload.purpose) {
+    throw AppException.unauthorized('访问令牌无效');
+  }
+
   const context = await authUserService.loadAuthUser(Number(payload.userId));
   if (!context) {
     throw AppException.unauthorized('用户不存在');

@@ -14,6 +14,7 @@ import { isResponseEnvelope } from '../../common/http/response.interceptor.js';
 import type { AuthUserContext } from '../../common/types.js';
 import { AuthService } from './auth.service.js';
 import { LoginDto, RefreshDto } from './dto/auth.dto.js';
+import { MfaVerifyLoginDto } from '../mfa/dto/mfa.dto.js';
 import { MenuService } from '../menu/menu.service.js';
 
 @Controller('auth')
@@ -70,6 +71,21 @@ export class AuthController {
   @Post('refresh')
   async refresh(@Body() dto: RefreshDto): Promise<unknown> {
     return this.authService.refresh(dto.refreshToken);
+  }
+
+  /**
+   * 二次验证（MFA）登录。
+   * 登录接口返回 `mfaRequired: true` 时，前端引导用户输入 authenticator
+   * 动态码 / 恢复码，连同 `mfaToken` 一起提交到这里换取正式双 Token。
+   */
+  @Public()
+  @Post('mfa/verify')
+  @OperationLog('认证', '二次验证登录')
+  async mfaVerify(@Body() dto: MfaVerifyLoginDto, @Req() req: Request): Promise<unknown> {
+    const userAgent = String(req.headers['user-agent'] ?? '');
+    const ip = getClientIp(req);
+    const result = await this.authService.verifyMfaLogin(dto.mfaToken, dto.code, ip, userAgent);
+    return { __raw: true, data: result, message: '登录成功' };
   }
 
   /** 登出。 */

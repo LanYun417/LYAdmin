@@ -61,6 +61,9 @@ export const ModelName = {
   OperationLog: 'OperationLog',
   HttpLog: 'HttpLog',
   Notice: 'Notice',
+  UserMfa: 'UserMfa',
+  SsoProvider: 'SsoProvider',
+  UserSso: 'UserSso',
   User: 'User',
   Role: 'Role',
   Menu: 'Menu',
@@ -260,6 +263,56 @@ export const NoticeScalarFieldEnum = {
 } as const
 
 export type NoticeScalarFieldEnum = (typeof NoticeScalarFieldEnum)[keyof typeof NoticeScalarFieldEnum]
+
+
+export const UserMfaScalarFieldEnum = {
+  id: 'id',
+  secret: 'secret',
+  enabled: 'enabled',
+  recovery: 'recovery',
+  enabledAt: 'enabledAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type UserMfaScalarFieldEnum = (typeof UserMfaScalarFieldEnum)[keyof typeof UserMfaScalarFieldEnum]
+
+
+export const SsoProviderScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  protocol: 'protocol',
+  issuer: 'issuer',
+  authorizationUrl: 'authorizationUrl',
+  tokenUrl: 'tokenUrl',
+  userInfoUrl: 'userInfoUrl',
+  jwksUrl: 'jwksUrl',
+  clientId: 'clientId',
+  clientSecret: 'clientSecret',
+  scopes: 'scopes',
+  redirectUri: 'redirectUri',
+  fieldMapping: 'fieldMapping',
+  linkByEmail: 'linkByEmail',
+  defaultRoleCodes: 'defaultRoleCodes',
+  status: 'status',
+  sort: 'sort',
+  remark: 'remark',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type SsoProviderScalarFieldEnum = (typeof SsoProviderScalarFieldEnum)[keyof typeof SsoProviderScalarFieldEnum]
+
+
+export const UserSsoScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  providerId: 'providerId',
+  subject: 'subject',
+  createdAt: 'createdAt'
+} as const
+
+export type UserSsoScalarFieldEnum = (typeof UserSsoScalarFieldEnum)[keyof typeof UserSsoScalarFieldEnum]
 
 
 export const UserScalarFieldEnum = {
@@ -562,6 +615,41 @@ export const NoticeOrderByRelevanceFieldEnum = {
 } as const
 
 export type NoticeOrderByRelevanceFieldEnum = (typeof NoticeOrderByRelevanceFieldEnum)[keyof typeof NoticeOrderByRelevanceFieldEnum]
+
+
+export const UserMfaOrderByRelevanceFieldEnum = {
+  secret: 'secret',
+  recovery: 'recovery'
+} as const
+
+export type UserMfaOrderByRelevanceFieldEnum = (typeof UserMfaOrderByRelevanceFieldEnum)[keyof typeof UserMfaOrderByRelevanceFieldEnum]
+
+
+export const SsoProviderOrderByRelevanceFieldEnum = {
+  name: 'name',
+  protocol: 'protocol',
+  issuer: 'issuer',
+  authorizationUrl: 'authorizationUrl',
+  tokenUrl: 'tokenUrl',
+  userInfoUrl: 'userInfoUrl',
+  jwksUrl: 'jwksUrl',
+  clientId: 'clientId',
+  clientSecret: 'clientSecret',
+  scopes: 'scopes',
+  redirectUri: 'redirectUri',
+  fieldMapping: 'fieldMapping',
+  defaultRoleCodes: 'defaultRoleCodes',
+  remark: 'remark'
+} as const
+
+export type SsoProviderOrderByRelevanceFieldEnum = (typeof SsoProviderOrderByRelevanceFieldEnum)[keyof typeof SsoProviderOrderByRelevanceFieldEnum]
+
+
+export const UserSsoOrderByRelevanceFieldEnum = {
+  subject: 'subject'
+} as const
+
+export type UserSsoOrderByRelevanceFieldEnum = (typeof UserSsoOrderByRelevanceFieldEnum)[keyof typeof UserSsoOrderByRelevanceFieldEnum]
 
 
 export const UserOrderByRelevanceFieldEnum = {

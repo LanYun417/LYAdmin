@@ -2,7 +2,7 @@
  * 用户 Store：登录 / 登出、Token 与当前用户信息（角色、权限码、菜单树）。
  */
 
-import { getMenusApi, getProfileApi, loginApi, logoutApi } from '@/api/auth';
+import { getMenusApi, getProfileApi, loginApi, logoutApi, verifyMfaApi } from '@/api/auth';
 import type { LoginParams, MenuNode, UserDetail } from '@/types/api';
 import { getAccessToken, getRefreshToken, removeToken, setToken } from '@/utils/auth';
 import { clearMenuCache, getMenuCache, setMenuCache } from '@/utils/menuCache';
@@ -54,8 +54,13 @@ export const useUserStore = defineStore(
      *
      * @param params 账号密码
      */
-    async function login(params: LoginParams): Promise<void> {
+    async function login(params: LoginParams): Promise<string | null> {
       const res = await loginApi(params);
+      // 绑定 MFA 的账号第一因子通过后只拿到挑战令牌：不写 Token，
+      // 由登录页引导输入动态码后调 verifyMfa（登录态在第二因子通过后才真正建立）
+      if (res.mfaRequired) {
+        return res.mfaToken ?? '';
+      }
       accessToken.value = res.accessToken;
       refreshToken.value = res.refreshToken;
       setToken(res.accessToken, res.refreshToken);
@@ -63,6 +68,19 @@ export const useUserStore = defineStore(
       mustChangePassword.value = res.mustChangePassword ?? false;
       loaded.value = false;
       // 重新登录应拉取新用户的菜单，清掉上一用户的缓存
+      clearMenuCache();
+      return null;
+    }
+
+    /** 二次验证通过：写入正式 Token 与用户信息，登录态就此建立。 */
+    async function verifyMfa(mfaToken: string, code: string): Promise<void> {
+      const res = await verifyMfaApi({ mfaToken, code });
+      accessToken.value = res.accessToken;
+      refreshToken.value = res.refreshToken;
+      setToken(res.accessToken, res.refreshToken);
+      userInfo.value = res.user as UserDetail;
+      mustChangePassword.value = res.mustChangePassword ?? false;
+      loaded.value = false;
       clearMenuCache();
     }
 
@@ -146,6 +164,7 @@ export const useUserStore = defineStore(
       avatar,
       isReadonlyGuest,
       login,
+      verifyMfa,
       fetchProfile,
       fetchMenus,
       loadUserInfo,
