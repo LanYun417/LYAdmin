@@ -2,8 +2,6 @@
 defineOptions({ name: 'BasicDialog', inheritAttrs: false });
 
 interface Props {
-  /** 是否显示弹窗 */
-  modelValue: boolean;
   /** 弹窗标题 */
   title?: string;
   /** 桌面端宽度；视口 ≤768px 时自动压缩为 98%，固定宽度不再溢出移动端 */
@@ -29,12 +27,15 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: boolean): void;
   /** 默认 footer 的确定按钮回调：表单校验与提交由调用方处理 */
   (e: 'confirm'): void;
 }>();
 
-/** 显隐双向绑定 */
+/**
+ * 显隐双向绑定。
+ * 只用 defineModel 声明 v-model：props 里再写一份 modelValue 会构成重复键
+ * （vue/no-dupe-keys 直接报错），且 defineModel 本身就会派发 update:modelValue。
+ */
 const visible = defineModel<boolean>({ required: true });
 
 const { width: windowWidth } = useWindowSize();
