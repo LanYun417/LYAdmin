@@ -53,6 +53,27 @@ curl --noproxy '*' http://localhost:3000/api/health/ready
 `prisma migrate deploy` **并补齐表/字段注释**后成功退出 → `api` 启动
 （启动时自动跑幂等种子，建出超管与菜单）。
 
+> **初始口令治理（硬规则）**：生产环境首次启动未配置 `SEED_ADMIN_PASSWORD` 时，
+> 种子会**拒绝启动**——默认弱口令（`123456`）不允许进入生产库。用配置口令创建的账号
+> 不受影响；开发环境用默认口令创建的 `admin` 会被标记「登录后强制改密」，
+> 登录后前端自动收敛到个人中心，改密成功需重新登录。管理员「重置密码」同样会标记
+> 强制改密（临时口令不长期共用）。
+
+## 3. Nginx / 反代与缓存（必读，2026-11-24 线上事故复盘）
+
+SPA 项目开反代缓存会出页面 404，本仓库已把安全配置模板固化到
+[`deploy/nginx/ly-admin-site.conf`](./nginx/ly-admin-site.conf)，要点：
+
+1. **API 与页面一律 `proxy_cache off`**：宝塔全局 `proxy.conf` 默认给所有反代站点开
+   `proxy_cache cache_one`，HTML 与 Brotli/Gzip 压缩变体按 URL 缓存约 1 小时，
+   快速刷新时浏览器可能拿到另一压缩算法的响应体 → 页面 404；
+2. **如果面板装了「站点加速 / 页面缓存」类插件**（宝塔 site_speed 等 Lua 缓存），
+   确认对该站点**关闭**——它比 proxy_cache 更隐蔽（`proxy_cache off` 都拦不住它）；
+3. **SSE 单独 location**：`proxy_buffering off` + 长 `proxy_read_timeout`，
+   否则实时推送变成「连上了但收不到帧」；
+4. **真实 IP**：`set_real_ip_from` + 后端 `.env` 的 `TRUST_PROXY` 配套设置，
+   否则限流、审计日志、IP 黑白名单拿到的全是 127.0.0.1。
+
 > 为什么迁移后还要补注释：Prisma 生成的 `migration.sql` **不含 `COMMENT` 语句**
 > （列注释是本项目用 `scripts/prisma-comments.ts` 单独维护的，见 `prisma/schema/*.prisma` 里的
 > `///` 注释）。若只跑 `migrate deploy`，线上库一条注释都没有，

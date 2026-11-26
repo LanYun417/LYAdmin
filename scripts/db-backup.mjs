@@ -7,7 +7,14 @@
  *   node scripts/db-backup.mjs --keep 14          # 覆盖保留份数（默认 7）
  *   node scripts/db-backup.mjs --list             # 只列已有备份，不执行
  *   node scripts/db-backup.mjs --dir <path>       # 覆盖输出目录
+ *   node scripts/db-backup.mjs --verify [file]    # 恢复校验：解压导入临时库并核对表数
  *
+ * 恢复校验（--verify）说明：
+ * - 「备份文件存在」≠「备份可用」：截断的 gzip、缺库权限、字符集问题都只在恢复时才暴露。
+ *   该模式把指定备份（默认最新一份）导入 `ly_admin_restore_check` 临时库，核对表数量后丢弃，
+ *   以最小代价验证「这份备份真的能恢复」；
+ * - 需要数据库账号有 CREATE/DROP 权限；校验用的临时库名固定，重复执行会先清理再建；
+ * - 退出码：0 = 通过；1 = 失败（文件缺失 / 解压或导入失败 / 表数与线上不一致）。
  * 说明：
  * - 口令从 ly-admin-api/.env 读（DB_USER/DB_PASSWORD/DB_NAME/DB_HOST/DB_PORT），
  *   不在命令行传参（进程列表里 `--password=` 会明文泄露）；
@@ -17,7 +24,7 @@
  * - 配套建议：配 crontab / 计划任务每日跑一次，保留份数按 RPO 定。
  */
 import { execFile } from 'node:child_process';
-import { createGzip } from 'node:zlib';
+import { createGunzip, createGzip } from 'node:zlib';
 import fs from 'node:fs';
 import path from 'node:path';
 import { pipeline } from 'node:stream/promises';
@@ -30,7 +37,7 @@ const DEFAULT_BACKUP_DIR = path.join(API_DIR, 'backups');
 
 /** 解析命令行参数（--key value）。 */
 function parseArgs(argv) {
-  const args = { keep: 7, dir: DEFAULT_BACKUP_DIR, list: false };
+  const args = { keep: 7, dir: DEFAULT_BACKUP_DIR, list: false, verify: false, verifyFile: null };
   for (let index = 0; index < argv.length; index += 1) {
     const token = argv[index];
     if (token === '--keep') {
@@ -41,9 +48,136 @@ function parseArgs(argv) {
       index += 1;
     } else if (token === '--list') {
       args.list = true;
+    } else if (token === '--verify') {
+      args.verify = true;
+      // --verify [file]：file 可省略（取最新一份），也可显式指定
+      const next = argv[index + 1];
+      if (next && !next.startsWith('--')) {
+        args.verifyFile = next;
+        index += 1;
+      }
     }
   }
   return args;
+}
+
+/** 执行 mysql 客户端命令（口令走 MYSQL_PWD，不进命令行），返回 stdout。 */
+function runMysql(config, sql) {
+  return new Promise((resolve, reject) => {
+    const child = execFile(
+      'mysql',
+      ['-h', config.host, '-P', String(config.port), '-u', config.user, config.database, '-e', sql],
+      { env: { ...process.env, MYSQL_PWD: config.password }, maxBuffer: 16 * 1024 * 1024 },
+    );
+    let stdout = '';
+    child.stdout?.on('data', (chunk) => {
+      stdout += chunk;
+    });
+    child.on('error', (error) => {
+      if (error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT') {
+        reject(new Error('找不到 mysql 客户端：请确认 MySQL 客户端已安装并在 PATH 中'));
+        return;
+      }
+      reject(error);
+    });
+    child.on('exit', (code) => {
+      if (code === 0) {
+        resolve(stdout);
+        return;
+      }
+      reject(new Error(`mysql 退出码 ${code}`));
+    });
+  });
+}
+
+/** 查询库的表数量（SHOW TABLES 行数）。 */
+async function countTables(config) {
+  const stdout = await runMysql(config, 'SHOW TABLES;');
+  return stdout
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean).length;
+}
+
+/**
+ * 恢复校验：把备份导入临时库并核对表数。
+ *
+ * 一次性临时库名固定为 `<库名>_restore_check`：重复校验会先 DROP 再 CREATE，
+ * 避免历史残留把「旧备份」误判成通过。
+ */
+async function verifyBackup(args, config) {
+  const backups = listBackups(args.dir);
+  if (backups.length === 0) {
+    console.error(`[db-backup] ${args.dir} 下没有可校验的备份`);
+    process.exit(1);
+  }
+  const chosen = args.verifyFile
+    ? (backups.find((backup) => backup.name === args.verifyFile) ?? {
+        name: args.verifyFile,
+        bytes: 0,
+        mtime: new Date(),
+      })
+    : backups[0];
+  const file = path.isAbsolute(chosen.name) ? chosen.name : path.join(args.dir, chosen.name);
+  if (!fs.existsSync(file)) {
+    console.error(`[db-backup] 备份文件不存在：${file}`);
+    process.exit(1);
+  }
+
+  const checkDatabase = `${config.database}_restore_check`;
+  const startedAt = Date.now();
+  console.log(`[db-backup] 恢复校验 ${file} → 临时库 ${checkDatabase}`);
+  try {
+    await runMysql(
+      config,
+      `DROP DATABASE IF EXISTS \`${checkDatabase}\`; CREATE DATABASE \`${checkDatabase}\` CHARACTER SET utf8mb4;`,
+    );
+    await new Promise((resolve, reject) => {
+      const gunzip = createGunzip();
+      const child = execFile(
+        'mysql',
+        ['-h', config.host, '-P', String(config.port), '-u', config.user, checkDatabase],
+        { env: { ...process.env, MYSQL_PWD: config.password } },
+      );
+      const stream = fs.createReadStream(file);
+      void stream.pipe(gunzip).pipe(child.stdin);
+      let settled = false;
+      const settle = (error) => {
+        if (settled) return;
+        settled = true;
+        if (error) {
+          reject(error);
+        } else {
+          resolve();
+        }
+      };
+      child.on('error', settle);
+      child.on('exit', (code) => {
+        // 退出码 0 才算导入成功；管道 finish 只代表数据写完，导入可能仍在进行
+        settle(code === 0 ? undefined : new Error(`导入退出码 ${code ?? 'unknown'}`));
+      });
+      stream.on('error', settle);
+      gunzip.on('error', settle);
+      // 兜底超时：避免 mysql 挂起把校验流程卡死
+      setTimeout(() => settle(new Error('导入超时（120s）')), 120_000);
+    });
+    const restored = await countTables({ ...config, database: checkDatabase });
+    const live = await countTables(config);
+    if (restored <= 0) {
+      throw new Error('临时库中没有表，备份可能为空或已损坏');
+    }
+    if (live > 0 && restored !== live) {
+      throw new Error(`表数不一致：备份 ${restored} 张 vs 线上 ${live} 张（备份可能早于结构变更）`);
+    }
+    console.log(
+      `[db-backup] ✅ 校验通过：备份可恢复，共 ${restored} 张表（线上 ${live} 张），用时 ${((Date.now() - startedAt) / 1000).toFixed(1)}s`,
+    );
+  } catch (error) {
+    console.error(`[db-backup] ❌ 校验失败：${error instanceof Error ? error.message : String(error)}`);
+    process.exitCode = 1;
+  } finally {
+    await runMysql(config, `DROP DATABASE IF EXISTS \`${checkDatabase}\`;`).catch(() => undefined);
+  }
 }
 
 /** 读取 ly-admin-api/.env 的键值（不做任何转义，仅取我们需要的几个键）。 */
@@ -156,6 +290,11 @@ function pruneBackups(dir, keep) {
 
 function main() {
   const args = parseArgs(process.argv.slice(2));
+
+  if (args.verify) {
+    verifyBackup(args, readDbConfig());
+    return;
+  }
 
   if (args.list) {
     const backups = listBackups(args.dir);

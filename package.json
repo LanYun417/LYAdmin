@@ -20,6 +20,7 @@
     "guard:bundle": "node scripts/bundle-budget.mjs",
     "slow-sql": "node scripts/slow-sql-report.mjs",
     "backup:db": "node scripts/db-backup.mjs",
+    "backup:verify": "node scripts/db-backup.mjs --verify",
     "commit": "cz",
     "dev:api": "npm --prefix ly-admin-api run start:dev",
     "dev:web": "npm --prefix ly-admin-web run dev",
