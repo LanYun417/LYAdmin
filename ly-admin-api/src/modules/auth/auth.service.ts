@@ -20,6 +20,7 @@ import { AuthUserService } from '../../common/auth/auth-user.service.js';
 import { ConfigService } from '../config/config.service.js';
 import { NOTICE_TYPE, NoticeService } from '../notice/notice.service.js';
 import { MfaService } from '../mfa/mfa.service.js';
+import { LdapService } from '../ldap/ldap.service.js';
 import type { AuthContext, JwtPayload, UserBrief } from '../../common/types.js';
 
 /** 登录结果。 */
@@ -29,6 +30,26 @@ export interface LoginResult {
   user: UserBrief;
   /** 是否必须强制修改初始口令（种子默认口令 / 管理员重置密码后被置位） */
   mustChangePassword: boolean;
+}
+
+/** 登录流程所需的用户记录（含角色关联，供设备控制与令牌签发复用）。 */
+interface LoginUserRecord {
+  id: bigint;
+  username: string;
+  nickname: string;
+  password: string;
+  avatar: string | null;
+  email: string | null;
+  phone: string | null;
+  gender: string | null;
+  status: number;
+  deptId: bigint;
+  lastLoginAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  mustChangePassword: number;
+  maxDevices: number | null;
+  userRoles?: Array<{ role: { roleCode: string; maxDevices: number | null } }>;
 }
 
 /** 登录中间结果：第一因子已过、二次验证未完成。 */
@@ -91,6 +112,7 @@ export class AuthService {
     private readonly configService: ConfigService,
     private readonly noticeService: NoticeService,
     private readonly mfaService: MfaService,
+    private readonly ldapService: LdapService,
   ) {}
 
   /** 将用户记录转换为对外简要信息。 */
@@ -182,52 +204,51 @@ export class AuthService {
     const location = await this.ipRegion.locate(ip);
 
     // 连带读角色编码：设备并发控制需要用它判定「访客豁免」（见 applyDeviceLimit）
-    const user = await this.prisma.user.findUnique({
-      where: { username },
-      include: { userRoles: { select: { role: { select: { roleCode: true, maxDevices: true } } } } },
-    });
-    if (!user) {
+    const localUser = await this.loadUserForLogin(username);
+    const localPasswordOk = localUser ? await comparePassword(password, localUser.password) : false;
+
+    // 最终参与后续流程（状态 / 设备控制 / 令牌签发）的账号：
+    // 本地口令正确 → 本地账号；否则走 LDAP 回退（目录认证成功则取其本地账号，未建号则自动建号）
+    // activeUser 与 localUser 同源（都是带 userRoles 的完整用户记录），供后续统一流程使用
+    const activeUser = localPasswordOk
+      ? localUser
+      : await this.ldapFallbackLogin(username, password, ip, userAgent, location);
+
+    if (!activeUser) {
       await this.writeLoginLog(username, ip, userAgent, LogResult.FAIL, ERROR_MESSAGE.LOGIN_FAILED, location);
       throw AppException.unauthorized(ERROR_MESSAGE.LOGIN_FAILED);
     }
-
-    const matched = await comparePassword(password, user.password);
-    if (!matched) {
-      await this.writeLoginLog(username, ip, userAgent, LogResult.FAIL, ERROR_MESSAGE.LOGIN_FAILED, location);
-      throw AppException.unauthorized(ERROR_MESSAGE.LOGIN_FAILED);
-    }
-
-    if (Number(user.status) !== Status.ENABLED) {
+    if (Number(activeUser.status) !== Status.ENABLED) {
       await this.writeLoginLog(username, ip, userAgent, LogResult.FAIL, ERROR_MESSAGE.ACCOUNT_DISABLED, location);
       throw AppException.unauthorized(ERROR_MESSAGE.ACCOUNT_DISABLED);
     }
 
     // 登录成功即重新建立会话：清掉上一次登出的时间标记，
     // 否则同秒内签发的令牌会被判为"登出前签发"而立刻失效（iat 精度是秒）
-    await this.blacklist.clearLogout(Number(user.id));
+    await this.blacklist.clearLogout(Number(activeUser.id));
 
-    await this.prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
+    await this.prisma.user.update({ where: { id: activeUser.id }, data: { lastLoginAt: new Date() } });
     // 登录会更新 lastLoginAt：失效该用户鉴权缓存，避免 /auth/profile 在 TTL 内返回陈旧值
-    this.authCache.invalidate(Number(user.id));
+    this.authCache.invalidate(Number(activeUser.id));
 
     // 设备并发控制：非访客角色达到在线设备上限时，回收最旧会话后放行新登录（访客豁免）
-    await this.applyDeviceLimit(user);
+    await this.applyDeviceLimit(activeUser);
 
     // 第二因子：已绑定 MFA 的账号不直接下发令牌，先给一个短期挑战令牌；
     // 设备上限已在上面收敛，挑战期间不占会话名额。
-    if (await this.mfaService.isEnabled(Number(user.id))) {
+    if (await this.mfaService.isEnabled(Number(activeUser.id))) {
       await this.writeLoginLog(username, ip, userAgent, LogResult.SUCCESS, '二次验证待确认', location);
       return {
         mfaRequired: true,
         mfaToken: await this.jwtService.signMfaChallengeToken(
-          { userId: Number(user.id), username: user.username },
+          { userId: Number(activeUser.id), username: activeUser.username },
           config.mfa.challengeExpiresMinutes,
         ),
       };
     }
 
     await this.writeLoginLog(username, ip, userAgent, LogResult.SUCCESS, '登录成功', location);
-    return this.issueTokens(user, ip, userAgent, location);
+    return this.issueTokens(activeUser, ip, userAgent, location);
   }
 
   /**
@@ -250,6 +271,46 @@ export class AuthService {
    * 挑战期间账号可能被禁用 / 已解绑 MFA / 挑战过期——逐一复核，
    * 任一条不满足都按 401 拒绝（宁可让用户重新登录，也不在中间态放行）。
    */
+  /** 按用户名加载「登录流程所需」的用户记录（含角色关联，供设备控制与令牌签发）。 */
+  private loadUserForLogin(username: string): Promise<LoginUserRecord | null> {
+    return this.prisma.user.findUnique({
+      where: { username },
+      include: { userRoles: { select: { role: { select: { roleCode: true, maxDevices: true } } } } },
+    });
+  }
+
+  /**
+   * LDAP 回退登录：本地口令校验失败时用目录凭据认证，成功则确保本地账号存在。
+   *
+   * 返回 null 的三种情况（调用方按「账号或密码错误」统一处理，不泄露是哪种）：
+   * 1. LDAP 未配置 / 未启用 / 信封密钥缺失；
+   * 2. 目录认证失败（用户不存在或口令错误）；
+   * 3. 自动建号失败（未配默认角色等，异常已在内部抛出并转为登录失败）。
+   */
+  private async ldapFallbackLogin(
+    username: string,
+    password: string,
+    ip: string,
+    userAgent: string,
+    location: string,
+  ): Promise<LoginUserRecord | null> {
+    if (!this.ldapService.isEnabled()) {
+      return null;
+    }
+    const ldapUser = await this.ldapService.authenticate(username, password);
+    if (!ldapUser) {
+      return null;
+    }
+    // 目录认证成功：确保本地账号存在（不存在则按 defaultRoleCodes 自动建号）
+    await this.ldapService.ensureLocalUser(ldapUser);
+    await this.writeLoginLog(username, ip, userAgent, LogResult.SUCCESS, '登录成功（LDAP）', location);
+    // 重新加载本地账号（含角色关联，供设备控制与令牌签发使用）
+    return this.prisma.user.findUnique({
+      where: { username: ldapUser.username },
+      include: { userRoles: { select: { role: { select: { roleCode: true, maxDevices: true } } } } },
+    });
+  }
+
   async verifyMfaLogin(mfaToken: string, code: string, ip: string, userAgent: string): Promise<LoginResult> {
     const challenge = await this.jwtService.verifyMfaChallengeToken(mfaToken).catch(() => {
       throw AppException.unauthorized('二次验证已过期，请重新登录');

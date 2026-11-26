@@ -9,9 +9,10 @@ import { MenuModule } from '../menu/menu.module.js';
 import { ConfigModule } from '../config/config.module.js';
 import { NoticeModule } from '../notice/notice.module.js';
 import { MfaModule } from '../mfa/mfa.module.js';
+import { LdapModule } from '../ldap/ldap.module.js';
 
 @Module({
-  imports: [MenuModule, ConfigModule, NoticeModule, MfaModule],
+  imports: [MenuModule, ConfigModule, NoticeModule, MfaModule, LdapModule],
   controllers: [AuthController],
   providers: [AuthService],
   exports: [AuthService],

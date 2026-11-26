@@ -77,6 +77,9 @@ export const OPENAPI_DOC: Record<string, unknown> = {
       "name": "IP 访问控制"
     },
     {
+      "name": "LDAP"
+    },
+    {
       "name": "Sse"
     },
     {
@@ -9002,6 +9005,242 @@ export const OPENAPI_DOC: Record<string, unknown> = {
         ]
       }
     },
+    "/api/ldap/config": {
+      "get": {
+        "tags": [
+          "LDAP"
+        ],
+        "summary": "配置视图（bindPassword 只回「是否已设置」）",
+        "operationId": "get__api_ldap_config",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "description": "页码"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 10
+            },
+            "description": "每页条数"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功（统一信封 { code, message, data }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "业务码，0 表示成功"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "list": {
+                          "type": "array",
+                          "items": {}
+                        },
+                        "total": {
+                          "type": "integer",
+                          "example": 0
+                        },
+                        "page": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "pageSize": {
+                          "type": "integer",
+                          "example": 10
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "LDAP"
+        ],
+        "summary": "保存配置",
+        "operationId": "put__api_ldap_config",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveLdapConfigDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功（统一信封 { code, message, data }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "业务码，0 表示成功"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/SaveLdapConfigDto"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/ldap/test": {
+      "post": {
+        "tags": [
+          "LDAP"
+        ],
+        "summary": "用已保存配置测试连接",
+        "operationId": "post__api_ldap_test",
+        "responses": {
+          "200": {
+            "description": "成功（统一信封 { code, message, data }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "业务码，0 表示成功"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {}
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/ldap/test-preview": {
+      "post": {
+        "tags": [
+          "LDAP"
+        ],
+        "summary": "用表单里的参数测试连接（保存前校验，不落库）",
+        "operationId": "post__api_ldap_test_preview",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TestLdapConfigDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功（统一信封 { code, message, data }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "业务码，0 表示成功"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/TestLdapConfigDto"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
     "/api/sse/online-count": {
       "get": {
         "tags": [
@@ -13336,6 +13575,106 @@ export const OPENAPI_DOC: Record<string, unknown> = {
         },
         "required": [
           "ruleType"
+        ]
+      },
+      "TestLdapConfigDto": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "example": "https://example.com"
+          },
+          "bindDn": {
+            "type": "string",
+            "example": "示例值"
+          },
+          "bindPassword": {
+            "type": "string",
+            "example": "示例值"
+          },
+          "baseDn": {
+            "type": "string",
+            "example": "示例值"
+          },
+          "verifyCert": {
+            "type": "boolean",
+            "example": true
+          },
+          "startTls": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": [
+          "url",
+          "bindDn",
+          "bindPassword",
+          "baseDn"
+        ]
+      },
+      "SaveLdapConfigDto": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "example": true
+          },
+          "url": {
+            "type": "string",
+            "description": "服务器地址（ldap:// 或 ldads://）",
+            "example": "https://example.com"
+          },
+          "startTls": {
+            "type": "boolean",
+            "example": true
+          },
+          "verifyCert": {
+            "type": "boolean",
+            "example": true
+          },
+          "bindDn": {
+            "type": "string",
+            "description": "服务账号 DN",
+            "example": "示例值"
+          },
+          "bindPassword": {
+            "type": "string",
+            "description": "服务账号口令（留空 = 不修改原口令）",
+            "example": "示例值"
+          },
+          "baseDn": {
+            "type": "string",
+            "description": "用户搜索基准 DN",
+            "example": "示例值"
+          },
+          "userFilter": {
+            "type": "string",
+            "description": "过滤器模板，必须含 {{username}}",
+            "example": "示例值"
+          },
+          "usernameAttr": {
+            "type": "string",
+            "example": "示例值"
+          },
+          "emailAttr": {
+            "type": "string",
+            "example": "示例值"
+          },
+          "nicknameAttr": {
+            "type": "string",
+            "example": "示例值"
+          },
+          "defaultRoleCodes": {
+            "type": "string",
+            "description": "默认角色编码（逗号分隔）",
+            "example": "示例值"
+          }
+        },
+        "required": [
+          "enabled",
+          "url",
+          "bindDn",
+          "baseDn"
         ]
       },
       "CreateExportTaskDto": {

@@ -5456,6 +5456,247 @@ export const API_DOCS: ApiDocGroup[] = [
     ]
   },
   {
+    "group": "LDAP",
+    "endpoints": [
+      {
+        "method": "GET",
+        "path": "/api/ldap/config",
+        "summary": "配置视图（bindPassword 只回「是否已设置」）",
+        "permission": [],
+        "isPublic": false,
+        "action": "",
+        "params": [
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "页码，从 1 开始",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "每页条数",
+            "example": 10
+          }
+        ],
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3100/api/ldap/config?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "page": 1,
+            "pageSize": 10
+          }
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/api/ldap/test",
+        "summary": "用已保存配置测试连接",
+        "permission": [],
+        "isPublic": false,
+        "action": "LDAP · 测试连接",
+        "examples": {
+          "curl": "curl -X POST \"http://localhost:3100/api/ldap/test\" \\\n  -H \"Authorization: Bearer <accessToken>\""
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/api/ldap/test-preview",
+        "summary": "用表单里的参数测试连接（保存前校验，不落库）",
+        "permission": [],
+        "isPublic": false,
+        "action": "LDAP · 测试连接",
+        "params": [
+          {
+            "name": "url",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "https://example.com"
+          },
+          {
+            "name": "bindDn",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "示例值"
+          },
+          {
+            "name": "bindPassword",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "示例值"
+          },
+          {
+            "name": "baseDn",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "示例值"
+          },
+          {
+            "name": "verifyCert",
+            "in": "body",
+            "type": "boolean",
+            "required": false,
+            "description": "",
+            "example": true
+          },
+          {
+            "name": "startTls",
+            "in": "body",
+            "type": "boolean",
+            "required": false,
+            "description": "",
+            "example": true
+          }
+        ],
+        "examples": {
+          "curl": "curl -X POST \"http://localhost:3100/api/ldap/test-preview\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"url\": \"https://example.com\",\n      \"bindDn\": \"示例值\",\n      \"bindPassword\": \"示例值\",\n      \"baseDn\": \"示例值\",\n      \"verifyCert\": true,\n      \"startTls\": true\n    }'",
+          "requestBody": {
+            "url": "https://example.com",
+            "bindDn": "示例值",
+            "bindPassword": "示例值",
+            "baseDn": "示例值",
+            "verifyCert": true,
+            "startTls": true
+          }
+        }
+      },
+      {
+        "method": "PUT",
+        "path": "/api/ldap/config",
+        "summary": "保存配置",
+        "permission": [],
+        "isPublic": false,
+        "action": "LDAP · 保存配置",
+        "params": [
+          {
+            "name": "enabled",
+            "in": "body",
+            "type": "boolean",
+            "required": true,
+            "description": "",
+            "example": true
+          },
+          {
+            "name": "url",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "服务器地址（ldap:// 或 ldads://）",
+            "example": "https://example.com"
+          },
+          {
+            "name": "startTls",
+            "in": "body",
+            "type": "boolean",
+            "required": false,
+            "description": "",
+            "example": true
+          },
+          {
+            "name": "verifyCert",
+            "in": "body",
+            "type": "boolean",
+            "required": false,
+            "description": "",
+            "example": true
+          },
+          {
+            "name": "bindDn",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "服务账号 DN",
+            "example": "示例值"
+          },
+          {
+            "name": "bindPassword",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "服务账号口令（留空 = 不修改原口令）",
+            "example": "示例值"
+          },
+          {
+            "name": "baseDn",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "用户搜索基准 DN",
+            "example": "示例值"
+          },
+          {
+            "name": "userFilter",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "过滤器模板，必须含 {{username}}",
+            "example": "示例值"
+          },
+          {
+            "name": "usernameAttr",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "示例值"
+          },
+          {
+            "name": "emailAttr",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "示例值"
+          },
+          {
+            "name": "nicknameAttr",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "示例值"
+          },
+          {
+            "name": "defaultRoleCodes",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "默认角色编码（逗号分隔）",
+            "example": "示例值"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X PUT \"http://localhost:3100/api/ldap/config\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"enabled\": true,\n      \"url\": \"https://example.com\",\n      \"startTls\": true,\n      \"verifyCert\": true,\n      \"bindDn\": \"示例值\",\n      \"bindPassword\": \"示例值\",\n      \"baseDn\": \"示例值\",\n      \"userFilter\": \"示例值\",\n      \"usernameAttr\": \"示例值\",\n      \"emailAttr\": \"示例值\",\n      \"nicknameAttr\": \"示例值\",\n      \"defaultRoleCodes\": \"示例值\"\n    }'",
+          "requestBody": {
+            "enabled": true,
+            "url": "https://example.com",
+            "startTls": true,
+            "verifyCert": true,
+            "bindDn": "示例值",
+            "bindPassword": "示例值",
+            "baseDn": "示例值",
+            "userFilter": "示例值",
+            "usernameAttr": "示例值",
+            "emailAttr": "示例值",
+            "nicknameAttr": "示例值",
+            "defaultRoleCodes": "示例值"
+          }
+        }
+      }
+    ]
+  },
+  {
     "group": "Sse",
     "endpoints": [
       {

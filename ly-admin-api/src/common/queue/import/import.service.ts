@@ -54,7 +54,7 @@ export class ImportService {
   register(type: string, title: string, processor: ImportProcessor): void {
     this.registry.set(type, { title, processor });
     this.queue.registerHandler(`import.${type}`, async (payload, ctx) => {
-      const csvText = String(payload.csvText ?? '');
+      const csvText = typeof payload.csvText === 'string' ? payload.csvText : '';
       const result = await processor(csvText);
       await this.finish(ctx.jobId, type, result);
     });
@@ -147,7 +147,7 @@ export class ImportService {
         jobId: BigInt(jobId),
         type,
         title: job.title,
-        fileName: String(this.safePayload(job.payload).fileName ?? ''),
+        fileName: String(this.safePayload(job.payload).fileName ?? '') || '(未知文件)',
         total: result.total,
         created: result.created,
         failed: JSON.stringify(result.failed),

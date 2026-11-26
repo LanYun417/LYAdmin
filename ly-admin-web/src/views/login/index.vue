@@ -12,6 +12,7 @@ import type { FormInstance, FormRules } from 'element-plus';
 import logoUrl from '@/assets/logo-mark.svg';
 import { getCaptchaApi } from '@/api/auth';
 import { getSsoAuthorizeUrlApi, listSsoProvidersApi } from '@/api/sso';
+import { getLdapConfigApi } from '@/api/ldap';
 import { useUserStore } from '@/store/modules/user';
 import { usePermissionStore } from '@/store/modules/permission';
 import { usernameRule } from '@/utils/validate';
@@ -107,6 +108,8 @@ function backToPasswordStep(): void {
 
 /** 登录页可见的 SSO 提供方 */
 const ssoProviders = ref<SsoProvider[]>([]);
+/** LDAP 是否已启用（登录页提示用；认证由后端在口令失败后回退） */
+const ldapEnabled = ref(false);
 
 /** 跳转到提供方授权页（后端登记 state 后 302 回来） */
 async function goSso(providerId: number): Promise<void> {
@@ -127,6 +130,14 @@ onMounted(() => {
     .catch(() => {
       // SSO 列表拉取失败不影响账号密码登录：静默降级为不展示按钮
       ssoProviders.value = [];
+    });
+  // LDAP 启用状态：仅用于登录页提示（认证本身是后端回退逻辑，无独立登录入口）
+  void getLdapConfigApi()
+    .then((config) => {
+      ldapEnabled.value = config.enabled;
+    })
+    .catch(() => {
+      ldapEnabled.value = false;
     });
 });
 
@@ -319,6 +330,9 @@ onBeforeUnmount(clearCaptchaRetry);
           <el-button class="login-button" @click="backToPasswordStep"> 返回账号密码登录 </el-button>
         </el-form-item>
       </el-form>
+
+      <!-- LDAP 提示：本地口令失败时会回退目录认证，无独立登录入口 -->
+      <p v-if="ldapEnabled" class="login-tip">已启用 LDAP 目录认证</p>
 
       <!-- 企业单点登录：存在启用中的提供方才渲染分隔线与按钮 -->
       <template v-if="ssoProviders.length > 0">

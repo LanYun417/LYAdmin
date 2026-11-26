@@ -1,0 +1,41 @@
+// use prisma-next
+// ↑ 首行不可删：VS Code 的 Prisma 扩展按文件判定是否启用 Prisma 7 语言服务。
+//
+// LDAP 目录认证配置（单例）。
+// 与 SSO（多提供方）不同：企业内部通常只有一个 LDAP/AD 目录源，
+// 故用单行配置（id 固定 1），避免「两份配置哪份生效」的歧义。
+// 公共约定（snake_case 映射 / 哨兵值 / 注释落库）见 base.prisma。
+
+/// LDAP 目录配置表（单例：id 恒为 1）。
+model LdapConfig {
+  /// 主键（固定为 1，@Service 保证单例语义）
+  id          Int     @id @default(1)
+  /// 是否启用 LDAP 认证（关闭时登录只走本地口令）
+  enabled     Boolean @default(false)
+  /// 服务器地址（ldap:// 或 ldaps://）
+  url         String  @db.VarChar(255)
+  /// 是否使用 StartTLS 升级连接（ldap:// 时可选）
+  startTls    Boolean @default(false) @map("start_tls")
+  /// 是否校验服务器证书（自签证书的内网目录可关闭，生产不建议）
+  verifyCert  Boolean @default(true) @map("verify_cert")
+  /// 服务账号 DN（用于搜索用户，如 cn=admin,dc=example,dc=com）
+  bindDn      String  @map("bind_dn") @db.VarChar(255)
+  /// 服务账号口令（信封加密）
+  bindPassword String @map("bind_password") @db.VarChar(500)
+  /// 用户搜索基准 DN（如 ou=users,dc=example,dc=com）
+  baseDn      String  @map("base_dn") @db.VarChar(255)
+  /// 用户搜索过滤器模板，{{username}} 为占位符（如 (uid={{username}})）
+  userFilter  String  @default("(uid={{username}})") @map("user_filter") @db.VarChar(255)
+  /// 用户名属性（用于本地账号名映射，如 uid / sAMAccountName）
+  usernameAttr String @default("uid") @map("username_attr") @db.VarChar(64)
+  /// 邮箱属性（如 mail）
+  emailAttr   String? @map("email_attr") @db.VarChar(64)
+  /// 昵称属性（如 displayName / cn）
+  nicknameAttr String? @map("nickname_attr") @db.VarChar(64)
+  /// 首次登录自动建号时授予的角色编码（逗号分隔）
+  defaultRoleCodes String? @map("default_role_codes") @db.VarChar(255)
+  /// 更新时间
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("sys_ldap_config")
+}

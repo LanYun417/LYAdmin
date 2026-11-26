@@ -410,6 +410,7 @@ export const ModelName = {
   File: 'File',
   ImportRecord: 'ImportRecord',
   IpRule: 'IpRule',
+  LdapConfig: 'LdapConfig',
   LoginLog: 'LoginLog',
   OperationLog: 'OperationLog',
   HttpLog: 'HttpLog',
@@ -443,7 +444,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "alertChannel" | "alertRule" | "alertRecord" | "apiKey" | "webhook" | "webhookDelivery" | "dictType" | "dictItem" | "sysConfig" | "exportTask" | "file" | "importRecord" | "ipRule" | "loginLog" | "operationLog" | "httpLog" | "notice" | "userMfa" | "queueJob" | "ssoProvider" | "userSso" | "user" | "role" | "menu" | "dept" | "userRole" | "roleMenu" | "roleDept" | "userMenu" | "taskLog" | "userProfile"
+    modelProps: "alertChannel" | "alertRule" | "alertRecord" | "apiKey" | "webhook" | "webhookDelivery" | "dictType" | "dictItem" | "sysConfig" | "exportTask" | "file" | "importRecord" | "ipRule" | "ldapConfig" | "loginLog" | "operationLog" | "httpLog" | "notice" | "userMfa" | "queueJob" | "ssoProvider" | "userSso" | "user" | "role" | "menu" | "dept" | "userRole" | "roleMenu" | "roleDept" | "userMenu" | "taskLog" | "userProfile"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1302,6 +1303,72 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.IpRuleCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.IpRuleCountAggregateOutputType> | number
+        }
+      }
+    }
+    LdapConfig: {
+      payload: Prisma.$LdapConfigPayload<ExtArgs>
+      fields: Prisma.LdapConfigFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.LdapConfigFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LdapConfigPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.LdapConfigFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LdapConfigPayload>
+        }
+        findFirst: {
+          args: Prisma.LdapConfigFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LdapConfigPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.LdapConfigFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LdapConfigPayload>
+        }
+        findMany: {
+          args: Prisma.LdapConfigFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LdapConfigPayload>[]
+        }
+        create: {
+          args: Prisma.LdapConfigCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LdapConfigPayload>
+        }
+        createMany: {
+          args: Prisma.LdapConfigCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        delete: {
+          args: Prisma.LdapConfigDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LdapConfigPayload>
+        }
+        update: {
+          args: Prisma.LdapConfigUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LdapConfigPayload>
+        }
+        deleteMany: {
+          args: Prisma.LdapConfigDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.LdapConfigUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        upsert: {
+          args: Prisma.LdapConfigUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$LdapConfigPayload>
+        }
+        aggregate: {
+          args: Prisma.LdapConfigAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateLdapConfig>
+        }
+        groupBy: {
+          args: Prisma.LdapConfigGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.LdapConfigGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.LdapConfigCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.LdapConfigCountAggregateOutputType> | number
         }
       }
     }
@@ -2747,6 +2814,26 @@ export const IpRuleScalarFieldEnum = {
 export type IpRuleScalarFieldEnum = (typeof IpRuleScalarFieldEnum)[keyof typeof IpRuleScalarFieldEnum]
 
 
+export const LdapConfigScalarFieldEnum = {
+  id: 'id',
+  enabled: 'enabled',
+  url: 'url',
+  startTls: 'startTls',
+  verifyCert: 'verifyCert',
+  bindDn: 'bindDn',
+  bindPassword: 'bindPassword',
+  baseDn: 'baseDn',
+  userFilter: 'userFilter',
+  usernameAttr: 'usernameAttr',
+  emailAttr: 'emailAttr',
+  nicknameAttr: 'nicknameAttr',
+  defaultRoleCodes: 'defaultRoleCodes',
+  updatedAt: 'updatedAt'
+} as const
+
+export type LdapConfigScalarFieldEnum = (typeof LdapConfigScalarFieldEnum)[keyof typeof LdapConfigScalarFieldEnum]
+
+
 export const LoginLogScalarFieldEnum = {
   id: 'id',
   username: 'username',
@@ -3224,6 +3311,21 @@ export const IpRuleOrderByRelevanceFieldEnum = {
 export type IpRuleOrderByRelevanceFieldEnum = (typeof IpRuleOrderByRelevanceFieldEnum)[keyof typeof IpRuleOrderByRelevanceFieldEnum]
 
 
+export const LdapConfigOrderByRelevanceFieldEnum = {
+  url: 'url',
+  bindDn: 'bindDn',
+  bindPassword: 'bindPassword',
+  baseDn: 'baseDn',
+  userFilter: 'userFilter',
+  usernameAttr: 'usernameAttr',
+  emailAttr: 'emailAttr',
+  nicknameAttr: 'nicknameAttr',
+  defaultRoleCodes: 'defaultRoleCodes'
+} as const
+
+export type LdapConfigOrderByRelevanceFieldEnum = (typeof LdapConfigOrderByRelevanceFieldEnum)[keyof typeof LdapConfigOrderByRelevanceFieldEnum]
+
+
 export const LoginLogOrderByRelevanceFieldEnum = {
   username: 'username',
   ip: 'ip',
@@ -3442,6 +3544,13 @@ export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$Prisma
 
 
 /**
+ * Reference to a field of type 'Boolean'
+ */
+export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
+    
+
+
+/**
  * Reference to a field of type 'Float'
  */
 export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
@@ -3611,6 +3720,7 @@ export type GlobalOmitConfig = {
   file?: Prisma.FileOmit
   importRecord?: Prisma.ImportRecordOmit
   ipRule?: Prisma.IpRuleOmit
+  ldapConfig?: Prisma.LdapConfigOmit
   loginLog?: Prisma.LoginLogOmit
   operationLog?: Prisma.OperationLogOmit
   httpLog?: Prisma.HttpLogOmit

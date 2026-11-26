@@ -64,6 +64,7 @@ export const ModelName = {
   File: 'File',
   ImportRecord: 'ImportRecord',
   IpRule: 'IpRule',
+  LdapConfig: 'LdapConfig',
   LoginLog: 'LoginLog',
   OperationLog: 'OperationLog',
   HttpLog: 'HttpLog',
@@ -313,6 +314,26 @@ export const IpRuleScalarFieldEnum = {
 } as const
 
 export type IpRuleScalarFieldEnum = (typeof IpRuleScalarFieldEnum)[keyof typeof IpRuleScalarFieldEnum]
+
+
+export const LdapConfigScalarFieldEnum = {
+  id: 'id',
+  enabled: 'enabled',
+  url: 'url',
+  startTls: 'startTls',
+  verifyCert: 'verifyCert',
+  bindDn: 'bindDn',
+  bindPassword: 'bindPassword',
+  baseDn: 'baseDn',
+  userFilter: 'userFilter',
+  usernameAttr: 'usernameAttr',
+  emailAttr: 'emailAttr',
+  nicknameAttr: 'nicknameAttr',
+  defaultRoleCodes: 'defaultRoleCodes',
+  updatedAt: 'updatedAt'
+} as const
+
+export type LdapConfigScalarFieldEnum = (typeof LdapConfigScalarFieldEnum)[keyof typeof LdapConfigScalarFieldEnum]
 
 
 export const LoginLogScalarFieldEnum = {
@@ -790,6 +811,21 @@ export const IpRuleOrderByRelevanceFieldEnum = {
 } as const
 
 export type IpRuleOrderByRelevanceFieldEnum = (typeof IpRuleOrderByRelevanceFieldEnum)[keyof typeof IpRuleOrderByRelevanceFieldEnum]
+
+
+export const LdapConfigOrderByRelevanceFieldEnum = {
+  url: 'url',
+  bindDn: 'bindDn',
+  bindPassword: 'bindPassword',
+  baseDn: 'baseDn',
+  userFilter: 'userFilter',
+  usernameAttr: 'usernameAttr',
+  emailAttr: 'emailAttr',
+  nicknameAttr: 'nicknameAttr',
+  defaultRoleCodes: 'defaultRoleCodes'
+} as const
+
+export type LdapConfigOrderByRelevanceFieldEnum = (typeof LdapConfigOrderByRelevanceFieldEnum)[keyof typeof LdapConfigOrderByRelevanceFieldEnum]
 
 
 export const LoginLogOrderByRelevanceFieldEnum = {

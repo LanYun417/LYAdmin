@@ -1252,3 +1252,40 @@ export interface ImportRecord {
   status: string;
   createdAt: string;
 }
+
+/* ------------------------------ LDAP 目录认证 ------------------------------ */
+
+/** LDAP 配置视图（bindPassword 只回「是否已设置」）。 */
+export interface LdapConfig {
+  /** 是否启用（关闭时登录只走本地口令） */
+  enabled: boolean;
+  /** 服务器地址（ldap:// / ldaps://） */
+  url: string;
+  /** StartTLS 升级连接 */
+  startTls: boolean;
+  /** 是否校验服务器证书 */
+  verifyCert: boolean;
+  /** 服务账号 DN */
+  bindDn: string;
+  /** 是否已设置口令（绝不回传真值） */
+  hasPassword: boolean;
+  /** 保存时下发的口令（留空 = 不修改；响应中永不返回） */
+  bindPassword?: string;
+  /** 用户搜索基准 DN */
+  baseDn: string;
+  /** 过滤器模板，必须含 {{username}} */
+  userFilter: string;
+  /** 用户名属性 */
+  usernameAttr: string;
+  emailAttr: string | null;
+  nicknameAttr: string | null;
+  /** 首次登录自动建号的默认角色编码（逗号分隔） */
+  defaultRoleCodes: string;
+  updatedAt: string | null;
+}
+
+/** 连接测试结果。 */
+export interface LdapTestResult {
+  ok: boolean;
+  message: string;
+}

@@ -442,6 +442,36 @@ const MENU_TREE: MenuSeedNode[] = [
         ],
       },
       {
+        // LDAP 目录认证配置（单例配置：地址/服务账号/搜索基准/属性映射）
+        key: 'system:ldap',
+        menuName: 'LDAP 认证',
+        menuNameEn: 'LDAP',
+        menuType: MenuType.MENU,
+        path: '/system/ldap',
+        component: 'system/ldap/index',
+        icon: 'person-badge',
+        permission: 'system:ldap:list',
+        sort: 8,
+        visible: Status.ENABLED,
+        keepAlive: 1,
+        children: [
+          {
+            key: 'system:ldap:query',
+            menuName: '查询',
+            menuType: MenuType.BUTTON,
+            permission: 'system:ldap:query',
+            sort: 1,
+          },
+          {
+            key: 'system:ldap:edit',
+            menuName: '配置',
+            menuType: MenuType.BUTTON,
+            permission: 'system:ldap:edit',
+            sort: 2,
+          },
+        ],
+      },
+      {
         // 告警中心：渠道配置 / 规则 / 投递记录（页面内分签）
         key: 'system:alert',
         menuName: '告警中心',

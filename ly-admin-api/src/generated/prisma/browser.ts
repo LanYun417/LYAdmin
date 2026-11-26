@@ -87,6 +87,11 @@ export type ImportRecord = Prisma.ImportRecordModel
  */
 export type IpRule = Prisma.IpRuleModel
 /**
+ * Model LdapConfig
+ * LDAP 目录配置表（单例：id 恒为 1）。
+ */
+export type LdapConfig = Prisma.LdapConfigModel
+/**
  * Model LoginLog
  * 登录日志表
  */
