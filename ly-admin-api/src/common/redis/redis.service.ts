@@ -89,6 +89,27 @@ export class RedisService implements OnModuleDestroy {
     }
   }
 
+  /**
+   * NX 写入（仅当键不存在时写入），用于「一次性票据 / 冷却窗口」类语义。
+   * 与其它方法一致：未启用 / 异常时返回 false（调用方据此降级，不抛出）。
+   * @returns true = 本次是首次写入（窗口内第一个）；false = 键已存在或写入失败
+   */
+  async setNx(key: string, value: string, ttlMs?: number): Promise<boolean> {
+    if (!this.isReady()) {
+      return false;
+    }
+    try {
+      const client = this.client!;
+      const reply =
+        ttlMs !== undefined
+          ? ((await client.set(key, value, { PX: ttlMs, NX: true })) as string | null)
+          : ((await client.set(key, value, { NX: true })) as string | null);
+      return reply === 'OK';
+    } catch {
+      return false;
+    }
+  }
+
   /** 读取键值。 */
   async get(key: string): Promise<string | null> {
     if (!this.isReady()) {

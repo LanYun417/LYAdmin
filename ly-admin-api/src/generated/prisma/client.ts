@@ -31,8 +31,8 @@ export * from "./enums.js"
  * const prisma = new PrismaClient({
  *   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL })
  * })
- * // Fetch zero or more DictTypes
- * const dictTypes = await prisma.dictType.findMany()
+ * // Fetch zero or more AlertChannels
+ * const alertChannels = await prisma.alertChannel.findMany()
  * ```
  * 
  * Read more in our [docs](https://pris.ly/d/client).
@@ -41,6 +41,23 @@ export const PrismaClient = $Class.getPrismaClientClass()
 export type PrismaClient<LogOpts extends Prisma.LogLevel = never, OmitOpts extends Prisma.PrismaClientOptions["omit"] = Prisma.PrismaClientOptions["omit"], ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = $Class.PrismaClient<LogOpts, OmitOpts, ExtArgs>
 export { Prisma }
 
+/**
+ * Model AlertChannel
+ * 告警渠道配置表。
+ * config 为 JSON：邮件存 SMTP 参数（口令信封加密后存放）、Webhook 类存 URL 与签名密钥（同样信封加密）。
+ */
+export type AlertChannel = Prisma.AlertChannelModel
+/**
+ * Model AlertRule
+ * 告警规则表。
+ * 事件命中规则后按 level 投递到绑定的渠道；cooldownSeconds 防止轰炸。
+ */
+export type AlertRule = Prisma.AlertRuleModel
+/**
+ * Model AlertRecord
+ * 告警投递记录表（审计 + 失败重试的凭据）。
+ */
+export type AlertRecord = Prisma.AlertRecordModel
 /**
  * Model DictType
  * 字典类型表

@@ -5665,6 +5665,564 @@ export const API_DOCS: ApiDocGroup[] = [
     ]
   },
   {
+    "group": "告警中心",
+    "endpoints": [
+      {
+        "method": "GET",
+        "path": "/api/alert/channels",
+        "summary": "渠道列表（敏感字段脱敏）",
+        "permission": [],
+        "isPublic": false,
+        "action": "",
+        "params": [
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "页码，从 1 开始",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "每页条数",
+            "example": 10
+          }
+        ],
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3100/api/alert/channels?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "page": 1,
+            "pageSize": 10
+          }
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/api/alert/channels/:id",
+        "summary": "渠道详情（编辑回显；敏感字段脱敏）",
+        "permission": [],
+        "isPublic": false,
+        "action": "",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3100/api/alert/channels/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "id": "1"
+          }
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/api/alert/records",
+        "summary": "投递记录分页列表",
+        "permission": [],
+        "isPublic": false,
+        "action": "",
+        "params": [
+          {
+            "name": "status",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "示例值"
+          },
+          {
+            "name": "eventType",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "示例值"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 1
+          }
+        ],
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3100/api/alert/records?status=%E7%A4%BA%E4%BE%8B%E5%80%BC&eventType=%E7%A4%BA%E4%BE%8B%E5%80%BC&page=1&pageSize=1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "status": "示例值",
+            "eventType": "示例值",
+            "page": 1,
+            "pageSize": 1
+          }
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/api/alert/rules",
+        "summary": "规则列表",
+        "permission": [],
+        "isPublic": false,
+        "action": "",
+        "params": [
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "页码，从 1 开始",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "每页条数",
+            "example": 10
+          }
+        ],
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3100/api/alert/rules?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "page": 1,
+            "pageSize": 10
+          }
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/api/alert/channels",
+        "summary": "新增渠道",
+        "permission": [],
+        "isPublic": false,
+        "action": "告警中心 · 新增渠道",
+        "params": [
+          {
+            "name": "type",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "示例值"
+          },
+          {
+            "name": "name",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "log-archive"
+          },
+          {
+            "name": "config",
+            "in": "body",
+            "type": "Record<string, unknown>",
+            "required": true,
+            "description": "渠道配置 JSON（邮件 host/port/secure/user/pass/from/to；Webhook 类 webhook/url/secret）",
+            "example": "示例值"
+          },
+          {
+            "name": "status",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 1
+          },
+          {
+            "name": "sort",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 1
+          },
+          {
+            "name": "remark",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "示例备注"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X POST \"http://localhost:3100/api/alert/channels\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"type\": \"示例值\",\n      \"name\": \"log-archive\",\n      \"config\": \"示例值\",\n      \"status\": 1,\n      \"sort\": 1,\n      \"remark\": \"示例备注\"\n    }'",
+          "requestBody": {
+            "type": "示例值",
+            "name": "log-archive",
+            "config": "示例值",
+            "status": 1,
+            "sort": 1,
+            "remark": "示例备注"
+          }
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/api/alert/channels/:id/test",
+        "summary": "测试发送（立即向该渠道投一条测试告警并落库）",
+        "permission": [],
+        "isPublic": false,
+        "action": "告警中心 · 测试发送",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X POST \"http://localhost:3100/api/alert/channels/1/test\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "id": "1"
+          }
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/api/alert/records/:id/retry",
+        "summary": "重投一条失败记录（原渠道集合）",
+        "permission": [],
+        "isPublic": false,
+        "action": "告警中心 · 重试投递",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X POST \"http://localhost:3100/api/alert/records/1/retry\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "id": "1"
+          }
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/api/alert/rules",
+        "summary": "新增规则",
+        "permission": [],
+        "isPublic": false,
+        "action": "告警中心 · 新增规则",
+        "params": [
+          {
+            "name": "name",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "log-archive"
+          },
+          {
+            "name": "eventType",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "事件类型（如 export.failed / login.bruteForce / monitor.disk）",
+            "example": "示例值"
+          },
+          {
+            "name": "level",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "示例值"
+          },
+          {
+            "name": "channelIds",
+            "in": "body",
+            "type": "number[]",
+            "required": true,
+            "description": "渠道 id 列表",
+            "example": []
+          },
+          {
+            "name": "cooldownSeconds",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "冷却秒数（0 = 不冷却）",
+            "example": 1
+          },
+          {
+            "name": "status",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 1
+          },
+          {
+            "name": "remark",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "示例备注"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X POST \"http://localhost:3100/api/alert/rules\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"name\": \"log-archive\",\n      \"eventType\": \"示例值\",\n      \"level\": \"示例值\",\n      \"channelIds\": [],\n      \"cooldownSeconds\": 1,\n      \"status\": 1,\n      \"remark\": \"示例备注\"\n    }'",
+          "requestBody": {
+            "name": "log-archive",
+            "eventType": "示例值",
+            "level": "示例值",
+            "channelIds": [],
+            "cooldownSeconds": 1,
+            "status": 1,
+            "remark": "示例备注"
+          }
+        }
+      },
+      {
+        "method": "PUT",
+        "path": "/api/alert/channels/:id",
+        "summary": "更新渠道（未提供的敏感字段保留原值）",
+        "permission": [],
+        "isPublic": false,
+        "action": "告警中心 · 编辑渠道",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          },
+          {
+            "name": "type",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "示例值"
+          },
+          {
+            "name": "name",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "log-archive"
+          },
+          {
+            "name": "config",
+            "in": "body",
+            "type": "Record<string, unknown>",
+            "required": true,
+            "description": "渠道配置 JSON（邮件 host/port/secure/user/pass/from/to；Webhook 类 webhook/url/secret）",
+            "example": "示例值"
+          },
+          {
+            "name": "status",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 1
+          },
+          {
+            "name": "sort",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 1
+          },
+          {
+            "name": "remark",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "示例备注"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X PUT \"http://localhost:3100/api/alert/channels/1\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"type\": \"示例值\",\n      \"name\": \"log-archive\",\n      \"config\": \"示例值\",\n      \"status\": 1,\n      \"sort\": 1,\n      \"remark\": \"示例备注\"\n    }'",
+          "pathParams": {
+            "id": "1"
+          },
+          "requestBody": {
+            "type": "示例值",
+            "name": "log-archive",
+            "config": "示例值",
+            "status": 1,
+            "sort": 1,
+            "remark": "示例备注"
+          }
+        }
+      },
+      {
+        "method": "PUT",
+        "path": "/api/alert/rules/:id",
+        "summary": "更新规则",
+        "permission": [],
+        "isPublic": false,
+        "action": "告警中心 · 编辑规则",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          },
+          {
+            "name": "name",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "log-archive"
+          },
+          {
+            "name": "eventType",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "事件类型（如 export.failed / login.bruteForce / monitor.disk）",
+            "example": "示例值"
+          },
+          {
+            "name": "level",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "示例值"
+          },
+          {
+            "name": "channelIds",
+            "in": "body",
+            "type": "number[]",
+            "required": true,
+            "description": "渠道 id 列表",
+            "example": []
+          },
+          {
+            "name": "cooldownSeconds",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "冷却秒数（0 = 不冷却）",
+            "example": 1
+          },
+          {
+            "name": "status",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 1
+          },
+          {
+            "name": "remark",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "示例备注"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X PUT \"http://localhost:3100/api/alert/rules/1\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"name\": \"log-archive\",\n      \"eventType\": \"示例值\",\n      \"level\": \"示例值\",\n      \"channelIds\": [],\n      \"cooldownSeconds\": 1,\n      \"status\": 1,\n      \"remark\": \"示例备注\"\n    }'",
+          "pathParams": {
+            "id": "1"
+          },
+          "requestBody": {
+            "name": "log-archive",
+            "eventType": "示例值",
+            "level": "示例值",
+            "channelIds": [],
+            "cooldownSeconds": 1,
+            "status": 1,
+            "remark": "示例备注"
+          }
+        }
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/alert/channels/:id",
+        "summary": "删除渠道",
+        "permission": [],
+        "isPublic": false,
+        "action": "告警中心 · 删除渠道",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X DELETE \"http://localhost:3100/api/alert/channels/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "id": "1"
+          }
+        }
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/alert/rules/:id",
+        "summary": "删除规则",
+        "permission": [],
+        "isPublic": false,
+        "action": "告警中心 · 删除规则",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X DELETE \"http://localhost:3100/api/alert/rules/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "id": "1"
+          }
+        }
+      }
+    ]
+  },
+  {
     "group": "安全中心",
     "endpoints": [
       {

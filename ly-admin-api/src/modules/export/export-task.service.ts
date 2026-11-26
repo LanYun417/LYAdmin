@@ -25,6 +25,7 @@ import { csvHeaderRow, csvRow } from '../../common/utils/csv-stream.js';
 import type { PageResult } from '../../common/types.js';
 import { LogsService } from '../logs/logs.service.js';
 import { NoticeService, NOTICE_TYPE } from '../notice/notice.service.js';
+import { AlertService } from '../alert/alert.service.js';
 import type { CsvExportTask } from '../logs/logs.service.js';
 
 /** 任务状态枚举（与 schema 注释一致）。 */
@@ -94,6 +95,7 @@ export class ExportTaskService implements OnModuleInit, OnModuleDestroy {
     private readonly prisma: PrismaService,
     private readonly logsService: LogsService,
     private readonly noticeService: NoticeService,
+    private readonly alertService: AlertService,
   ) {}
 
   /**
@@ -306,6 +308,16 @@ export class ExportTaskService implements OnModuleInit, OnModuleDestroy {
         })
         .catch(() => undefined);
       await this.notifyOwner(task.userId, task.username, null, false, message);
+      // 站内通知之外，再向告警中心发布事件：邮件 / Webhook / 群机器人由管理员配置的规则分发。
+      // AlertService.publish 内部吞掉一切异常——告警是旁路，绝不能反过来拖垮任务收尾。
+      await this.alertService.publish({
+        eventType: 'export.failed',
+        level: 'warning',
+        title: `导出任务失败：${task.module}`,
+        message: `导出任务 #${id}（${task.module}，操作人 ${task.username}）失败：${message}`,
+        payload: { taskId: id, module: task.module, username: task.username },
+        dedupKey: `export-${id}`,
+      });
     }
   }
 

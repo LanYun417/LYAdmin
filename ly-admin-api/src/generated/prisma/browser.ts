@@ -18,6 +18,23 @@ export { Prisma }
 export * as $Enums from './enums.js'
 export * from './enums.js';
 /**
+ * Model AlertChannel
+ * 告警渠道配置表。
+ * config 为 JSON：邮件存 SMTP 参数（口令信封加密后存放）、Webhook 类存 URL 与签名密钥（同样信封加密）。
+ */
+export type AlertChannel = Prisma.AlertChannelModel
+/**
+ * Model AlertRule
+ * 告警规则表。
+ * 事件命中规则后按 level 投递到绑定的渠道；cooldownSeconds 防止轰炸。
+ */
+export type AlertRule = Prisma.AlertRuleModel
+/**
+ * Model AlertRecord
+ * 告警投递记录表（审计 + 失败重试的凭据）。
+ */
+export type AlertRecord = Prisma.AlertRecordModel
+/**
  * Model DictType
  * 字典类型表
  */

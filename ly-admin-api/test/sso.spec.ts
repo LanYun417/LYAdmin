@@ -84,7 +84,7 @@ describe('SsoService', () => {
   });
 
   it('新增提供方：clientSecret 信封加密入库，对外 DTO 不含密钥', async () => {
-    const item = (await service.createProvider(VALID_INPUT as unknown as Record<string, unknown>, 1)) as {
+    const item = (await service.createProvider(VALID_INPUT as unknown as Record<string, unknown>, 1)) as unknown as {
       clientId: string;
     } & Record<string, unknown>;
     const created = prisma.ssoProvider.create.mock.calls[0][0].data;
@@ -103,9 +103,11 @@ describe('SsoService', () => {
   it('授权 URL 含 client_id / scope / redirect_uri / state，state 已入 Redis', async () => {
     prisma.ssoProvider.findUnique = vi.fn(async () => ({
       id: 1n,
-      name: '企业 OIDC',
       status: 1,
+      // name 等其余字段由 VALID_INPUT 提供
       ...VALID_INPUT,
+      // VALID_INPUT 自带 issuer 等键；显式覆盖敏感与派生字段
+      issuer: VALID_INPUT.issuer,
       clientSecret: 'v1:x',
       protocol: 'oidc',
       jwksUrl: null,
@@ -116,7 +118,7 @@ describe('SsoService', () => {
       remark: null,
       createdAt: new Date(),
       updatedAt: new Date(),
-    }));
+    })) as unknown as typeof prisma.ssoProvider.findUnique;
     const { url } = await service.buildAuthorizeUrl(1);
     const parsed = new URL(url);
     expect(parsed.origin + parsed.pathname).toBe('https://sso.example.com/authorize');
@@ -138,7 +140,9 @@ describe('SsoService', () => {
   });
 
   it('登录页只返回启用中的提供方', async () => {
-    prisma.ssoProvider.findMany = vi.fn(async () => [{ id: 1n, name: '启用中' }]);
+    prisma.ssoProvider.findMany = vi.fn(async () => [
+      { id: 1n, name: '启用中' },
+    ]) as unknown as typeof prisma.ssoProvider.findMany;
     const list = await service.listEnabledProviders();
     expect(list).toEqual([{ id: 1, name: '启用中' }]);
   });

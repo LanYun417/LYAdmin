@@ -1,0 +1,96 @@
+// use prisma-next
+// ↑ 首行不可删：VS Code 的 Prisma 扩展按文件判定是否启用 Prisma 7 语言服务。
+//
+// 告警中心：通知渠道配置、告警规则、投递记录。
+// 公共约定（snake_case 映射 / 哨兵值 / 注释落库）见 base.prisma。
+
+/// 告警渠道配置表。
+/// config 为 JSON：邮件存 SMTP 参数（口令信封加密后存放）、Webhook 类存 URL 与签名密钥（同样信封加密）。
+model AlertChannel {
+  /// 主键
+  id        BigInt   @id @default(autoincrement()) @db.BigInt
+  /// 渠道类型：email / webhook / dingtalk / wecom / feishu
+  type      String   @db.VarChar(20)
+  /// 渠道名称（如「运维邮件」「安全 Webhook」）
+  name      String   @db.VarChar(50)
+  /// 渠道配置（JSON；敏感字段为信封密文）
+  config    String   @db.Text
+  /// 1 启用 / 0 停用
+  status    Int      @default(1) @db.TinyInt
+  /// 排序
+  sort      Int      @default(0)
+  /// 备注
+  remark    String?  @db.VarChar(255)
+  /// 创建时间
+  createdAt DateTime @default(now()) @map("created_at")
+  /// 更新时间
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([status, sort])
+  @@map("sys_alert_channel")
+}
+
+/// 告警规则表。
+/// 事件命中规则后按 level 投递到绑定的渠道；cooldownSeconds 防止轰炸。
+model AlertRule {
+  /// 主键
+  id             BigInt   @id @default(autoincrement()) @db.BigInt
+  /// 规则名称
+  name           String   @db.VarChar(50)
+  /// 触发事件类型（如 export.failed / login.bruteForce / monitor.disk）
+  eventType      String   @map("event_type") @db.VarChar(50)
+  /// 告警级别：info / warning / critical（仅同级别或更高级别的事件才触发，critical 会同时匹配 warning/info 规则）
+  level          String   @default("warning") @db.VarChar(20)
+  /// 渠道 id 列表（JSON 数组；只投递给启用中的渠道）
+  channelIds     String   @map("channel_ids") @db.Text
+  /// 静默间隔（秒）：同一规则的同一去重键在该窗口内只告警一次
+  cooldownSeconds Int     @default(300) @map("cooldown_seconds")
+  /// 1 启用 / 0 停用
+  status         Int      @default(1) @db.TinyInt
+  /// 备注
+  remark         String?  @db.VarChar(255)
+  /// 创建时间
+  createdAt      DateTime @default(now()) @map("created_at")
+  /// 更新时间
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@index([status])
+  @@index([eventType])
+  @@map("sys_alert_rule")
+}
+
+/// 告警投递记录表（审计 + 失败重试的凭据）。
+model AlertRecord {
+  /// 主键
+  id        BigInt   @id @default(autoincrement()) @db.BigInt
+  /// 触发规则 id（手动测试发送时为 0）
+  ruleId    BigInt   @default(0) @map("rule_id") @db.BigInt
+  /// 规则名称快照
+  ruleName  String   @map("rule_name") @db.VarChar(50)
+  /// 事件类型
+  eventType String   @map("event_type") @db.VarChar(50)
+  /// 告警级别
+  level     String   @db.VarChar(20)
+  /// 告警标题
+  title     String   @db.VarChar(255)
+  /// 告警内容
+  message   String   @db.Text
+  /// 事件负载（JSON，便于排查）
+  payload   String?  @db.Text
+  /// 目标渠道 id 列表（JSON 数组）
+  channelIds String  @map("channel_ids") @db.Text
+  /// 投递状态：pending 待投递 / sent 已投递 / failed 全部渠道失败
+  status    String   @default("pending") @db.VarChar(20)
+  /// 各渠道投递结果（JSON：{ channelId: { ok, error } }）
+  results   String?  @db.Text
+  /// 重试次数
+  retries   Int      @default(0)
+  /// 创建时间
+  createdAt DateTime  @default(now()) @map("created_at")
+  /// 投递完成时间
+  sentAt    DateTime? @map("sent_at")
+
+  @@index([createdAt])
+  @@index([status])
+  @@map("sys_alert_record")
+}

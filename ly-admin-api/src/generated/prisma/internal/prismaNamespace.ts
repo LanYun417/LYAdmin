@@ -397,6 +397,9 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 
 
 export const ModelName = {
+  AlertChannel: 'AlertChannel',
+  AlertRule: 'AlertRule',
+  AlertRecord: 'AlertRecord',
   DictType: 'DictType',
   DictItem: 'DictItem',
   SysConfig: 'SysConfig',
@@ -435,10 +438,208 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "dictType" | "dictItem" | "sysConfig" | "exportTask" | "file" | "ipRule" | "loginLog" | "operationLog" | "httpLog" | "notice" | "userMfa" | "ssoProvider" | "userSso" | "user" | "role" | "menu" | "dept" | "userRole" | "roleMenu" | "roleDept" | "userMenu" | "taskLog" | "userProfile"
+    modelProps: "alertChannel" | "alertRule" | "alertRecord" | "dictType" | "dictItem" | "sysConfig" | "exportTask" | "file" | "ipRule" | "loginLog" | "operationLog" | "httpLog" | "notice" | "userMfa" | "ssoProvider" | "userSso" | "user" | "role" | "menu" | "dept" | "userRole" | "roleMenu" | "roleDept" | "userMenu" | "taskLog" | "userProfile"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
+    AlertChannel: {
+      payload: Prisma.$AlertChannelPayload<ExtArgs>
+      fields: Prisma.AlertChannelFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.AlertChannelFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AlertChannelPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.AlertChannelFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AlertChannelPayload>
+        }
+        findFirst: {
+          args: Prisma.AlertChannelFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AlertChannelPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.AlertChannelFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AlertChannelPayload>
+        }
+        findMany: {
+          args: Prisma.AlertChannelFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AlertChannelPayload>[]
+        }
+        create: {
+          args: Prisma.AlertChannelCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AlertChannelPayload>
+        }
+        createMany: {
+          args: Prisma.AlertChannelCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        delete: {
+          args: Prisma.AlertChannelDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AlertChannelPayload>
+        }
+        update: {
+          args: Prisma.AlertChannelUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AlertChannelPayload>
+        }
+        deleteMany: {
+          args: Prisma.AlertChannelDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.AlertChannelUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        upsert: {
+          args: Prisma.AlertChannelUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AlertChannelPayload>
+        }
+        aggregate: {
+          args: Prisma.AlertChannelAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateAlertChannel>
+        }
+        groupBy: {
+          args: Prisma.AlertChannelGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AlertChannelGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.AlertChannelCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AlertChannelCountAggregateOutputType> | number
+        }
+      }
+    }
+    AlertRule: {
+      payload: Prisma.$AlertRulePayload<ExtArgs>
+      fields: Prisma.AlertRuleFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.AlertRuleFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AlertRulePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.AlertRuleFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AlertRulePayload>
+        }
+        findFirst: {
+          args: Prisma.AlertRuleFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AlertRulePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.AlertRuleFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AlertRulePayload>
+        }
+        findMany: {
+          args: Prisma.AlertRuleFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AlertRulePayload>[]
+        }
+        create: {
+          args: Prisma.AlertRuleCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AlertRulePayload>
+        }
+        createMany: {
+          args: Prisma.AlertRuleCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        delete: {
+          args: Prisma.AlertRuleDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AlertRulePayload>
+        }
+        update: {
+          args: Prisma.AlertRuleUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AlertRulePayload>
+        }
+        deleteMany: {
+          args: Prisma.AlertRuleDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.AlertRuleUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        upsert: {
+          args: Prisma.AlertRuleUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AlertRulePayload>
+        }
+        aggregate: {
+          args: Prisma.AlertRuleAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateAlertRule>
+        }
+        groupBy: {
+          args: Prisma.AlertRuleGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AlertRuleGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.AlertRuleCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AlertRuleCountAggregateOutputType> | number
+        }
+      }
+    }
+    AlertRecord: {
+      payload: Prisma.$AlertRecordPayload<ExtArgs>
+      fields: Prisma.AlertRecordFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.AlertRecordFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AlertRecordPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.AlertRecordFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AlertRecordPayload>
+        }
+        findFirst: {
+          args: Prisma.AlertRecordFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AlertRecordPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.AlertRecordFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AlertRecordPayload>
+        }
+        findMany: {
+          args: Prisma.AlertRecordFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AlertRecordPayload>[]
+        }
+        create: {
+          args: Prisma.AlertRecordCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AlertRecordPayload>
+        }
+        createMany: {
+          args: Prisma.AlertRecordCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        delete: {
+          args: Prisma.AlertRecordDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AlertRecordPayload>
+        }
+        update: {
+          args: Prisma.AlertRecordUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AlertRecordPayload>
+        }
+        deleteMany: {
+          args: Prisma.AlertRecordDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.AlertRecordUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        upsert: {
+          args: Prisma.AlertRecordUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AlertRecordPayload>
+        }
+        aggregate: {
+          args: Prisma.AlertRecordAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateAlertRecord>
+        }
+        groupBy: {
+          args: Prisma.AlertRecordGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AlertRecordGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.AlertRecordCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AlertRecordCountAggregateOutputType> | number
+        }
+      }
+    }
     DictType: {
       payload: Prisma.$DictTypePayload<ExtArgs>
       fields: Prisma.DictTypeFieldRefs
@@ -1996,6 +2197,57 @@ export const TransactionIsolationLevel = runtime.makeStrictEnum({
 export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof typeof TransactionIsolationLevel]
 
 
+export const AlertChannelScalarFieldEnum = {
+  id: 'id',
+  type: 'type',
+  name: 'name',
+  config: 'config',
+  status: 'status',
+  sort: 'sort',
+  remark: 'remark',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type AlertChannelScalarFieldEnum = (typeof AlertChannelScalarFieldEnum)[keyof typeof AlertChannelScalarFieldEnum]
+
+
+export const AlertRuleScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  eventType: 'eventType',
+  level: 'level',
+  channelIds: 'channelIds',
+  cooldownSeconds: 'cooldownSeconds',
+  status: 'status',
+  remark: 'remark',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type AlertRuleScalarFieldEnum = (typeof AlertRuleScalarFieldEnum)[keyof typeof AlertRuleScalarFieldEnum]
+
+
+export const AlertRecordScalarFieldEnum = {
+  id: 'id',
+  ruleId: 'ruleId',
+  ruleName: 'ruleName',
+  eventType: 'eventType',
+  level: 'level',
+  title: 'title',
+  message: 'message',
+  payload: 'payload',
+  channelIds: 'channelIds',
+  status: 'status',
+  results: 'results',
+  retries: 'retries',
+  createdAt: 'createdAt',
+  sentAt: 'sentAt'
+} as const
+
+export type AlertRecordScalarFieldEnum = (typeof AlertRecordScalarFieldEnum)[keyof typeof AlertRecordScalarFieldEnum]
+
+
 export const DictTypeScalarFieldEnum = {
   id: 'id',
   dictName: 'dictName',
@@ -2387,6 +2639,42 @@ export const NullsOrder = {
 } as const
 
 export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
+export const AlertChannelOrderByRelevanceFieldEnum = {
+  type: 'type',
+  name: 'name',
+  config: 'config',
+  remark: 'remark'
+} as const
+
+export type AlertChannelOrderByRelevanceFieldEnum = (typeof AlertChannelOrderByRelevanceFieldEnum)[keyof typeof AlertChannelOrderByRelevanceFieldEnum]
+
+
+export const AlertRuleOrderByRelevanceFieldEnum = {
+  name: 'name',
+  eventType: 'eventType',
+  level: 'level',
+  channelIds: 'channelIds',
+  remark: 'remark'
+} as const
+
+export type AlertRuleOrderByRelevanceFieldEnum = (typeof AlertRuleOrderByRelevanceFieldEnum)[keyof typeof AlertRuleOrderByRelevanceFieldEnum]
+
+
+export const AlertRecordOrderByRelevanceFieldEnum = {
+  ruleName: 'ruleName',
+  eventType: 'eventType',
+  level: 'level',
+  title: 'title',
+  message: 'message',
+  payload: 'payload',
+  channelIds: 'channelIds',
+  status: 'status',
+  results: 'results'
+} as const
+
+export type AlertRecordOrderByRelevanceFieldEnum = (typeof AlertRecordOrderByRelevanceFieldEnum)[keyof typeof AlertRecordOrderByRelevanceFieldEnum]
 
 
 export const DictTypeOrderByRelevanceFieldEnum = {
@@ -2828,6 +3116,9 @@ export interface PrismaClientOptionsWithAdapter extends PrismaClientBaseOptions 
  */
 export type PrismaClientOptions = PrismaClientOptionsWithAccelerateUrl | PrismaClientOptionsWithAdapter
 export type GlobalOmitConfig = {
+  alertChannel?: Prisma.AlertChannelOmit
+  alertRule?: Prisma.AlertRuleOmit
+  alertRecord?: Prisma.AlertRecordOmit
   dictType?: Prisma.DictTypeOmit
   dictItem?: Prisma.DictItemOmit
   sysConfig?: Prisma.SysConfigOmit

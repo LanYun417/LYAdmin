@@ -36,6 +36,7 @@ import { SseModule } from './modules/sse/sse.module.js';
 import { ExportModule } from './modules/export/export.module.js';
 import { IpRuleModule } from './modules/ip-rule/ip-rule.module.js';
 import { SsoModule } from './modules/sso/sso.module.js';
+import { AlertModule } from './modules/alert/alert.module.js';
 
 @Module({
   imports: [
@@ -66,6 +67,7 @@ import { SsoModule } from './modules/sso/sso.module.js';
     ExportModule,
     IpRuleModule,
     SsoModule,
+    AlertModule,
   ],
   providers: [
     // 守卫顺序：先鉴权（挂 req.user），再校验权限码

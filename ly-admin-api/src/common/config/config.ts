@@ -338,6 +338,20 @@ export const config = {
     /** 前端地址（回调 302 目标；票据页面前缀即此 + /sso/callback） */
     frontendUrl: (process.env.SSO_FRONTEND_URL ?? 'http://localhost:5173').replace(/\/+$/, ''),
   },
+  /**
+   * 告警中心。
+   * 渠道的敏感字段（SMTP 口令 / Webhook 签名密钥）走信封加密，与 MFA / SSO 同一把钥匙；
+   * 未配置信封密钥时告警功能整体禁用（渠道配置无法安全落库）。
+   */
+  alert: {
+    enabled: secretsEncryptionAvailable(),
+    /** 邮件发送默认发件人（渠道可覆盖） */
+    mailFrom: process.env.ALERT_MAIL_FROM ?? '',
+    /** 单渠道超时（秒）：慢渠道不能拖垮整个告警流程 */
+    channelTimeoutSeconds: Math.max(3, toNumber(process.env.ALERT_CHANNEL_TIMEOUT_SECONDS, 10)),
+    /** 投递失败重试次数（同步重试；避免依赖额外队列） */
+    retryTimes: Math.max(0, Math.min(toNumber(process.env.ALERT_RETRY_TIMES, 1), 3)),
+  },
 } as const;
 
 export type AppConfig = typeof config;

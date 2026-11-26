@@ -1097,3 +1097,57 @@ export interface SsoProviderParams {
   sort?: number;
   remark?: string;
 }
+
+/* ------------------------------ 告警中心 ------------------------------ */
+
+/** 告警渠道（敏感字段后端只回 '***' 或不回）。 */
+export interface AlertChannel {
+  id: number;
+  /** email / webhook / dingtalk / wecom / feishu */
+  type: string;
+  name: string;
+  /** 渠道配置（敏感字段为 '***' 占位） */
+  config: Record<string, unknown>;
+  /** 1 启用 / 0 停用 */
+  status: number;
+  sort: number;
+  remark: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** 告警规则。 */
+export interface AlertRule {
+  id: number;
+  name: string;
+  /** 事件类型（如 export.failed / login.bruteForce） */
+  eventType: string;
+  /** info / warning / critical */
+  level: string;
+  channelIds: number[];
+  /** 冷却秒数（0 = 不冷却） */
+  cooldownSeconds: number;
+  /** 1 启用 / 0 停用 */
+  status: number;
+  remark: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** 告警投递记录。 */
+export interface AlertRecord {
+  id: number;
+  ruleId: number;
+  ruleName: string;
+  eventType: string;
+  level: string;
+  title: string;
+  message: string;
+  channelIds: number[];
+  /** pending / sent / failed */
+  status: string;
+  results: Record<string, { ok: boolean; error?: string }> | null;
+  retries: number;
+  createdAt: string;
+  sentAt: string | null;
+}

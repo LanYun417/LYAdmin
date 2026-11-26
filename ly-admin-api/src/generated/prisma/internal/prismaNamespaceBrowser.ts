@@ -51,6 +51,9 @@ export const AnyNull = runtime.AnyNull
 
 
 export const ModelName = {
+  AlertChannel: 'AlertChannel',
+  AlertRule: 'AlertRule',
+  AlertRecord: 'AlertRecord',
   DictType: 'DictType',
   DictItem: 'DictItem',
   SysConfig: 'SysConfig',
@@ -90,6 +93,57 @@ export const TransactionIsolationLevel = runtime.makeStrictEnum({
 } as const)
 
 export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof typeof TransactionIsolationLevel]
+
+
+export const AlertChannelScalarFieldEnum = {
+  id: 'id',
+  type: 'type',
+  name: 'name',
+  config: 'config',
+  status: 'status',
+  sort: 'sort',
+  remark: 'remark',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type AlertChannelScalarFieldEnum = (typeof AlertChannelScalarFieldEnum)[keyof typeof AlertChannelScalarFieldEnum]
+
+
+export const AlertRuleScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  eventType: 'eventType',
+  level: 'level',
+  channelIds: 'channelIds',
+  cooldownSeconds: 'cooldownSeconds',
+  status: 'status',
+  remark: 'remark',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type AlertRuleScalarFieldEnum = (typeof AlertRuleScalarFieldEnum)[keyof typeof AlertRuleScalarFieldEnum]
+
+
+export const AlertRecordScalarFieldEnum = {
+  id: 'id',
+  ruleId: 'ruleId',
+  ruleName: 'ruleName',
+  eventType: 'eventType',
+  level: 'level',
+  title: 'title',
+  message: 'message',
+  payload: 'payload',
+  channelIds: 'channelIds',
+  status: 'status',
+  results: 'results',
+  retries: 'retries',
+  createdAt: 'createdAt',
+  sentAt: 'sentAt'
+} as const
+
+export type AlertRecordScalarFieldEnum = (typeof AlertRecordScalarFieldEnum)[keyof typeof AlertRecordScalarFieldEnum]
 
 
 export const DictTypeScalarFieldEnum = {
@@ -483,6 +537,42 @@ export const NullsOrder = {
 } as const
 
 export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
+export const AlertChannelOrderByRelevanceFieldEnum = {
+  type: 'type',
+  name: 'name',
+  config: 'config',
+  remark: 'remark'
+} as const
+
+export type AlertChannelOrderByRelevanceFieldEnum = (typeof AlertChannelOrderByRelevanceFieldEnum)[keyof typeof AlertChannelOrderByRelevanceFieldEnum]
+
+
+export const AlertRuleOrderByRelevanceFieldEnum = {
+  name: 'name',
+  eventType: 'eventType',
+  level: 'level',
+  channelIds: 'channelIds',
+  remark: 'remark'
+} as const
+
+export type AlertRuleOrderByRelevanceFieldEnum = (typeof AlertRuleOrderByRelevanceFieldEnum)[keyof typeof AlertRuleOrderByRelevanceFieldEnum]
+
+
+export const AlertRecordOrderByRelevanceFieldEnum = {
+  ruleName: 'ruleName',
+  eventType: 'eventType',
+  level: 'level',
+  title: 'title',
+  message: 'message',
+  payload: 'payload',
+  channelIds: 'channelIds',
+  status: 'status',
+  results: 'results'
+} as const
+
+export type AlertRecordOrderByRelevanceFieldEnum = (typeof AlertRecordOrderByRelevanceFieldEnum)[keyof typeof AlertRecordOrderByRelevanceFieldEnum]
 
 
 export const DictTypeOrderByRelevanceFieldEnum = {
