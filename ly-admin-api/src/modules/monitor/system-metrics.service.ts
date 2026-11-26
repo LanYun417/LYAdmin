@@ -24,6 +24,7 @@ import { readFileSync, statfsSync } from 'node:fs';
 import { hostname, arch, platform, cpus, freemem, totalmem, loadavg, release } from 'node:os';
 import { promisify } from 'node:util';
 import { config } from '../../common/config/config.js';
+import { BUILD_INFO } from '../../generated/build-info.js';
 
 /** 采样间隔（毫秒）。3s 兼顾曲线平滑度与读取开销。 */
 const SAMPLE_INTERVAL_MS = 3000;
@@ -583,7 +584,7 @@ export class SystemMetricsService implements OnModuleInit, OnModuleDestroy {
         release: release(),
         arch: arch(),
         nodeVersion: process.version,
-        appVersion: process.env.APP_VERSION ?? 'dev',
+        appVersion: process.env.APP_VERSION || BUILD_INFO.version || 'dev',
       },
       history: [...this.history],
       warmingUp: usage === null,

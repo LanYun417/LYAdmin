@@ -8,7 +8,7 @@
   "type": "module",
   "scripts": {
     "build": "nest build",
-    "prebuild": "npm run docs:gen",
+    "prebuild": "npm run docs:gen && npm run build:info",
     "format": "prettier --write \"src/**/*.ts\" \"prisma/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
@@ -29,6 +29,7 @@
     "prisma:comments:check": "tsx scripts/prisma-comments.ts --check",
     "prisma:studio": "prisma studio",
     "docs:gen": "node scripts/gen-api-docs.mjs",
+    "build:info": "node scripts/build-info.mjs",
     "seed": "tsx prisma/seed.ts",
     "ip2region:update": "tsx scripts/update-ip2region.ts"
   },

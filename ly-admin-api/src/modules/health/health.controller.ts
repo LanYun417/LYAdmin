@@ -13,19 +13,21 @@
  *     若也返回 503，Redis 抖动会把整个集群摘空。
  *   Redis 未配置（`REDIS_HOST` 为空）时状态为 `disabled`，不算故障。
  *
- * 版本信息取自环境变量（`APP_VERSION` / `GIT_COMMIT`，由构建产物注入），未注入时为 `dev`。
+ * 版本信息：构建期由 `scripts/build-info.mjs` 写入 `src/generated/build-info.ts`
+ * （prebuild 自动执行）；环境变量 `APP_VERSION` / `GIT_COMMIT` 仍可覆盖（CI 发布用）。
  */
 import { Controller, Get } from '@nestjs/common';
 import { Public } from '../../common/auth/auth.guard.js';
 import { config } from '../../common/config/config.js';
 import { AppException } from '../../common/exception/app.exception.js';
 import { RedisService } from '../../common/redis/redis.service.js';
+import { BUILD_INFO } from '../../generated/build-info.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 
 /** 应用标识与构建信息。 */
 const APP_NAME = 'ly-admin-api';
-const APP_VERSION = process.env.APP_VERSION ?? 'dev';
-const GIT_COMMIT = process.env.GIT_COMMIT ?? '';
+const APP_VERSION = process.env.APP_VERSION || BUILD_INFO.version || 'dev';
+const GIT_COMMIT = process.env.GIT_COMMIT || BUILD_INFO.commit || '';
 
 /** 单项依赖探测结果。 */
 interface DependencyCheck {
