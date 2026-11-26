@@ -1228,3 +1228,25 @@ export interface QueueJob {
   createdBy: number;
   createdAt: string;
 }
+
+/* ------------------------------ 数据导入中心 ------------------------------ */
+
+/** 导入记录。 */
+export interface ImportRecord {
+  id: number;
+  /** 队列任务 id */
+  jobId: number;
+  /** 导入类型（如 users） */
+  type: string;
+  title: string;
+  fileName: string;
+  /** 总行数 */
+  total: number;
+  /** 成功行数 */
+  created: number;
+  /** 逐行失败报告 */
+  failed: Array<{ row: number; message: string }>;
+  /** ok / partial / failed */
+  status: string;
+  createdAt: string;
+}

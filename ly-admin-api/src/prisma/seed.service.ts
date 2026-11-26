@@ -594,6 +594,36 @@ const MENU_TREE: MenuSeedNode[] = [
           },
         ],
       },
+      {
+        // 数据导入中心：异步导入（上传 → 队列执行 → 通知）
+        key: 'system:import',
+        menuName: '数据导入',
+        menuNameEn: 'Data Import',
+        menuType: MenuType.MENU,
+        path: '/system/import',
+        component: 'system/import/index',
+        icon: 'file-earmark-arrow-up',
+        permission: 'system:import:list',
+        sort: 11,
+        visible: Status.ENABLED,
+        keepAlive: 1,
+        children: [
+          {
+            key: 'system:import:query',
+            menuName: '查询',
+            menuType: MenuType.BUTTON,
+            permission: 'system:import:query',
+            sort: 1,
+          },
+          {
+            key: 'system:import:add',
+            menuName: '导入',
+            menuType: MenuType.BUTTON,
+            permission: 'system:import:add',
+            sort: 2,
+          },
+        ],
+      },
     ],
   },
   {

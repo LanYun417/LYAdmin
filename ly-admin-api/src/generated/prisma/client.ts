@@ -101,6 +101,11 @@ export type ExportTask = Prisma.ExportTaskModel
  */
 export type File = Prisma.FileModel
 /**
+ * Model ImportRecord
+ * 导入记录表：与异步导出中心（sys_export_task）对称——执行结果与逐行失败报告落这里。
+ */
+export type ImportRecord = Prisma.ImportRecordModel
+/**
  * Model IpRule
  * IP 访问控制规则表（黑名单拦截请求；白名单绕过限流，且豁免黑名单误封）
  */

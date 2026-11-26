@@ -7072,6 +7072,119 @@ export const API_DOCS: ApiDocGroup[] = [
     ]
   },
   {
+    "group": "数据导入",
+    "endpoints": [
+      {
+        "method": "GET",
+        "path": "/api/import/records",
+        "summary": "导入记录分页",
+        "permission": [],
+        "isPublic": false,
+        "action": "",
+        "params": [
+          {
+            "name": "type",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "示例值"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "示例值"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 1
+          }
+        ],
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3100/api/import/records?type=%E7%A4%BA%E4%BE%8B%E5%80%BC&status=%E7%A4%BA%E4%BE%8B%E5%80%BC&page=1&pageSize=1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "type": "示例值",
+            "status": "示例值",
+            "page": 1,
+            "pageSize": 1
+          }
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/api/import/types",
+        "summary": "已注册的导入类型（前端下拉）",
+        "permission": [],
+        "isPublic": false,
+        "action": "",
+        "params": [
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "页码，从 1 开始",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "每页条数",
+            "example": 10
+          }
+        ],
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3100/api/import/types?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "page": 1,
+            "pageSize": 10
+          }
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/api/import/submit",
+        "summary": "上传并入队（立即返回，执行进度见导入记录）",
+        "permission": [],
+        "isPublic": false,
+        "action": "数据导入 · 上传",
+        "params": [
+          {
+            "name": "type",
+            "in": "query",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "示例值"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X POST \"http://localhost:3100/api/import/submit?type=%E7%A4%BA%E4%BE%8B%E5%80%BC\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "type": "示例值"
+          }
+        }
+      }
+    ]
+  },
+  {
     "group": "部门/岗位管理",
     "endpoints": [
       {

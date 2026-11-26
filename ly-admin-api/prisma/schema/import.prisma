@@ -1,0 +1,32 @@
+// use prisma-next
+// ↑ 首行不可删：VS Code 的 Prisma 扩展按文件判定是否启用 Prisma 7 语言服务。
+//
+// 数据导入记录（异步导入中心）。
+// 公共约定（snake_case 映射 / 哨兵值 / 注释落库）见 base.prisma。
+
+/// 导入记录表：与异步导出中心（sys_export_task）对称——执行结果与逐行失败报告落这里。
+model ImportRecord {
+  /// 主键
+  id       BigInt   @id @default(autoincrement()) @db.BigInt
+  /// 队列任务 id（sys_queue_job）
+  jobId    BigInt   @map("job_id") @db.BigInt
+  /// 导入类型（如 users）
+  type     String   @db.VarChar(50)
+  /// 标题（队列任务标题快照）
+  title    String   @db.VarChar(100)
+  /// 原始文件名
+  fileName String   @map("file_name") @db.VarChar(255)
+  /// 总行数
+  total    Int      @default(0)
+  /// 成功行数
+  created  Int      @default(0)
+  /// 逐行失败报告（JSON：[{ row, message }]）
+  failed   String   @default("[]") @db.Text
+  /// ok 全部成功 / partial 部分失败 / failed 全部失败
+  status   String   @default("ok") @db.VarChar(20)
+  /// 创建时间
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([createdAt])
+  @@map("sys_import_record")
+}

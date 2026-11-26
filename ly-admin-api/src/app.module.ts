@@ -39,6 +39,7 @@ import { SsoModule } from './modules/sso/sso.module.js';
 import { AlertModule } from './modules/alert/alert.module.js';
 import { ApiKeyModule } from './modules/api-key/api-key.module.js';
 import { QueueModule } from './common/queue/queue.module.js';
+import { ImportModule } from './common/queue/import/import.module.js';
 
 @Module({
   imports: [
@@ -72,6 +73,7 @@ import { QueueModule } from './common/queue/queue.module.js';
     AlertModule,
     ApiKeyModule,
     QueueModule,
+    ImportModule,
   ],
   providers: [
     // 守卫顺序：先鉴权（挂 req.user），再校验权限码

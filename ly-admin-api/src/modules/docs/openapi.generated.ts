@@ -95,6 +95,9 @@ export const OPENAPI_DOC: Record<string, unknown> = {
       "name": "开放 API"
     },
     {
+      "name": "数据导入"
+    },
+    {
       "name": "部门/岗位管理"
     }
   ],
@@ -11569,6 +11572,246 @@ export const OPENAPI_DOC: Record<string, unknown> = {
               "type": "string"
             },
             "description": "路径参数 id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功（统一信封 { code, message, data }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "业务码，0 表示成功"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {}
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/import/records": {
+      "get": {
+        "tags": [
+          "数据导入"
+        ],
+        "summary": "导入记录分页",
+        "operationId": "get__api_import_records",
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "示例值"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "示例值"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "example": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "example": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功（统一信封 { code, message, data }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "业务码，0 表示成功"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "list": {
+                          "type": "array",
+                          "items": {}
+                        },
+                        "total": {
+                          "type": "integer",
+                          "example": 0
+                        },
+                        "page": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "pageSize": {
+                          "type": "integer",
+                          "example": 10
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/import/types": {
+      "get": {
+        "tags": [
+          "数据导入"
+        ],
+        "summary": "已注册的导入类型（前端下拉）",
+        "operationId": "get__api_import_types",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "description": "页码"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 10
+            },
+            "description": "每页条数"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功（统一信封 { code, message, data }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "业务码，0 表示成功"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "list": {
+                          "type": "array",
+                          "items": {}
+                        },
+                        "total": {
+                          "type": "integer",
+                          "example": 0
+                        },
+                        "page": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "pageSize": {
+                          "type": "integer",
+                          "example": 10
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/import/submit": {
+      "post": {
+        "tags": [
+          "数据导入"
+        ],
+        "summary": "上传并入队（立即返回，执行进度见导入记录）",
+        "operationId": "post__api_import_submit",
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "示例值"
+            }
           }
         ],
         "responses": {

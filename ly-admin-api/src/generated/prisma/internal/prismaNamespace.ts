@@ -408,6 +408,7 @@ export const ModelName = {
   SysConfig: 'SysConfig',
   ExportTask: 'ExportTask',
   File: 'File',
+  ImportRecord: 'ImportRecord',
   IpRule: 'IpRule',
   LoginLog: 'LoginLog',
   OperationLog: 'OperationLog',
@@ -442,7 +443,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "alertChannel" | "alertRule" | "alertRecord" | "apiKey" | "webhook" | "webhookDelivery" | "dictType" | "dictItem" | "sysConfig" | "exportTask" | "file" | "ipRule" | "loginLog" | "operationLog" | "httpLog" | "notice" | "userMfa" | "queueJob" | "ssoProvider" | "userSso" | "user" | "role" | "menu" | "dept" | "userRole" | "roleMenu" | "roleDept" | "userMenu" | "taskLog" | "userProfile"
+    modelProps: "alertChannel" | "alertRule" | "alertRecord" | "apiKey" | "webhook" | "webhookDelivery" | "dictType" | "dictItem" | "sysConfig" | "exportTask" | "file" | "importRecord" | "ipRule" | "loginLog" | "operationLog" | "httpLog" | "notice" | "userMfa" | "queueJob" | "ssoProvider" | "userSso" | "user" | "role" | "menu" | "dept" | "userRole" | "roleMenu" | "roleDept" | "userMenu" | "taskLog" | "userProfile"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1169,6 +1170,72 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.FileCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.FileCountAggregateOutputType> | number
+        }
+      }
+    }
+    ImportRecord: {
+      payload: Prisma.$ImportRecordPayload<ExtArgs>
+      fields: Prisma.ImportRecordFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ImportRecordFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ImportRecordPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ImportRecordFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ImportRecordPayload>
+        }
+        findFirst: {
+          args: Prisma.ImportRecordFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ImportRecordPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ImportRecordFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ImportRecordPayload>
+        }
+        findMany: {
+          args: Prisma.ImportRecordFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ImportRecordPayload>[]
+        }
+        create: {
+          args: Prisma.ImportRecordCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ImportRecordPayload>
+        }
+        createMany: {
+          args: Prisma.ImportRecordCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        delete: {
+          args: Prisma.ImportRecordDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ImportRecordPayload>
+        }
+        update: {
+          args: Prisma.ImportRecordUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ImportRecordPayload>
+        }
+        deleteMany: {
+          args: Prisma.ImportRecordDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ImportRecordUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        upsert: {
+          args: Prisma.ImportRecordUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ImportRecordPayload>
+        }
+        aggregate: {
+          args: Prisma.ImportRecordAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateImportRecord>
+        }
+        groupBy: {
+          args: Prisma.ImportRecordGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ImportRecordGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ImportRecordCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ImportRecordCountAggregateOutputType> | number
         }
       }
     }
@@ -2648,6 +2715,22 @@ export const FileScalarFieldEnum = {
 export type FileScalarFieldEnum = (typeof FileScalarFieldEnum)[keyof typeof FileScalarFieldEnum]
 
 
+export const ImportRecordScalarFieldEnum = {
+  id: 'id',
+  jobId: 'jobId',
+  type: 'type',
+  title: 'title',
+  fileName: 'fileName',
+  total: 'total',
+  created: 'created',
+  failed: 'failed',
+  status: 'status',
+  createdAt: 'createdAt'
+} as const
+
+export type ImportRecordScalarFieldEnum = (typeof ImportRecordScalarFieldEnum)[keyof typeof ImportRecordScalarFieldEnum]
+
+
 export const IpRuleScalarFieldEnum = {
   id: 'id',
   ip: 'ip',
@@ -3121,6 +3204,17 @@ export const FileOrderByRelevanceFieldEnum = {
 export type FileOrderByRelevanceFieldEnum = (typeof FileOrderByRelevanceFieldEnum)[keyof typeof FileOrderByRelevanceFieldEnum]
 
 
+export const ImportRecordOrderByRelevanceFieldEnum = {
+  type: 'type',
+  title: 'title',
+  fileName: 'fileName',
+  failed: 'failed',
+  status: 'status'
+} as const
+
+export type ImportRecordOrderByRelevanceFieldEnum = (typeof ImportRecordOrderByRelevanceFieldEnum)[keyof typeof ImportRecordOrderByRelevanceFieldEnum]
+
+
 export const IpRuleOrderByRelevanceFieldEnum = {
   ip: 'ip',
   remark: 'remark'
@@ -3513,6 +3607,7 @@ export type GlobalOmitConfig = {
   sysConfig?: Prisma.SysConfigOmit
   exportTask?: Prisma.ExportTaskOmit
   file?: Prisma.FileOmit
+  importRecord?: Prisma.ImportRecordOmit
   ipRule?: Prisma.IpRuleOmit
   loginLog?: Prisma.LoginLogOmit
   operationLog?: Prisma.OperationLogOmit
