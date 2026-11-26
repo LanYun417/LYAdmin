@@ -12,6 +12,7 @@
  * ③ 与项目既有的 `prisma:comments` 生成式脚本风格一致。
  *
  * 用法：`npm run docs:gen`（已接入 `prebuild`，`npm run build` 会自动执行）。
+ * 可选参数：`--out <dir>` 将产物写到指定目录（而非 src 内），供「重复生成一致性」测试使用。
  */
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
@@ -85,7 +86,12 @@ const GROUP_ORDER = [
   '系统',
 ];
 
-/** 递归收集控制器源码文件。 */
+/**
+ * 递归收集控制器源码文件。
+ * ⚠️ 必须按路径排序：readdirSync 的顺序由文件系统决定（不同机器/克隆可能不同），
+ * 不排序时模块合并顺序、同票数组件的推断都会随之漂移，产物 diff 充斥着无意义的重排
+ * （2026-11 已实际发生过：重新生成产生 600+ 行纯排序变更）。
+ */
 function collectControllerFiles(dir) {
   const out = [];
   for (const name of readdirSync(dir)) {
@@ -98,7 +104,7 @@ function collectControllerFiles(dir) {
       out.push(full);
     }
   }
-  return out;
+  return out.sort((a, b) => a.localeCompare(b));
 }
 
 /** 读取节点上的装饰器（兼容不同 TS 版本的 API）。 */
@@ -217,7 +223,7 @@ const SAMPLE_VALUES = {
   name: 'log-archive',
 };
 
-/** 收集 DTO 源文件。 */
+/** 收集 DTO 源文件（同样按路径排序，保证 dtoMap 的插入顺序确定）。 */
 function collectDtoFiles(dir) {
   const out = [];
   for (const name of readdirSync(dir)) {
@@ -230,7 +236,7 @@ function collectDtoFiles(dir) {
       out.push(full);
     }
   }
-  return out;
+  return out.sort((a, b) => a.localeCompare(b));
 }
 
 /** 解析 DTO 文件：类名 → 字段定义列表（名称 / 类型 / 是否可选 / JSDoc）。 */
@@ -1001,6 +1007,12 @@ export const OPENAPI_DOC: Record<string, unknown> = ${body};
 
 /** 主流程。 */
 function main() {
+  // `--out <dir>`：把产物写到指定目录（供测试做「重复生成一致性」校验），默认写回 src。
+  const outFlagIndex = process.argv.indexOf('--out');
+  const outDir = outFlagIndex >= 0 ? resolve(process.argv[outFlagIndex + 1] ?? '') : null;
+  const outDocsFile = outDir ? join(outDir, 'api-docs.generated.ts') : OUT_FILE;
+  const outOpenApiFile = outDir ? join(outDir, 'openapi.generated.ts') : OUT_OPENAPI;
+
   // DTO 索引：请求示例（请求体 / 查询参数）据此自动合成，避免手工抄字段
   const dtoMap = new Map();
   for (const file of collectDtoFiles(SRC_DIR)) {
@@ -1034,18 +1046,18 @@ function main() {
     }))
     .sort((a, b) => rank(a.group) - rank(b.group) || a.group.localeCompare(b.group));
 
-  mkdirSync(dirname(OUT_FILE), { recursive: true });
-  writeFileSync(OUT_FILE, buildSource(groups), 'utf8');
+  mkdirSync(dirname(outDocsFile), { recursive: true });
+  writeFileSync(outDocsFile, buildSource(groups), 'utf8');
 
   // OpenAPI 3.0 导出：同一份扫描数据的规范重映射
   const pkg = JSON.parse(readFileSync(join(API_ROOT, 'package.json'), 'utf8'));
   const openapiDoc = buildOpenApi(groups, dtoMap, pkg.version || '1.0.0');
-  mkdirSync(dirname(OUT_OPENAPI), { recursive: true });
-  writeFileSync(OUT_OPENAPI, buildOpenApiSource(openapiDoc), 'utf8');
+  mkdirSync(dirname(outOpenApiFile), { recursive: true });
+  writeFileSync(outOpenApiFile, buildOpenApiSource(openapiDoc), 'utf8');
 
   const total = groups.reduce((sum, g) => sum + g.endpoints.length, 0);
   console.log(
-    `[ApiDocs] 已生成 ${groups.length} 个模块 / ${total} 个接口（解析 ${dtoMap.size} 个 DTO）→ ${OUT_FILE} 与 ${OUT_OPENAPI}`,
+    `[ApiDocs] 已生成 ${groups.length} 个模块 / ${total} 个接口（解析 ${dtoMap.size} 个 DTO）→ ${outDocsFile} 与 ${outOpenApiFile}`,
   );
 }
 
