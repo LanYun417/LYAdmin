@@ -15,6 +15,8 @@ import { getOperationMeta, inferAction, type OperationMeta } from './operation-l
 import type { AuthenticatedRequest } from '../auth/auth.guard.js';
 import { IpRegionService } from '../ip/ip-region.service.js';
 import { buildSnapshotFields, runWithSnapshot, type OperationSnapshot } from './operation-snapshot.js';
+import { computeOperationDiff } from './operation-diff.js';
+import { SNAPSHOT_MAX_CHARS } from './operation-snapshot.js';
 import { getTraceId } from './trace-id.js';
 
 /** 读取客户端 IP（受 trust proxy 设置影响）。 */
@@ -90,6 +92,8 @@ export class OperationLogInterceptor implements NestInterceptor {
     const ip = getClientIp(req) || null;
     const location = (await this.ipRegion.locate(ip)) || null;
     const { beforeData, afterData } = buildSnapshotFields(snapshot);
+    // 字段级 Diff：仅列变化字段。两份快照都缺（服务层未采集）或完全一致时为 null
+    const diff = computeOperationDiff(snapshot.before, snapshot.after);
     await this.operationLogService.createOperationLog({
       userId: req.user?.userId ?? null,
       username: req.user?.username ?? null,
@@ -100,6 +104,7 @@ export class OperationLogInterceptor implements NestInterceptor {
       params: OperationLogService.serializeParams(req.body),
       beforeData,
       afterData,
+      diff: diff ? JSON.stringify(diff).slice(0, SNAPSHOT_MAX_CHARS) : null,
       duration,
       result: statusCode < 400 ? 1 : 0,
       errorMessage: statusCode < 400 ? null : errorMessage || `HTTP ${statusCode}`,

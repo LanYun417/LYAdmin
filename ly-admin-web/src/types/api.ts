@@ -307,6 +307,8 @@ export interface OperationLog {
   beforeData: string | null;
   /** 变更后数据（JSON 文本），口径同 beforeData */
   afterData: string | null;
+  /** 字段级差异（JSON 文本：仅列变化字段；`{from,to}` 为值变化，__added__/__deleted__ 为字段增删） */
+  diff: string | null;
   duration: number;
   result: number;
   errorMessage: string | null;

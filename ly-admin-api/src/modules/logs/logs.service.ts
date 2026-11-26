@@ -174,6 +174,8 @@ function mapOperationRow(row: {
   params: string | null;
   beforeData: string | null;
   afterData: string | null;
+  /** 字段级差异（JSON 文本：仅列变化字段；未采集 / 无变化为 null） */
+  diff: string | null;
   duration: number;
   result: number;
   errorMessage: string | null;
@@ -191,6 +193,8 @@ function mapOperationRow(row: {
   params: string | null;
   beforeData: string | null;
   afterData: string | null;
+  /** 字段级差异（JSON 文本：仅列变化字段；未采集 / 无变化为 null） */
+  diff: string | null;
   duration: number;
   result: number;
   errorMessage: string | null;
@@ -210,6 +214,7 @@ function mapOperationRow(row: {
     // 变更前后值：仅记录到落库的那一刻（未采集的接口为 null），前端据此渲染「变更留痕」
     beforeData: row.beforeData,
     afterData: row.afterData,
+    diff: row.diff,
     duration: Number(row.duration),
     result: Number(row.result),
     errorMessage: row.errorMessage,

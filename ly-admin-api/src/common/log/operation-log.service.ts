@@ -19,6 +19,8 @@ export interface OperationLogInput {
   beforeData?: string | null;
   /** 变更后数据（JSON 文本，未采集为 null） */
   afterData?: string | null;
+  /** 字段级差异（JSON 文本：仅列变化字段，未采集 / 无变化为 null） */
+  diff?: string | null;
   duration: number;
   result: number;
   errorMessage: string | null;
@@ -70,6 +72,7 @@ export class OperationLogService {
           params: input.params,
           beforeData: input.beforeData ?? null,
           afterData: input.afterData ?? null,
+          diff: input.diff ? input.diff.slice(0, 2000) : null,
           duration: input.duration,
           result: input.result,
           errorMessage: input.errorMessage ? input.errorMessage.slice(0, 500) : null,

@@ -53,10 +53,25 @@ function formatSnapshotValue(value: unknown): string {
 }
 
 /**
- * 字段级对比：取前后键的并集逐字段比对。
- * 只做「值是否相等」的判断（不做文本 diff）——审计关心的是"哪个字段被改了"。
+ * 字段级对比：优先用服务端计算的「仅列变化字段」Diff（`sys_operation_log.diff`），
+ * 旧日志没有 diff 时回退到前端按 before/after 并集比对。
+ * 服务端口径：`{ from, to }` 为值变化，`__added__` / `__deleted__` 为字段增删。
  */
 const snapshotDiff = computed<SnapshotDiffRow[]>(() => {
+  const raw = snapshotRow.value?.diff;
+  if (raw) {
+    const parsed = parseSnapshot(raw);
+    return Object.entries(parsed).map(([field, value]) => {
+      if (value === '__added__') {
+        return { field, before: '-', after: '（新增）', changed: true };
+      }
+      if (value === '__deleted__') {
+        return { field, before: '（已删除）', after: '-', changed: true };
+      }
+      const pair = value as { from: unknown; to: unknown };
+      return { field, before: formatSnapshotValue(pair.from), after: formatSnapshotValue(pair.to), changed: true };
+    });
+  }
   const before = parseSnapshot(snapshotRow.value?.beforeData);
   const after = parseSnapshot(snapshotRow.value?.afterData);
   const fields = Array.from(new Set([...Object.keys(before), ...Object.keys(after)]));
