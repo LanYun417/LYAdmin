@@ -1203,3 +1203,28 @@ export interface WebhookDelivery {
   duration: number;
   createdAt: string;
 }
+
+/* ------------------------------ 通用任务队列 ------------------------------ */
+
+/** 队列任务。 */
+export interface QueueJob {
+  id: number;
+  /** 任务类型（如 data.import） */
+  type: string;
+  title: string;
+  payload: unknown;
+  /** 幂等键（空 = 未启用去重） */
+  idemKey: string;
+  /** 最大尝试次数（含首次） */
+  maxAttempts: number;
+  attempts: number;
+  /** pending / running / done / dead */
+  status: string;
+  /** 下次可执行时间（指数退避后的重试时刻） */
+  availAt: string;
+  lastError: string | null;
+  startedAt: string | null;
+  finishedAt: string | null;
+  createdBy: number;
+  createdAt: string;
+}

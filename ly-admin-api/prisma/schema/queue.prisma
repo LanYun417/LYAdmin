@@ -1,0 +1,45 @@
+// use prisma-next
+// ↑ 首行不可删：VS Code 的 Prisma 扩展按文件判定是否启用 Prisma 7 语言服务。
+//
+// 通用任务队列：失败重试（指数退避）、幂等去重、跨实例分布式锁。
+// 公共约定（snake_case 映射 / 哨兵值 / 注释落库）见 base.prisma。
+
+/// 通用任务队列表。
+/// 与 sys_task_log（内置 cron 任务的执行记录）分工：本表是「可重试的业务任务」，
+/// 每个任务声明 maxAttempts 与幂等键，由队列执行器消费。
+model QueueJob {
+  /// 主键
+  id          BigInt   @id @default(autoincrement()) @db.BigInt
+  /// 任务类型（如 data.import / report.generate）
+  type        String   @db.VarChar(50)
+  /// 任务标题（展示用）
+  title       String   @db.VarChar(100)
+  /// 任务负载（JSON）
+  payload     String   @db.Text
+  /// 幂等键（唯一：同键重复入队直接返回已有任务，0 = 不启用）
+  idemKey     String   @default("") @map("idem_key") @db.VarChar(128)
+  /// 最大尝试次数（含首次）
+  maxAttempts Int      @default(3) @map("max_attempts")
+  /// 已尝试次数
+  attempts    Int      @default(0)
+  /// 状态：pending 待执行 / running 执行中 / done 成功 / dead 多次失败放弃
+  status      String   @default("pending") @db.VarChar(20)
+  /// 下次可执行时间（指数退避：availAt = now + base * 2^(attempts-1)）
+  availAt     DateTime @default(now()) @map("avail_at")
+  /// 最近一次错误（截断）
+  lastError   String?  @map("last_error") @db.VarChar(500)
+  /// 最近一次开始执行时间（兜底回收僵尸 running 用）
+  startedAt   DateTime? @map("started_at")
+  /// 完成时间
+  finishedAt  DateTime? @map("finished_at")
+  /// 创建人（0 = 系统）
+  createdBy   BigInt   @default(0) @map("created_by") @db.BigInt
+  /// 创建时间
+  createdAt   DateTime @default(now()) @map("created_at")
+  /// 更新时间
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@unique([idemKey])
+  @@index([status, availAt])
+  @@map("sys_queue_job")
+}

@@ -5665,6 +5665,157 @@ export const API_DOCS: ApiDocGroup[] = [
     ]
   },
   {
+    "group": "任务队列",
+    "endpoints": [
+      {
+        "method": "GET",
+        "path": "/api/queue/jobs",
+        "summary": "任务分页列表",
+        "permission": [],
+        "isPublic": false,
+        "action": "",
+        "params": [
+          {
+            "name": "status",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "示例值"
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "示例值"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 1
+          }
+        ],
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3100/api/queue/jobs?status=%E7%A4%BA%E4%BE%8B%E5%80%BC&type=%E7%A4%BA%E4%BE%8B%E5%80%BC&page=1&pageSize=1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "status": "示例值",
+            "type": "示例值",
+            "page": 1,
+            "pageSize": 1
+          }
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/api/queue/consume",
+        "summary": "手动触发一次消费（运维排障用，绕过调度周期）",
+        "permission": [],
+        "isPublic": false,
+        "action": "任务队列 · 手动消费",
+        "examples": {
+          "curl": "curl -X POST \"http://localhost:3100/api/queue/consume\" \\\n  -H \"Authorization: Bearer <accessToken>\""
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/api/queue/jobs",
+        "summary": "入队（幂等键命中时直接返回已有任务，不重复执行）",
+        "permission": [],
+        "isPublic": false,
+        "action": "任务队列 · 入队",
+        "params": [
+          {
+            "name": "type",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "示例值"
+          },
+          {
+            "name": "title",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "示例值"
+          },
+          {
+            "name": "payload",
+            "in": "body",
+            "type": "Record<string, unknown>",
+            "required": true,
+            "description": "任务负载（处理器按 type 解释）",
+            "example": "示例值"
+          },
+          {
+            "name": "idemKey",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "幂等键：同键已在库直接返回已有任务（空 = 不去重）",
+            "example": "示例值"
+          },
+          {
+            "name": "maxAttempts",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "最大尝试次数（含首次，默认 3）",
+            "example": 1
+          }
+        ],
+        "examples": {
+          "curl": "curl -X POST \"http://localhost:3100/api/queue/jobs\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"type\": \"示例值\",\n      \"title\": \"示例值\",\n      \"payload\": \"示例值\",\n      \"idemKey\": \"示例值\",\n      \"maxAttempts\": 1\n    }'",
+          "requestBody": {
+            "type": "示例值",
+            "title": "示例值",
+            "payload": "示例值",
+            "idemKey": "示例值",
+            "maxAttempts": 1
+          }
+        }
+      },
+      {
+        "method": "PUT",
+        "path": "/api/queue/jobs/:id/replay",
+        "summary": "重放（dead / done → pending 重新执行）",
+        "permission": [],
+        "isPublic": false,
+        "action": "任务队列 · 重放",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X PUT \"http://localhost:3100/api/queue/jobs/1/replay\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "id": "1"
+          }
+        }
+      }
+    ]
+  },
+  {
     "group": "告警中心",
     "endpoints": [
       {

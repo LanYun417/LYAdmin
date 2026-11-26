@@ -83,6 +83,9 @@ export const OPENAPI_DOC: Record<string, unknown> = {
       "name": "下载中心"
     },
     {
+      "name": "任务队列"
+    },
+    {
       "name": "告警中心"
     },
     {
@@ -9383,6 +9386,257 @@ export const OPENAPI_DOC: Record<string, unknown> = {
         ]
       }
     },
+    "/api/queue/jobs": {
+      "get": {
+        "tags": [
+          "任务队列"
+        ],
+        "summary": "任务分页列表",
+        "operationId": "get__api_queue_jobs",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "示例值"
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "示例值"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "example": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "example": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功（统一信封 { code, message, data }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "业务码，0 表示成功"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "list": {
+                          "type": "array",
+                          "items": {}
+                        },
+                        "total": {
+                          "type": "integer",
+                          "example": 0
+                        },
+                        "page": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "pageSize": {
+                          "type": "integer",
+                          "example": 10
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "任务队列"
+        ],
+        "summary": "入队（幂等键命中时直接返回已有任务，不重复执行）",
+        "operationId": "post__api_queue_jobs",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EnqueueJobDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功（统一信封 { code, message, data }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "业务码，0 表示成功"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/EnqueueJobDto"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/queue/consume": {
+      "post": {
+        "tags": [
+          "任务队列"
+        ],
+        "summary": "手动触发一次消费（运维排障用，绕过调度周期）",
+        "operationId": "post__api_queue_consume",
+        "responses": {
+          "200": {
+            "description": "成功（统一信封 { code, message, data }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "业务码，0 表示成功"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {}
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/queue/jobs/{id}/replay": {
+      "put": {
+        "tags": [
+          "任务队列"
+        ],
+        "summary": "重放（dead / done → pending 重新执行）",
+        "operationId": "put__api_queue_jobs__id_replay",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "路径参数 id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功（统一信封 { code, message, data }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "业务码，0 表示成功"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {}
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
     "/api/alert/channels": {
       "get": {
         "tags": [
@@ -12862,6 +13116,39 @@ export const OPENAPI_DOC: Record<string, unknown> = {
         },
         "required": [
           "module"
+        ]
+      },
+      "EnqueueJobDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "example": "示例值"
+          },
+          "title": {
+            "type": "string",
+            "example": "示例值"
+          },
+          "payload": {
+            "type": "string",
+            "description": "任务负载（处理器按 type 解释）",
+            "example": "示例值"
+          },
+          "idemKey": {
+            "type": "string",
+            "description": "幂等键：同键已在库直接返回已有任务（空 = 不去重）",
+            "example": "示例值"
+          },
+          "maxAttempts": {
+            "type": "number",
+            "description": "最大尝试次数（含首次，默认 3）",
+            "example": 1
+          }
+        },
+        "required": [
+          "type",
+          "title",
+          "payload"
         ]
       },
       "AlertChannelDto": {

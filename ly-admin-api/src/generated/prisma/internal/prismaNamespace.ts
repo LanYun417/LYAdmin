@@ -414,6 +414,7 @@ export const ModelName = {
   HttpLog: 'HttpLog',
   Notice: 'Notice',
   UserMfa: 'UserMfa',
+  QueueJob: 'QueueJob',
   SsoProvider: 'SsoProvider',
   UserSso: 'UserSso',
   User: 'User',
@@ -441,7 +442,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "alertChannel" | "alertRule" | "alertRecord" | "apiKey" | "webhook" | "webhookDelivery" | "dictType" | "dictItem" | "sysConfig" | "exportTask" | "file" | "ipRule" | "loginLog" | "operationLog" | "httpLog" | "notice" | "userMfa" | "ssoProvider" | "userSso" | "user" | "role" | "menu" | "dept" | "userRole" | "roleMenu" | "roleDept" | "userMenu" | "taskLog" | "userProfile"
+    modelProps: "alertChannel" | "alertRule" | "alertRecord" | "apiKey" | "webhook" | "webhookDelivery" | "dictType" | "dictItem" | "sysConfig" | "exportTask" | "file" | "ipRule" | "loginLog" | "operationLog" | "httpLog" | "notice" | "userMfa" | "queueJob" | "ssoProvider" | "userSso" | "user" | "role" | "menu" | "dept" | "userRole" | "roleMenu" | "roleDept" | "userMenu" | "taskLog" | "userProfile"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1567,6 +1568,72 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    QueueJob: {
+      payload: Prisma.$QueueJobPayload<ExtArgs>
+      fields: Prisma.QueueJobFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.QueueJobFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QueueJobPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.QueueJobFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QueueJobPayload>
+        }
+        findFirst: {
+          args: Prisma.QueueJobFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QueueJobPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.QueueJobFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QueueJobPayload>
+        }
+        findMany: {
+          args: Prisma.QueueJobFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QueueJobPayload>[]
+        }
+        create: {
+          args: Prisma.QueueJobCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QueueJobPayload>
+        }
+        createMany: {
+          args: Prisma.QueueJobCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        delete: {
+          args: Prisma.QueueJobDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QueueJobPayload>
+        }
+        update: {
+          args: Prisma.QueueJobUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QueueJobPayload>
+        }
+        deleteMany: {
+          args: Prisma.QueueJobDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.QueueJobUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        upsert: {
+          args: Prisma.QueueJobUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QueueJobPayload>
+        }
+        aggregate: {
+          args: Prisma.QueueJobAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateQueueJob>
+        }
+        groupBy: {
+          args: Prisma.QueueJobGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.QueueJobGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.QueueJobCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.QueueJobCountAggregateOutputType> | number
+        }
+      }
+    }
     SsoProvider: {
       payload: Prisma.$SsoProviderPayload<ExtArgs>
       fields: Prisma.SsoProviderFieldRefs
@@ -2686,6 +2753,27 @@ export const UserMfaScalarFieldEnum = {
 export type UserMfaScalarFieldEnum = (typeof UserMfaScalarFieldEnum)[keyof typeof UserMfaScalarFieldEnum]
 
 
+export const QueueJobScalarFieldEnum = {
+  id: 'id',
+  type: 'type',
+  title: 'title',
+  payload: 'payload',
+  idemKey: 'idemKey',
+  maxAttempts: 'maxAttempts',
+  attempts: 'attempts',
+  status: 'status',
+  availAt: 'availAt',
+  lastError: 'lastError',
+  startedAt: 'startedAt',
+  finishedAt: 'finishedAt',
+  createdBy: 'createdBy',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type QueueJobScalarFieldEnum = (typeof QueueJobScalarFieldEnum)[keyof typeof QueueJobScalarFieldEnum]
+
+
 export const SsoProviderScalarFieldEnum = {
   id: 'id',
   name: 'name',
@@ -3103,6 +3191,18 @@ export const UserMfaOrderByRelevanceFieldEnum = {
 export type UserMfaOrderByRelevanceFieldEnum = (typeof UserMfaOrderByRelevanceFieldEnum)[keyof typeof UserMfaOrderByRelevanceFieldEnum]
 
 
+export const QueueJobOrderByRelevanceFieldEnum = {
+  type: 'type',
+  title: 'title',
+  payload: 'payload',
+  idemKey: 'idemKey',
+  status: 'status',
+  lastError: 'lastError'
+} as const
+
+export type QueueJobOrderByRelevanceFieldEnum = (typeof QueueJobOrderByRelevanceFieldEnum)[keyof typeof QueueJobOrderByRelevanceFieldEnum]
+
+
 export const SsoProviderOrderByRelevanceFieldEnum = {
   name: 'name',
   protocol: 'protocol',
@@ -3419,6 +3519,7 @@ export type GlobalOmitConfig = {
   httpLog?: Prisma.HttpLogOmit
   notice?: Prisma.NoticeOmit
   userMfa?: Prisma.UserMfaOmit
+  queueJob?: Prisma.QueueJobOmit
   ssoProvider?: Prisma.SsoProviderOmit
   userSso?: Prisma.UserSsoOmit
   user?: Prisma.UserOmit

@@ -68,6 +68,7 @@ export const ModelName = {
   HttpLog: 'HttpLog',
   Notice: 'Notice',
   UserMfa: 'UserMfa',
+  QueueJob: 'QueueJob',
   SsoProvider: 'SsoProvider',
   UserSso: 'UserSso',
   User: 'User',
@@ -384,6 +385,27 @@ export const UserMfaScalarFieldEnum = {
 } as const
 
 export type UserMfaScalarFieldEnum = (typeof UserMfaScalarFieldEnum)[keyof typeof UserMfaScalarFieldEnum]
+
+
+export const QueueJobScalarFieldEnum = {
+  id: 'id',
+  type: 'type',
+  title: 'title',
+  payload: 'payload',
+  idemKey: 'idemKey',
+  maxAttempts: 'maxAttempts',
+  attempts: 'attempts',
+  status: 'status',
+  availAt: 'availAt',
+  lastError: 'lastError',
+  startedAt: 'startedAt',
+  finishedAt: 'finishedAt',
+  createdBy: 'createdBy',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type QueueJobScalarFieldEnum = (typeof QueueJobScalarFieldEnum)[keyof typeof QueueJobScalarFieldEnum]
 
 
 export const SsoProviderScalarFieldEnum = {
@@ -801,6 +823,18 @@ export const UserMfaOrderByRelevanceFieldEnum = {
 } as const
 
 export type UserMfaOrderByRelevanceFieldEnum = (typeof UserMfaOrderByRelevanceFieldEnum)[keyof typeof UserMfaOrderByRelevanceFieldEnum]
+
+
+export const QueueJobOrderByRelevanceFieldEnum = {
+  type: 'type',
+  title: 'title',
+  payload: 'payload',
+  idemKey: 'idemKey',
+  status: 'status',
+  lastError: 'lastError'
+} as const
+
+export type QueueJobOrderByRelevanceFieldEnum = (typeof QueueJobOrderByRelevanceFieldEnum)[keyof typeof QueueJobOrderByRelevanceFieldEnum]
 
 
 export const SsoProviderOrderByRelevanceFieldEnum = {

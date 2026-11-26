@@ -137,6 +137,13 @@ export type Notice = Prisma.NoticeModel
  */
 export type UserMfa = Prisma.UserMfaModel
 /**
+ * Model QueueJob
+ * 通用任务队列表。
+ * 与 sys_task_log（内置 cron 任务的执行记录）分工：本表是「可重试的业务任务」，
+ * 每个任务声明 maxAttempts 与幂等键，由队列执行器消费。
+ */
+export type QueueJob = Prisma.QueueJobModel
+/**
  * Model SsoProvider
  * SSO 提供方配置表。
  * clientSecret 同样经 AES-256-GCM 信封加密存放（见 common/crypto/secret-box.ts）。

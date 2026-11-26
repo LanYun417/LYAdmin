@@ -557,6 +557,43 @@ const MENU_TREE: MenuSeedNode[] = [
           },
         ],
       },
+      {
+        // 通用任务队列：可重试业务任务的执行与重放
+        key: 'system:queue',
+        menuName: '任务队列',
+        menuNameEn: 'Task Queue',
+        menuType: MenuType.MENU,
+        path: '/system/queue',
+        component: 'system/queue/index',
+        icon: 'list-task',
+        permission: 'system:queue:list',
+        sort: 10,
+        visible: Status.ENABLED,
+        keepAlive: 1,
+        children: [
+          {
+            key: 'system:queue:query',
+            menuName: '查询',
+            menuType: MenuType.BUTTON,
+            permission: 'system:queue:query',
+            sort: 1,
+          },
+          {
+            key: 'system:queue:add',
+            menuName: '入队',
+            menuType: MenuType.BUTTON,
+            permission: 'system:queue:add',
+            sort: 2,
+          },
+          {
+            key: 'system:queue:replay',
+            menuName: '重放',
+            menuType: MenuType.BUTTON,
+            permission: 'system:queue:replay',
+            sort: 3,
+          },
+        ],
+      },
     ],
   },
   {

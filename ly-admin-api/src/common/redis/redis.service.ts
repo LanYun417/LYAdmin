@@ -110,6 +110,44 @@ export class RedisService implements OnModuleDestroy {
     }
   }
 
+  /**
+   * 原子释放锁：token 匹配才删除（Lua 保证比对 + 删除原子性）。
+   * Redis 不可用 / 异常时返回 false（调用方兜底等 TTL 过期）。
+   */
+  async evalLockRelease(key: string, token: string): Promise<boolean> {
+    if (!this.isReady()) {
+      return false;
+    }
+    try {
+      const result = await this.client!.eval(
+        "if redis.call('GET', KEYS[1]) == ARGV[1] then return redis.call('DEL', KEYS[1]) end return 0",
+        { keys: [key], arguments: [token] },
+      );
+      return result === 1;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * 原子续期：仅当锁仍由该 token 持有时刷新 TTL。
+   * @returns true = 续期成功（仍是持有者）；false = 锁已易主或不可用
+   */
+  async renewLock(key: string, token: string, ttlMs: number): Promise<boolean> {
+    if (!this.isReady()) {
+      return false;
+    }
+    try {
+      const result = await this.client!.eval(
+        "if redis.call('GET', KEYS[1]) == ARGV[1] then return redis.call('PEXPIRE', KEYS[1], ARGV[2]) end return 0",
+        { keys: [key], arguments: [token, String(ttlMs)] },
+      );
+      return result === 1;
+    } catch {
+      return false;
+    }
+  }
+
   /** 读取键值。 */
   async get(key: string): Promise<string | null> {
     if (!this.isReady()) {
