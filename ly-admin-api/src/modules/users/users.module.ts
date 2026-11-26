@@ -6,13 +6,14 @@
  */
 import { Module } from '@nestjs/common';
 import { NoticeModule } from '../notice/notice.module.js';
+import { ApiKeyModule } from '../api-key/api-key.module.js';
 import { UsersController } from './users.controller.js';
 import { UsersService } from './users.service.js';
 import { UsersImportService } from './users-import.service.js';
 
 @Module({
   controllers: [UsersController],
-  imports: [NoticeModule],
+  imports: [NoticeModule, ApiKeyModule],
   providers: [UsersService, UsersImportService],
 })
 export class UsersModule {}

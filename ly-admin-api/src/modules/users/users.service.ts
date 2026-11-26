@@ -14,6 +14,7 @@ import { assertPasswordNotContainsAccount } from '../../common/auth/password-pol
 import { recordAfter, recordBefore } from '../../common/log/operation-snapshot.js';
 import { runBatchDelete, type BatchDeleteResult } from '../../common/utils/batch.js';
 import { NOTICE_TYPE, NoticeService } from '../notice/notice.service.js';
+import { WebhookService } from '../api-key/webhook.service.js';
 import type { AuthUserContext, PageResult, UserDetail } from '../../common/types.js';
 import type { Prisma } from '../../generated/prisma/client.js';
 import type { CreateUserDto, UpdateUserDto } from './dto/users.dto.js';
@@ -59,6 +60,7 @@ export class UsersService {
     private readonly dataScope: DataScopeService,
     private readonly authCache: AuthCacheService,
     private readonly noticeService: NoticeService,
+    private readonly webhookService: WebhookService,
   ) {}
 
   /** 判断用户是否为超级管理员：内置 `admin` 账号，或持有 `super_admin` 角色。 */
@@ -238,6 +240,17 @@ export class UsersService {
     });
 
     await this.syncUserRoles(Number(user.id), dto.roleIds ?? []);
+    // Webhook 外发：把「新用户入职」推给外部系统（如 IM 开通、资产分配）。
+    // publish 内部吞掉一切异常——外发失败绝不影响用户创建主流程。
+    await this.webhookService.publish({
+      event: 'user.created',
+      data: {
+        userId: Number(user.id),
+        username: user.username,
+        nickname: user.nickname,
+        roleIds: dto.roleIds ?? [],
+      },
+    });
     return this.getUserDetail(Number(user.id));
   }
 

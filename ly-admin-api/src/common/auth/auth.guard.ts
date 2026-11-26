@@ -3,6 +3,7 @@
  * 模块职责：解析 Bearer Token、校验 accessToken、查库校验用户状态（强制下线）、
  * 校验改密后旧 Token 失效与登出黑名单，并把用户上下文挂载到请求对象。
  */
+import { createHash } from 'node:crypto';
 import { type CanActivate, type ExecutionContext, Injectable, SetMetadata, createParamDecorator } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
@@ -12,10 +13,27 @@ import { JwtService } from './jwt.service.js';
 import { SessionService } from './session.service.js';
 import { TokenBlacklistService } from './token-blacklist.service.js';
 import { RedisService } from '../redis/redis.service.js';
+// 同 AuthUserService：PrismaService 参与依赖注入，必须是值导入
+import { PrismaService } from '../../prisma/prisma.service.js';
 // 必须为**值导入**（非 import type）：Nest 依赖注入需要运行时的构造函数引用，
 // 用 import type 会在 emitDecoratorMetadata 下退化为 Function，导致无法解析依赖。
 import { AuthUserService } from './auth-user.service.js';
+import { getClientIp } from '../log/operation-log.interceptor.js';
+import { matchIpRule } from '../ip/ip-match.js';
 import type { AuthContext, AuthUserContext } from '../types.js';
+
+/** 解析 JSON 字符串数组；任何异常/非数组都归一为空数组（不让脏数据放大成 500）。 */
+function parseJsonArray(raw: string | null): string[] {
+  if (!raw) {
+    return [];
+  }
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.map((item) => String(item)) : [];
+  } catch {
+    return [];
+  }
+}
 
 /** 请求对象扩展：挂载鉴权上下文。 */
 export interface AuthenticatedRequest extends Request {
@@ -149,6 +167,7 @@ export class AuthGuard implements CanActivate {
     private readonly authUserService: AuthUserService,
     private readonly sessionService: SessionService,
     private readonly redis: RedisService,
+    private readonly prisma: PrismaService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -161,6 +180,15 @@ export class AuthGuard implements CanActivate {
     }
 
     const req = context.switchToHttp().getRequest<AuthenticatedRequest>();
+
+    // API Key 通道：`Authorization: Bearer lyak_xxx` 走服务账号鉴权
+    // （JWT 与 API Key 不可能同前缀：JWT 以 eyJ 开头，语义上零歧义）
+    const header = req.headers.authorization;
+    if (header?.startsWith('Bearer lyak_')) {
+      await this.authenticateApiKey(header.slice(7).trim(), req);
+      return true;
+    }
+
     const sidHolder: { value?: string } = {};
     const { user, context: authContext } = await authenticateRequest(
       req,
@@ -176,6 +204,72 @@ export class AuthGuard implements CanActivate {
     req.tokenSid = sidHolder.value;
     req.authContext = authContext;
     return true;
+  }
+
+  /**
+   * API Key 鉴权：哈希命中 → 状态/过期/IP 白名单校验 → 以所属用户身份挂载上下文。
+   *
+   * 权限口径：Key 的 scopes 为空 = 与所属用户完全一致（最简单、最常见）；
+   * 非空 = 在用户权限基础上再取交集（缩小范围，绝不放大）。
+   * lastUsedAt 异步更新（不阻塞请求，写失败仅丢统计）。
+   */
+  private async authenticateApiKey(rawKey: string, req: AuthenticatedRequest): Promise<void> {
+    if (rawKey.length < 16) {
+      throw AppException.unauthorized('API Key 无效');
+    }
+    const keyHash = createHash('sha256').update(rawKey).digest('hex');
+    const row = await this.prisma.apiKey.findUnique({ where: { keyHash } });
+    if (!row) {
+      throw AppException.unauthorized('API Key 无效');
+    }
+    const fail = (reason: string): never => {
+      throw AppException.unauthorized(`API Key 不可用：${reason}`);
+    };
+    if (Number(row.status) !== Status.ENABLED) {
+      fail('已停用');
+    }
+    if (row.expiresAt && row.expiresAt.getTime() < Date.now()) {
+      fail('已过期');
+    }
+    const owner = await this.prisma.user.findUnique({
+      where: { id: row.userId },
+      select: { id: true, username: true, status: true, deptId: true },
+    });
+    if (!owner || Number(owner.status) !== Status.ENABLED) {
+      fail('所属账号不存在或已被禁用');
+    }
+    // IP 白名单（非白名单直接拒；解析不了的条目跳过，不让配置错误锁死合法调用方）
+    const allowIps = parseJsonArray(row.allowIps);
+    if (allowIps.length > 0) {
+      const ip = getClientIp(req);
+      const matched = allowIps.some((pattern) => matchIpRule(ip, pattern));
+      if (!matched) {
+        fail('调用 IP 不在白名单');
+      }
+    }
+
+    // 用户级权限上下文（与 JWT 登录同一加载路径，保证口径一致）
+    const ctx = await this.authUserService.loadAuthUser(Number(row.userId));
+    if (!ctx) {
+      throw AppException.unauthorized('API Key 所属用户不存在');
+    }
+    const scopes = parseJsonArray(row.scopes).filter((item) => item.length > 0);
+    const permissions = scopes.length > 0 ? ctx.permissions.filter((code) => scopes.includes(code)) : ctx.permissions;
+    req.user = {
+      userId: ctx.userId,
+      username: ctx.username,
+      roles: ctx.roleCodes,
+      permissions,
+      status: Number(ctx.status),
+      deptId: ctx.deptId,
+      deptName: ctx.deptName ?? null,
+      // API Key 不参与改密失效与登出黑名单（没有 iat/sid 概念）
+      tokenIat: 0,
+    };
+    req.authContext = { ...ctx, permissions };
+
+    // 使用统计：异步更新，失败无所谓
+    void this.prisma.apiKey.update({ where: { id: row.id }, data: { lastUsedAt: new Date() } }).catch(() => undefined);
   }
 }
 

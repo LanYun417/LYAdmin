@@ -6357,6 +6357,570 @@ export const API_DOCS: ApiDocGroup[] = [
     ]
   },
   {
+    "group": "开放 API",
+    "endpoints": [
+      {
+        "method": "GET",
+        "path": "/api/open/keys",
+        "summary": "密钥列表（含所属用户；密钥本体永不下发）",
+        "permission": [],
+        "isPublic": false,
+        "action": "",
+        "params": [
+          {
+            "name": "name",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "log-archive"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 1
+          }
+        ],
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3100/api/open/keys?name=log-archive&page=1&pageSize=1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "name": "log-archive",
+            "page": 1,
+            "pageSize": 1
+          }
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/api/open/keys/:id",
+        "summary": "密钥详情",
+        "permission": [],
+        "isPublic": false,
+        "action": "",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3100/api/open/keys/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "id": "1"
+          }
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/api/open/webhook-deliveries",
+        "summary": "投递记录分页",
+        "permission": [],
+        "isPublic": false,
+        "action": "",
+        "params": [
+          {
+            "name": "status",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "示例值"
+          },
+          {
+            "name": "event",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "示例值"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 1
+          }
+        ],
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3100/api/open/webhook-deliveries?status=%E7%A4%BA%E4%BE%8B%E5%80%BC&event=%E7%A4%BA%E4%BE%8B%E5%80%BC&page=1&pageSize=1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "status": "示例值",
+            "event": "示例值",
+            "page": 1,
+            "pageSize": 1
+          }
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/api/open/webhooks",
+        "summary": "订阅列表",
+        "permission": [],
+        "isPublic": false,
+        "action": "",
+        "params": [
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "页码，从 1 开始",
+            "example": 1
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "每页条数",
+            "example": 10
+          }
+        ],
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3100/api/open/webhooks?page=1&pageSize=10\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "query": {
+            "page": 1,
+            "pageSize": 10
+          }
+        }
+      },
+      {
+        "method": "GET",
+        "path": "/api/open/webhooks/:id",
+        "summary": "订阅详情",
+        "permission": [],
+        "isPublic": false,
+        "action": "",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X GET \"http://localhost:3100/api/open/webhooks/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "id": "1"
+          }
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/api/open/keys",
+        "summary": "签发密钥（明文仅此一次返回，请妥善保存）",
+        "permission": [],
+        "isPublic": false,
+        "action": "开放 API · 签发密钥",
+        "params": [
+          {
+            "name": "name",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "log-archive"
+          },
+          {
+            "name": "userId",
+            "in": "body",
+            "type": "number",
+            "required": true,
+            "description": "所属用户 id：Key 以该用户身份调用接口",
+            "example": 1
+          },
+          {
+            "name": "scopes",
+            "in": "body",
+            "type": "string[]",
+            "required": false,
+            "description": "权限范围：空 = 与所属用户一致；否则在其权限内取交集",
+            "example": []
+          },
+          {
+            "name": "allowIps",
+            "in": "body",
+            "type": "string[]",
+            "required": false,
+            "description": "允许的调用 IP / CIDR；空 = 不限制",
+            "example": []
+          },
+          {
+            "name": "expiresAt",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "过期时间 ISO 串；缺省 = 永久",
+            "example": "示例值"
+          },
+          {
+            "name": "remark",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "示例备注"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X POST \"http://localhost:3100/api/open/keys\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"name\": \"log-archive\",\n      \"userId\": 1,\n      \"scopes\": [],\n      \"allowIps\": [],\n      \"expiresAt\": \"示例值\",\n      \"remark\": \"示例备注\"\n    }'",
+          "requestBody": {
+            "name": "log-archive",
+            "userId": 1,
+            "scopes": [],
+            "allowIps": [],
+            "expiresAt": "示例值",
+            "remark": "示例备注"
+          }
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/api/open/webhooks",
+        "summary": "新增订阅",
+        "permission": [],
+        "isPublic": false,
+        "action": "开放 API · 新增 Webhook",
+        "params": [
+          {
+            "name": "name",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "log-archive"
+          },
+          {
+            "name": "url",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "https://example.com"
+          },
+          {
+            "name": "events",
+            "in": "body",
+            "type": "string[]",
+            "required": false,
+            "description": "订阅事件名列表；空 = 全部事件",
+            "example": []
+          },
+          {
+            "name": "secret",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "签名密钥（更新时留空 = 不修改）",
+            "example": "示例值"
+          },
+          {
+            "name": "status",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 1
+          },
+          {
+            "name": "remark",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "示例备注"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X POST \"http://localhost:3100/api/open/webhooks\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"name\": \"log-archive\",\n      \"url\": \"https://example.com\",\n      \"events\": [],\n      \"secret\": \"示例值\",\n      \"status\": 1,\n      \"remark\": \"示例备注\"\n    }'",
+          "requestBody": {
+            "name": "log-archive",
+            "url": "https://example.com",
+            "events": [],
+            "secret": "示例值",
+            "status": 1,
+            "remark": "示例备注"
+          }
+        }
+      },
+      {
+        "method": "POST",
+        "path": "/api/open/webhooks/:id/test",
+        "summary": "手动测试推送",
+        "permission": [],
+        "isPublic": false,
+        "action": "开放 API · 测试 Webhook",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X POST \"http://localhost:3100/api/open/webhooks/1/test\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "id": "1"
+          }
+        }
+      },
+      {
+        "method": "PUT",
+        "path": "/api/open/keys/:id",
+        "summary": "更新密钥配置（密钥本体不可改，轮换请删旧建新）",
+        "permission": [],
+        "isPublic": false,
+        "action": "开放 API · 编辑密钥",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          },
+          {
+            "name": "name",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "log-archive"
+          },
+          {
+            "name": "scopes",
+            "in": "body",
+            "type": "string[]",
+            "required": false,
+            "description": "",
+            "example": []
+          },
+          {
+            "name": "allowIps",
+            "in": "body",
+            "type": "string[]",
+            "required": false,
+            "description": "",
+            "example": []
+          },
+          {
+            "name": "expiresAt",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "示例值"
+          },
+          {
+            "name": "remark",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "示例备注"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X PUT \"http://localhost:3100/api/open/keys/1\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"name\": \"log-archive\",\n      \"scopes\": [],\n      \"allowIps\": [],\n      \"expiresAt\": \"示例值\",\n      \"remark\": \"示例备注\"\n    }'",
+          "pathParams": {
+            "id": "1"
+          },
+          "requestBody": {
+            "name": "log-archive",
+            "scopes": [],
+            "allowIps": [],
+            "expiresAt": "示例值",
+            "remark": "示例备注"
+          }
+        }
+      },
+      {
+        "method": "PUT",
+        "path": "/api/open/keys/:id/status",
+        "summary": "启停密钥",
+        "permission": [],
+        "isPublic": false,
+        "action": "开放 API · 启停密钥",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X PUT \"http://localhost:3100/api/open/keys/1/status\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "id": "1"
+          }
+        }
+      },
+      {
+        "method": "PUT",
+        "path": "/api/open/webhooks/:id",
+        "summary": "更新订阅（secret 留空 = 不修改）",
+        "permission": [],
+        "isPublic": false,
+        "action": "开放 API · 编辑 Webhook",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          },
+          {
+            "name": "name",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "log-archive"
+          },
+          {
+            "name": "url",
+            "in": "body",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "https://example.com"
+          },
+          {
+            "name": "events",
+            "in": "body",
+            "type": "string[]",
+            "required": false,
+            "description": "订阅事件名列表；空 = 全部事件",
+            "example": []
+          },
+          {
+            "name": "secret",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "签名密钥（更新时留空 = 不修改）",
+            "example": "示例值"
+          },
+          {
+            "name": "status",
+            "in": "body",
+            "type": "number",
+            "required": false,
+            "description": "",
+            "example": 1
+          },
+          {
+            "name": "remark",
+            "in": "body",
+            "type": "string",
+            "required": false,
+            "description": "",
+            "example": "示例备注"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X PUT \"http://localhost:3100/api/open/webhooks/1\" \\\n  -H \"Authorization: Bearer <accessToken>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n      \"name\": \"log-archive\",\n      \"url\": \"https://example.com\",\n      \"events\": [],\n      \"secret\": \"示例值\",\n      \"status\": 1,\n      \"remark\": \"示例备注\"\n    }'",
+          "pathParams": {
+            "id": "1"
+          },
+          "requestBody": {
+            "name": "log-archive",
+            "url": "https://example.com",
+            "events": [],
+            "secret": "示例值",
+            "status": 1,
+            "remark": "示例备注"
+          }
+        }
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/open/keys/:id",
+        "summary": "删除密钥（立即失效）",
+        "permission": [],
+        "isPublic": false,
+        "action": "开放 API · 删除密钥",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X DELETE \"http://localhost:3100/api/open/keys/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "id": "1"
+          }
+        }
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/open/webhooks/:id",
+        "summary": "删除订阅",
+        "permission": [],
+        "isPublic": false,
+        "action": "开放 API · 删除 Webhook",
+        "params": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "",
+            "example": "1"
+          }
+        ],
+        "examples": {
+          "curl": "curl -X DELETE \"http://localhost:3100/api/open/webhooks/1\" \\\n  -H \"Authorization: Bearer <accessToken>\"",
+          "pathParams": {
+            "id": "1"
+          }
+        }
+      }
+    ]
+  },
+  {
     "group": "部门/岗位管理",
     "endpoints": [
       {

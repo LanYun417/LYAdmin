@@ -54,6 +54,9 @@ export const ModelName = {
   AlertChannel: 'AlertChannel',
   AlertRule: 'AlertRule',
   AlertRecord: 'AlertRecord',
+  ApiKey: 'ApiKey',
+  Webhook: 'Webhook',
+  WebhookDelivery: 'WebhookDelivery',
   DictType: 'DictType',
   DictItem: 'DictItem',
   SysConfig: 'SysConfig',
@@ -144,6 +147,57 @@ export const AlertRecordScalarFieldEnum = {
 } as const
 
 export type AlertRecordScalarFieldEnum = (typeof AlertRecordScalarFieldEnum)[keyof typeof AlertRecordScalarFieldEnum]
+
+
+export const ApiKeyScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  prefix: 'prefix',
+  keyHash: 'keyHash',
+  userId: 'userId',
+  scopes: 'scopes',
+  allowIps: 'allowIps',
+  expiresAt: 'expiresAt',
+  lastUsedAt: 'lastUsedAt',
+  status: 'status',
+  remark: 'remark',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ApiKeyScalarFieldEnum = (typeof ApiKeyScalarFieldEnum)[keyof typeof ApiKeyScalarFieldEnum]
+
+
+export const WebhookScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  url: 'url',
+  events: 'events',
+  secret: 'secret',
+  status: 'status',
+  lastStatus: 'lastStatus',
+  lastPushAt: 'lastPushAt',
+  remark: 'remark',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type WebhookScalarFieldEnum = (typeof WebhookScalarFieldEnum)[keyof typeof WebhookScalarFieldEnum]
+
+
+export const WebhookDeliveryScalarFieldEnum = {
+  id: 'id',
+  webhookId: 'webhookId',
+  event: 'event',
+  payload: 'payload',
+  statusCode: 'statusCode',
+  status: 'status',
+  error: 'error',
+  duration: 'duration',
+  createdAt: 'createdAt'
+} as const
+
+export type WebhookDeliveryScalarFieldEnum = (typeof WebhookDeliveryScalarFieldEnum)[keyof typeof WebhookDeliveryScalarFieldEnum]
 
 
 export const DictTypeScalarFieldEnum = {
@@ -573,6 +627,40 @@ export const AlertRecordOrderByRelevanceFieldEnum = {
 } as const
 
 export type AlertRecordOrderByRelevanceFieldEnum = (typeof AlertRecordOrderByRelevanceFieldEnum)[keyof typeof AlertRecordOrderByRelevanceFieldEnum]
+
+
+export const ApiKeyOrderByRelevanceFieldEnum = {
+  name: 'name',
+  prefix: 'prefix',
+  keyHash: 'keyHash',
+  scopes: 'scopes',
+  allowIps: 'allowIps',
+  remark: 'remark'
+} as const
+
+export type ApiKeyOrderByRelevanceFieldEnum = (typeof ApiKeyOrderByRelevanceFieldEnum)[keyof typeof ApiKeyOrderByRelevanceFieldEnum]
+
+
+export const WebhookOrderByRelevanceFieldEnum = {
+  name: 'name',
+  url: 'url',
+  events: 'events',
+  secret: 'secret',
+  lastStatus: 'lastStatus',
+  remark: 'remark'
+} as const
+
+export type WebhookOrderByRelevanceFieldEnum = (typeof WebhookOrderByRelevanceFieldEnum)[keyof typeof WebhookOrderByRelevanceFieldEnum]
+
+
+export const WebhookDeliveryOrderByRelevanceFieldEnum = {
+  event: 'event',
+  payload: 'payload',
+  status: 'status',
+  error: 'error'
+} as const
+
+export type WebhookDeliveryOrderByRelevanceFieldEnum = (typeof WebhookDeliveryOrderByRelevanceFieldEnum)[keyof typeof WebhookDeliveryOrderByRelevanceFieldEnum]
 
 
 export const DictTypeOrderByRelevanceFieldEnum = {

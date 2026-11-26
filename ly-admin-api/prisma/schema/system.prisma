@@ -51,6 +51,9 @@ model User {
   /// 用户级额外权限覆盖（在角色权限之上单独对该用户「额外授予 / 额外撤销」，见 UserMenu 模型）
   userMenus UserMenu[]
 
+  /// 该用户签发的服务账号密钥（见 sys_api_key）
+  apiKeys ApiKey[]
+
   @@index([deptId])
   @@map("sys_user")
 }

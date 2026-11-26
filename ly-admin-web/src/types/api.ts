@@ -1151,3 +1151,55 @@ export interface AlertRecord {
   createdAt: string;
   sentAt: string | null;
 }
+
+/* ------------------------------ 开放 API（API Key / Webhook） ------------------------------ */
+
+/** 服务账号密钥（明文 key 仅创建响应返回一次）。 */
+export interface ApiKey {
+  id: number;
+  name: string;
+  /** 密钥前缀（如 lyak_a1b2c3d4，仅展示） */
+  prefix: string;
+  /** 明文密钥，仅签发响应内含此字段 */
+  key?: string;
+  userId: number;
+  username: string;
+  /** 权限范围：空 = 同所属用户 */
+  scopes: string[];
+  /** IP / CIDR 白名单；空 = 不限制 */
+  allowIps: string[];
+  expiresAt: string | null;
+  lastUsedAt: string | null;
+  status: number;
+  remark: string | null;
+  createdAt: string;
+}
+
+/** Webhook 订阅（secret 只写不读）。 */
+export interface WebhookItem {
+  id: number;
+  name: string;
+  url: string;
+  /** 订阅事件名；空 = 全部 */
+  events: string[];
+  /** 签名密钥：仅创建/更新时下发，后端永不明文返回 */
+  secret?: string;
+  status: number;
+  lastStatus: 'ok' | 'failed' | null;
+  lastPushAt: string | null;
+  remark: string | null;
+  createdAt: string;
+}
+
+/** Webhook 投递记录。 */
+export interface WebhookDelivery {
+  id: number;
+  webhookId: number;
+  event: string;
+  payload: unknown;
+  statusCode: number;
+  status: 'ok' | 'failed';
+  error: string | null;
+  duration: number;
+  createdAt: string;
+}

@@ -1,0 +1,97 @@
+// use prisma-next
+// ↑ 首行不可删：VS Code 的 Prisma 扩展按文件判定是否启用 Prisma 7 语言服务。
+//
+// 开放 API：服务账号（API Key）与 Webhook 外发。
+// 公共约定（snake_case 映射 / 哨兵值 / 注释落库）见 base.prisma。
+
+/// 服务账号 / API Key 表。
+/// 密钥只存 SHA-256 哈希（不存明文：库里躺一把可直接调接口的钥匙等于没有鉴权）；
+/// 前缀保留前几位明文用于列表识别（`lyak_` + 8 位）。
+model ApiKey {
+  /// 主键
+  id         BigInt   @id @default(autoincrement()) @db.BigInt
+  /// 密钥名称（备注用途，如「CI 部署」「数据分析同步」）
+  name       String   @db.VarChar(50)
+  /// 密钥前缀（展示用，如 lyak_a1b2c3d4）
+  prefix     String   @db.VarChar(20)
+  /// 密钥 SHA-256 哈希（校验时比对；unique 保证一把 Key 只对应一行）
+  keyHash    String   @unique @map("key_hash") @db.VarChar(64)
+  /// 绑定的用户 id（Key 以该用户身份调用接口，权限同该用户）
+  userId     BigInt   @map("user_id") @db.BigInt
+  /// 所属用户（只读关联，仅用于列表展示用户名）
+  user       User     @relation(fields: [userId], references: [id])
+  /// 权限范围：空 = 与所属用户完全一致；否则仅限列出的权限码
+  scopes     String   @default("") @db.Text
+  /// 允许的调用 IP / CIDR（JSON 数组；空 = 不限制）
+  allowIps   String   @default("") @map("allow_ips") @db.Text
+  /// 过期时间（NULL = 永久）
+  expiresAt  DateTime? @map("expires_at")
+  /// 最后使用时间
+  lastUsedAt DateTime? @map("last_used_at")
+  /// 1 启用 / 0 停用
+  status     Int      @default(1) @db.TinyInt
+  /// 备注
+  remark     String?  @db.VarChar(255)
+  /// 创建时间
+  createdAt  DateTime @default(now()) @map("created_at")
+  /// 更新时间
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@index([userId, status])
+  @@map("sys_api_key")
+}
+
+/// Webhook 订阅表（本站事件向外部 URL 外发）。
+model Webhook {
+  /// 主键
+  id          BigInt   @id @default(autoincrement()) @db.BigInt
+  /// 订阅名称
+  name        String   @db.VarChar(50)
+  /// 目标 URL
+  url         String   @db.VarChar(500)
+  /// 订阅事件（JSON 数组，如 ["user.created","export.finished"]；空数组 = 全部）
+  events      String   @db.Text
+  /// 签名密钥（信封加密；HMAC-SHA256 签名放在 X-LY-Signature 头）
+  secret      String   @db.VarChar(500)
+  /// 1 启用 / 0 停用
+  status      Int      @default(1) @db.TinyInt
+  /// 最近一次投递状态（pending / ok / failed，仅展示）
+  lastStatus  String?  @map("last_status") @db.VarChar(20)
+  /// 最近一次投递时间
+  lastPushAt  DateTime? @map("last_push_at")
+  /// 备注
+  remark      String?  @db.VarChar(255)
+  /// 创建时间
+  createdAt   DateTime @default(now()) @map("created_at")
+  /// 更新时间
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([status])
+  @@map("sys_webhook")
+}
+
+/// Webhook 投递记录表（审计 + 失败排查；成功记录按保留期清理）。
+model WebhookDelivery {
+  /// 主键
+  id         BigInt   @id @default(autoincrement()) @db.BigInt
+  /// 订阅 id
+  webhookId  BigInt   @map("webhook_id") @db.BigInt
+  /// 事件名
+  event      String   @db.VarChar(50)
+  /// 事件负载（JSON）
+  payload    String   @db.Text
+  /// 响应状态码（0 = 未到达）
+  statusCode Int      @default(0) @map("status_code")
+  /// 投递结果：ok / failed
+  status     String   @db.VarChar(20)
+  /// 错误信息（截断）
+  error      String?  @db.VarChar(500)
+  /// 耗时（ms）
+  duration   Int      @default(0)
+  /// 创建时间
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([webhookId, createdAt])
+  @@index([createdAt])
+  @@map("sys_webhook_delivery")
+}

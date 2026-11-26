@@ -35,6 +35,23 @@ export type AlertRule = Prisma.AlertRuleModel
  */
 export type AlertRecord = Prisma.AlertRecordModel
 /**
+ * Model ApiKey
+ * 服务账号 / API Key 表。
+ * 密钥只存 SHA-256 哈希（不存明文：库里躺一把可直接调接口的钥匙等于没有鉴权）；
+ * 前缀保留前几位明文用于列表识别（`lyak_` + 8 位）。
+ */
+export type ApiKey = Prisma.ApiKeyModel
+/**
+ * Model Webhook
+ * Webhook 订阅表（本站事件向外部 URL 外发）。
+ */
+export type Webhook = Prisma.WebhookModel
+/**
+ * Model WebhookDelivery
+ * Webhook 投递记录表（审计 + 失败排查；成功记录按保留期清理）。
+ */
+export type WebhookDelivery = Prisma.WebhookDeliveryModel
+/**
  * Model DictType
  * 字典类型表
  */
