@@ -25,6 +25,8 @@ export interface LoginResult {
   accessToken: string;
   refreshToken: string;
   user: UserBrief;
+  /** 是否必须强制修改初始口令（种子默认口令 / 管理员重置密码后被置位） */
+  mustChangePassword: boolean;
 }
 
 /** Token 对。 */
@@ -213,6 +215,8 @@ export class AuthService {
       accessToken: await this.jwtService.signAccessToken(payload, sid),
       refreshToken: await this.jwtService.signRefreshToken(payload, sid),
       user: this.toUserBrief({ ...user, dept: await this.deptRef(user.deptId) }),
+      // 初始口令治理：被置位的账号登录后前端强制改密，杜绝「123456 上生产」的事故
+      mustChangePassword: Number(user.mustChangePassword) === 1,
     };
   }
 
@@ -348,7 +352,7 @@ export class AuthService {
   async getProfile(
     userId: number,
     context?: AuthContext | null,
-  ): Promise<{ user: UserBrief; roles: string[]; permissions: string[] }> {
+  ): Promise<{ user: UserBrief; roles: string[]; permissions: string[]; mustChangePassword: boolean }> {
     const ctx = context ?? (await this.loadFull(userId));
     if (!ctx) {
       throw AppException.notFound('用户不存在');
@@ -361,6 +365,8 @@ export class AuthService {
       user: this.toUserBrief({ ...user, dept: await this.deptRef(user.deptId) }),
       roles: ctx.roleCodes,
       permissions: ctx.permissions,
+      // 刷新页面后前端据此恢复「强制改密」拦截（登录响应只在新登录时下发一次）
+      mustChangePassword: Number(user.mustChangePassword) === 1,
     };
   }
 

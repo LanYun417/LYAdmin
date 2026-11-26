@@ -6,6 +6,7 @@
 
 import { ElMessage } from '@/utils/element';
 import type { UploadRequestOptions } from 'element-plus';
+import { useI18n } from 'vue-i18n';
 import { getProfileDetailApi, uploadAvatarApi } from '@/api/profile';
 import { useDict } from '@/composables/useDict';
 import { useUserStore } from '@/store/modules/user';
@@ -18,9 +19,13 @@ import type { ProfileDetail } from '@/types/api';
 
 defineOptions({ name: 'Profile' });
 
+const { t } = useI18n();
 const userStore = useUserStore();
 const uploading = ref(false);
 const loadingDetail = ref(false);
+
+/** 是否处于「强制修改初始口令」状态（种子默认口令 / 管理员重置密码后被置位） */
+const forcePasswordChange = computed(() => userStore.mustChangePassword && !userStore.isReadonlyGuest);
 
 /** 详情（扩展资料 + 会话画像）。账户信息仍走 userStore（登录时已拉全）。 */
 const detail = ref<ProfileDetail | null>(null);
@@ -79,6 +84,15 @@ async function handleAvatarUpload(options: UploadRequestOptions): Promise<void> 
 
 <template>
   <div class="profile-page">
+    <!-- 初始口令治理：被置位的账号在改密前被守卫收敛到本页，这里给出醒目说明 -->
+    <el-alert
+      v-if="forcePasswordChange"
+      :title="t('profile.forceChangeTitle')"
+      :description="t('profile.forceChangeDesc')"
+      type="warning"
+      show-icon
+      class="mb-4"
+    />
     <el-row :gutter="16">
       <el-col :xs="24" :md="8">
         <el-card shadow="never">

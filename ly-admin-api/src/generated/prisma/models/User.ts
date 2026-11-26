@@ -31,6 +31,7 @@ export type UserAvgAggregateOutputType = {
   status: number | null
   deptId: number | null
   maxDevices: number | null
+  mustChangePassword: number | null
 }
 
 export type UserSumAggregateOutputType = {
@@ -38,6 +39,7 @@ export type UserSumAggregateOutputType = {
   status: number | null
   deptId: bigint | null
   maxDevices: number | null
+  mustChangePassword: number | null
 }
 
 export type UserMinAggregateOutputType = {
@@ -55,6 +57,7 @@ export type UserMinAggregateOutputType = {
   remark: string | null
   deptId: bigint | null
   maxDevices: number | null
+  mustChangePassword: number | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -74,6 +77,7 @@ export type UserMaxAggregateOutputType = {
   remark: string | null
   deptId: bigint | null
   maxDevices: number | null
+  mustChangePassword: number | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -93,6 +97,7 @@ export type UserCountAggregateOutputType = {
   remark: number
   deptId: number
   maxDevices: number
+  mustChangePassword: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -104,6 +109,7 @@ export type UserAvgAggregateInputType = {
   status?: true
   deptId?: true
   maxDevices?: true
+  mustChangePassword?: true
 }
 
 export type UserSumAggregateInputType = {
@@ -111,6 +117,7 @@ export type UserSumAggregateInputType = {
   status?: true
   deptId?: true
   maxDevices?: true
+  mustChangePassword?: true
 }
 
 export type UserMinAggregateInputType = {
@@ -128,6 +135,7 @@ export type UserMinAggregateInputType = {
   remark?: true
   deptId?: true
   maxDevices?: true
+  mustChangePassword?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -147,6 +155,7 @@ export type UserMaxAggregateInputType = {
   remark?: true
   deptId?: true
   maxDevices?: true
+  mustChangePassword?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -166,6 +175,7 @@ export type UserCountAggregateInputType = {
   remark?: true
   deptId?: true
   maxDevices?: true
+  mustChangePassword?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -272,6 +282,7 @@ export type UserGroupByOutputType = {
   remark: string | null
   deptId: bigint
   maxDevices: number | null
+  mustChangePassword: number
   createdAt: Date
   updatedAt: Date
   _count: UserCountAggregateOutputType | null
@@ -314,6 +325,7 @@ export type UserWhereInput = {
   remark?: Prisma.StringNullableFilter<"User"> | string | null
   deptId?: Prisma.BigIntFilter<"User"> | bigint | number
   maxDevices?: Prisma.IntNullableFilter<"User"> | number | null
+  mustChangePassword?: Prisma.IntFilter<"User"> | number
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   userRoles?: Prisma.UserRoleListRelationFilter
@@ -335,6 +347,7 @@ export type UserOrderByWithRelationInput = {
   remark?: Prisma.SortOrderInput | Prisma.SortOrder
   deptId?: Prisma.SortOrder
   maxDevices?: Prisma.SortOrderInput | Prisma.SortOrder
+  mustChangePassword?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   userRoles?: Prisma.UserRoleOrderByRelationAggregateInput
@@ -360,6 +373,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   remark?: Prisma.StringNullableFilter<"User"> | string | null
   deptId?: Prisma.BigIntFilter<"User"> | bigint | number
   maxDevices?: Prisma.IntNullableFilter<"User"> | number | null
+  mustChangePassword?: Prisma.IntFilter<"User"> | number
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   userRoles?: Prisma.UserRoleListRelationFilter
@@ -381,6 +395,7 @@ export type UserOrderByWithAggregationInput = {
   remark?: Prisma.SortOrderInput | Prisma.SortOrder
   deptId?: Prisma.SortOrder
   maxDevices?: Prisma.SortOrderInput | Prisma.SortOrder
+  mustChangePassword?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.UserCountOrderByAggregateInput
@@ -408,6 +423,7 @@ export type UserScalarWhereWithAggregatesInput = {
   remark?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   deptId?: Prisma.BigIntWithAggregatesFilter<"User"> | bigint | number
   maxDevices?: Prisma.IntNullableWithAggregatesFilter<"User"> | number | null
+  mustChangePassword?: Prisma.IntWithAggregatesFilter<"User"> | number
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
 }
@@ -427,6 +443,7 @@ export type UserCreateInput = {
   remark?: string | null
   deptId?: bigint | number
   maxDevices?: number | null
+  mustChangePassword?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   userRoles?: Prisma.UserRoleCreateNestedManyWithoutUserInput
@@ -448,6 +465,7 @@ export type UserUncheckedCreateInput = {
   remark?: string | null
   deptId?: bigint | number
   maxDevices?: number | null
+  mustChangePassword?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   userRoles?: Prisma.UserRoleUncheckedCreateNestedManyWithoutUserInput
@@ -469,6 +487,7 @@ export type UserUpdateInput = {
   remark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deptId?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   maxDevices?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  mustChangePassword?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   userRoles?: Prisma.UserRoleUpdateManyWithoutUserNestedInput
@@ -490,6 +509,7 @@ export type UserUncheckedUpdateInput = {
   remark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deptId?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   maxDevices?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  mustChangePassword?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   userRoles?: Prisma.UserRoleUncheckedUpdateManyWithoutUserNestedInput
@@ -511,6 +531,7 @@ export type UserCreateManyInput = {
   remark?: string | null
   deptId?: bigint | number
   maxDevices?: number | null
+  mustChangePassword?: number
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -530,6 +551,7 @@ export type UserUpdateManyMutationInput = {
   remark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deptId?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   maxDevices?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  mustChangePassword?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -549,6 +571,7 @@ export type UserUncheckedUpdateManyInput = {
   remark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deptId?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   maxDevices?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  mustChangePassword?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -574,6 +597,7 @@ export type UserCountOrderByAggregateInput = {
   remark?: Prisma.SortOrder
   deptId?: Prisma.SortOrder
   maxDevices?: Prisma.SortOrder
+  mustChangePassword?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -583,6 +607,7 @@ export type UserAvgOrderByAggregateInput = {
   status?: Prisma.SortOrder
   deptId?: Prisma.SortOrder
   maxDevices?: Prisma.SortOrder
+  mustChangePassword?: Prisma.SortOrder
 }
 
 export type UserMaxOrderByAggregateInput = {
@@ -600,6 +625,7 @@ export type UserMaxOrderByAggregateInput = {
   remark?: Prisma.SortOrder
   deptId?: Prisma.SortOrder
   maxDevices?: Prisma.SortOrder
+  mustChangePassword?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -619,6 +645,7 @@ export type UserMinOrderByAggregateInput = {
   remark?: Prisma.SortOrder
   deptId?: Prisma.SortOrder
   maxDevices?: Prisma.SortOrder
+  mustChangePassword?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -628,6 +655,7 @@ export type UserSumOrderByAggregateInput = {
   status?: Prisma.SortOrder
   deptId?: Prisma.SortOrder
   maxDevices?: Prisma.SortOrder
+  mustChangePassword?: Prisma.SortOrder
 }
 
 export type UserScalarRelationFilter = {
@@ -678,6 +706,7 @@ export type UserCreateWithoutUserRolesInput = {
   remark?: string | null
   deptId?: bigint | number
   maxDevices?: number | null
+  mustChangePassword?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   userMenus?: Prisma.UserMenuCreateNestedManyWithoutUserInput
@@ -698,6 +727,7 @@ export type UserUncheckedCreateWithoutUserRolesInput = {
   remark?: string | null
   deptId?: bigint | number
   maxDevices?: number | null
+  mustChangePassword?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   userMenus?: Prisma.UserMenuUncheckedCreateNestedManyWithoutUserInput
@@ -734,6 +764,7 @@ export type UserUpdateWithoutUserRolesInput = {
   remark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deptId?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   maxDevices?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  mustChangePassword?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   userMenus?: Prisma.UserMenuUpdateManyWithoutUserNestedInput
@@ -754,6 +785,7 @@ export type UserUncheckedUpdateWithoutUserRolesInput = {
   remark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deptId?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   maxDevices?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  mustChangePassword?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   userMenus?: Prisma.UserMenuUncheckedUpdateManyWithoutUserNestedInput
@@ -774,6 +806,7 @@ export type UserCreateWithoutUserMenusInput = {
   remark?: string | null
   deptId?: bigint | number
   maxDevices?: number | null
+  mustChangePassword?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   userRoles?: Prisma.UserRoleCreateNestedManyWithoutUserInput
@@ -794,6 +827,7 @@ export type UserUncheckedCreateWithoutUserMenusInput = {
   remark?: string | null
   deptId?: bigint | number
   maxDevices?: number | null
+  mustChangePassword?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   userRoles?: Prisma.UserRoleUncheckedCreateNestedManyWithoutUserInput
@@ -830,6 +864,7 @@ export type UserUpdateWithoutUserMenusInput = {
   remark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deptId?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   maxDevices?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  mustChangePassword?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   userRoles?: Prisma.UserRoleUpdateManyWithoutUserNestedInput
@@ -850,6 +885,7 @@ export type UserUncheckedUpdateWithoutUserMenusInput = {
   remark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deptId?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   maxDevices?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  mustChangePassword?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   userRoles?: Prisma.UserRoleUncheckedUpdateManyWithoutUserNestedInput
@@ -910,6 +946,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   remark?: boolean
   deptId?: boolean
   maxDevices?: boolean
+  mustChangePassword?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   userRoles?: boolean | Prisma.User$userRolesArgs<ExtArgs>
@@ -934,11 +971,12 @@ export type UserSelectScalar = {
   remark?: boolean
   deptId?: boolean
   maxDevices?: boolean
+  mustChangePassword?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "username" | "password" | "nickname" | "avatar" | "email" | "phone" | "gender" | "status" | "lastLoginAt" | "passwordChangedAt" | "remark" | "deptId" | "maxDevices" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "username" | "password" | "nickname" | "avatar" | "email" | "phone" | "gender" | "status" | "lastLoginAt" | "passwordChangedAt" | "remark" | "deptId" | "maxDevices" | "mustChangePassword" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   userRoles?: boolean | Prisma.User$userRolesArgs<ExtArgs>
   userMenus?: boolean | Prisma.User$userMenusArgs<ExtArgs>
@@ -1017,6 +1055,11 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
      * 单用户登录设备数上限；NULL = 走全局 sys.login.maxDevices，0 = 不限制
      */
     maxDevices: number | null
+    /**
+     * 是否需要强制修改初始口令：1 = 登录后必须改密（种子用默认口令创建 / 管理员重置时置位）；
+     * 用户自助改密或管理员改密后清零
+     */
+    mustChangePassword: number
     /**
      * 创建时间
      */
@@ -1410,6 +1453,7 @@ export interface UserFieldRefs {
   readonly remark: Prisma.FieldRef<"User", 'String'>
   readonly deptId: Prisma.FieldRef<"User", 'BigInt'>
   readonly maxDevices: Prisma.FieldRef<"User", 'Int'>
+  readonly mustChangePassword: Prisma.FieldRef<"User", 'Int'>
   readonly createdAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"User", 'DateTime'>
 }

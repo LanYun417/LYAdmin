@@ -830,6 +830,8 @@ export interface LoginResult {
   accessToken: string;
   refreshToken: string;
   user: UserBrief;
+  /** 是否必须强制修改初始口令（种子默认口令 / 管理员重置密码后被置位） */
+  mustChangePassword?: boolean;
 }
 
 /** 登录图形验证码 */
@@ -853,6 +855,8 @@ export interface ProfileResult {
   user: UserDetail;
   roles: string[];
   permissions: string[];
+  /** 是否必须强制修改初始口令（刷新页面后据此恢复拦截） */
+  mustChangePassword?: boolean;
 }
 
 /** 修改资料参数 */

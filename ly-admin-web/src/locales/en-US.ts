@@ -95,4 +95,9 @@ export default {
     publish: 'Publish notice',
     clear: 'Clear',
   },
+  profile: {
+    forceChangeTitle: 'Password change required',
+    forceChangeDesc:
+      'This account is still using its initial password (seed default or a temporary password set by an administrator). You cannot access other pages until you change it. You will need to sign in again after changing it.',
+  },
 };

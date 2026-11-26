@@ -94,4 +94,9 @@ export default {
     publish: '发布通知',
     clear: '清空',
   },
+  profile: {
+    forceChangeTitle: '需要修改初始密码',
+    forceChangeDesc:
+      '当前账号仍在使用初始密码（种子默认口令或管理员重置的临时口令），修改密码前无法访问其它页面。修改成功后需重新登录。',
+  },
 };

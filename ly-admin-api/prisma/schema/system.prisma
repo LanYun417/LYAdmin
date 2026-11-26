@@ -34,6 +34,9 @@ model User {
   deptId            BigInt    @default(0) @map("dept_id") @db.BigInt
   /// 单用户登录设备数上限；NULL = 走全局 sys.login.maxDevices，0 = 不限制
   maxDevices        Int?      @map("max_devices")
+  /// 是否需要强制修改初始口令：1 = 登录后必须改密（种子用默认口令创建 / 管理员重置时置位）；
+  /// 用户自助改密或管理员改密后清零
+  mustChangePassword Int      @default(0) @map("must_change_password") @db.TinyInt
   /// 创建时间
   createdAt         DateTime  @default(now()) @map("created_at")
   /// 更新时间

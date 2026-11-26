@@ -277,6 +277,7 @@ export const UserScalarFieldEnum = {
   remark: 'remark',
   deptId: 'deptId',
   maxDevices: 'maxDevices',
+  mustChangePassword: 'mustChangePassword',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const

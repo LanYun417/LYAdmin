@@ -30,6 +30,11 @@ export const useUserStore = defineStore(
     const menus = ref<MenuNode[]>([]);
     /** 是否已加载用户信息（profile + menus） */
     const loaded = ref<boolean>(false);
+    /**
+     * 是否必须强制修改初始口令（种子默认口令 / 管理员重置密码后被置位）。
+     * 随 user store 持久化：刷新页面后路由守卫仍需拦截，不能只在登录响应里存活一次。
+     */
+    const mustChangePassword = ref<boolean>(false);
 
     /** 是否已登录 */
     const isLogin = computed<boolean>(() => Boolean(accessToken.value));
@@ -55,6 +60,7 @@ export const useUserStore = defineStore(
       refreshToken.value = res.refreshToken;
       setToken(res.accessToken, res.refreshToken);
       userInfo.value = res.user as UserDetail;
+      mustChangePassword.value = res.mustChangePassword ?? false;
       loaded.value = false;
       // 重新登录应拉取新用户的菜单，清掉上一用户的缓存
       clearMenuCache();
@@ -66,6 +72,8 @@ export const useUserStore = defineStore(
       userInfo.value = res.user;
       roles.value = res.roles ?? [];
       permissions.value = res.permissions ?? [];
+      // 强制改密标记以服务端为准：管理员刚重置过口令时，这里要及时把拦截恢复出来
+      mustChangePassword.value = res.mustChangePassword ?? false;
     }
 
     /** 拉取当前用户菜单树（命中短 TTL 缓存则跳过网络请求） */
@@ -109,6 +117,7 @@ export const useUserStore = defineStore(
       permissions.value = [];
       menus.value = [];
       loaded.value = false;
+      mustChangePassword.value = false;
       clearMenuCache();
       removeToken();
     }
@@ -131,6 +140,7 @@ export const useUserStore = defineStore(
       permissions,
       menus,
       loaded,
+      mustChangePassword,
       isLogin,
       nickname,
       avatar,
@@ -148,7 +158,8 @@ export const useUserStore = defineStore(
   {
     persist: {
       key: 'ly_admin_user',
-      pick: ['accessToken', 'refreshToken'],
+      // mustChangePassword 一并持久化：刷新后守卫要能立刻恢复强制改密拦截
+      pick: ['accessToken', 'refreshToken', 'mustChangePassword'],
     },
   },
 );

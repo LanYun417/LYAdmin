@@ -14,7 +14,10 @@
 import { Injectable, Logger, type OnApplicationBootstrap } from '@nestjs/common';
 import { DataScope, MenuType, Status, SUPER_ADMIN_ROLE } from '../common/config/constants.js';
 import { hashPassword } from '../common/utils/utils.js';
+import { decideAdminSeed, DEFAULT_SEED_ADMIN_PASSWORD } from './admin-seed-policy.js';
 import { PrismaService } from './prisma.service.js';
+
+export { DEFAULT_SEED_ADMIN_PASSWORD } from './admin-seed-policy.js';
 
 /** 日志上下文（种子各步骤共用）。 */
 const logger = new Logger('Seed');
@@ -1045,7 +1048,7 @@ export async function resetSeedRoleMenus(
 /* --------------------------------- 用户种子 -------------------------------- */
 
 /** 种子超管口令的默认值（仅本地开发便利，生产部署必须用 `SEED_ADMIN_PASSWORD` 覆盖）。 */
-const DEFAULT_SEED_ADMIN_PASSWORD = '123456';
+const DEFAULT_SEED_ADMIN_PASSWORD_ = DEFAULT_SEED_ADMIN_PASSWORD;
 
 /**
  * 实际生效的种子超管口令。
@@ -1054,21 +1057,36 @@ const DEFAULT_SEED_ADMIN_PASSWORD = '123456';
  * 而 CI 通过环境变量注入 `SEED_ADMIN_PASSWORD`，两边一不一致就 401（真实发生过）。
  */
 export function resolveSeedAdminPassword(): string {
-  return process.env.SEED_ADMIN_PASSWORD?.trim() || DEFAULT_SEED_ADMIN_PASSWORD;
+  return process.env.SEED_ADMIN_PASSWORD?.trim() || DEFAULT_SEED_ADMIN_PASSWORD_;
 }
 
 /**
  * 写入超级管理员 `admin` 并绑定超管角色（幂等：已存在的账号不覆盖密码）。
  *
- * 口令来自 `SEED_ADMIN_PASSWORD`；未配置时回退默认值，并在生产环境打 warn —— 默认口令
- * 是弱口令（且不满足口令策略的长度要求，仅因为种子直写哈希才绕过了校验）。
+ * 口令治理见 {@link decideAdminSeed}：
+ * - 生产首启未配置 `SEED_ADMIN_PASSWORD` → 抛错拒绝启动（默认口令不上生产）；
+ * - 用默认口令创建（仅开发）→ 置 `mustChangePassword=1`，登录后前端强制改密。
  */
 async function seedUser(prisma: PrismaService): Promise<void> {
   const superRole = await prisma.role.findUnique({ where: { roleCode: SUPER_ADMIN_ROLE } });
-  const configuredPassword = process.env.SEED_ADMIN_PASSWORD?.trim();
-  const password = configuredPassword || DEFAULT_SEED_ADMIN_PASSWORD;
-  if (!configuredPassword && process.env.NODE_ENV === 'production') {
-    logger.warn('[Seed] 未配置 SEED_ADMIN_PASSWORD，超管账号使用默认弱口令；请设置后重新执行种子或立即改密');
+  const existing = await prisma.user.findUnique({ where: { username: 'admin' }, select: { id: true } });
+  const decision = decideAdminSeed({
+    env: process.env.NODE_ENV ?? 'development',
+    configured: process.env.SEED_ADMIN_PASSWORD,
+    exists: Boolean(existing),
+  });
+  if (decision.refuse) {
+    throw new Error(
+      '[Seed] 生产环境首次启动必须配置 SEED_ADMIN_PASSWORD：默认弱口令（123456）不允许进入生产库。' +
+        '请生成强口令后写入 ly-admin-api/.env 并重新启动。',
+    );
+  }
+  if (decision.mustChangePassword) {
+    logger.warn(
+      process.env.NODE_ENV === 'production'
+        ? '[Seed] 未配置 SEED_ADMIN_PASSWORD，超管账号使用默认弱口令；请设置后重新执行种子或立即改密'
+        : '[Seed] 开发环境默认口令：admin 账号已标记「登录后强制改密」',
+    );
   }
 
   const admin = await prisma.user.upsert({
@@ -1076,10 +1094,12 @@ async function seedUser(prisma: PrismaService): Promise<void> {
     update: {},
     create: {
       username: 'admin',
-      password: await hashPassword(password),
+      password: await hashPassword(decision.password),
       nickname: '超级管理员',
       status: Status.ENABLED,
       remark: '内置超级管理员账号',
+      // 种子默认口令创建的账号：首次登录即强制改密，杜绝「123456 上生产」的事故
+      mustChangePassword: decision.mustChangePassword ? 1 : 0,
     },
   });
 

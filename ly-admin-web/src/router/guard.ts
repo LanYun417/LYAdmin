@@ -15,6 +15,13 @@ import { hasPermission } from '@/utils/permission';
 const WHITE_LIST: string[] = ['/login', '/403', '/404', '/500'];
 
 /**
+ * 「强制修改初始口令」期间允许访问的路径。
+ * 被置位的账号在改密前只能留在个人中心（改密表单位于该页）与错误页，
+ * 防止带着种子默认口令 / 管理员重置的临时口令在系统里到处点。
+ */
+const PASSWORD_CHANGE_ALLOWED: string[] = ['/profile', '/403', '/404', '/500'];
+
+/**
  * 注册全局前置守卫：
  * - 未登录 → 跳登录页（白名单放行）
  * - 已登录访问 /login → 跳首页
@@ -48,6 +55,13 @@ export function setupRouterGuard(router: Router): void {
     // 已登录访问登录页 → 首页
     if (to.path === '/login') {
       return '/home';
+    }
+
+    // 初始口令治理：必须改密的账号在改密前收敛到个人中心。
+    // 只读访客无法自助改密（后端 409），对其不拦截——否则管理员一重置就把访客关在死循环里；
+    // 访客侧的处置是个人中心内的联系管理员提示（见 profile 页）。
+    if (userStore.mustChangePassword && !userStore.isReadonlyGuest && !PASSWORD_CHANGE_ALLOWED.includes(to.path)) {
+      return `/profile?forcePassword=1`;
     }
 
     // 动态路由已注入 → 校验路由级权限后放行

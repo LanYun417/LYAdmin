@@ -371,6 +371,8 @@ export class UsersService {
       data: {
         password: await hashPassword(password),
         passwordChangedAt: new Date(),
+        // 管理员重置的口令是「临时口令」：下次登录强制本人改密，避免长期共用初始口令
+        mustChangePassword: 1,
       },
     });
     // 改密：失效缓存的旧 passwordChangedAt，保持「旧 Token 立即失效」语义

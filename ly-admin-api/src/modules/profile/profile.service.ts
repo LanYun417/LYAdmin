@@ -203,6 +203,8 @@ export class ProfileService {
       data: {
         password: await hashPassword(input.newPassword),
         passwordChangedAt: new Date(),
+        // 自助改密成功：清零「强制修改初始口令」标记，前端拦截随之解除
+        mustChangePassword: 0,
       },
     });
     this.authCache.invalidate(userId);
