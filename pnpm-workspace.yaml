@@ -1,0 +1,16 @@
+# pnpm monorepo 工作区：根目录承载工程规范，两个子包分别对应后端与前端。
+# 安装统一在仓库根目录执行：pnpm install
+packages:
+  - 'ly-admin-api'
+  - 'ly-admin-web'
+
+# 允许执行安装脚本的包（pnpm 默认全部拦截）。这些都是项目运行/构建必需：
+# - @prisma/engines / prisma：迁移与客户端生成要下载引擎二进制；
+# - @prisma/client：postinstall 生成查询引擎；
+# - esbuild：构建期原生二进制（依赖装不上会连带 vite/vitest 无法启动）；
+# - @parcel/watcher：nest start --watch 的文件监听后端（vite 8 依赖）。
+allowBuilds:
+  '@parcel/watcher': true
+  '@prisma/engines': true
+  esbuild: true
+  prisma: true

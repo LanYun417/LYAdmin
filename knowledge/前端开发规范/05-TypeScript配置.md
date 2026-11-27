@@ -63,8 +63,8 @@ tsconfig.node.json   → Node 侧（vite.config.ts）
 
 ## 类型检查命令
 
-- 前端：`npm run type-check`（`vue-tsc --noEmit`）或 `npm run build`（`vue-tsc --noEmit && vite build`）。
-- 后端：`cd ly-admin-api && npm run typecheck`（`tsc --noEmit`）。
+- 前端：`pnpm run type-check`（`vue-tsc --noEmit`）或 `pnpm run build`（`vue-tsc --noEmit && vite build`）。
+- 后端：`cd ly-admin-api && pnpm run typecheck`（`tsc --noEmit`）。
 
 > **注意**：Vue 文件必须用 `vue-tsc` 检查，不能用 `tsc`（不识别 SFC）。
 
@@ -77,8 +77,8 @@ tsconfig.node.json   → Node 侧（vite.config.ts）
 
 ## 常见错误
 
-| 现象                             | 原因                      | 解决                                           |
-| -------------------------------- | ------------------------- | ---------------------------------------------- |
-| `Cannot find name 'ref'`         | d.ts 未生成或未 include   | 跑一次 `npm run dev`；检查 `include` 覆盖 d.ts |
-| vue 文件报类型错误但 ts 文件正常 | 用了 `tsc` 而非 `vue-tsc` | 统一 `vue-tsc --noEmit`                        |
-| vite.config.ts 报错              | 被 app 配置 include 进去  | Node 侧文件只能被 tsconfig.node.json include   |
+| 现象                             | 原因                      | 解决                                            |
+| -------------------------------- | ------------------------- | ----------------------------------------------- |
+| `Cannot find name 'ref'`         | d.ts 未生成或未 include   | 跑一次 `pnpm run dev`；检查 `include` 覆盖 d.ts |
+| vue 文件报类型错误但 ts 文件正常 | 用了 `tsc` 而非 `vue-tsc` | 统一 `vue-tsc --noEmit`                         |
+| vite.config.ts 报错              | 被 app 配置 include 进去  | Node 侧文件只能被 tsconfig.node.json include    |

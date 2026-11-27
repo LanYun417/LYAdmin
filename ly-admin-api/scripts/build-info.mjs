@@ -11,7 +11,7 @@
  * 优先级：环境变量 > git 实际值 > 兜底 'dev' / ''。
  * 无 .git 的环境（如从源码包解构构建）自动降级，不阻断构建。
  *
- * 用法：`npm run build:info`（已接入 `prebuild`）。
+ * 用法：`pnpm run build:info`（已接入 `prebuild`）。
  */
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';

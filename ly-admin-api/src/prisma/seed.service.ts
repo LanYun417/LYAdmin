@@ -9,7 +9,7 @@
  *
  * 执行时机：
  * - 服务启动时由 SeedService 的 onApplicationBootstrap 自动执行，早于 app.listen；
- * - 也可手动执行：`npm run seed`（入口见 prisma/seed.ts）。
+ * - 也可手动执行：`pnpm run seed`（入口见 prisma/seed.ts）。
  */
 import { Injectable, Logger, type OnApplicationBootstrap } from '@nestjs/common';
 import { DataScope, MenuType, Status, SUPER_ADMIN_ROLE } from '../common/config/constants.js';

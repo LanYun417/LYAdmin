@@ -5,7 +5,7 @@
  * 背景：生产「同源部署」时前端产物由后端直接托管（`app.setup.ts` 从 `config.web.distDir`
  * 读取），该目录默认是 `<api 根>/web`。Docker 镜像构建用 `COPY --from=web-builder` 完成这一步，
  * 但**本地原生打包**此前需要手工复制，容易忘记导致后端托管到旧产物。本脚本把「打包 → 同步」
- * 收敛为一步，`npm run build` / `build:only` 结束即自动就位。**同时保留 `dist/`**（只读拷贝，
+ * 收敛为一步，`pnpm run build` / `build:only` 结束即自动就位。**同时保留 `dist/`**（只读拷贝，
  * 不移动），本地预览 / 交给 nginx 时照旧可用。
  *
  * 目标目录解析**对齐后端** `config.web.distDir`（`path.resolve(ROOT_DIR, WEB_DIST_DIR ?? 'web')`）：

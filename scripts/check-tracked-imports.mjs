@@ -7,7 +7,7 @@
  * `ly-admin-api/src/modules/logs/` 的三个文件从未入库，而当时所有本地检查都是通过的。
  *
  * 本脚本只读取 `git ls-files` 的视角，因此等价于「干净克隆能否解析全部相对导入」。
- * 用法：npm run guard:imports
+ * 用法：pnpm run guard:imports
  */
 import { execSync } from 'node:child_process';
 import fs from 'node:fs';

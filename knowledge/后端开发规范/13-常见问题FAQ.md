@@ -13,15 +13,15 @@ Prisma 7 禁止在 schema 写 `url`。这是 VS Code 的 Prisma 扩展回落到 
 MySQL 未启动或库未创建；核对 `.env` 的 `DB_*`（或 `DATABASE_URL`），先执行建库 SQL。
 
 **Q4：`Table 'ly_admin.sys_user' doesn't exist`？**
-Prisma 7 不在启动时建表。执行 `npm run prisma:push`，随后 `npm run prisma:comments`。
+Prisma 7 不在启动时建表。执行 `pnpm run prisma:push`，随后 `pnpm run prisma:comments`。
 
 ## Prisma
 
 **Q5：改了 schema，代码里类型还是旧的？**
-执行 `npm run prisma:generate`；生成物在 `src/generated/prisma/`，需要一起提交。
+执行 `pnpm run prisma:generate`；生成物在 `src/generated/prisma/`，需要一起提交。
 
 **Q6：表 / 字段注释是空的？**
-`///` 不会自动进库。执行 `npm run prisma:comments`；`--force-reset` 之后也要补跑。
+`///` 不会自动进库。执行 `pnpm run prisma:comments`；`--force-reset` 之后也要补跑。
 
 **Q7：`Unknown argument 'dept'` / `roles`？**
 Prisma 的 `SelectSubset` 会让不在模型上的 `where` 键静默失效。`User` 没有 `dept` 关系（deptId=0 哨兵），
@@ -37,7 +37,7 @@ Prisma 的 `SelectSubset` 会让不在模型上的 `where` 键静默失效。`Us
 3）菜单 / 角色关联写错了表（必须是 `sys_user_role` / `sys_role_menu`）。
 
 **Q10：登录后菜单为空？**
-种子未写入：`npm run seed`；普通角色需在「角色管理 → 菜单授权」勾选。超管仍为空说明种子异常。
+种子未写入：`pnpm run seed`；普通角色需在「角色管理 → 菜单授权」勾选。超管仍为空说明种子异常。
 
 **Q11：退出登录后旧 Token 还能用？**
 登出黑名单依赖 Redis；未配置 `REDIS_HOST` 时黑名单不生效（降级为「未失效」）。多实例部署必须配 Redis。

@@ -25,7 +25,7 @@ ly-admin-api/
 │  │  ├─ file.prisma          #   文件元信息
 │  │  ├─ log.prisma           #   登录 / 操作 / HTTP 访问日志
 │  │  └─ generated.prisma     #   代码生成器注入区（[GEN-ANCHOR]，勿手工放业务模型）
-│  └─ seed.ts                 # CLI 种子入口（npm run seed）
+│  └─ seed.ts                 # CLI 种子入口（pnpm run seed）
 ├─ scripts/
 │  ├─ prisma-comments.ts      # 把 schema 的 /// 同步为库内 COMMENT
 │  ├─ gen-api-docs.mjs        # 扫描控制器生成接口文档数据（docs:gen / build 的 prebuild）
@@ -62,26 +62,26 @@ ly-admin-api/
 
 ## 常用脚本
 
-| 命令                            | 说明                                                       |
-| ------------------------------- | ---------------------------------------------------------- |
-| `npm run start:dev`             | Nest watch 模式热重载（:3000）                             |
-| `npm run start:debug`           | 同样的 watch 模式，附带 Node 调试端口                      |
-| `npm run build`                 | 编译到 `dist/`（prebuild 自动重新生成接口文档）            |
-| `npm run start:prod`            | 运行编译产物 `node dist/main`                              |
-| `npm run migrate:dev`           | 生成并应用迁移（开发环境，产出的 SQL 需入库）              |
-| `npm run migrate:deploy`        | 应用已有迁移（生产 / 容器）                                |
-| `npm run migrate:status`        | 查看迁移状态                                               |
-| `npm run prisma:push`           | 建表 / 同步表结构（首次必执行；Prisma 7 启动时不自动建表） |
-| `npm run prisma:comments`       | 把 schema 的 `///` 同步为库内表 / 字段 COMMENT（幂等）     |
-| `npm run prisma:comments:check` | 检查库内注释是否漂移（有差异退出码 1）                     |
-| `npm run prisma:generate`       | 重新生成 Prisma Client                                     |
-| `npm run seed`                  | 单独执行种子数据（幂等；服务启动时也会自动执行）           |
-| `npm run docs:gen`              | 扫描控制器重新生成接口文档                                 |
-| `npm run ip2region:update`      | 更新 IP 归属地数据文件（下载 → 校验 → 原子替换）           |
-| `npm run typecheck`             | 类型检查（`tsc --noEmit`）                                 |
-| `npm run lint`                  | oxlint（type-aware）                                       |
-| `npm run test`                  | vitest 单元测试                                            |
-| `npm run test:e2e`              | vitest e2e 契约测试（需本地 MySQL / Redis）                |
+| 命令                             | 说明                                                       |
+| -------------------------------- | ---------------------------------------------------------- |
+| `pnpm run start:dev`             | Nest watch 模式热重载（:3000）                             |
+| `pnpm run start:debug`           | 同样的 watch 模式，附带 Node 调试端口                      |
+| `pnpm run build`                 | 编译到 `dist/`（prebuild 自动重新生成接口文档）            |
+| `pnpm run start:prod`            | 运行编译产物 `node dist/main`                              |
+| `pnpm run migrate:dev`           | 生成并应用迁移（开发环境，产出的 SQL 需入库）              |
+| `pnpm run migrate:deploy`        | 应用已有迁移（生产 / 容器）                                |
+| `pnpm run migrate:status`        | 查看迁移状态                                               |
+| `pnpm run prisma:push`           | 建表 / 同步表结构（首次必执行；Prisma 7 启动时不自动建表） |
+| `pnpm run prisma:comments`       | 把 schema 的 `///` 同步为库内表 / 字段 COMMENT（幂等）     |
+| `pnpm run prisma:comments:check` | 检查库内注释是否漂移（有差异退出码 1）                     |
+| `pnpm run prisma:generate`       | 重新生成 Prisma Client                                     |
+| `pnpm run seed`                  | 单独执行种子数据（幂等；服务启动时也会自动执行）           |
+| `pnpm run docs:gen`              | 扫描控制器重新生成接口文档                                 |
+| `pnpm run ip2region:update`      | 更新 IP 归属地数据文件（下载 → 校验 → 原子替换）           |
+| `pnpm run typecheck`             | 类型检查（`tsc --noEmit`）                                 |
+| `pnpm run lint`                  | oxlint（type-aware）                                       |
+| `pnpm run test`                  | vitest 单元测试                                            |
+| `pnpm run test:e2e`              | vitest e2e 契约测试（需本地 MySQL / Redis）                |
 
 ## 环境变量
 
@@ -90,7 +90,7 @@ ly-admin-api/
 
 IP 归属地数据文件默认读取 `data/ip2region_v4.xdb`（约 10 MB，**不入库**）：
 
-- 首次使用执行 `npm run ip2region:update` 拉取；
+- 首次使用执行 `pnpm run ip2region:update` 拉取；
 - 可用环境变量 `IP2REGION_DB_PATH` 覆盖路径；
 - 文件缺失或损坏时服务照常启动，仅 IP 归属地解析降级为空，不影响其他功能。
 

@@ -1,5 +1,5 @@
 /**
- * 种子数据 CLI 入口（`npm run seed`）。
+ * 种子数据 CLI 入口（`pnpm run seed`）。
  * 模块职责：仅负责装配 Prisma 连接并调用 `runSeed`，业务逻辑全部在
  * `src/prisma/seed.service.ts`，与「服务启动时自动种子」共用同一份实现，避免两份数据漂移。
  *

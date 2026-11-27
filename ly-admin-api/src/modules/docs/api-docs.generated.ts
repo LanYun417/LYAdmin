@@ -2,7 +2,7 @@
  * 接口文档数据（自动生成，请勿手工编辑）。
  *
  * 由 `scripts/gen-api-docs.mjs` 在构建期扫描控制器产出；修改接口后请重新执行
- * `npm run docs:gen`（`npm run build` 的 prebuild 已自动接入）。
+ * `pnpm run docs:gen`（`pnpm run build` 的 prebuild 已自动接入）。
  */
 import type { ApiDocGroup } from './docs.types.js';
 

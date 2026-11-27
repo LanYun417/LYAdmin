@@ -104,12 +104,12 @@ export default [
 ## 命令（根目录）
 
 ```bash
-npm run lint           # eslint . --max-warnings 0
-npm run lint:fix       # eslint . --fix
-npm run format         # prettier --write "**/*.{js,mjs,cjs,ts,vue,json,css,scss,md,html}"
-npm run format:check   # prettier --check ...
-npm run stylelint      # stylelint "**/*.{css,scss,vue}"
-npm run stylelint:fix  # stylelint ... --fix
+pnpm run lint           # eslint . --max-warnings 0
+pnpm run lint:fix       # eslint . --fix
+pnpm run format         # prettier --write "**/*.{js,mjs,cjs,ts,vue,json,css,scss,md,html}"
+pnpm run format:check   # prettier --check ...
+pnpm run stylelint      # stylelint "**/*.{css,scss,vue}"
+pnpm run stylelint:fix  # stylelint ... --fix
 ```
 
 提交时 lint-staged 会自动对暂存文件执行三者（见 14）。

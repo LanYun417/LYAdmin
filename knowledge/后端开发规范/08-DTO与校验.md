@@ -44,7 +44,7 @@ export class MenuUpsertDto {
 ```
 
 > 这类缺陷不会在编译期暴露，运行时才表现为「新增的记录字段全是 undefined」。
-> 新增 DTO 后务必用 `npm run test:e2e` 或手工请求验证一次。
+> 新增 DTO 后务必用 `pnpm run test:e2e` 或手工请求验证一次。
 
 ## 3. 类型转换
 

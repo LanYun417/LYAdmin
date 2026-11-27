@@ -7,8 +7,8 @@
  * （gen 模块从 information_schema 读 TABLE_COMMENT / COLUMN_COMMENT 作为业务名与字段标签）。
  *
  * 用法：
- *   npm run prisma:comments          # 应用差异（默认）
- *   npm run prisma:comments:check    # 仅检查，有差异时退出码 1（可用于 CI）
+ *   pnpm run prisma:comments          # 应用差异（默认）
+ *   pnpm run prisma:comments:check    # 仅检查，有差异时退出码 1（可用于 CI）
  *   tsx scripts/prisma-comments.ts --dry-run   # 只打印将要执行的 SQL
  *   tsx scripts/prisma-comments.ts --prune     # 额外清空 schema 未声明的多余注释
  *
@@ -223,7 +223,7 @@ async function main(): Promise<void> {
 
   for (const t of targets) {
     if (!existingTables.has(t.table)) {
-      console.log(`  · 跳过 ${t.table}（库中不存在，先执行 npm run prisma:push）`);
+      console.log(`  · 跳过 ${t.table}（库中不存在，先执行 pnpm run prisma:push）`);
       continue;
     }
     const rows = await prisma.$queryRawUnsafe<Array<Record<string, string>>>(`SHOW CREATE TABLE \`${t.table}\``);

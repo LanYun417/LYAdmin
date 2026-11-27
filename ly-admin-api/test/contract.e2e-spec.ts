@@ -14,7 +14,7 @@
  * 鉴权走**真实登录**（验证码答案从 Redis 取），既覆盖登录链路本身，也会写入一条登录日志
  * 供 CSV 时区用例使用。
  *
- * 前置条件：本地 MySQL 与 Redis 可用，且已执行 `npm run prisma:push` 与 `npm run seed`。
+ * 前置条件：本地 MySQL 与 Redis 可用，且已执行 `pnpm run prisma:push` 与 `pnpm run seed`。
  */
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import request from 'supertest';

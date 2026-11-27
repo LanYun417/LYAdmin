@@ -52,8 +52,8 @@ Prisma 7 禁止在 schema 写 `datasource.url`：
 ## 4. `///` 注释与数据库 COMMENT
 
 - `///` 是 schema 级文档注释，只进 DMMF 与 Client JSDoc，**不会写入数据库**。
-- 表 / 字段 COMMENT 由 `npm run prisma:comments` 从 `///` 生成 DDL 同步，幂等可重复执行。
-- `npm run prisma:comments:check` 检查漂移（有差异退出码 1，可用于 CI）。
+- 表 / 字段 COMMENT 由 `pnpm run prisma:comments` 从 `///` 生成 DDL 同步，幂等可重复执行。
+- `pnpm run prisma:comments:check` 检查漂移（有差异退出码 1，可用于 CI）。
 - 代码生成器从 `information_schema` 读 `TABLE_COMMENT` / `COLUMN_COMMENT` 作为业务名与表单标签，
   注释缺失时生成物会退化为英文列名。
 
@@ -62,13 +62,13 @@ Prisma 7 禁止在 schema 写 `datasource.url`：
 
 ## 5. 迁移（migrate）与 db push 的分工
 
-| 场景                                  | 用法                                                      |
-| ------------------------------------- | --------------------------------------------------------- |
-| 生产 / 共享环境（必须可审计、可回滚） | `npm run migrate:deploy`（只应用已有迁移，不改 schema）   |
-| 本地开发改表                          | `npm run migrate:dev -- --name <语义名>` → 生成迁移并应用 |
-| 查看迁移是否落后库                    | `npm run migrate:status`                                  |
-| 本地一次性试错（不产生迁移文件）      | `npm run prisma:push`（**仅限本地**，勿用于生产）         |
-| 同步表/字段 COMMENT                   | `npm run prisma:comments`（与迁移无关，独立执行）         |
+| 场景                                  | 用法                                                       |
+| ------------------------------------- | ---------------------------------------------------------- |
+| 生产 / 共享环境（必须可审计、可回滚） | `pnpm run migrate:deploy`（只应用已有迁移，不改 schema）   |
+| 本地开发改表                          | `pnpm run migrate:dev -- --name <语义名>` → 生成迁移并应用 |
+| 查看迁移是否落后库                    | `pnpm run migrate:status`                                  |
+| 本地一次性试错（不产生迁移文件）      | `pnpm run prisma:push`（**仅限本地**，勿用于生产）         |
+| 同步表/字段 COMMENT                   | `pnpm run prisma:comments`（与迁移无关，独立执行）         |
 
 > **CLI 脚本只准依赖 `db-config`，不许依赖服务端 `config`**。`config.ts` 在模块加载时就会
 > fail-fast 校验 JWT 等必填项，而 `migrate` 服务、CI 冒烟这类环境里只有 `DB_*`——
@@ -120,5 +120,5 @@ Prisma 7 禁止在 schema 写 `datasource.url`：
 ## 7. 生成物
 
 - `src/generated/prisma/` **提交入库**，保证未跑 `prisma generate` 的机器也能编译。
-- 不要手改生成物；schema 变更后执行 `npm run prisma:generate` 并单独提交（`chore(api):`）。
-- 修改 schema 后必须跑 `npx prisma validate`，确保目录式 schema 合法。
+- 不要手改生成物；schema 变更后执行 `pnpm run prisma:generate` 并单独提交（`chore(api):`）。
+- 修改 schema 后必须跑 `pnpm exec prisma validate`，确保目录式 schema 合法。

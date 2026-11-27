@@ -43,7 +43,7 @@ function main() {
   const budget = loadBudget();
 
   if (!fs.existsSync(DIST_ASSETS)) {
-    console.error(`[bundle-budget] 产物目录不存在: ${DIST_ASSETS}（先执行 npm run build）`);
+    console.error(`[bundle-budget] 产物目录不存在: ${DIST_ASSETS}（先执行 pnpm run build）`);
     process.exit(1);
   }
 

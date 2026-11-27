@@ -7,11 +7,11 @@ import { defineConfig, devices } from '@playwright/test';
  * 这几处是 CSS/布局层的历史翻车点（桌面改样式时最容易只在桌面验证）。
  *
  * 前置（两个服务都要在跑）：
- * - 后端 3100：`CAPTCHA_ENABLED=false npm run start:dev`（E2E 不处理图形验证码；
+ * - 后端 3100：`CAPTCHA_ENABLED=false pnpm run start:dev`（E2E 不处理图形验证码；
  *   该变量通过 webServer.env 注入，dotenv 不会覆盖已存在的环境变量）；
- * - 前端 5173：`npm run dev`（reuseExistingServer：本地已起则直接复用）。
+ * - 前端 5173：`pnpm run dev`（reuseExistingServer：本地已起则直接复用）。
  *
- * 运行：`npm run test:e2e:web`（首次需 `npx playwright install chromium`）。
+ * 运行：`pnpm run test:e2e:web`（首次需 `pnpm exec playwright install chromium`）。
  */
 export default defineConfig({
   testDir: './e2e',
@@ -30,8 +30,8 @@ export default defineConfig({
     screenshot: 'only-on-failure',
     storageState: 'e2e/.auth/state.json',
     // 本地可用系统浏览器免下 Chromium（内网/下载慢时的逃生口）：
-    // E2E_BROWSER_CHANNEL=msedge npm run test:e2e:web
-    // CI 不设该变量 → 走 `npx playwright install chromium` 的产物。
+    // E2E_BROWSER_CHANNEL=msedge pnpm run test:e2e:web
+    // CI 不设该变量 → 走 `pnpm exec playwright install chromium` 的产物。
     ...(process.env.E2E_BROWSER_CHANNEL ? { channel: process.env.E2E_BROWSER_CHANNEL } : {}),
   },
 
@@ -59,14 +59,14 @@ export default defineConfig({
   webServer: [
     {
       // 后端：CAPTCHA_ENABLED=false 让登录只需账号口令（dotenv 不覆盖已存在的 env）
-      command: 'npm --prefix ../ly-admin-api run start:dev',
+      command: 'pnpm --dir ../ly-admin-api run start:dev',
       url: 'http://localhost:3100/api/health/ready',
       reuseExistingServer: true,
       timeout: 180_000,
       env: { CAPTCHA_ENABLED: 'false' },
     },
     {
-      command: 'npm run dev',
+      command: 'pnpm run dev',
       url: 'http://localhost:5173',
       reuseExistingServer: true,
       timeout: 120_000,

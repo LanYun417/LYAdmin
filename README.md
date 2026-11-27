@@ -109,7 +109,7 @@ LYAdmin 面向企业内部运营 / 管理场景，提供一套可直接二次开
 | 系统监控        | CPU（整体 / 分核，cgroup 配额感知）、内存、磁盘、系统负载、进程；**网络活动**（上下行速率、累计流量、错误 / 丢包）。网络口径：Linux 读 `/proc/net/dev`（与采样同频 3s），Windows 走网卡统计（15s，因需起子进程），均排除环回网卡；指标经 **SSE 推送**（3s 一帧）驱动实时刷新，断线自动回退轮询兜底 |
 | 仪表盘          | 统计卡片、近 7 日登录趋势、操作类型分布、各角色用户数（ECharts）                                                                                                                                                                                                                                   |
 | 个人中心        | 修改资料、修改密码（旧密码校验）、更换头像；**扩展资料**（简介 / 生日 / 公司 / 职位 / 所在地，独立 `sys_user_profile` 表）；**用户画像**（我的在线设备：浏览器 / IP / 归属地 / 登录与活跃时间 / 在线时长，可自助下线其他设备）                                                                     |
-| 多语言          | vue-i18n 中 / 英 双语，导航栏切换；语言包 key 由 `npm run guard:locale` 门禁对齐（缺 key / 占位符不一致直接拦截）                                                                                                                                                                                  |
+| 多语言          | vue-i18n 中 / 英 双语，导航栏切换；语言包 key 由 `pnpm run guard:locale` 门禁对齐（缺 key / 占位符不一致直接拦截）                                                                                                                                                                                 |
 | Markdown 编辑器 | 内置 Vditor（懒加载、资源自托管、随主题切换亮 / 暗）                                                                                                                                                                                                                                               |
 | 布局与体验      | 侧边栏折叠、面包屑、标签页（tagsView）、keep-alive、暗黑模式、移动端响应式、403 / 404 / 500 错误页                                                                                                                                                                                                 |
 
@@ -184,7 +184,7 @@ ly-admin-api/
 │  │  ├─ generated.prisma     #   代码生成器注入区（[GEN-ANCHOR]，勿手工放业务模型）
 │  │  ├─ log.prisma           #   登录 / 操作 / HTTP 访问日志
 │  │  └─ system.prisma        #   用户 / 角色 / 菜单 / 部门 + 三张关联表
-│  └─ seed.ts                 # CLI 种子（npm run seed）
+│  └─ seed.ts                 # CLI 种子（pnpm run seed）
 ├─ scripts/
 │  ├─ prisma-comments.ts      # 把 schema 的 /// 同步为数据库表/字段 COMMENT
 │  ├─ gen-api-docs.mjs        # 扫描控制器生成接口文档数据（docs:gen / build 的 prebuild）
@@ -211,7 +211,7 @@ ly-admin-api/
 | 项      | 要求                                                     |
 | ------- | -------------------------------------------------------- |
 | Node.js | >= 24.0.0（验证于 v24.x）                                |
-| npm     | >= 10                                                    |
+| pnpm    | >= 12（`packageManager: pnpm@12.23.0`）                  |
 | MySQL   | 8.x 运行中，需提前创建数据库 `ly_admin`（utf8mb4）       |
 | Redis   | 可选。用于验证码共享、登出黑名单与登录限流；未配置时降级 |
 
@@ -223,17 +223,15 @@ CREATE DATABASE IF NOT EXISTS `ly_admin`
   DEFAULT COLLATE utf8mb4_general_ci;
 ```
 
-> 表结构由 Prisma 管理：Prisma 7 不提供运行时 DDL，首次需执行一次 `npm run prisma:push` 建表；
-> 种子数据在每次服务启动时**幂等**执行，也可用 `npm run seed` 手动执行。
+> 表结构由 Prisma 管理：Prisma 7 不提供运行时 DDL，首次需执行一次 `pnpm run prisma:push` 建表；
+> 种子数据在每次服务启动时**幂等**执行，也可用 `pnpm run seed` 手动执行。
 
 ### 2. 安装依赖
 
 根依赖（工程规范工具 + husky 钩子）**务必先装**：
 
 ```bash
-npm install                        # 根目录
-cd ly-admin-api && npm install     # 后端（NestJS 12 + Prisma 7）
-cd ../ly-admin-web && npm install  # 前端（Vue 3 + Vite）
+pnpm install                       # 根目录（pnpm workspace，一次装齐前后端与工程工具）
 ```
 
 ### 3. 配置环境变量
@@ -258,24 +256,24 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 ```bash
 cd ly-admin-api
-npm run prisma:push       # 建表 / 同步表结构（首次必执行；Prisma 7 启动时不自动建表）
-npm run prisma:comments   # 把 schema 里的 /// 文档注释同步为表/字段 COMMENT（幂等）
-npm run seed              # 写入默认数据（可选：服务启动时也会自动幂等执行）
+pnpm run prisma:push       # 建表 / 同步表结构（首次必执行；Prisma 7 启动时不自动建表）
+pnpm run prisma:comments   # 把 schema 里的 /// 文档注释同步为表/字段 COMMENT（幂等）
+pnpm run seed              # 写入默认数据（可选：服务启动时也会自动幂等执行）
 ```
 
 > Prisma 不会把 schema 的 `///` 注释写进数据库（`db push` 不写、`db pull` 也读不回），
-> 表/字段 COMMENT 由 `npm run prisma:comments` 负责落库——它从 `prisma/schema/` 下各文件的 `///` 生成 DDL，
-> 幂等可重复执行，改完注释或同步完表结构跑一次即可。用 `npm run prisma:comments:check` 可检查
+> 表/字段 COMMENT 由 `pnpm run prisma:comments` 负责落库——它从 `prisma/schema/` 下各文件的 `///` 生成 DDL，
+> 幂等可重复执行，改完注释或同步完表结构跑一次即可。用 `pnpm run prisma:comments:check` 可检查
 > 库内注释是否漂移（有差异时退出码 1，可用于 CI）。这些注释是运维与代码生成器的数据源。
 
 ### 5. 启动
 
 ```bash
 # 根目录：有序启动前后端（后端 :3100，前端 :5173）
-npm run dev
+pnpm run dev
 ```
 
-`npm run dev` 由 `scripts/dev.mjs` 编排（零第三方依赖），**保证前端一定在后端就绪之后才启动**：
+`pnpm run dev` 由 `scripts/dev.mjs` 编排（零第三方依赖），**保证前端一定在后端就绪之后才启动**：
 
 1. 先探 `GET /api/health/live`——已有后端在跑就直接复用，只起前端（顺带避开端口占用报错）；
 2. 否则拉起 `nest start --watch`，轮询健康检查直到 200（进程已监听、路由已挂载）才继续；
@@ -283,17 +281,17 @@ npm run dev
 4. 任一子进程退出即整棵进程树回收；Ctrl+C 干净退出，复用的后端不会被误杀。
 
 > **⚠️ 端口必须三处一致**：`ly-admin-api/.env` 的 `PORT`、`ly-admin-web/vite.config.ts` 的 `proxy.target`、`scripts/dev.mjs` 的 `API_PORT`（默认 **3100**）。
-> 三者不一致时，`npm run dev` 会把端口上已有的服务当成后端复用。
+> 三者不一致时，`pnpm run dev` 会把端口上已有的服务当成后端复用。
 
 ```bash
-npm run dev -- --fresh   # 忽略已在运行的后端，强制新起一个
+pnpm run dev -- --fresh   # 忽略已在运行的后端，强制新起一个
 ```
 
 或分别启动：
 
 ```bash
-npm run dev:api    # 后端 http://localhost:3100（等价 cd ly-admin-api && npm run start:dev）
-npm run dev:web   # 前端 http://localhost:5173（等价 cd ly-admin-web && npm run dev）
+pnpm run dev:api    # 后端 http://localhost:3100（等价 cd ly-admin-api && pnpm run start:dev）
+pnpm run dev:web   # 前端 http://localhost:5173（等价 cd ly-admin-web && pnpm run dev）
 ```
 
 启动后可访问：
@@ -321,62 +319,62 @@ npm run dev:web   # 前端 http://localhost:5173（等价 cd ly-admin-web && npm
 
 ### 根目录
 
-| 命令                        | 说明                                                       |
-| --------------------------- | ---------------------------------------------------------- |
-| `npm run dev`               | 有序启动前后端（后端就绪后才起前端，见 `scripts/dev.mjs`） |
-| `npm run dev:api`           | 仅启动后端                                                 |
-| `npm run dev:web`           | 仅启动前端                                                 |
-| `npm run lint`              | 全仓 ESLint 检查（`--max-warnings 0`）                     |
-| `npm run lint:fix`          | 全仓 ESLint 自动修复                                       |
-| `npm run format`            | 全仓 Prettier 格式化                                       |
-| `npm run format:check`      | 全仓 Prettier 格式校验（不写文件）                         |
-| `npm run stylelint`         | 全仓 Stylelint 检查                                        |
-| `npm run stylelint:fix`     | 全仓 Stylelint 自动修复                                    |
-| `npm run guard:deps`        | 校验三处 `package.json` 的运行时依赖与基线一致             |
-| `npm run guard:deps:update` | 依赖基线有变更时，先生成新基线再提交                       |
-| `npm run guard:imports`     | 校验已入库文件的相对导入可解析（干净克隆可构建）           |
-| `npm run guard:locale`      | 校验 zh-CN / en-US 语言包 key 与占位符一致                 |
-| `npm run guard:bundle`      | 前端产物体积预算门禁（超预算即失败，见下）                 |
-| `npm run slow-sql`          | 慢 SQL 聚合报告（读 `ly-admin-api/logs/db-*.log`）         |
-| `npm run backup:db`         | 数据库备份（mysqldump → gzip，默认保留 7 份）              |
-| `npm run commit`            | cz-git 交互式生成规范提交                                  |
-| `npm run prepare`           | 装配 husky 钩子（`npm install` 后自动执行）                |
+| 命令                         | 说明                                                       |
+| ---------------------------- | ---------------------------------------------------------- |
+| `pnpm run dev`               | 有序启动前后端（后端就绪后才起前端，见 `scripts/dev.mjs`） |
+| `pnpm run dev:api`           | 仅启动后端                                                 |
+| `pnpm run dev:web`           | 仅启动前端                                                 |
+| `pnpm run lint`              | 全仓 ESLint 检查（`--max-warnings 0`）                     |
+| `pnpm run lint:fix`          | 全仓 ESLint 自动修复                                       |
+| `pnpm run format`            | 全仓 Prettier 格式化                                       |
+| `pnpm run format:check`      | 全仓 Prettier 格式校验（不写文件）                         |
+| `pnpm run stylelint`         | 全仓 Stylelint 检查                                        |
+| `pnpm run stylelint:fix`     | 全仓 Stylelint 自动修复                                    |
+| `pnpm run guard:deps`        | 校验三处 `package.json` 的运行时依赖与基线一致             |
+| `pnpm run guard:deps:update` | 依赖基线有变更时，先生成新基线再提交                       |
+| `pnpm run guard:imports`     | 校验已入库文件的相对导入可解析（干净克隆可构建）           |
+| `pnpm run guard:locale`      | 校验 zh-CN / en-US 语言包 key 与占位符一致                 |
+| `pnpm run guard:bundle`      | 前端产物体积预算门禁（超预算即失败，见下）                 |
+| `pnpm run slow-sql`          | 慢 SQL 聚合报告（读 `ly-admin-api/logs/db-*.log`）         |
+| `pnpm run backup:db`         | 数据库备份（mysqldump → gzip，默认保留 7 份）              |
+| `pnpm run commit`            | cz-git 交互式生成规范提交                                  |
+| `pnpm run prepare`           | 装配 husky 钩子（`pnpm install` 后自动执行）               |
 
 ### 前端 `ly-admin-web/`
 
-| 命令                   | 说明                                                                                                                                                                                           |
-| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `npm run dev`          | Vite 开发服务（:5173）                                                                                                                                                                         |
-| `npm run build`        | 类型检查 + 生产构建                                                                                                                                                                            |
-| `npm run build:only`   | 跳过类型检查，直接构建                                                                                                                                                                         |
-| `npm run preview`      | 本地预览构建产物                                                                                                                                                                               |
-| `npm run type-check`   | 仅类型检查（`vue-tsc --noEmit`）                                                                                                                                                               |
-| `npm run test`         | vitest 单测（工具函数 + 组件测试：BasicDialog / Pagination / TablePage / SSE）                                                                                                                 |
-| `npm run test:e2e:web` | Playwright E2E（桌面 + 390px 移动端布局回归）。前置：后端以 `CAPTCHA_ENABLED=false` 起在 3100，前端 dev 在 5173（Playwright 会自动拉起，已起则复用）；首次需 `npx playwright install chromium` |
+| 命令                    | 说明                                                                                                                                                                                                 |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm run dev`          | Vite 开发服务（:5173）                                                                                                                                                                               |
+| `pnpm run build`        | 类型检查 + 生产构建                                                                                                                                                                                  |
+| `pnpm run build:only`   | 跳过类型检查，直接构建                                                                                                                                                                               |
+| `pnpm run preview`      | 本地预览构建产物                                                                                                                                                                                     |
+| `pnpm run type-check`   | 仅类型检查（`vue-tsc --noEmit`）                                                                                                                                                                     |
+| `pnpm run test`         | vitest 单测（工具函数 + 组件测试：BasicDialog / Pagination / TablePage / SSE）                                                                                                                       |
+| `pnpm run test:e2e:web` | Playwright E2E（桌面 + 390px 移动端布局回归）。前置：后端以 `CAPTCHA_ENABLED=false` 起在 3100，前端 dev 在 5173（Playwright 会自动拉起，已起则复用）；首次需 `pnpm exec playwright install chromium` |
 
 ### 后端 `ly-admin-api/`
 
-| 命令                            | 说明                                                       |
-| ------------------------------- | ---------------------------------------------------------- |
-| `npm run start:dev`             | Nest watch 模式热重载（:3100，随 `.env` 的 `PORT`）        |
-| `npm run start:debug`           | 同样的 watch 模式，附带 Node 调试端口                      |
-| `npm run build`                 | 编译到 `dist/`                                             |
-| `npm run start:prod`            | 运行编译产物 `node dist/main`                              |
-| `npm run migrate:dev`           | 生成并应用迁移（开发环境，产出的 SQL 需入库）              |
-| `npm run migrate:deploy`        | 应用已有迁移（生产 / 容器）                                |
-| `npm run migrate:status`        | 查看迁移状态                                               |
-| `npm run prisma:push`           | 建表 / 同步表结构（首次必执行）                            |
-| `npm run prisma:comments`       | 把 schema 的 `///` 同步为库内表 / 字段 COMMENT             |
-| `npm run prisma:comments:check` | 检查库内注释是否漂移（有差异退出码 1）                     |
-| `npm run prisma:generate`       | 重新生成 Prisma Client                                     |
-| `npm run prisma:studio`         | 启动 Prisma Studio 可视化                                  |
-| `npm run docs:gen`              | 扫描控制器重新生成接口文档（`build` 的 prebuild 自动执行） |
-| `npm run ip2region:update`      | 下载 / 更新 IP 归属地数据文件（约 10MB，不入库）           |
-| `npm run seed`                  | 单独执行种子数据（幂等）                                   |
-| `npm run typecheck`             | 仅类型检查（`tsc --noEmit`）                               |
-| `npm run lint`                  | oxlint（type-aware）                                       |
-| `npm run test`                  | vitest 单元测试                                            |
-| `npm run test:e2e`              | vitest e2e 契约测试（需本地 MySQL；CI 与提交前建议跑）     |
+| 命令                             | 说明                                                       |
+| -------------------------------- | ---------------------------------------------------------- |
+| `pnpm run start:dev`             | Nest watch 模式热重载（:3100，随 `.env` 的 `PORT`）        |
+| `pnpm run start:debug`           | 同样的 watch 模式，附带 Node 调试端口                      |
+| `pnpm run build`                 | 编译到 `dist/`                                             |
+| `pnpm run start:prod`            | 运行编译产物 `node dist/main`                              |
+| `pnpm run migrate:dev`           | 生成并应用迁移（开发环境，产出的 SQL 需入库）              |
+| `pnpm run migrate:deploy`        | 应用已有迁移（生产 / 容器）                                |
+| `pnpm run migrate:status`        | 查看迁移状态                                               |
+| `pnpm run prisma:push`           | 建表 / 同步表结构（首次必执行）                            |
+| `pnpm run prisma:comments`       | 把 schema 的 `///` 同步为库内表 / 字段 COMMENT             |
+| `pnpm run prisma:comments:check` | 检查库内注释是否漂移（有差异退出码 1）                     |
+| `pnpm run prisma:generate`       | 重新生成 Prisma Client                                     |
+| `pnpm run prisma:studio`         | 启动 Prisma Studio 可视化                                  |
+| `pnpm run docs:gen`              | 扫描控制器重新生成接口文档（`build` 的 prebuild 自动执行） |
+| `pnpm run ip2region:update`      | 下载 / 更新 IP 归属地数据文件（约 10MB，不入库）           |
+| `pnpm run seed`                  | 单独执行种子数据（幂等）                                   |
+| `pnpm run typecheck`             | 仅类型检查（`tsc --noEmit`）                               |
+| `pnpm run lint`                  | oxlint（type-aware）                                       |
+| `pnpm run test`                  | vitest 单元测试                                            |
+| `pnpm run test:e2e`              | vitest e2e 契约测试（需本地 MySQL；CI 与提交前建议跑）     |
 
 ## 环境变量
 
@@ -456,10 +454,10 @@ npm run dev:web   # 前端 http://localhost:5173（等价 cd ly-admin-web && npm
 cd ly-admin-web
 # 产物必须落在 ly-admin-api/web/：后端按 path.resolve(ROOT_DIR, 'web') 读取（ROOT_DIR 即 ly-admin-api/），
 # 写到仓库根 web/ 会导致后端找不到产物、跳过静态托管。
-npm run build:only -- --outDir ../ly-admin-api/web --emptyOutDir
+pnpm run build:only -- --outDir ../ly-admin-api/web --emptyOutDir
 
 cd ../ly-admin-api
-npm run build
+pnpm run build
 NODE_ENV=production node dist/main.js
 ```
 
@@ -475,19 +473,19 @@ NODE_ENV=production node dist/main.js
 - 前端 `VITE_API_BASE_URL` 指向后端地址（或由网关统一前缀）。
 
 > 生产环境建议将 `NODE_ENV=production`，并通过进程管理器（systemd / pm2 / 容器）托管；`UPLOAD_DIR`、`LOG_DIR`、`cache` 目录需保证可写与持久化。
-> 首次部署记得执行 `npm run prisma:push` 与 `npm run prisma:comments`（Prisma 7 不在启动时建表）。
+> 首次部署记得执行 `pnpm run prisma:push` 与 `pnpm run prisma:comments`（Prisma 7 不在启动时建表）。
 
 ### 数据库备份（运维必配）
 
 ```bash
-npm run backup:db                # mysqldump → gzip → ly-admin-api/backups/，默认保留 7 份
-npm run backup:db -- --keep 14   # 覆盖保留份数
-npm run backup:db -- --list      # 查看已有备份
+pnpm run backup:db                # mysqldump → gzip → ly-admin-api/backups/，默认保留 7 份
+pnpm run backup:db -- --keep 14   # 覆盖保留份数
+pnpm run backup:db -- --list      # 查看已有备份
 ```
 
 - 口令从 `ly-admin-api/.env` 读，不进命令行；依赖机器上有 `mysqldump`；产物 `*.sql.gz`（`/backups` 已 gitignore）。
 - 建议配 crontab / 计划任务每日执行（保留份数按 RPO 定），备份目录与 `UPLOAD_DIR` 一样保证可写、异地留存。
-- 慢查询治理：`npm run slow-sql` 聚合 `logs/db-*.log`（Prisma 慢 SQL 事件）出 TOP N 归一化语句，按报告补索引（`SLOW_SQL_MS` 控制记录阈值）。
+- 慢查询治理：`pnpm run slow-sql` 聚合 `logs/db-*.log`（Prisma 慢 SQL 事件）出 TOP N 归一化语句，按报告补索引（`SLOW_SQL_MS` 控制记录阈值）。
 
 ## 接口约定
 
@@ -506,19 +504,19 @@ npm run backup:db -- --list      # 查看已有备份
 
 欢迎提交 Issue 与 Pull Request。
 
-1. **环境**：按[快速开始](#快速开始)拉起项目；根目录 `npm install` 以装配 husky 钩子。
+1. **环境**：按[快速开始](#快速开始)拉起项目；根目录 `pnpm install` 以装配 husky 钩子。
 2. **分支**：从 `main` 切出特性分支（命名 `feature/*` / `fix/*` / `hotfix/*`）。
-3. **编码**：遵循 [前端开发规范](./knowledge/前端开发规范/00-导读.md)、[后端开发规范](./knowledge/后端开发规范/00-导读.md) 与 [Git 提交规范](./knowledge/Git提交规范/00-导读.md)；提交信息使用 Conventional Commits（`npm run commit` 可交互生成）。
+3. **编码**：遵循 [前端开发规范](./knowledge/前端开发规范/00-导读.md)、[后端开发规范](./knowledge/后端开发规范/00-导读.md) 与 [Git 提交规范](./knowledge/Git提交规范/00-导读.md)；提交信息使用 Conventional Commits（`pnpm run commit` 可交互生成）。
 4. **提交前自检**（务必全绿）：
 
    ```bash
-   npm run format:check      # Prettier
-   npm run lint              # ESLint（--max-warnings 0）
-   npm run stylelint         # Stylelint
-   npm run guard:deps        # 依赖基线
-   npm run guard:locale      # 语言包 key / 占位符一致
-   (cd ly-admin-api && npm run typecheck && npm run lint && npm run test && npm run test:e2e)
-   (cd ly-admin-web && npm run type-check)
+   pnpm run format:check      # Prettier
+   pnpm run lint              # ESLint（--max-warnings 0）
+   pnpm run stylelint         # Stylelint
+   pnpm run guard:deps        # 依赖基线
+   pnpm run guard:locale      # 语言包 key / 占位符一致
+   (cd ly-admin-api && pnpm run typecheck && pnpm run lint && pnpm run test && pnpm run test:e2e)
+   (cd ly-admin-web && pnpm run type-check)
    ```
 
 5. **PR**：说明背景与改动点，关联相关 Issue，并确保上述检查通过。
@@ -528,7 +526,7 @@ npm run backup:db -- --list      # 查看已有备份
 
 > 新增后端业务模块请遵循 NestJS 分层（module → controller → service → dto），数据访问统一走 `PrismaService`；
 > 表结构变更改 `prisma/schema/` 下对应的模型文件（按域分文件，见 base.prisma 的「文件划分」）后，
-> 依次执行 `npm run prisma:push` 与 `npm run prisma:comments`（后者把 `///` 同步为库内表/字段 COMMENT）。
+> 依次执行 `pnpm run prisma:push` 与 `pnpm run prisma:comments`（后者把 `///` 同步为库内表/字段 COMMENT）。
 
 ## 常见问题
 
@@ -545,7 +543,7 @@ npm run backup:db -- --list      # 查看已有备份
 确认 MySQL 已启动、`ly_admin` 库已创建；核对 `ly-admin-api/.env` 的 `DB_*`（或 `DATABASE_URL`）。库不存在时执行[第 1 步](#1-准备数据库)的建库 SQL。
 
 **Q4：报缺表 / `Table 'ly_admin.xxx' doesn't exist`？**
-Prisma 7 不在启动时建表。执行 `cd ly-admin-api && npm run prisma:push`（表结构同步后如需恢复注释，再跑 `npm run prisma:comments`）。
+Prisma 7 不在启动时建表。执行 `cd ly-admin-api && pnpm run prisma:push`（表结构同步后如需恢复注释，再跑 `pnpm run prisma:comments`）。
 
 **Q5：登录 / 鉴权正常，但登出黑名单、登录限流没生效？**
 这两项依赖 Redis。未配置 `REDIS_HOST` 时视为不启用，主流程不受影响但增强失效。需要时启动 Redis 并配置 `REDIS_*`。
@@ -554,10 +552,10 @@ Prisma 7 不在启动时建表。执行 `cd ly-admin-api && npm run prisma:push`
 本项目 Tailwind 采用 v4 的 CSS 优先配置，**刻意不引入 preflight**（避免破坏 Element Plus），**不做全局重置**属预期行为。若工具类整体失效，检查 `ly-admin-web/src/styles/index.css` 是否含 `@import url('tailwindcss/utilities.css')`、是否在 `main.ts` 末尾引入。改动 `@theme` 令牌后建议重启一次 dev server 确保产物刷新。
 
 **Q7：提交时 husky 钩子不执行？**
-在**根目录**执行 `npm install`（会触发 `prepare` → `husky`），确认 `.husky/` 下存在 `pre-commit` 与 `commit-msg`。只在 `ly-admin-web/` 或 `ly-admin-api/` 装依赖不会装配钩子。
+在**根目录**执行 `pnpm install`（会触发 `prepare` → `husky`），确认 `.husky/` 下存在 `pre-commit` 与 `commit-msg`。只在 `ly-admin-web/` 或 `ly-admin-api/` 装依赖不会装配钩子。
 
 **Q8：登录成功但菜单为空？**
-菜单由后端按当前用户角色下发。`super_admin` 仍为空说明种子未写入，执行 `cd ly-admin-api && npm run seed`（幂等）；普通角色请在「角色管理 → 菜单授权」中勾选。
+菜单由后端按当前用户角色下发。`super_admin` 仍为空说明种子未写入，执行 `cd ly-admin-api && pnpm run seed`（幂等）；普通角色请在「角色管理 → 菜单授权」中勾选。
 
 **Q9：上传文件后访问 404？**
 确认 `ly-admin-api/uploads/` 存在且可写；确保后端已启动、前端代理已转发 `/static`。分离部署时还需把前端 origin 配进 `UPLOAD_ALLOWED_REFERERS`。

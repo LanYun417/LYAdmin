@@ -8,7 +8,7 @@
   "type": "module",
   "scripts": {
     "build": "nest build",
-    "prebuild": "npm run docs:gen && npm run build:info",
+    "prebuild": "pnpm run docs:gen && pnpm run build:info",
     "format": "prettier --write \"src/**/*.ts\" \"prisma/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",

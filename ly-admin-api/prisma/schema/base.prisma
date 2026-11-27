@@ -24,10 +24,10 @@
 // 文档注释（`///`）与数据库 COMMENT 的关系（重要）：
 // - `///` 是 Prisma 的 schema 级文档注释，只进 DMMF 与 Prisma Client 的 JSDoc，**不会写进数据库**：
 //   `prisma db push` 不带注释、`prisma db pull` 也读不回（已实测）。
-// - 表/字段的数据库 COMMENT 由 `npm run prisma:comments`（scripts/prisma-comments.ts）从本目录
-//   各文件的 `///` 生成 DDL 同步到库，幂等、可重复执行；`npm run prisma:comments:check` 检查是否漂移（CI 友好）。
+// - 表/字段的数据库 COMMENT 由 `ppnpm run prisma:comments`（scripts/prisma-comments.ts）从本目录
+//   各文件的 `///` 生成 DDL 同步到库，幂等、可重复执行；`ppnpm run prisma:comments:check` 检查是否漂移（CI 友好）。
 // - 因此**改表/字段说明请改对应模型文件里的 `///`**，改完执行同步命令。`db push --force-reset` 会重建表
-//   并清空注释，重建后重新执行 `npm run prisma:comments` 即可恢复。
+//   并清空注释，重建后重新执行 `ppnpm run prisma:comments` 即可恢复。
 // - 这些注释并非装饰：代码生成器（tool:gen）从 information_schema 读 TABLE_COMMENT / COLUMN_COMMENT
 //   作为业务名与表单字段标签，缺失时生成物会退化为英文列名。
 

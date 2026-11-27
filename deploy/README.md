@@ -77,7 +77,7 @@ SPA 项目开反代缓存会出页面 404，本仓库已把安全配置模板固
 > 为什么迁移后还要补注释：Prisma 生成的 `migration.sql` **不含 `COMMENT` 语句**
 > （列注释是本项目用 `scripts/prisma-comments.ts` 单独维护的，见 `prisma/schema/*.prisma` 里的
 > `///` 注释）。若只跑 `migrate deploy`，线上库一条注释都没有，
-> `npm run prisma:comments:check` 也会报差异——所以 compose 的 `migrate` 服务把两件事串在一起做。
+> `pnpm run prisma:comments:check` 也会报差异——所以 compose 的 `migrate` 服务把两件事串在一起做。
 
 浏览器访问 `http://<host>:3000`（api 容器同时托管前端产物并做 history 回退）。
 
@@ -85,11 +85,11 @@ SPA 项目开反代缓存会出页面 404，本仓库已把安全配置模板固
 
 ```bash
 # 查看迁移状态 / 手动补迁移（手动执行时记得把注释一起补上，与 compose 内的默认流程保持一致）
-docker compose -f deploy/docker-compose.yml run --rm migrate npx prisma migrate status
-docker compose -f deploy/docker-compose.yml run --rm migrate sh -c   'npx prisma migrate deploy && npm run prisma:comments'
+docker compose -f deploy/docker-compose.yml run --rm migrate pnpm exec prisma migrate status
+docker compose -f deploy/docker-compose.yml run --rm migrate sh -c   'pnpm --filter ly-admin-api exec prisma migrate deploy && pnpm --filter ly-admin-api run prisma:comments'
 
 # 部署后自检：注释与 schema 是否一致（无输出即一致，有差异时退出码非 0）
-docker compose -f deploy/docker-compose.yml run --rm migrate npm run prisma:comments:check
+docker compose -f deploy/docker-compose.yml run --rm migrate pnpm run prisma:comments:check
 
 # 重新构建并滚动重启（只重建 api，不动数据库）
 docker compose -f deploy/docker-compose.yml up -d --build api
@@ -136,17 +136,17 @@ docker compose -f deploy/docker-compose.yml up -d --build
 ## 5.5 非 Docker 部署（pm2 直跑）注意事项
 
 若不走 compose、而是把产物直接放到宿主机用 pm2 跑（如 `pm2 start dist/main.js`），
-**除 `dist/` 与 `web/` 之外，依赖必须单独同步**——容器镜像有 `npm ci` 兜底，
+**除 `dist/` 与 `web/` 之外，依赖必须单独同步**——容器镜像有 `pnpm install` 兜底，
 直跑部署没有，这是最容易踩的坑（症状：进程 online 但端口拒连，error.log 里是
 `ERR_MODULE_NOT_FOUND: Cannot find package 'xxx'`）。
 
 清单：
 
-1. **依赖**：`cd <部署目录> && npm install --omit=dev`（或按 `package.json` 增量装新依赖）。
+1. **依赖**：`cd <部署目录> && pnpm install --frozen-lockfile --filter ly-admin-api...`（或按 `package.json` 增量装新依赖）。
    只推 `dist/` + `web/` 而不同步依赖，新增依赖（如 `ldapjs`、`nodemailer`）必然启动失败。
-2. **Prisma 客户端**：`npx prisma generate`（业务生成物已随 `dist/generated` 打包，
+2. **Prisma 客户端**：`pnpm --filter ly-admin-api exec prisma generate`（业务生成物已随 `dist/generated` 打包，
    但 `@prisma/client` 包的 `.prisma/client` 内部解析仍需生成物存在）。
-3. **迁移与注释**：`npx prisma migrate deploy && npm run prisma:comments`，与 compose 的 `migrate` 服务同口径。
+3. **迁移与注释**：`pnpm --filter ly-admin-api exec prisma migrate deploy && pnpm --filter ly-admin-api run prisma:comments`，与 compose 的 `migrate` 服务同口径。
 4. **ip2region 离线库**：同第 7 节，缺失时归属地静默降级。
 5. **排查建议**：不要只信 `pm2 status` 的 `online`——它只表示进程没退出。
    以 `curl :<port>/api/health/ready` 为准；且 `~/.pm2/logs/*-error.log` 是**追加**的，
@@ -164,13 +164,13 @@ docker compose -f deploy/docker-compose.yml up -d --build
 
 - **ip2region 离线库不进镜像**：`ly-admin-api/data/ip2region_v4.xdb`（约 10MB）未入库，
   compose 以只读方式挂载宿主目录；缺失时归属地解析静默降级为空串（不影响登录与日志写入）。
-  需要时先在宿主机执行 `npm --prefix ly-admin-api run ip2region:update`。
+  需要时先在宿主机执行 `pnpm --dir ly-admin-api run ip2region:update`。
 - **镜像不含 `prisma` CLI**：运行时阶段只装 `dependencies`，迁移由 `migrate` 服务
-  （`api-builder` 阶段镜像，含 devDependencies）执行，这也是它能用 `npx prisma` 的原因。
+  （`api-builder` 阶段镜像，含 devDependencies）执行，这也是它能用 `pnpm exec prisma` 的原因。
 - **前端产物是构建期烘焙的**：改了前端代码必须重新 `--build`，没有「挂载宿主 dist 热更」的用法。
-- **本地原生同源部署**：`npm --prefix ly-admin-web run build`（或 `build:only`）会自动把产物同步到
+- **本地原生同源部署**：`pnpm --dir ly-admin-web run build`（或 `build:only`）会自动把产物同步到
   `ly-admin-api/web/`（后端 `WEB_DIST_DIR` 默认值），无需手工复制，`dist/` 本身也保留；
-  只改了产物想单独重同步时执行 `npm --prefix ly-admin-web run sync:api`。
+  只改了产物想单独重同步时执行 `pnpm --dir ly-admin-web run sync:api`。
 - **部署链路由 CI 的 `compose-smoke` job 持续验证**：它会在每次 push 时真的把整套 compose 跑起来
   （构建镜像 → 迁移 → api 就绪 → 登录冒烟 → 前端 index.html 可达），失败即红。
   本地同样可以直接跑：`docker compose -f deploy/docker-compose.yml up -d --build` 后按第 2 节探活。

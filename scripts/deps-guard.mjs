@@ -2,7 +2,7 @@
 /**
  * 零依赖哨兵（F8 · 差异化能力）。
  * 模块职责：把「零第三方运行时依赖」这条项目身份约束从「口头约定」变成「可执行校验」——
- * 任何人 `npm i` 一个包即被拦截。
+ * 任何人新增一个运行时依赖即被拦截。
  *
  * 校验对象：项目根 / ly-admin-api / ly-admin-web 三处 `package.json`。
  * 校验规则：
@@ -189,7 +189,9 @@ function check() {
 
   if (failed) {
     console.error('[DepsGuard] 运行时依赖变更会破坏「零第三方运行时依赖」约束，已阻断。');
-    console.error('[DepsGuard] 如确需变更，请显式运行 `npm run guard:deps -- --update` 更新基线，并在评审中说明原因。');
+    console.error(
+      '[DepsGuard] 如确需变更，请显式运行 `pnpm run guard:deps -- --update` 更新基线，并在评审中说明原因。',
+    );
     return 1;
   }
 

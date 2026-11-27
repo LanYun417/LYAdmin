@@ -2,22 +2,22 @@
 
 ## 环境 / 安装类
 
-**Q1：npm install 报引擎不满足？**
+**Q1：pnpm install 报引擎不满足？**
 Node 版本低于 `engines` 要求的 `>=24.0.0`（即 24+）。`node -v` 核对；本机为 24.x 通常满足。
 
 **Q2：安装缓慢或超时？**
 确认根 `.npmrc` 指向 npmmirror 镜像（`registry=https://registry.npmmirror.com`）；公司网络按需在 `.npmrc` 追加配置。
 
 **Q3：提交时 husky 钩子不执行？**
-在**根目录**执行 `npm install`（会触发 `prepare` → `husky`）。只在 `ly-admin-web/` 或 `ly-admin-api/` 装依赖不会装配根钩子。确认 `.husky/` 下存在 `pre-commit` / `commit-msg` / `pre-push`。
+在**根目录**执行 `pnpm install`（会触发 `prepare` → `husky`）。只在 `ly-admin-web/` 或 `ly-admin-api/` 装依赖不会装配根钩子。确认 `.husky/` 下存在 `pre-commit` / `commit-msg` / `pre-push`。
 
 **Q4：push 被 pre-push 拦截（deps-guard）？**
-运行时依赖偏离基线（见 15）。确需变更走 `npm run guard:deps -- --update` 更新基线并在评审说明。
+运行时依赖偏离基线（见 15）。确需变更走 `pnpm run guard:deps -- --update` 更新基线并在评审说明。
 
 ## 自动导入类
 
 **Q5：运行时 `ref is not defined`？**
-插件没生效：确认 `vite.config.ts` 中 `AutoImport` 已注册且在 `vue()` 之后；重启 `npm run dev`。
+插件没生效：确认 `vite.config.ts` 中 `AutoImport` 已注册且在 `vue()` 之后；重启 `pnpm run dev`。
 
 **Q6：TS 报 `Cannot find name 'ElMessage'`？**
 `ElMessage` 不自动导入，应从 `@/utils/element` 引入（见 06/09）。`ref` 等报找不到则确认 `auto-imports.d.ts` 已生成且 `tsconfig.json` 的 `include` 覆盖它（跑一次 dev 即可生成）。
@@ -48,7 +48,7 @@ vite alias 与 tsconfig paths 不一致，双端对齐 `@` → `./src`。
 history 模式需服务端回退。同源部署由后端托管 `ly-admin-api/web` 并回退 `index.html`；分离部署 Nginx `try_files $uri $uri/ /index.html;`。
 
 **Q14：登录成功但菜单为空？**
-菜单由后端按角色下发。空说明种子未写入，`cd ly-admin-api && npm run seed`（幂等）；普通角色在「角色管理 → 菜单授权」勾选。
+菜单由后端按角色下发。空说明种子未写入，`cd ly-admin-api && pnpm run seed`（幂等）；普通角色在「角色管理 → 菜单授权」勾选。
 
 **Q15：端口被占用（3100 / 5173）？**
 后端 3100 是固定端口：被占需改 `ly-admin-api/.env` 的 `PORT`，并同步 `vite.config.ts` 的 proxy `target` 与 `scripts/dev.mjs` 的 `API_PORT`（三处一致）。三处不一致时，`dev.mjs` 会把端口上已有的服务当成后端复用，表现为数据串台。

@@ -18,7 +18,7 @@
  * 说明：
  * - 口令从 ly-admin-api/.env 读（DB_USER/DB_PASSWORD/DB_NAME/DB_HOST/DB_PORT），
  *   不在命令行传参（进程列表里 `--password=` 会明文泄露）；
- * - 依赖机器上有 mysqldump（与 MySQL 同源安装）；脚本本身零 npm 依赖，
+ * - 依赖机器上有 mysqldump（与 MySQL 同源安装）；脚本本身零第三方依赖，
  *   压缩用 Node 内置 zlib（产物 .sql.gz），保留期外的旧备份自动删除；
  * - 备份文件名带库名与时间戳：ly_admin-20261112-233000.sql.gz。
  * - 配套建议：配 crontab / 计划任务每日跑一次，保留份数按 RPO 定。

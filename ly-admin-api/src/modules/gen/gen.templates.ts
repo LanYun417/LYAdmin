@@ -1526,7 +1526,7 @@ function renderDictSeedSnippet(config: GenConfig, columns: GenColumn[]): string 
 /**
  * 渲染 i18n 片段：把列表页用到的中文文案收敛为 key 清单（zh-CN / en-US 两份）。
  * 生成物是「片段」而非完整语言包：接手方把 key 并入 `locales/zh-CN.ts` 与 `en-US.ts` 即可，
- * `npm run guard:locale` 会校验两份 key 与占位符一致（缺 key 直接拦截提交）。
+ * `pnpm run guard:locale` 会校验两份 key 与占位符一致（缺 key 直接拦截提交）。
  */
 function renderI18nSnippet(config: GenConfig, columns: GenColumn[], tableComment = ''): string {
   const name = toCamel(config.businessName);
@@ -1543,7 +1543,7 @@ function renderI18nSnippet(config: GenConfig, columns: GenColumn[], tableComment
   return `/**
  * i18n 片段（自动生成，请勿整文件提交）。
  * 把下列 key 并入 \`ly-admin-web/src/locales/zh-CN.ts\` 与 \`en-US.ts\` 的
- * \`${name}\` 命名空间；随后 \`npm run guard:locale\` 会校验两份 key 一致。
+ * \`${name}\` 命名空间；随后 \`pnpm run guard:locale\` 会校验两份 key 一致。
  *
  * zh-CN.ts:
  *   ${name}: {
@@ -1631,7 +1631,7 @@ function renderReadme(config: GenConfig, columns: GenColumn[], tableComment: str
   // 接线步骤：前 3 步固定，字典 / 树形 / 未知类型按实际情况追加，末尾补一条控件核对
   const stepBodies: string[] = [
     `**同步表结构**：把 \`backend/prisma/${config.tableName}.model.prisma\` 的 model 追加进 \`ly-admin-api/prisma/schema/generated.prisma\` ` +
-      `（用「生成到项目」时已自动插入 \`[GEN-ANCHOR]\` 锚点之前），然后执行 \`npm run prisma:push\``,
+      `（用「生成到项目」时已自动插入 \`[GEN-ANCHOR]\` 锚点之前），然后执行 \`pnpm run prisma:push\``,
     `**注册模块**：\`ly-admin-api/src/app.module.ts\`（自动：import 与 \`imports\` 数组加入 \`${toPascal(config.businessName)}Module\`）`,
     `**菜单与权限码**：\`ly-admin-api/src/prisma/seed.service.ts\`（自动：目录 / MENU 与 4 个按钮节点，权限码依次为 ${perm}:list、:query、:add、:edit、:remove）；重启服务即自动幂等种子`,
     `**角色授权**：超管（menuKeys: 'ALL'）自动可见；其它角色请在「系统管理-角色管理-菜单授权」中勾选`,

@@ -1,6 +1,8 @@
 # Dependencies
 node_modules/
 .pnpm-store/
+# 统一使用 pnpm-lock.yaml，避免误提交 npm 锁文件造成双包管理器混用
+package-lock.json
 
 # Build output
 dist/

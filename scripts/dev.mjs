@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * 一键开发启动器（根目录 `npm run dev`）。
+ * 一键开发启动器（根目录 `pnpm run dev`）。
  *
  * 解决的核心问题：原实现用 concurrently 并行拉起前后端，前端往往先于后端就绪——
  * 首次打开页面时 Vite 代理打到尚未监听的 :3100（后端端口），登录 / 初始化请求直接失败，
@@ -18,9 +18,9 @@
  * 因此该脚本取代了原先的 concurrently + 手写等待链。
  *
  * 用法：
- *   npm run dev              # 有序启动（后端就绪 → 前端）
- *   npm run dev -- --fresh   # 忽略已在运行的后端，强制新起一个（端口被占则直接报错退出）
- *   npm run dev -- --help    # 查看帮助
+ *   pnpm run dev              # 有序启动（后端就绪 → 前端）
+ *   pnpm run dev -- --fresh   # 忽略已在运行的后端，强制新起一个（端口被占则直接报错退出）
+ *   pnpm run dev -- --help    # 查看帮助
  *
  * 可用环境变量：
  *   API_PORT              后端端口（默认 3100，需与 ly-admin-api/.env 的 PORT 一致）
@@ -85,12 +85,12 @@ const TASKS = {
   api: {
     label: 'api',
     color: USE_COLOR ? '\x1b[34m' : '',
-    command: 'npm --prefix ly-admin-api run start:dev',
+    command: 'pnpm --dir ly-admin-api run start:dev',
   },
   web: {
     label: 'web',
     color: USE_COLOR ? '\x1b[32m' : '',
-    command: 'npm --prefix ly-admin-web run dev',
+    command: 'pnpm --dir ly-admin-web run dev',
   },
 };
 
@@ -373,9 +373,9 @@ function printHelp() {
       'LYAdmin 开发启动器',
       '',
       '用法：',
-      '  npm run dev              有序启动：后端就绪后才启动前端',
-      '  npm run dev -- --fresh   强制新起后端（忽略已在运行的实例）',
-      '  npm run dev -- --help    显示本帮助',
+      '  pnpm run dev              有序启动：后端就绪后才启动前端',
+      '  pnpm run dev -- --fresh   强制新起后端（忽略已在运行的实例）',
+      '  pnpm run dev -- --help    显示本帮助',
       '',
       '环境变量：',
       `  API_PORT=${API_PORT}              后端端口`,

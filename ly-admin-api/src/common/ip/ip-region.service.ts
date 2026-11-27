@@ -3,7 +3,7 @@
  * 模块职责：把客户端 IP 解析为「国家 省份 城市 运营商」文本，供登录 / 操作 / 访问日志落库展示。
  *
  * 设计取舍：
- * - 离线优先：全程不访问外网。IP 库为本地 xdb 文件（约 10MB，`npm run ip2region:update` 更新），
+ * - 离线优先：全程不访问外网。IP 库为本地 xdb 文件（约 10MB，`pnpm run ip2region:update` 更新），
  *   启动时一次性读入内存做全量缓存，查询纯内存完成（微秒级），无文件 IO 压力；
  * - 只支持 IPv4：后台管理系统面向办公 / 家庭网络，IPv6 直连罕见。
  *   IPv4-mapped IPv6（`::ffff:x.x.x.x`，Windows 常见回环形态）先归一化再解析，其余 IPv6 静默跳过；
@@ -37,7 +37,7 @@ export class IpRegionService implements OnModuleInit, OnModuleDestroy {
       // 文件缺失 / 损坏：禁用归属地解析而非阻断启动（日志功能降级，核心业务不受影响）
       this.searcher = null;
       this.logger.warn(
-        `ip2region 数据加载失败，IP 归属地解析已禁用（执行 npm run ip2region:update 可修复）：${
+        `ip2region 数据加载失败，IP 归属地解析已禁用（执行 pnpm run ip2region:update 可修复）：${
           error instanceof Error ? error.message : String(error)
         }`,
       );

@@ -111,7 +111,7 @@ watch(
 
 ### 门禁
 
-`npm run guard:locale`（`scripts/check-locale-keys.mjs`，已进 CI）：校验两侧语言包
+`pnpm run guard:locale`（`scripts/check-locale-keys.mjs`，已进 CI）：校验两侧语言包
 **key 集合完全一致**、值非空、`{count}` 这类插值占位符成对出现。
 漏一个 key 不会报错，只会在英文界面露出中文，属于「看起来能跑、实际很难发现」的问题。
 

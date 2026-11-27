@@ -528,7 +528,7 @@ export const RESPONSE_EXAMPLES: Record<string, unknown> = {
   'POST /api/gen/create': envelope({
     written: ['ly-admin-api/src/modules/config/config.controller.ts'],
     injected: ['ly-admin-api/src/app.module.ts'],
-    manualSteps: ['执行 npm run prisma:push'],
+    manualSteps: ['执行 pnpm run prisma:push'],
   }),
 
   /* 个人中心 */

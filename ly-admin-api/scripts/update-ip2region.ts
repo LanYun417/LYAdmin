@@ -3,7 +3,7 @@
  *
  * 模块职责：从 ip2region 官方仓库拉取最新的 IPv4 xdb 数据文件到 `data/` 目录。
  * 该文件约 10MB 且更新频繁，故**不入库**（.gitignore 已排除），
- * 全新 clone 的项目或需要刷新 IP 库时执行一次 `npm run ip2region:update` 即可。
+ * 全新 clone 的项目或需要刷新 IP 库时执行一次 `pnpm run ip2region:update` 即可。
  *
  * 实现要点：先下载到临时文件再原子改名，避免中途失败留下损坏的半成品文件；
  * 下载完成后做最基本的完整性校验（文件头前 2 字节为 version，小端 uint16），
@@ -13,8 +13,8 @@
  * 后者在国内直连常被墙，Node 的 fetch 又不自动走系统代理，故不要把它当唯一源）；
  * 也可用环境变量 `IP2REGION_URL` 指定单个自定义源（如内网镜像 / 本地代理地址）。
  *
- * 用法：`npm run ip2region:update`
- * 自定义源：`IP2REGION_URL=https://example.com/ip2region_v4.xdb npm run ip2region:update`
+ * 用法：`pnpm run ip2region:update`
+ * 自定义源：`IP2REGION_URL=https://example.com/ip2region_v4.xdb pnpm run ip2region:update`
  */
 import { createWriteStream } from 'node:fs';
 import { mkdir, open, rename, stat, unlink } from 'node:fs/promises';

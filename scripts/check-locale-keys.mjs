@@ -9,7 +9,7 @@
  * - 叶子值不能为空字符串；
  * - 插值占位符（如 {count}）必须成对出现，否则切换语言后会露出原始占位符。
  *
- * 用法：node scripts/check-locale-keys.mjs（根目录 npm run guard:locale）
+ * 用法：node scripts/check-locale-keys.mjs（根目录 pnpm run guard:locale）
  */
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
