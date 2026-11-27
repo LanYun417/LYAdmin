@@ -18,6 +18,8 @@ import type { AlertChannel, AlertRecord, AlertRule } from '@/types/api';
 import ChannelForm from './components/ChannelForm.vue';
 import RuleForm from './components/RuleForm.vue';
 
+import { hasPermission } from '@/utils/permission';
+
 defineOptions({ name: 'SystemAlert' });
 
 /* ------------------------------- 渠道分签 ------------------------------- */
@@ -231,7 +233,12 @@ onMounted(() => {
               </template>
             </el-table-column>
             <el-table-column prop="remark" label="备注" min-width="160" show-overflow-tooltip />
-            <el-table-column label="操作" width="200" fixed="right">
+            <el-table-column
+              v-if="hasPermission(['system:alert:add', 'system:alert:edit', 'system:alert:remove'])"
+              label="操作"
+              width="200"
+              fixed="right"
+            >
               <template #default="{ row }">
                 <div class="table-action">
                   <el-button
@@ -305,7 +312,12 @@ onMounted(() => {
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="130" fixed="right">
+            <el-table-column
+              v-if="hasPermission(['system:alert:edit', 'system:alert:remove'])"
+              label="操作"
+              width="130"
+              fixed="right"
+            >
               <template #default="{ row }">
                 <div class="table-action">
                   <el-button
@@ -403,7 +415,7 @@ onMounted(() => {
                 {{ row.sentAt ? new Date(row.sentAt).toLocaleString() : '-' }}
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="90" fixed="right">
+            <el-table-column v-if="hasPermission('system:alert:edit')" label="操作" width="90" fixed="right">
               <template #default="{ row }">
                 <el-button
                   v-if="row.status !== 'sent'"

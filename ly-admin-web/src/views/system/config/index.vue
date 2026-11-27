@@ -8,6 +8,8 @@ import type { SysConfigItem } from '@/types/api';
 import TablePage from '@/components/TablePage/index.vue';
 import ConfigForm from './components/ConfigForm.vue';
 
+import { hasPermission } from '@/utils/permission';
+
 defineOptions({ name: 'SystemConfig' });
 
 const { loading, list, total, query, search, reset, getList, changePage, changePageSize } = useTable(
@@ -100,7 +102,12 @@ function handleFormSuccess(): void {
         </template>
       </el-table-column>
       <el-table-column prop="remark" label="备注" min-width="180" show-overflow-tooltip />
-      <el-table-column label="操作" width="150" fixed="right">
+      <el-table-column
+        v-if="hasPermission(['system:config:edit', 'system:config:remove'])"
+        label="操作"
+        width="150"
+        fixed="right"
+      >
         <template #default="{ row }">
           <div class="table-action">
             <el-button

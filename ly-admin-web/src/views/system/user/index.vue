@@ -354,8 +354,22 @@ onMounted(() => {
       <el-table-column v-if="isVisible('lastLogin')" label="最后登录" width="180">
         <template #default="{ row }">{{ formatDateTime(row.lastLoginAt) }}</template>
       </el-table-column>
-      <!-- 操作列：移动端只保留「编辑」，其余操作收进「更多」下拉，避免按钮换行挤压 -->
-      <el-table-column label="操作" :width="appStore.isMobile ? 120 : 340" fixed="right">
+      <!-- 操作列：移动端只保留「编辑」，其余操作收进「更多」下拉，避免按钮换行挤压；
+         当前用户没有任何操作权限时整列隐藏，不再保留一列空白。 -->
+      <el-table-column
+        v-if="
+          hasPermission([
+            'system:user:edit',
+            'system:user:assignRole',
+            'system:user:assignPerm',
+            'system:user:resetPwd',
+            'system:user:remove',
+          ]) && isVisible('action')
+        "
+        label="操作"
+        :width="appStore.isMobile ? 120 : 340"
+        fixed="right"
+      >
         <template #default="{ row }">
           <div class="table-action">
             <el-button v-permission="'system:user:edit'" type="primary" link @click="handleEdit(row as UserDetail)">

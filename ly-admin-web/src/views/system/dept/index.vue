@@ -7,6 +7,8 @@ import { useStatusDict } from '@/composables/useDict';
 import type { DeptNode } from '@/types/api';
 import DeptForm from './components/DeptForm.vue';
 
+import { hasPermission } from '@/utils/permission';
+
 defineOptions({ name: 'SystemDept' });
 
 const loading = ref(false);
@@ -127,7 +129,12 @@ onMounted(() => {
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="150" fixed="right">
+        <el-table-column
+          v-if="hasPermission(['system:dept:edit', 'system:dept:remove'])"
+          label="操作"
+          width="150"
+          fixed="right"
+        >
           <template #default="{ row }">
             <div class="table-action">
               <el-button v-permission="'system:dept:edit'" type="primary" link @click="handleEdit(row as DeptNode)">

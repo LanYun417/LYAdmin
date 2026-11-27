@@ -185,8 +185,13 @@ async function handleDelete(row: DictType): Promise<void> {
       <el-table-column label="创建时间" width="180">
         <template #default="{ row }">{{ formatDateTime(row.createdAt) }}</template>
       </el-table-column>
-      <!-- 操作列：移动端只保留「编辑」，其余操作收进「更多」下拉，避免按钮换行挤压 -->
-      <el-table-column label="操作" :width="appStore.isMobile ? 120 : 220" fixed="right">
+      <!-- 操作列：移动端只保留「编辑」，其余操作收进「更多」下拉；无任何操作权限时整列隐藏 -->
+      <el-table-column
+        v-if="hasPermission(['system:dict:edit', 'system:dict:list', 'system:dict:remove'])"
+        label="操作"
+        :width="appStore.isMobile ? 120 : 220"
+        fixed="right"
+      >
         <template #default="{ row }">
           <div class="table-action">
             <el-button v-permission="'system:dict:edit'" type="primary" link @click="handleEdit(row as DictType)">

@@ -7,6 +7,8 @@ import { useStatusDict } from '@/composables/useDict';
 import type { MenuNode } from '@/types/api';
 import MenuForm from './components/MenuForm.vue';
 
+import { hasPermission } from '@/utils/permission';
+
 defineOptions({ name: 'SystemMenu' });
 
 const loading = ref(false);
@@ -135,7 +137,12 @@ onMounted(() => {
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="150" fixed="right">
+        <el-table-column
+          v-if="hasPermission(['system:menu:edit', 'system:menu:remove'])"
+          label="操作"
+          width="150"
+          fixed="right"
+        >
           <template #default="{ row }">
             <div class="table-action">
               <el-button v-permission="'system:menu:edit'" type="primary" link @click="handleEdit(row as MenuNode)">

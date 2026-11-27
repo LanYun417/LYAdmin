@@ -18,6 +18,8 @@ import type { ApiKey, WebhookDelivery, WebhookItem } from '@/types/api';
 import ApiKeyForm from './components/ApiKeyForm.vue';
 import WebhookForm from './components/WebhookForm.vue';
 
+import { hasPermission } from '@/utils/permission';
+
 defineOptions({ name: 'SystemOpenApi' });
 
 /* ------------------------------- API Key 分签 ------------------------------- */
@@ -264,7 +266,12 @@ onMounted(() => {
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="190" fixed="right">
+            <el-table-column
+              v-if="hasPermission(['system:apiKey:edit', 'system:apiKey:remove'])"
+              label="操作"
+              width="190"
+              fixed="right"
+            >
               <template #default="{ row }">
                 <div class="table-action">
                   <el-button
@@ -337,7 +344,12 @@ onMounted(() => {
                 <span v-else class="text-muted">-</span>
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="220" fixed="right">
+            <el-table-column
+              v-if="hasPermission(['system:webhook:edit', 'system:webhook:remove'])"
+              label="操作"
+              width="220"
+              fixed="right"
+            >
               <template #default="{ row }">
                 <div class="table-action">
                   <el-button

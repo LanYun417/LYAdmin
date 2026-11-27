@@ -219,7 +219,12 @@ watch(
           <el-table-column label="创建时间" width="170">
             <template #default="{ row }">{{ formatDateTime(row.createdAt) }}</template>
           </el-table-column>
-          <el-table-column label="操作" width="140" fixed="right">
+          <el-table-column
+            v-if="hasPermission(['system:dict:edit', 'system:dict:remove'])"
+            label="操作"
+            width="140"
+            fixed="right"
+          >
             <template #default="{ row }">
               <div class="table-action">
                 <el-button

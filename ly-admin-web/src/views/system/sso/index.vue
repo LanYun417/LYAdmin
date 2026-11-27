@@ -11,6 +11,8 @@ import type { SsoProvider } from '@/types/api';
 import TablePage from '@/components/TablePage/index.vue';
 import SsoForm from './components/SsoForm.vue';
 
+import { hasPermission } from '@/utils/permission';
+
 defineOptions({ name: 'SystemSso' });
 
 const { loading, list, total, getList } = useTable(
@@ -93,7 +95,12 @@ function handleFormSuccess(): void {
         </template>
       </el-table-column>
       <el-table-column prop="sort" label="排序" width="80" align="center" />
-      <el-table-column label="操作" width="130" fixed="right">
+      <el-table-column
+        v-if="hasPermission(['system:sso:edit', 'system:sso:remove'])"
+        label="操作"
+        width="130"
+        fixed="right"
+      >
         <template #default="{ row }">
           <div class="table-action">
             <el-button v-permission="'system:sso:edit'" type="primary" link @click="handleEdit(row as SsoProvider)">
