@@ -6,10 +6,10 @@
  */
 export const BUILD_INFO = {
   "version": "1.0.0",
-  "commit": "8f612051e5a9bbe867a0b6336151f839e3b1814d",
-  "shortCommit": "8f61205",
+  "commit": "c54c46b0ee89dfaf90c4dead1401ee95733a0f2e",
+  "shortCommit": "c54c46b",
   "branch": "main",
-  "buildTime": "2026-11-27T02:16:13.162Z",
+  "buildTime": "2026-11-27T02:21:55.090Z",
   "node": "v24.22.3"
 } as const;
 
