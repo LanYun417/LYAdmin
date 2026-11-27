@@ -1,8 +1,11 @@
 # 持续集成（GitHub Actions 语法）
 #
-# 说明：本仓库主远端是 Gitee。若只在 Gitee 上跑 CI，把这里的 `npm` 命令序列原样搬进
+# 说明：本仓库主远端是 Gitee。若只在 Gitee 上跑 CI，把这里的 `pnpm` 命令序列原样搬进
 # Gitee Go / Jenkins 流水线即可（下面每个 step 都是自包含的命令行，不依赖 Actions 特性），
 # 只需自行提供 MySQL 8 与 Redis 7 作为构建机上的服务。
+#
+# 依赖管理统一为 pnpm workspace：仓库根一份 `pnpm-lock.yaml`，安装只在根目录执行一次
+# （`pnpm install --frozen-lockfile`），子包依赖由 workspace 收敛。
 #
 # 三道门禁分别对应三类「本地容易漏、线上会炸」的问题：
 #   guards → 规范漂移（格式 / 依赖基线 / 被 gitignore 吞掉的源码文件）
@@ -49,21 +52,22 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
-          cache: npm
-      - name: 安装根依赖
-        run: npm ci --no-audit --no-fund
+      - name: 安装 pnpm
+        run: pnpm install -g pnpm@12 --no-audit --no-fund
+      - name: 安装依赖（根 workspace）
+        run: pnpm install --frozen-lockfile
       - name: 代码格式
-        run: npm run format:check
+        run: pnpm run format:check
       - name: 前端 lint 与样式 lint
         run: |
-          npm run lint
-          npm run stylelint
+          pnpm run lint
+          pnpm run stylelint
       - name: 运行时依赖基线
-        run: npm run guard:deps
+        run: pnpm run guard:deps
       - name: 被忽略但仍被引用的源码文件
-        run: npm run guard:imports
+        run: pnpm run guard:imports
       - name: 语言包 key 一致性
-        run: npm run guard:locale
+        run: pnpm run guard:locale
 
   api:
     name: 后端（编译 / 单测 / 迁移 / 契约 e2e）
@@ -89,35 +93,34 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
-          cache: npm
-          cache-dependency-path: ly-admin-api/package-lock.json
-      - name: 安装后端依赖
-        working-directory: ly-admin-api
-        run: npm ci --no-audit --no-fund
+      - name: 安装 pnpm
+        run: pnpm install -g pnpm@12 --no-audit --no-fund
+      - name: 安装依赖（根 workspace）
+        run: pnpm install --frozen-lockfile
       - name: 类型检查
         working-directory: ly-admin-api
-        run: npm run typecheck
+        run: pnpm run typecheck
       - name: lint
         working-directory: ly-admin-api
-        run: npm run lint
+        run: pnpm run lint
       - name: 单测
         working-directory: ly-admin-api
-        run: npm run test
+        run: pnpm run test
       - name: 应用迁移（同时验证迁移文件可执行）
         working-directory: ly-admin-api
-        run: npm run migrate:deploy
+        run: pnpm run migrate:deploy
       # 必须先应用再检查：Prisma 生成的 migration.sql **不含 COMMENT 语句**
       # （注释由 scripts/prisma-comments.ts 单独维护），全新库里一条注释都没有，
       # 直接 check 必然报差异 —— 这一步等价于"部署后补齐注释"。
       - name: 应用表/字段注释
         working-directory: ly-admin-api
-        run: npm run prisma:comments
+        run: pnpm run prisma:comments
       - name: 表/字段注释与 schema 一致性
         working-directory: ly-admin-api
-        run: npm run prisma:comments:check
+        run: pnpm run prisma:comments:check
       - name: 契约 e2e（真实 MySQL + Redis）
         working-directory: ly-admin-api
-        run: npm run test:e2e
+        run: pnpm run test:e2e
 
   web:
     name: 前端（类型 / 构建）
@@ -127,27 +130,26 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
-          cache: npm
-          cache-dependency-path: ly-admin-web/package-lock.json
-      - name: 安装前端依赖
-        working-directory: ly-admin-web
-        run: npm ci --no-audit --no-fund
+      - name: 安装 pnpm
+        run: pnpm install -g pnpm@12 --no-audit --no-fund
+      - name: 安装依赖（根 workspace）
+        run: pnpm install --frozen-lockfile
       - name: 类型检查
         working-directory: ly-admin-web
-        run: npm run type-check
+        run: pnpm run type-check
       - name: 单测
         working-directory: ly-admin-web
-        run: npm run test
+        run: pnpm run test
       - name: 构建产物
         working-directory: ly-admin-web
-        run: npm run build
+        run: pnpm run build
       - name: 构建预算（产物体积门禁）
-        run: npm run guard:bundle
+        run: pnpm run guard:bundle
 
   web-e2e:
     # 手动触发（Actions → Run workflow）：Playwright 要下浏览器 + 起前后端双服务，
     # 每次 push 都跑会把 CI 时长翻倍；移动端布局回归按需/发版前跑一次即可。
-    # 本地等价命令：cd ly-admin-web && npm run test:e2e:web（见 playwright.config.ts 注释）
+    # 本地等价命令：cd ly-admin-web && pnpm run test:e2e:web（见 playwright.config.ts 注释）
     name: Web E2E（Playwright 移动端回归，手动触发）
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
@@ -177,25 +179,21 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
-          cache: npm
-          cache-dependency-path: ly-admin-api/package-lock.json
-      - name: 安装后端依赖
-        working-directory: ly-admin-api
-        run: npm ci --no-audit --no-fund
+      - name: 安装 pnpm
+        run: pnpm install -g pnpm@12 --no-audit --no-fund
+      - name: 安装依赖（根 workspace）
+        run: pnpm install --frozen-lockfile
       # 建表交给迁移（应用启动时种子自动补齐 admin/菜单/权限）
       - name: 应用迁移
         working-directory: ly-admin-api
-        run: npm run migrate:deploy
-      - name: 安装前端依赖
-        working-directory: ly-admin-web
-        run: npm ci --no-audit --no-fund
+        run: pnpm run migrate:deploy
       - name: 安装 Playwright 浏览器
         working-directory: ly-admin-web
-        run: npx playwright install --with-deps chromium
+        run: pnpm exec playwright install --with-deps chromium
       # Playwright 的 webServer 会自动拉起后端（3100）与前端（5173）
       - name: 运行 E2E（桌面 + 390px 移动端）
         working-directory: ly-admin-web
-        run: npm run test:e2e:web
+        run: pnpm run test:e2e:web
       - name: 上传测试报告（失败时）
         if: failure()
         uses: actions/upload-artifact@v4
