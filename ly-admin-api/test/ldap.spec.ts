@@ -15,7 +15,6 @@ const ldapMock = vi.hoisted(() => ({ createClient: vi.fn() }));
 vi.mock('ldapjs', () => ({ default: ldapMock, createClient: ldapMock.createClient }));
 
 const { LdapService } = await import('../src/modules/ldap/ldap.service.js');
-const { decryptSecret } = await import('../src/common/crypto/secret-box.js');
 
 /** 构造一个可控的 ldapjs client mock（bind/search 结果由句柄控制）。 */
 function makeClient(handlers: {
