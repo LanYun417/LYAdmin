@@ -133,6 +133,25 @@ docker compose -f deploy/docker-compose.yml up -d --build
 | `cache`      | 图片缩略图缓存             | **无需备份**（可再生）                                   |
 | `redis-data` | 黑名单 / 限流计数 / 验证码 | 无需备份（AOF 只为平滑重启）                             |
 
+## 5.5 非 Docker 部署（pm2 直跑）注意事项
+
+若不走 compose、而是把产物直接放到宿主机用 pm2 跑（如 `pm2 start dist/main.js`），
+**除 `dist/` 与 `web/` 之外，依赖必须单独同步**——容器镜像有 `npm ci` 兜底，
+直跑部署没有，这是最容易踩的坑（症状：进程 online 但端口拒连，error.log 里是
+`ERR_MODULE_NOT_FOUND: Cannot find package 'xxx'`）。
+
+清单：
+
+1. **依赖**：`cd <部署目录> && npm install --omit=dev`（或按 `package.json` 增量装新依赖）。
+   只推 `dist/` + `web/` 而不同步依赖，新增依赖（如 `ldapjs`、`nodemailer`）必然启动失败。
+2. **Prisma 客户端**：`npx prisma generate`（业务生成物已随 `dist/generated` 打包，
+   但 `@prisma/client` 包的 `.prisma/client` 内部解析仍需生成物存在）。
+3. **迁移与注释**：`npx prisma migrate deploy && npm run prisma:comments`，与 compose 的 `migrate` 服务同口径。
+4. **ip2region 离线库**：同第 7 节，缺失时归属地静默降级。
+5. **排查建议**：不要只信 `pm2 status` 的 `online`——它只表示进程没退出。
+   以 `curl :<port>/api/health/ready` 为准；且 `~/.pm2/logs/*-error.log` 是**追加**的，
+   会混入历史失败条目，判断本次启动问题前先 `: > ` 清空再重启。
+
 ## 6. 反向代理与 HTTPS
 
 `deploy/nginx.conf` 是可直接套用的示例：nginx 托管前端产物、反代 `/api` 与 `/static`。
