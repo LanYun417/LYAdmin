@@ -9093,7 +9093,7 @@ export const OPENAPI_DOC: Record<string, unknown> = {
         "tags": [
           "LDAP"
         ],
-        "summary": "保存配置",
+        "summary": "保存配置（停用时允许留空，见服务的校验口径）",
         "operationId": "put__api_ldap_config",
         "requestBody": {
           "required": true,
@@ -9141,6 +9141,47 @@ export const OPENAPI_DOC: Record<string, unknown> = {
             "bearerAuth": []
           }
         ]
+      },
+      "delete": {
+        "tags": [
+          "LDAP"
+        ],
+        "summary": "清空配置（整行删除，回到「未配置 + 停用」初始态；含口令一并抹除）",
+        "operationId": "delete__api_ldap_config",
+        "responses": {
+          "200": {
+            "description": "成功（统一信封 { code, message, data }）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "业务码，0 表示成功"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "data": {}
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
       }
     },
     "/api/ldap/test": {
@@ -9148,7 +9189,7 @@ export const OPENAPI_DOC: Record<string, unknown> = {
         "tags": [
           "LDAP"
         ],
-        "summary": "用已保存配置测试连接",
+        "summary": "用已保存配置测试连接（只读：不落库）",
         "operationId": "post__api_ldap_test",
         "responses": {
           "200": {
@@ -11746,7 +11787,7 @@ export const OPENAPI_DOC: Record<string, unknown> = {
         "tags": [
           "开放 API"
         ],
-        "summary": "手动测试推送",
+        "summary": "手动测试推送（会真的向外部 URL 发一次请求，故按编辑权限控制）",
         "operationId": "post__api_open_webhooks__id_test",
         "parameters": [
           {

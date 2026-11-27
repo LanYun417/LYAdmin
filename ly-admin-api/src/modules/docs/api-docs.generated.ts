@@ -4684,7 +4684,9 @@ export const API_DOCS: ApiDocGroup[] = [
         "method": "GET",
         "path": "/api/sso/admin/providers",
         "summary": "管理面：提供方列表（含完整配置，clientSecret 永不出库）",
-        "permission": [],
+        "permission": [
+          "system:sso:query"
+        ],
         "isPublic": false,
         "action": "",
         "params": [
@@ -4717,7 +4719,9 @@ export const API_DOCS: ApiDocGroup[] = [
         "method": "GET",
         "path": "/api/sso/admin/providers/:id",
         "summary": "管理面：提供方详情",
-        "permission": [],
+        "permission": [
+          "system:sso:query"
+        ],
         "isPublic": false,
         "action": "",
         "params": [
@@ -4807,7 +4811,9 @@ export const API_DOCS: ApiDocGroup[] = [
         "method": "POST",
         "path": "/api/sso/admin/providers",
         "summary": "管理面：新增提供方",
-        "permission": [],
+        "permission": [
+          "system:sso:add"
+        ],
         "isPublic": false,
         "action": "SSO 配置 · 新增",
         "params": [
@@ -4990,7 +4996,9 @@ export const API_DOCS: ApiDocGroup[] = [
         "method": "PUT",
         "path": "/api/sso/admin/providers/:id",
         "summary": "管理面：更新提供方（clientSecret 留空表示不修改）",
-        "permission": [],
+        "permission": [
+          "system:sso:edit"
+        ],
         "isPublic": false,
         "action": "SSO 配置 · 编辑",
         "params": [
@@ -5160,7 +5168,9 @@ export const API_DOCS: ApiDocGroup[] = [
         "method": "DELETE",
         "path": "/api/sso/admin/providers/:id",
         "summary": "管理面：删除提供方（绑定关系一并清理）",
-        "permission": [],
+        "permission": [
+          "system:sso:remove"
+        ],
         "isPublic": false,
         "action": "SSO 配置 · 删除",
         "params": [
@@ -5462,7 +5472,9 @@ export const API_DOCS: ApiDocGroup[] = [
         "method": "GET",
         "path": "/api/ldap/config",
         "summary": "配置视图（bindPassword 只回「是否已设置」）",
-        "permission": [],
+        "permission": [
+          "system:ldap:query"
+        ],
         "isPublic": false,
         "action": "",
         "params": [
@@ -5494,8 +5506,10 @@ export const API_DOCS: ApiDocGroup[] = [
       {
         "method": "POST",
         "path": "/api/ldap/test",
-        "summary": "用已保存配置测试连接",
-        "permission": [],
+        "summary": "用已保存配置测试连接（只读：不落库）",
+        "permission": [
+          "system:ldap:query"
+        ],
         "isPublic": false,
         "action": "LDAP · 测试连接",
         "examples": {
@@ -5506,7 +5520,9 @@ export const API_DOCS: ApiDocGroup[] = [
         "method": "POST",
         "path": "/api/ldap/test-preview",
         "summary": "用表单里的参数测试连接（保存前校验，不落库）",
-        "permission": [],
+        "permission": [
+          "system:ldap:query"
+        ],
         "isPublic": false,
         "action": "LDAP · 测试连接",
         "params": [
@@ -5574,8 +5590,10 @@ export const API_DOCS: ApiDocGroup[] = [
       {
         "method": "PUT",
         "path": "/api/ldap/config",
-        "summary": "保存配置",
-        "permission": [],
+        "summary": "保存配置（停用时允许留空，见服务的校验口径）",
+        "permission": [
+          "system:ldap:edit"
+        ],
         "isPublic": false,
         "action": "LDAP · 保存配置",
         "params": [
@@ -5692,6 +5710,19 @@ export const API_DOCS: ApiDocGroup[] = [
             "nicknameAttr": "示例值",
             "defaultRoleCodes": "示例值"
           }
+        }
+      },
+      {
+        "method": "DELETE",
+        "path": "/api/ldap/config",
+        "summary": "清空配置（整行删除，回到「未配置 + 停用」初始态；含口令一并抹除）",
+        "permission": [
+          "system:ldap:edit"
+        ],
+        "isPublic": false,
+        "action": "LDAP · 清空配置",
+        "examples": {
+          "curl": "curl -X DELETE \"http://localhost:3100/api/ldap/config\" \\\n  -H \"Authorization: Bearer <accessToken>\""
         }
       }
     ]
@@ -6063,7 +6094,9 @@ export const API_DOCS: ApiDocGroup[] = [
         "method": "GET",
         "path": "/api/alert/channels",
         "summary": "渠道列表（敏感字段脱敏）",
-        "permission": [],
+        "permission": [
+          "system:alert:query"
+        ],
         "isPublic": false,
         "action": "",
         "params": [
@@ -6096,7 +6129,9 @@ export const API_DOCS: ApiDocGroup[] = [
         "method": "GET",
         "path": "/api/alert/channels/:id",
         "summary": "渠道详情（编辑回显；敏感字段脱敏）",
-        "permission": [],
+        "permission": [
+          "system:alert:query"
+        ],
         "isPublic": false,
         "action": "",
         "params": [
@@ -6120,7 +6155,9 @@ export const API_DOCS: ApiDocGroup[] = [
         "method": "GET",
         "path": "/api/alert/records",
         "summary": "投递记录分页列表",
-        "permission": [],
+        "permission": [
+          "system:alert:query"
+        ],
         "isPublic": false,
         "action": "",
         "params": [
@@ -6171,7 +6208,9 @@ export const API_DOCS: ApiDocGroup[] = [
         "method": "GET",
         "path": "/api/alert/rules",
         "summary": "规则列表",
-        "permission": [],
+        "permission": [
+          "system:alert:query"
+        ],
         "isPublic": false,
         "action": "",
         "params": [
@@ -6204,7 +6243,9 @@ export const API_DOCS: ApiDocGroup[] = [
         "method": "POST",
         "path": "/api/alert/channels",
         "summary": "新增渠道",
-        "permission": [],
+        "permission": [
+          "system:alert:add"
+        ],
         "isPublic": false,
         "action": "告警中心 · 新增渠道",
         "params": [
@@ -6273,7 +6314,9 @@ export const API_DOCS: ApiDocGroup[] = [
         "method": "POST",
         "path": "/api/alert/channels/:id/test",
         "summary": "测试发送（立即向该渠道投一条测试告警并落库）",
-        "permission": [],
+        "permission": [
+          "system:alert:edit"
+        ],
         "isPublic": false,
         "action": "告警中心 · 测试发送",
         "params": [
@@ -6297,7 +6340,9 @@ export const API_DOCS: ApiDocGroup[] = [
         "method": "POST",
         "path": "/api/alert/records/:id/retry",
         "summary": "重投一条失败记录（原渠道集合）",
-        "permission": [],
+        "permission": [
+          "system:alert:edit"
+        ],
         "isPublic": false,
         "action": "告警中心 · 重试投递",
         "params": [
@@ -6321,7 +6366,9 @@ export const API_DOCS: ApiDocGroup[] = [
         "method": "POST",
         "path": "/api/alert/rules",
         "summary": "新增规则",
-        "permission": [],
+        "permission": [
+          "system:alert:add"
+        ],
         "isPublic": false,
         "action": "告警中心 · 新增规则",
         "params": [
@@ -6399,7 +6446,9 @@ export const API_DOCS: ApiDocGroup[] = [
         "method": "PUT",
         "path": "/api/alert/channels/:id",
         "summary": "更新渠道（未提供的敏感字段保留原值）",
-        "permission": [],
+        "permission": [
+          "system:alert:edit"
+        ],
         "isPublic": false,
         "action": "告警中心 · 编辑渠道",
         "params": [
@@ -6479,7 +6528,9 @@ export const API_DOCS: ApiDocGroup[] = [
         "method": "PUT",
         "path": "/api/alert/rules/:id",
         "summary": "更新规则",
-        "permission": [],
+        "permission": [
+          "system:alert:edit"
+        ],
         "isPublic": false,
         "action": "告警中心 · 编辑规则",
         "params": [
@@ -6568,7 +6619,9 @@ export const API_DOCS: ApiDocGroup[] = [
         "method": "DELETE",
         "path": "/api/alert/channels/:id",
         "summary": "删除渠道",
-        "permission": [],
+        "permission": [
+          "system:alert:remove"
+        ],
         "isPublic": false,
         "action": "告警中心 · 删除渠道",
         "params": [
@@ -6592,7 +6645,9 @@ export const API_DOCS: ApiDocGroup[] = [
         "method": "DELETE",
         "path": "/api/alert/rules/:id",
         "summary": "删除规则",
-        "permission": [],
+        "permission": [
+          "system:alert:remove"
+        ],
         "isPublic": false,
         "action": "告警中心 · 删除规则",
         "params": [
@@ -6755,7 +6810,9 @@ export const API_DOCS: ApiDocGroup[] = [
         "method": "GET",
         "path": "/api/open/keys",
         "summary": "密钥列表（含所属用户；密钥本体永不下发）",
-        "permission": [],
+        "permission": [
+          "system:apiKey:query"
+        ],
         "isPublic": false,
         "action": "",
         "params": [
@@ -6797,7 +6854,9 @@ export const API_DOCS: ApiDocGroup[] = [
         "method": "GET",
         "path": "/api/open/keys/:id",
         "summary": "密钥详情",
-        "permission": [],
+        "permission": [
+          "system:apiKey:query"
+        ],
         "isPublic": false,
         "action": "",
         "params": [
@@ -6821,7 +6880,9 @@ export const API_DOCS: ApiDocGroup[] = [
         "method": "GET",
         "path": "/api/open/webhook-deliveries",
         "summary": "投递记录分页",
-        "permission": [],
+        "permission": [
+          "system:webhook:query"
+        ],
         "isPublic": false,
         "action": "",
         "params": [
@@ -6872,7 +6933,9 @@ export const API_DOCS: ApiDocGroup[] = [
         "method": "GET",
         "path": "/api/open/webhooks",
         "summary": "订阅列表",
-        "permission": [],
+        "permission": [
+          "system:webhook:query"
+        ],
         "isPublic": false,
         "action": "",
         "params": [
@@ -6905,7 +6968,9 @@ export const API_DOCS: ApiDocGroup[] = [
         "method": "GET",
         "path": "/api/open/webhooks/:id",
         "summary": "订阅详情",
-        "permission": [],
+        "permission": [
+          "system:webhook:query"
+        ],
         "isPublic": false,
         "action": "",
         "params": [
@@ -6929,7 +6994,9 @@ export const API_DOCS: ApiDocGroup[] = [
         "method": "POST",
         "path": "/api/open/keys",
         "summary": "签发密钥（明文仅此一次返回，请妥善保存）",
-        "permission": [],
+        "permission": [
+          "system:apiKey:add"
+        ],
         "isPublic": false,
         "action": "开放 API · 签发密钥",
         "params": [
@@ -6998,7 +7065,9 @@ export const API_DOCS: ApiDocGroup[] = [
         "method": "POST",
         "path": "/api/open/webhooks",
         "summary": "新增订阅",
-        "permission": [],
+        "permission": [
+          "system:webhook:add"
+        ],
         "isPublic": false,
         "action": "开放 API · 新增 Webhook",
         "params": [
@@ -7066,8 +7135,10 @@ export const API_DOCS: ApiDocGroup[] = [
       {
         "method": "POST",
         "path": "/api/open/webhooks/:id/test",
-        "summary": "手动测试推送",
-        "permission": [],
+        "summary": "手动测试推送（会真的向外部 URL 发一次请求，故按编辑权限控制）",
+        "permission": [
+          "system:webhook:edit"
+        ],
         "isPublic": false,
         "action": "开放 API · 测试 Webhook",
         "params": [
@@ -7091,7 +7162,9 @@ export const API_DOCS: ApiDocGroup[] = [
         "method": "PUT",
         "path": "/api/open/keys/:id",
         "summary": "更新密钥配置（密钥本体不可改，轮换请删旧建新）",
-        "permission": [],
+        "permission": [
+          "system:apiKey:edit"
+        ],
         "isPublic": false,
         "action": "开放 API · 编辑密钥",
         "params": [
@@ -7162,7 +7235,9 @@ export const API_DOCS: ApiDocGroup[] = [
         "method": "PUT",
         "path": "/api/open/keys/:id/status",
         "summary": "启停密钥",
-        "permission": [],
+        "permission": [
+          "system:apiKey:edit"
+        ],
         "isPublic": false,
         "action": "开放 API · 启停密钥",
         "params": [
@@ -7186,7 +7261,9 @@ export const API_DOCS: ApiDocGroup[] = [
         "method": "PUT",
         "path": "/api/open/webhooks/:id",
         "summary": "更新订阅（secret 留空 = 不修改）",
-        "permission": [],
+        "permission": [
+          "system:webhook:edit"
+        ],
         "isPublic": false,
         "action": "开放 API · 编辑 Webhook",
         "params": [
@@ -7266,7 +7343,9 @@ export const API_DOCS: ApiDocGroup[] = [
         "method": "DELETE",
         "path": "/api/open/keys/:id",
         "summary": "删除密钥（立即失效）",
-        "permission": [],
+        "permission": [
+          "system:apiKey:remove"
+        ],
         "isPublic": false,
         "action": "开放 API · 删除密钥",
         "params": [
@@ -7290,7 +7369,9 @@ export const API_DOCS: ApiDocGroup[] = [
         "method": "DELETE",
         "path": "/api/open/webhooks/:id",
         "summary": "删除订阅",
-        "permission": [],
+        "permission": [
+          "system:webhook:remove"
+        ],
         "isPublic": false,
         "action": "开放 API · 删除 Webhook",
         "params": [

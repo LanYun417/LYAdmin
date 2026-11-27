@@ -2,7 +2,7 @@
  * LDAP 目录认证接口：配置读取 / 保存 / 连接测试。
  * bindPassword 只写不读：后端永不明文返回，编辑时留空 = 不修改。
  */
-import { get, post, put } from './request';
+import { del, get, post, put } from './request';
 import type { LdapConfig, LdapTestResult } from '@/types/api';
 
 /** 配置视图（bindPassword 只回 hasPassword） */
@@ -13,6 +13,11 @@ export function getLdapConfigApi(): Promise<LdapConfig> {
 /** 保存配置（bindPassword 留空 = 不修改） */
 export function saveLdapConfigApi(data: Partial<LdapConfig>): Promise<LdapConfig> {
   return put<LdapConfig>('/ldap/config', data);
+}
+
+/** 清空配置（整行删除，回到「未配置 + 停用」，口令一并抹除） */
+export function clearLdapConfigApi(): Promise<LdapConfig> {
+  return del<LdapConfig>('/ldap/config');
 }
 
 /** 用已保存配置测试连接 */

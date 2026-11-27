@@ -13,6 +13,7 @@ import { CurrentUser, Public } from '../../common/auth/auth.guard.js';
 import { OperationLog } from '../../common/log/operation-log.decorator.js';
 import { getClientIp } from '../../common/log/operation-log.interceptor.js';
 import { IdParamDto } from '../../common/dto/id-param.dto.js';
+import { RequirePermissions } from '../../common/auth/permission.guard.js';
 import { config } from '../../common/config/config.js';
 import { SsoService } from './sso.service.js';
 import { SsoProviderDto, SsoRedeemDto } from './dto/sso.dto.js';
@@ -86,12 +87,14 @@ export class SsoController {
 
   /** 管理面：提供方列表（含完整配置，clientSecret 永不出库）。 */
   @Get('admin/providers')
+  @RequirePermissions('system:sso:query')
   listProviders(@CurrentUser() _user: AuthUserContext): Promise<{ list: unknown[]; total: number }> {
     return this.ssoService.listProviders();
   }
 
   /** 管理面：提供方详情。 */
   @Get('admin/providers/:id')
+  @RequirePermissions('system:sso:query')
   getProvider(@Param() params: IdParamDto): Promise<unknown> {
     return this.ssoService.getProvider(params.id);
   }
@@ -99,6 +102,7 @@ export class SsoController {
   /** 管理面：新增提供方。 */
   @Post('admin/providers')
   @OperationLog('SSO 配置', '新增')
+  @RequirePermissions('system:sso:add')
   createProvider(@Body() dto: SsoProviderDto, @CurrentUser() user: AuthUserContext): Promise<unknown> {
     return this.ssoService.createProvider(dto as unknown as Record<string, unknown>, user.userId);
   }
@@ -106,6 +110,7 @@ export class SsoController {
   /** 管理面：更新提供方（clientSecret 留空表示不修改）。 */
   @Put('admin/providers/:id')
   @OperationLog('SSO 配置', '编辑')
+  @RequirePermissions('system:sso:edit')
   updateProvider(
     @Param() params: IdParamDto,
     @Body() dto: SsoProviderDto,
@@ -117,6 +122,7 @@ export class SsoController {
   /** 管理面：删除提供方（绑定关系一并清理）。 */
   @Delete('admin/providers/:id')
   @OperationLog('SSO 配置', '删除')
+  @RequirePermissions('system:sso:remove')
   async deleteProvider(@Param() params: IdParamDto, @CurrentUser() user: AuthUserContext): Promise<null> {
     await this.ssoService.deleteProvider(params.id, user.userId);
     return null;

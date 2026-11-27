@@ -180,17 +180,35 @@ export class LdapService {
   }
 
   /** 必填与格式校验（保存前 fail-fast）。 */
-  private assertConfigInput(input: { url: string; bindDn: string; baseDn: string; userFilter?: string }): void {
-    if (!input.url?.trim()) {
+  private assertConfigInput(input: {
+    enabled?: boolean;
+    url: string;
+    bindDn: string;
+    baseDn: string;
+    userFilter?: string;
+  }): void {
+    const url = (input.url ?? '').trim();
+    const bindDn = (input.bindDn ?? '').trim();
+    const baseDn = (input.baseDn ?? '').trim();
+
+    // 停用状态：允许全部留空（用户要「关掉并清空表单」），只校验填了的字段格式；
+    // 启用状态：三项必填——否则服务端拿着空 DN 去 bind，报错信息对运维毫无意义。
+    if (input.enabled === false) {
+      if (url && !/^ldaps?:\/\//.test(url)) {
+        throw AppException.badRequest('服务器地址必须以 ldap:// 或 ldaps:// 开头');
+      }
+      return;
+    }
+    if (!url) {
       throw AppException.badRequest('服务器地址不能为空');
     }
-    if (!/^ldaps?:\/\//.test(input.url.trim())) {
+    if (!/^ldaps?:\/\//.test(url)) {
       throw AppException.badRequest('服务器地址必须以 ldap:// 或 ldaps:// 开头');
     }
-    if (!input.bindDn?.trim()) {
+    if (!bindDn) {
       throw AppException.badRequest('服务账号 DN 不能为空');
     }
-    if (!input.baseDn?.trim()) {
+    if (!baseDn) {
       throw AppException.badRequest('用户搜索基准 DN 不能为空');
     }
     const filter = input.userFilter ?? '(uid={{username}})';
@@ -200,6 +218,16 @@ export class LdapService {
     if (!isValidFilterTemplate(filter)) {
       throw AppException.badRequest('用户搜索过滤器含非法字符');
     }
+  }
+
+  /**
+   * 清空配置：删掉整个配置行，回到「未配置 + 停用」的初始态。
+   * 口令随行抹除（不留「关了但密钥还躺在库里」的尾巴）。
+   * 不存在配置时静默成功（幂等：重复清空 = 一次成功）。
+   */
+  async clearConfig(): Promise<void> {
+    await this.prisma.ldapConfig.deleteMany({ where: { id: SINGLETON_ID } });
+    this.logger.log('LDAP 配置已清空');
   }
 
   /** 测试连接：以服务账号 bind + 一次匿名搜索，验证凭据与基准 DN 可达。 */

@@ -95,6 +95,12 @@ describe('LdapService 配置', () => {
           }
           return row;
         }),
+        // deleteMany 命中单例行时抹除（无行则静默，保证 clearConfig 幂等）
+        deleteMany: vi.fn(async () => {
+          const had = row !== null;
+          row = null;
+          return { count: had ? 1 : 0 };
+        }),
       },
     };
     service = new LdapService(prisma as never);
@@ -133,6 +139,35 @@ describe('LdapService 配置', () => {
     expect(view.enabled).toBe(false);
     expect(view.hasPassword).toBe(false);
     expect(view.updatedAt).toBeNull();
+  });
+
+  it('停用时允许全部留空（关掉并清空表单，不再被必填校验卡住）', async () => {
+    const view = await service.saveConfig(
+      validInput({ enabled: false, url: '', bindDn: '', baseDn: '', bindPassword: '' }),
+    );
+    expect(view.enabled).toBe(false);
+    expect(view.url).toBe('');
+    expect(view.bindDn).toBe('');
+    expect(view.baseDn).toBe('');
+    // 停用但填了内容：仍校验格式（URL scheme 白名单不放行）
+    await expect(service.saveConfig(validInput({ enabled: false, url: 'http://x.com' }))).rejects.toThrow(
+      /ldap:\/\/ 或 ldaps/,
+    );
+  });
+
+  it('clearConfig：整行删除，口令一并抹除（不留「关了但密钥还躺在库里」的尾巴）', async () => {
+    await service.saveConfig(validInput());
+    expect(row?.bindPassword).toBeTruthy();
+
+    await service.clearConfig();
+    expect(row).toBeNull();
+
+    const view = await service.getConfig();
+    expect(view.enabled).toBe(false);
+    expect(view.hasPassword).toBe(false);
+
+    // 幂等：重复清空 = 静默成功
+    await expect(service.clearConfig()).resolves.toBeUndefined();
   });
 });
 

@@ -22,6 +22,9 @@ defineOptions({ name: 'SystemOpenApi' });
 
 /* ------------------------------- API Key 分签 ------------------------------- */
 
+/** 当前激活的分签（默认「密钥」：与 onMounted 的加载目标一致，避免页面打开时内容区空白）。 */
+const activeTab = ref('keys');
+
 const keyLoading = ref(false);
 const keys = ref<ApiKey[]>([]);
 const keyTotal = ref(0);
@@ -194,7 +197,8 @@ onMounted(() => {
 
 <template>
   <div class="open-api-page">
-    <el-tabs @tab-change="handleTabChange">
+    <!-- 默认激活第一个分签：不绑定 v-model 时 el-tabs 无选中面板，内容区一片空白 -->
+    <el-tabs v-model="activeTab" @tab-change="handleTabChange">
       <!-- 密钥 -->
       <el-tab-pane label="服务账号密钥" name="keys">
         <el-card shadow="never">
