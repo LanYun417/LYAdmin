@@ -35,89 +35,94 @@ function render(): void {
   // 目标整屏约 6 个刻度，点数多时按间隔抽标签，避免拥挤。
   const labelInterval = Math.max(0, Math.ceil(props.data.dates.length / 6) - 1);
 
-  chart.setOption({
-    tooltip: {
-      trigger: 'axis',
-      backgroundColor: palette.tooltipBg,
-      borderColor: palette.tooltipBorder,
-      textStyle: { color: palette.tooltipText },
-      axisPointer: { type: 'line', lineStyle: { color: hexToRgba(PRIMARY, 0.4) } },
-    },
-    legend: {
-      top: 8,
-      data: ['请求量', '错误数'],
-      textStyle: { color: palette.text },
-    },
-    grid: { left: 8, right: 16, top: 48, bottom: 8, ...GRID_AXIS_LABEL_FIT },
-    xAxis: {
-      type: 'category',
-      boundaryGap: false,
-      data: props.data.dates,
-      axisLine: { lineStyle: { color: palette.axisLine } },
-      axisTick: { show: false },
-      axisLabel: { color: palette.textSecondary, fontSize: 12, margin: 12, interval: labelInterval },
-    },
-    yAxis: {
-      type: 'value',
-      minInterval: 1,
-      axisLabel: { color: palette.textSecondary, fontSize: 12 },
-      splitLine: { lineStyle: { color: palette.splitLine, type: 'dashed' } },
-    },
-    series: [
-      {
-        name: '请求量',
-        type: 'line',
-        smooth: 0.4,
-        symbol: 'circle',
-        symbolSize: 8,
-        showSymbol: false,
-        lineStyle: { width: 3, color: PRIMARY },
-        itemStyle: { color: PRIMARY, borderColor: palette.cardBg, borderWidth: 2 },
-        emphasis: { focus: 'series' },
-        areaStyle: {
-          color: verticalGradient(hexToRgba(PRIMARY, 0.3), hexToRgba(PRIMARY, 0.02)),
-        },
-        z: 3,
-        data: props.data.requests,
+  chart.setOption(
+    {
+      tooltip: {
+        trigger: 'axis',
+        backgroundColor: palette.tooltipBg,
+        borderColor: palette.tooltipBorder,
+        textStyle: { color: palette.tooltipText },
+        axisPointer: { type: 'line', lineStyle: { color: hexToRgba(PRIMARY, 0.4) } },
       },
-      // 次序列「辉光」：同数据的粗半透明线贴着曲线走，不铺面积，避免与请求量的填充叠加发灰。
-      {
-        name: '错误数 glow',
-        type: 'line',
-        smooth: 0.4,
-        showSymbol: false,
-        silent: true,
-        legendHoverLink: false,
-        lineStyle: { width: 10, color: hexToRgba(ERROR, 0.18), cap: 'round' },
-        tooltip: { show: false },
-        z: 1,
-        data: props.data.errors,
+      legend: {
+        top: 8,
+        data: ['请求量', '错误数'],
+        textStyle: { color: palette.text },
       },
-      {
-        name: '错误数',
-        type: 'line',
-        smooth: 0.4,
-        symbol: 'circle',
-        symbolSize: 7,
-        showSymbol: false,
-        lineStyle: { width: 2, color: ERROR },
-        itemStyle: { color: ERROR, borderColor: palette.cardBg, borderWidth: 2 },
-        emphasis: { focus: 'series' },
-        z: 2,
-        data: props.data.errors,
+      grid: { left: 8, right: 16, top: 48, bottom: 8, ...GRID_AXIS_LABEL_FIT },
+      xAxis: {
+        type: 'category',
+        boundaryGap: false,
+        data: props.data.dates,
+        axisLine: { lineStyle: { color: palette.axisLine } },
+        axisTick: { show: false },
+        axisLabel: { color: palette.textSecondary, fontSize: 12, margin: 12, interval: labelInterval },
       },
-    ],
-    graphic: hasData
-      ? []
-      : [
-          {
-            type: 'text',
-            left: 'center',
-            top: 'middle',
-            style: { text: '暂无数据', fill: palette.textSecondary, fontSize: 14 },
+      yAxis: {
+        type: 'value',
+        minInterval: 1,
+        axisLabel: { color: palette.textSecondary, fontSize: 12 },
+        splitLine: { lineStyle: { color: palette.splitLine, type: 'dashed' } },
+      },
+      series: [
+        {
+          name: '请求量',
+          type: 'line',
+          smooth: 0.4,
+          symbol: 'circle',
+          symbolSize: 8,
+          showSymbol: false,
+          lineStyle: { width: 3, color: PRIMARY },
+          itemStyle: { color: PRIMARY, borderColor: palette.cardBg, borderWidth: 2 },
+          emphasis: { focus: 'series' },
+          areaStyle: {
+            color: verticalGradient(hexToRgba(PRIMARY, 0.3), hexToRgba(PRIMARY, 0.02)),
           },
-        ],
-  });
+          z: 3,
+          data: props.data.requests,
+        },
+        // 次序列「辉光」：同数据的粗半透明线贴着曲线走，不铺面积，避免与请求量的填充叠加发灰。
+        {
+          name: '错误数 glow',
+          type: 'line',
+          smooth: 0.4,
+          showSymbol: false,
+          silent: true,
+          legendHoverLink: false,
+          lineStyle: { width: 10, color: hexToRgba(ERROR, 0.18), cap: 'round' },
+          tooltip: { show: false },
+          z: 1,
+          data: props.data.errors,
+        },
+        {
+          name: '错误数',
+          type: 'line',
+          smooth: 0.4,
+          symbol: 'circle',
+          symbolSize: 7,
+          showSymbol: false,
+          lineStyle: { width: 2, color: ERROR },
+          itemStyle: { color: ERROR, borderColor: palette.cardBg, borderWidth: 2 },
+          emphasis: { focus: 'series' },
+          z: 2,
+          data: props.data.errors,
+        },
+      ],
+      graphic: hasData
+        ? []
+        : [
+            {
+              type: 'text',
+              left: 'center',
+              top: 'middle',
+              style: { text: '暂无数据', fill: palette.textSecondary, fontSize: 14 },
+            },
+          ],
+      // 异步首帧为空时会先写入「暂无数据」图层；后续 setOption 默认采用合并模式，
+      // 空数组不会移除旧图层，导致曲线出现后提示仍残留。必须显式替换 graphic 组件。
+    },
+    { replaceMerge: ['graphic'] },
+  );
 }
 
 const resize = throttle(
